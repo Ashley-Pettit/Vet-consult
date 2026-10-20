@@ -1,0 +1,19 @@
+{
+  "name": "vet-consult-scribe",
+  "version": "1.0.0",
+  "description": "Dictate a vet consult and get a formal SOAP clinical note for the medical system.",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "serve": "node scripts/serve.mjs dist 4173",
+    "test:unit": "node --test tests/unit/*.test.js",
+    "test:e2e": "playwright test",
+    "test": "npm run test:unit && npm run build && npm run test:e2e"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.10.1",
+    "@playwright/test": "^1.48.2",
+    "esbuild": "^0.24.0"
+  },
+  "private": true,
+  "type": "module"
+}

@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' https:; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="description" content="Dictate a vet consult and get a formal SOAP clinical note ready to paste into the medical system.">
+<meta name="theme-color" content="#F3F6F4" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0E1714" media="(prefers-color-scheme: dark)">
+<title>Consult Scribe</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<a class="skip" href="#transcript">Skip to dictation</a>
+<header class="bar">
+  <div class="brand">
+    <svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="currentColor"/><path d="M11 9v6a5 5 0 0 0 10 0V9" fill="none" stroke="var(--logo-ink)" stroke-width="2.4" stroke-linecap="round"/><path d="M16 20v3" stroke="var(--logo-ink)" stroke-width="2.4" stroke-linecap="round"/><circle cx="16" cy="25" r="1.8" fill="var(--logo-ink)"/></svg>
+    <span>Consult Scribe</span>
+  </div>
+  <button class="icon-btn" id="open-settings" type="button" aria-label="Settings" title="Settings">
+    <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+  </button>
+</header>
+
+<main id="main">
+  <!-- 1. Dictate -->
+  <section id="view-record" class="view" aria-labelledby="record-title">
+    <h1 id="record-title" class="sr-only">Dictate a consult</h1>
+
+    <fieldset class="types">
+      <legend class="sr-only">Note type</legend>
+      <label><input type="radio" name="type" value="consult" checked><span>Consult</span></label>
+      <label><input type="radio" name="type" value="intake"><span>Intake</span></label>
+      <label><input type="radio" name="type" value="inspectorate"><span>Inspectorate</span></label>
+    </fieldset>
+
+    <div class="mic-zone">
+      <button id="mic" class="mic" type="button" aria-pressed="false" aria-describedby="mic-status">
+        <svg class="i-mic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2.5" width="6" height="12" rx="3"/><path d="M5 10.5a7 7 0 0 0 14 0"/><path d="M12 17.5v4"/></svg>
+        <svg class="i-stop" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2.5" fill="currentColor"/></svg>
+        <span class="sr-only" id="mic-label">Start dictating</span>
+      </button>
+      <p id="mic-status" class="mic-status" aria-live="polite">Tap the mic and talk through the consult</p>
+      <p id="timer" class="timer" hidden>00:00</p>
+    </div>
+
+    <div id="banner" class="banner" role="alert" hidden></div>
+
+    <div class="field">
+      <div class="field-head">
+        <label for="transcript">Dictation</label>
+        <button type="button" class="link" id="load-example">Try an example</button>
+      </div>
+      <textarea id="transcript" rows="7" spellcheck="true" autocomplete="off" placeholder="Your words appear here as you talk. You can also type or fix anything."></textarea>
+      <p id="interim" class="interim" aria-hidden="true"></p>
+    </div>
+
+    <div class="actions">
+      <button type="button" class="btn ghost" id="clear">Start over</button>
+      <button type="button" class="btn primary" id="create">Create note</button>
+    </div>
+  </section>
+
+  <!-- 2. Working -->
+  <section id="view-working" class="view working" hidden aria-labelledby="working-title">
+    <div class="pulse" aria-hidden="true"></div>
+    <h1 id="working-title">Writing the clinical note</h1>
+    <p class="muted" id="working-elapsed" aria-live="off">Usually 10 to 40 seconds</p>
+    <button type="button" class="btn ghost" id="stop">Stop</button>
+  </section>
+
+  <!-- 3. Note -->
+  <section id="view-note" class="view" hidden aria-labelledby="note-title">
+    <div class="note-head">
+      <button type="button" class="link back" id="back">
+        <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        Edit dictation
+      </button>
+      <h1 id="note-title" tabindex="-1">Clinical note</h1>
+    </div>
+
+    <div id="checks" class="checks" hidden>
+      <h2>Check before saving</h2>
+      <ul id="check-list"></ul>
+    </div>
+
+    <article id="note" class="note" aria-label="Formatted clinical note"></article>
+
+    <details class="edit">
+      <summary>Edit the text before copying</summary>
+      <label for="plain" class="sr-only">Note text to copy</label>
+      <textarea id="plain" rows="14" spellcheck="true"></textarea>
+    </details>
+
+    <div class="actions">
+      <button type="button" class="btn ghost" id="new">New consult</button>
+      <button type="button" class="btn primary" id="copy">Copy note</button>
+    </div>
+  </section>
+
+  <p class="foot">The vet is responsible for the record. Review every field and dose before saving. Speech is processed by your browser’s speech service and the note by Claude.</p>
+</main>
+
+<dialog id="settings" aria-labelledby="settings-title">
+  <form method="dialog" id="settings-form" novalidate>
+    <div class="dlg-head">
+      <h2 id="settings-title">Settings</h2>
+      <button class="icon-btn" value="close" aria-label="Close settings" title="Close">
+        <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+
+    <div class="field">
+      <label for="clinician">Your name (added to every note)</label>
+      <input id="clinician" type="text" autocomplete="name" placeholder="e.g. Dr Sam Lee">
+    </div>
+
+    <div class="field">
+      <label for="model">Note writer</label>
+      <select id="model"></select>
+    </div>
+
+    <div class="field" id="key-field">
+      <label for="api-key">Anthropic API key</label>
+      <input id="api-key" type="password" autocomplete="off" spellcheck="false" placeholder="sk-ant-…">
+      <label class="check"><input type="checkbox" id="remember-key"> Remember on this device</label>
+      <p class="help">Get a key from <a href="https://platform.claude.com/" target="_blank" rel="noopener">the Claude Console</a>. Only use your own key on a device you control.</p>
+    </div>
+
+    <p class="conn" id="conn-status"></p>
+
+    <div class="dlg-actions">
+      <button type="button" class="btn ghost danger" id="forget">Clear saved data</button>
+      <button type="submit" class="btn primary" value="save" id="save-settings">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<div id="toast" class="toast" role="status" aria-live="polite" hidden>
+  <span id="toast-text"></span>
+  <button type="button" class="link" id="toast-action" hidden></button>
+</div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>

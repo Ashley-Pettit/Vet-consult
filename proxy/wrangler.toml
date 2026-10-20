@@ -1,0 +1,7 @@
+name = "consult-scribe-proxy"
+main = "worker.js"
+compatibility_date = "2026-06-01"
+
+[vars]
+ALLOWED_ORIGINS = "https://ashley-pettit.github.io"
+# Secret: wrangler secret put ANTHROPIC_API_KEY
