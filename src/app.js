@@ -279,10 +279,6 @@ async function createNote() {
   if (busy) return;
   const text = els.transcript.value.trim();
   if (!text) return;
-  if (text.split(/\s+/).length < 8) {
-    banner('That’s quite short. Add the exam findings and plan, then create the note.');
-    return;
-  }
   busy = true;
   els.create.disabled = true;
   dictation.stop();

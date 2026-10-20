@@ -196,14 +196,14 @@ test.describe('creating a note', () => {
     await expect(page.locator('#note img')).toHaveCount(0);
   });
 
-  test('very short dictation is caught before calling Claude', async ({ page }) => {
+  test('short dictation still goes straight to Claude', async ({ page }) => {
     await withKey(page);
     const calls = await mockApi(page);
     await openApp(page);
     await page.locator('#transcript').fill('dog fine');
     await page.locator('#create').click();
-    await expect(page.locator('#banner')).toContainText('quite short');
-    expect(calls).toHaveLength(0);
+    await expect(page.locator('#view-note')).toBeVisible();
+    expect(calls).toHaveLength(1);
   });
 
   test('double clicking create sends one request', async ({ page }) => {
