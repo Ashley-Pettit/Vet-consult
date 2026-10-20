@@ -2,7 +2,7 @@
 
 Talk through a vet consult. Get a formal SOAP clinical note ready to paste into the medical system.
 
-Built as a prototype for RSPCA shelter vet teams. Once this repo is on GitHub, CI publishes it to https://ashley-pettit.github.io/vet-consult-scribe/
+Built as a prototype for RSPCA shelter vet teams. **Live app:** https://ashley-pettit.github.io/Vet-consult/
 
 ## How a vet uses it
 
