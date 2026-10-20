@@ -1,7 +1,7 @@
 {
   "name": "vet-consult-scribe",
   "version": "1.0.0",
-  "description": "Dictate a vet consult and get a formal SOAP clinical note for the medical system.",
+  "description": "Dictate a vet consult and get a formal SOAP clinical note for the practice management system (PMS).",
   "scripts": {
     "build": "node scripts/build.mjs",
     "serve": "node scripts/serve.mjs dist 4173",

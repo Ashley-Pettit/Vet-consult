@@ -74,7 +74,7 @@ export function buildPrompt(dictation, type = 'consult', opts = {}) {
   const t = NOTE_TYPES[type] || NOTE_TYPES.consult;
   const text = String(dictation || '').slice(0, MAX_DICTATION);
   const clinician = opts.clinician ? `The clinician is ${String(opts.clinician).slice(0, 80)}. Use this for visit.clinician.\n` : '';
-  return `You are a veterinary clinical scribe for ${CONFIG.clinicDescription}. Convert the vet's spoken dictation into a formal medical record.
+  return `You are a veterinary clinical scribe for ${CONFIG.clinicDescription}. Convert the vet's spoken dictation into formal clinical notes for the practice management system (PMS).
 ${t.rule}
 ${clinician}
 Rules:
@@ -215,7 +215,7 @@ export function formatDate(d = new Date()) {
   return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-/** The plain-text version that gets pasted into the CRM. */
+/** The plain-text version that gets pasted into the clinical notes in the PMS. */
 export function toPlainText(n, date = new Date()) {
   const p = n.patient;
   const vt = n.objective.vitals;

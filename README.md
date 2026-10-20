@@ -1,6 +1,6 @@
 # Consult Scribe
 
-Talk through a vet consult. Get a formal SOAP clinical note ready to paste into the medical system.
+Talk through a vet consult. Get a formal SOAP clinical note ready to paste into the clinical notes in your practice management system (PMS), such as ezyVet or RxWorks.
 
 Built as a prototype for RSPCA shelter vet teams. **Live app:** https://ashley-pettit.github.io/Vet-consult/
 
@@ -11,7 +11,7 @@ Built as a prototype for RSPCA shelter vet teams. **Live app:** https://ashley-p
 3. Tap the mic again to stop. Fix any misheard words in the box.
 4. Tap **Create note**.
 5. Read the **Check before saving** list first. It flags missing details, assumed values and risky combinations.
-6. Tap **Copy note** and paste it into the patient record.
+6. Tap **Copy note** and paste it into the patient's clinical notes in the PMS.
 
 Tips:
 
@@ -48,7 +48,7 @@ With a proxy configured, staff never see or handle an API key.
 
 ## Privacy and clinical safety
 
-- **The vet owns the record.** Every note must be reviewed before saving. The app never writes to the medical system itself.
+- **The vet owns the record.** Every note must be reviewed before saving. The app never writes to the PMS itself.
 - **Speech** is converted by the browser's speech service (Google for Chrome, Microsoft for Edge, Apple for Safari). Check this meets the organisation's privacy requirements before using it with real cases.
 - **Notes** are written by Claude through the chosen connection. Avoid dictating owner names, addresses or phone numbers unless the organisation has approved it.
 - **Nothing is kept on a server by this app.** The dictation draft is kept in the browser tab only and is cleared with Start over or New consult.
@@ -84,7 +84,7 @@ index.html           page shell
 src/app.js           UI and flow
 src/speech.js        microphone (Web Speech API) with auto-restart
 src/ai.js            Claude connections and friendly errors
-src/note.js          prompt, parsing, plain-text CRM format
+src/note.js          prompt, parsing, plain-text format for the PMS clinical notes
 src/config.js        deployment settings
 proxy/worker.js      server-side key proxy
 tests/               unit (node:test) and end-to-end (Playwright)

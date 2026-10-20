@@ -434,7 +434,7 @@ els.copy.addEventListener('click', async () => {
   const ok = await copyText(els.plain.value);
   if (ok) {
     els.copy.textContent = 'Copied ✓';
-    toast('Copied. Paste it into the patient record.');
+    toast('Copied. Paste it into the clinical notes in your PMS.');
     setTimeout(() => (els.copy.textContent = 'Copy note'), 2500);
   } else toast('Text selected. Press Ctrl+C, or long-press and choose Copy.');
 });
