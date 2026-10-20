@@ -14,7 +14,7 @@ test.describe('dictation', () => {
     await expect(mic).toHaveAttribute('aria-pressed', 'true');
     await expect(page.locator('#mic-status')).toHaveText(/Listening/);
     await expect(page.locator('#timer')).toBeVisible();
-    await expect(page.locator('#create')).toBeDisabled(); // can't create while listening
+    await expect(page.locator('#create')).toBeDisabled(); // nothing dictated yet
 
     await page.evaluate(() => window.__fakeSay('this is rusty full stop temp 39.4', { final: false }));
     await expect(page.locator('#interim')).toHaveText(/this is rusty/);
@@ -77,11 +77,11 @@ test.describe('creating a note', () => {
     await fakeSpeech(page);
     const calls = await mockApi(page);
     await openApp(page);
-    await page.locator('#load-example').click();
+    await page.locator('#transcript').fill(DICTATION);
     await page.locator('#create').click();
     const dlg = page.locator('#settings');
     await expect(dlg).toBeVisible();
-    await expect(page.locator('#conn-status')).toContainText('Add an API key');
+    await expect(page.locator('#conn-status')).toContainText('adding an API key');
     await page.locator('#api-key').fill('sk-ant-abc');
     await page.locator('#clinician').fill('Dr Sam Lee');
     await page.locator('#remember-key').check();
@@ -110,7 +110,7 @@ test.describe('creating a note', () => {
     expect(calls[0].body.messages[0].content).toContain('shelter intake examination');
     expect(calls[0].body.model).toBe('claude-sonnet-5-5');
 
-    await expect(page.locator('#note-title')).toHaveText('Intake consult');
+    await expect(page.locator('#note-title')).toHaveText('Shelter intake exam');
     await expect(page.locator('#checks')).toBeVisible();
     await expect(page.locator('#check-list li')).toHaveCount(2);
     await expect(page.locator('.pname strong')).toHaveText('Rusty');
@@ -119,7 +119,7 @@ test.describe('creating a note', () => {
     await expect(page.locator('#note')).toContainText('Not recorded'); // clinician gap
 
     const plain = await page.locator('#plain').inputValue();
-    expect(plain).toMatch(/^INTAKE CONSULT - \d\d\/\d\d\/\d{4} \d\d:\d\d/);
+    expect(plain).toMatch(/^SHELTER INTAKE EXAM - \d\d\/\d\d\/\d{4} \d\d:\d\d/);
     expect(plain).toContain('- Rx: Cephalexin 22 mg/kg PO BID x 7 days');
 
     // Edits to the text are what gets copied.
@@ -204,6 +204,36 @@ test.describe('creating a note', () => {
     await page.locator('#create').click();
     await expect(page.locator('#view-note')).toBeVisible();
     expect(calls).toHaveLength(1);
+  });
+
+  test('the example works with no connection and is labelled as an example', async ({ page }) => {
+    const calls = await mockApi(page);
+    await openApp(page);
+    await page.locator('#load-example').click();
+    await page.locator('#create').click();
+    await expect(page.locator('#view-note')).toBeVisible();
+    await expect(page.locator('#note-banner')).toContainText('example note');
+    await expect(page.locator('.pname strong')).toHaveText('Rusty');
+    expect(calls).toHaveLength(0);
+    await page.locator('#back').click();
+    await page.locator('#transcript').fill(DICTATION);
+    await page.locator('#create').click();
+    await expect(page.locator('#settings')).toBeVisible();
+  });
+
+  test('create note while still listening keeps the last words', async ({ page }) => {
+    await fakeSpeech(page);
+    await withKey(page);
+    const calls = await mockApi(page);
+    await openApp(page);
+    await page.locator('#mic').click();
+    await expect(page.locator('#mic')).toHaveAttribute('aria-pressed', 'true');
+    await page.evaluate(() => window.__fakeSay('this is rusty kelpie cross temp 39.4 plan cephalexin'));
+    await expect(page.locator('#create')).toBeEnabled();
+    await page.locator('#create').click();
+    await expect(page.locator('#view-note')).toBeVisible();
+    await expect(page.locator('#mic')).toHaveAttribute('aria-pressed', 'false');
+    expect(calls[0].body.messages[0].content).toContain('cephalexin');
   });
 
   test('double clicking create sends one request', async ({ page }) => {

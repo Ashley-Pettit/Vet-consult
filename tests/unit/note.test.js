@@ -98,7 +98,7 @@ test('isEmptyNote spots a blank reply', () => {
 test('plain text has every SOAP section and marks gaps', () => {
   const n = normaliseNote(SAMPLE_NOTE);
   const t = toPlainText(n, new Date(2026, 9, 21, 9, 5));
-  assert.match(t, /^INTAKE CONSULT - 21\/10\/2026 09:05/);
+  assert.match(t, /^SHELTER INTAKE EXAM - 21\/10\/2026 09:05/);
   assert.match(t, new RegExp(`Clinician: ${NOT_RECORDED}`));
   assert.match(t, /Patient: Rusty \| Canine \| Kelpie cross \| Male entire/);
   assert.match(t, /14\.2 kg/);

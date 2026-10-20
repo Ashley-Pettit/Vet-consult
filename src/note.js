@@ -263,3 +263,31 @@ History from the inspector, found wandering on the highway, limping on the left 
 On exam he's bright and alert but a bit nervous. Temp 39.4, heart rate 120, resp 30. Body condition 3 out of 9. Gums pink, bit tacky, CRT under 2 seconds, about 5 percent dehydrated. Four centimetre laceration on the lateral left forelimb, looks a day or two old, mildly contaminated, no bone exposed. Heavy flea burden. Heart and lungs clear. Abdo palpation unremarkable.
 Assessment, forelimb laceration, underweight, mild dehydration, fleas.
 Plan, sedated with dexmedetomidine, clipped and cleaned, lignocaine local, sutured. Started cephalexin 22 mg per kg orally twice a day for 7 days. Meloxicam 0.1 mg per kg orally once a day for 5 days. Bravecto as per label. Sub-cut fluids 300 mls today. Small frequent meals. Recheck in 10 to 14 days for suture removal, hold for the stray period, desex once cleared.`;
+
+/** The note shown for the example dictation when no Claude connection is set up yet (demo mode). */
+export const EXAMPLE_NOTE = {
+  patient: {
+    name: 'Rusty', species: 'Canine', breed: 'Kelpie cross', sex: 'Male entire', age: 'Approx. 3 years (dental estimate)',
+    weight_kg: '14.2', microchip: 'Scanned, none detected', animal_id: 'QS-48213', intake_type: 'Stray (inspectorate)',
+  },
+  visit: { type: 'Shelter intake exam', clinician: '' },
+  subjective: 'Stray presented by inspector. Found wandering on highway with left forelimb lameness. No known owner.',
+  objective: {
+    vitals: { temp_c: '39.4', hr_bpm: '120', rr_bpm: '30', bcs: '3/9', mm_crt: 'Pink, tacky, CRT <2 s', hydration: '~5% dehydrated' },
+    findings: ['Bright, alert, mildly anxious', '4 cm laceration, lateral left forelimb, est. 24-48 h old', 'Heavy flea burden'],
+  },
+  assessment: { problems: ['Laceration, left forelimb', 'Underweight (BCS 3/9)', 'Mild dehydration (~5%)', 'Flea infestation'], differentials: [] },
+  plan: {
+    procedures: ['Sedation (dexmedetomidine), clip and lavage, lignocaine local, primary closure'],
+    diagnostics: [],
+    treatments: [
+      { drug: 'Cephalexin', dose: '22 mg/kg', route: 'PO', frequency: 'BID', duration: '7 days' },
+      { drug: 'Meloxicam', dose: '0.1 mg/kg', route: 'PO', frequency: 'SID', duration: '5 days' },
+      { drug: 'Fluralaner (Bravecto)', dose: 'Per label', route: 'PO', frequency: 'Once', duration: '' },
+    ],
+    follow_up: ['Recheck and suture removal in 10-14 days', 'Hold for stray period'],
+  },
+  welfare_notes: '',
+  check: ['Clinician name not stated', 'Meloxicam started while ~5% dehydrated: confirm hydration plan'],
+};
+

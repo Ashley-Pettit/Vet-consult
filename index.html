@@ -85,6 +85,8 @@
       <h1 id="note-title" tabindex="-1">Clinical note</h1>
     </div>
 
+    <p id="note-banner" class="banner" data-tone="info" hidden></p>
+
     <div id="checks" class="checks" hidden>
       <h2>Check before saving</h2>
       <ul id="check-list"></ul>
@@ -116,6 +118,8 @@
       </button>
     </div>
 
+    <p class="conn" id="conn-status" role="status"></p>
+
     <div class="field">
       <label for="clinician">Your name (added to every note)</label>
       <input id="clinician" type="text" autocomplete="name" placeholder="e.g. Dr Sam Lee">
@@ -133,7 +137,6 @@
       <p class="help">Get a key from <a href="https://platform.claude.com/" target="_blank" rel="noopener">the Claude Console</a>. Only use your own key on a device you control.</p>
     </div>
 
-    <p class="conn" id="conn-status"></p>
 
     <div class="dlg-actions">
       <button type="button" class="btn ghost danger" id="forget">Clear saved data</button>

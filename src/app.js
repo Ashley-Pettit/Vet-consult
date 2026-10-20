@@ -6,6 +6,7 @@ import {
   NOTE_TYPES,
   NOT_RECORDED,
   EXAMPLE_DICTATION,
+  EXAMPLE_NOTE,
   appendSegment,
   buildPrompt,
   extractJson,
@@ -83,7 +84,7 @@ const noteType = () => document.querySelector('input[name="type"]:checked')?.val
 
 function updateCreateState() {
   const has = els.transcript.value.trim().length > 0;
-  els.create.disabled = !has || dictation.state !== 'idle' || busy;
+  els.create.disabled = !has || busy; // allowed while listening: it stops the mic first
   els.clear.disabled = !has;
   els.example.hidden = has;
 }
@@ -281,12 +282,21 @@ async function createNote() {
   if (!text) return;
   busy = true;
   els.create.disabled = true;
-  dictation.stop();
+  if (dictation.state !== 'idle') {
+    // Let the last words land before reading the box.
+    dictation.stop();
+    await waitForIdle();
+  }
+  const finalText = els.transcript.value.trim() || text;
   if (!(await ensureProvider())) {
     busy = false;
     updateCreateState();
+    if (finalText === EXAMPLE_DICTATION.trim()) {
+      showNote(normaliseNote(EXAMPLE_NOTE), 'This is the example note. To write notes from your own dictation, add an API key in Settings.');
+      return;
+    }
     els.create.focus();
-    openSettings('Add an API key to start writing notes.');
+    openSettings('To write notes, connect to Claude by adding an API key below.');
     return;
   }
   banner('');
@@ -299,15 +309,12 @@ async function createNote() {
   }, 1000);
   aborter = new AbortController();
   try {
-    const reply = await provider.generate(buildPrompt(text, noteType(), { clinician: settings.clinician }), aborter.signal);
+    const reply = await provider.generate(buildPrompt(finalText, noteType(), { clinician: settings.clinician }), aborter.signal);
     const note = normaliseNote(extractJson(reply));
     if (isEmptyNote(note)) throw new AiError('empty', '');
     if (settings.clinician && !note.visit.clinician) note.visit.clinician = settings.clinician;
     if (!note.visit.type) note.visit.type = NOTE_TYPES[noteType()].title;
-    currentNote = note;
-    renderNote(note);
-    showView('note');
-    els.noteTitle.focus();
+    showNote(note);
   } catch (e) {
     showView('record');
     busy = false;
@@ -324,6 +331,24 @@ async function createNote() {
     busy = false;
     updateCreateState();
   }
+}
+
+function waitForIdle(ms = 2500) {
+  return new Promise((resolve) => {
+    const t0 = Date.now();
+    const check = () => (dictation.state === 'idle' || Date.now() - t0 > ms ? resolve() : setTimeout(check, 50));
+    check();
+  });
+}
+
+function showNote(note, info = '') {
+  if (settings.clinician && !note.visit.clinician) note.visit.clinician = settings.clinician;
+  currentNote = note;
+  renderNote(note);
+  $('note-banner').textContent = info;
+  $('note-banner').hidden = !info;
+  showView('note');
+  els.noteTitle.focus();
 }
 
 els.create.addEventListener('click', createNote);
@@ -455,6 +480,7 @@ els.newBtn.addEventListener('click', () => {
       if (prevNote) {
         currentNote = prevNote;
         renderNote(prevNote);
+        $('note-banner').hidden = true;
         els.plain.value = prevPlain;
         showView('note');
       }
