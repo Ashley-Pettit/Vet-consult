@@ -33,6 +33,23 @@ test('appendSegment joins speech segments cleanly', () => {
   assert.equal(appendSegment('Weight 14 kilos', 'full stop'), 'Weight 14 kilos.');
 });
 
+test('new line commands survive at the start of a segment', () => {
+  assert.equal(appendSegment('Dog is dehydrated', 'new line plan sutures'), 'Dog is dehydrated\nPlan sutures');
+  assert.equal(appendSegment('History', 'new paragraph exam normal'), 'History\n\nExam normal');
+  const a = appendSegment('', 'exam full stop new line');
+  assert.equal(a, 'Exam.\n');
+  assert.equal(appendSegment(a, 'plan rest'), 'Exam.\nPlan rest');
+});
+
+test('units the model adds are not doubled', () => {
+  const n = normaliseNote({ patient: { weight_kg: '14.2 kgs' }, objective: { vitals: { temp_c: '39.4 °C', hr_bpm: '120 bpm', rr_bpm: '30 /min' } } });
+  assert.equal(n.patient.weight_kg, '14.2');
+  assert.equal(n.objective.vitals.temp_c, '39.4');
+  assert.equal(n.objective.vitals.hr_bpm, '120');
+  assert.equal(n.objective.vitals.rr_bpm, '30');
+  assert.match(toPlainText(n), /T 39\.4 °C \| HR 120 bpm \| RR 30 bpm/);
+});
+
 test('prompt carries type rule, clinician, dictation and guards', () => {
   const p = buildPrompt('dog with fleas', 'inspectorate', { clinician: 'Dr Lee' });
   assert.match(p, /evidential/);

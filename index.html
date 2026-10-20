@@ -42,7 +42,7 @@
       <button id="mic" class="mic" type="button" aria-pressed="false" aria-describedby="mic-status">
         <svg class="i-mic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2.5" width="6" height="12" rx="3"/><path d="M5 10.5a7 7 0 0 0 14 0"/><path d="M12 17.5v4"/></svg>
         <svg class="i-stop" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2.5" fill="currentColor"/></svg>
-        <span class="sr-only" id="mic-label">Start dictating</span>
+        <span class="sr-only" id="mic-label">Dictate</span>
       </button>
       <p id="mic-status" class="mic-status" aria-live="polite">Tap the mic and talk through the consult</p>
       <p id="timer" class="timer" hidden>00:00</p>
@@ -109,7 +109,7 @@
   <form method="dialog" id="settings-form" novalidate>
     <div class="dlg-head">
       <h2 id="settings-title">Settings</h2>
-      <button class="icon-btn" value="close" aria-label="Close settings" title="Close">
+      <button type="button" class="icon-btn" id="close-settings" aria-label="Close settings" title="Close">
         <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
       </button>
     </div>

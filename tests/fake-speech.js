@@ -18,7 +18,7 @@ export function installFakeSpeech(win, opts = {}) {
           this.onend && this.onend();
           return;
         }
-        this.onstart && this.onstart();
+        if (!state.neverStart) this.onstart && this.onstart();
       }, 5);
     }
     stop() {

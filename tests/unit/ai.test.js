@@ -82,3 +82,26 @@ test('friendly() always returns readable text', () => {
   assert.equal(friendly({ code: 'weird' }), AI_MESSAGES.server);
   assert.equal(friendly(undefined), AI_MESSAGES.server);
 });
+
+test('proxy: expired sign-in redirects and blocked answers read as sign-in problems', async () => {
+  const { CONFIG } = await import('../../src/config.js');
+  const saved = CONFIG.proxyUrl;
+  CONFIG.proxyUrl = 'https://proxy.example/';
+  try {
+    let init;
+    const redirect = await resolveProvider({}, { claude: null, fetch: async (u, i) => ((init = i), { ok: false, status: 0, type: 'opaqueredirect', json: async () => null }) });
+    assert.equal(redirect.id, 'proxy');
+    await assert.rejects(redirect.generate('x'), (e) => e.code === 'signin');
+    assert.equal(init.credentials, 'include');
+    assert.equal(init.redirect, 'manual');
+    assert.equal(init.headers['x-api-key'], undefined, 'no key leaves the device');
+
+    const blocked = await resolveProvider({}, { claude: null, fetch: async () => { throw new TypeError('Failed to fetch'); } });
+    await assert.rejects(blocked.generate('x'), (e) => e.code === 'signin');
+
+    const denied = await resolveProvider({}, { claude: null, fetch: async () => ({ ok: false, status: 401, type: 'cors', json: async () => ({}) }) });
+    await assert.rejects(denied.generate('x'), (e) => e.code === 'forbidden');
+  } finally {
+    CONFIG.proxyUrl = saved;
+  }
+});

@@ -2,7 +2,7 @@
 
 Talk through a vet consult. Get a formal SOAP clinical note ready to paste into the medical system.
 
-Built as a prototype for RSPCA shelter vet teams. **Live app:** https://ashley-pettit.github.io/vet-consult-scribe/
+Built as a prototype for RSPCA shelter vet teams. Once this repo is on GitHub, CI publishes it to https://ashley-pettit.github.io/vet-consult-scribe/
 
 ## How a vet uses it
 
@@ -41,7 +41,7 @@ A personal key is stored only on that device, and only if "Remember on this devi
    npx wrangler secret put ANTHROPIC_API_KEY
    ```
 2. Set `ALLOWED_ORIGINS` in `proxy/wrangler.toml` to the app's address.
-3. Put Cloudflare Access (or the organisation's SSO) in front of the proxy so only staff can reach it.
+3. Put Cloudflare Access (or the organisation's SSO) in front of the proxy so only staff can reach it. This is required: the origin check is not sign-in. In Access, turn on "Bypass options requests to origin" so browser preflight checks get through.
 4. Set `proxyUrl` in `src/config.js` to the proxy address, then push. CI tests and redeploys.
 
 With a proxy configured, staff never see or handle an API key.
@@ -61,6 +61,8 @@ With a proxy configured, staff never see or handle an API key.
 | Chrome, Edge (desktop and Android) | Yes |
 | Safari (Mac, iPhone, iPad) | Yes |
 | Firefox | No. Use the keyboard's own dictation key instead |
+
+If dictation stops on its own (lost connection, browser limit), the app beeps twice and vibrates so a vet who isn't looking knows. On Android, the system may play a short tone each time listening resumes after a pause.
 
 On any device the keyboard's dictation key also works (Windows + H on a PC).
 

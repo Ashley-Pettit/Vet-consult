@@ -31,6 +31,7 @@ let settings = store.loadSettings();
 let provider = null;
 let currentNote = null;
 let aborter = null;
+let busy = false;
 let wakeLock = null;
 let timerId = null;
 let startedAt = 0;
@@ -68,7 +69,8 @@ function toast(text, action) {
   }
   els.toast.hidden = false;
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => (els.toast.hidden = true), action ? 8000 : 3500);
+  // Toasts with an Undo stay until the next action, so nobody is rushed (WCAG 2.2.1).
+  if (!action) toastTimer = setTimeout(() => (els.toast.hidden = true), 3500);
 }
 
 function banner(text, tone = 'warn') {
@@ -81,7 +83,7 @@ const noteType = () => document.querySelector('input[name="type"]:checked')?.val
 
 function updateCreateState() {
   const has = els.transcript.value.trim().length > 0;
-  els.create.disabled = !has || dictation.state !== 'idle';
+  els.create.disabled = !has || dictation.state !== 'idle' || busy;
   els.clear.disabled = !has;
   els.example.hidden = has;
 }
@@ -107,15 +109,66 @@ const fmt = (ms) => {
   return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
 };
 
+let wantAwake = false;
+let wakePending = null;
 async function keepAwake(on) {
+  wantAwake = on;
+  if (!('wakeLock' in navigator)) return;
+  if (wakePending) await wakePending.catch(() => {}); // one request at a time
   try {
-    if (on && 'wakeLock' in navigator && !wakeLock) wakeLock = await navigator.wakeLock.request('screen');
-    if (!on && wakeLock) {
-      await wakeLock.release();
-      wakeLock = null;
+    if (wantAwake && !wakeLock) {
+      wakePending = navigator.wakeLock.request('screen');
+      const lock = await wakePending;
+      lock.addEventListener('release', () => {
+        if (wakeLock === lock) wakeLock = null;
+      });
+      wakeLock = lock;
     }
   } catch {
+    /* not granted or page hidden; the screen may sleep */
+  } finally {
+    wakePending = null;
+  }
+  if (!wantAwake && wakeLock) {
+    const lock = wakeLock;
     wakeLock = null;
+    lock.release().catch(() => {});
+  }
+}
+
+// A short double beep and a buzz when dictation stops without being asked, so a vet who isn't looking knows.
+let audioCtx = null;
+function unlockAudio() {
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (AC && !audioCtx) audioCtx = new AC();
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+  } catch {
+    audioCtx = null;
+  }
+}
+function alertStopped() {
+  try {
+    if (navigator.vibrate) navigator.vibrate([120, 80, 120]);
+  } catch {
+    /* ignore */
+  }
+  if (!audioCtx) return;
+  try {
+    const t = audioCtx.currentTime;
+    for (const at of [0, 0.22]) {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.frequency.value = 660;
+      gain.gain.setValueAtTime(0.0001, t + at);
+      gain.gain.exponentialRampToValueAtTime(0.15, t + at + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + at + 0.16);
+      osc.connect(gain).connect(audioCtx.destination);
+      osc.start(t + at);
+      osc.stop(t + at + 0.18);
+    }
+  } catch {
+    /* ignore */
   }
 }
 
@@ -123,7 +176,6 @@ dictation.onstate = (state) => {
   const on = state !== 'idle';
   document.body.dataset.mic = state;
   els.mic.setAttribute('aria-pressed', String(on));
-  els.micLabel.textContent = on ? 'Stop dictating' : 'Start dictating';
   els.micStatus.textContent =
     state === 'starting'
       ? 'Starting the microphone…'
@@ -157,6 +209,7 @@ dictation.onfinal = (t) => {
   els.transcript.scrollTop = els.transcript.scrollHeight;
 };
 dictation.onerror = (code) => {
+  if (code === 'interrupted' || code === 'network' || code === 'audio-capture') alertStopped();
   const blockedInClaude = globalThis.claude && (code === 'not-allowed' || code === 'service-not-allowed');
   banner(
     blockedInClaude
@@ -167,11 +220,14 @@ dictation.onerror = (code) => {
 };
 
 els.mic.addEventListener('click', () => {
+  if (busy) return;
   if (dictation.state !== 'idle') {
     dictation.stop();
     return;
   }
   banner('');
+  els.toast.hidden = true;
+  unlockAudio();
   if (els.transcript.value === EXAMPLE_DICTATION) setTranscript('');
   dictation.start();
 });
@@ -181,22 +237,24 @@ if (!dictation.supported) document.body.dataset.speech = 'none';
 /* ---------------- transcript ---------------- */
 
 els.transcript.addEventListener('input', () => {
+  els.toast.hidden = true; // an old Undo would overwrite what was just typed
   store.saveDraft(els.transcript.value);
   autoGrow(els.transcript);
   updateCreateState();
 });
 
 els.example.addEventListener('click', () => {
-  dictation.stop();
+  dictation.cancel();
   setTranscript(EXAMPLE_DICTATION);
   banner('');
+  els.create.focus();
   toast('Example loaded. Tap Create note to see the result.');
 });
 
 els.clear.addEventListener('click', () => {
   const previous = els.transcript.value;
   if (!previous) return;
-  dictation.stop();
+  dictation.cancel();
   setTranscript('');
   banner('');
   toast('Dictation cleared.', { label: 'Undo', run: () => setTranscript(previous) });
@@ -218,14 +276,20 @@ async function ensureProvider() {
 }
 
 async function createNote() {
+  if (busy) return;
   const text = els.transcript.value.trim();
   if (!text) return;
   if (text.split(/\s+/).length < 8) {
     banner('That’s quite short. Add the exam findings and plan, then create the note.');
     return;
   }
+  busy = true;
+  els.create.disabled = true;
   dictation.stop();
   if (!(await ensureProvider())) {
+    busy = false;
+    updateCreateState();
+    els.create.focus();
     openSettings('Add an API key to start writing notes.');
     return;
   }
@@ -250,6 +314,9 @@ async function createNote() {
     els.noteTitle.focus();
   } catch (e) {
     showView('record');
+    busy = false;
+    updateCreateState();
+    els.create.focus();
     if (e && e.code === 'cancelled') toast('Stopped. Your dictation is still here.');
     else {
       banner(friendly(e), 'error');
@@ -258,6 +325,8 @@ async function createNote() {
   } finally {
     clearInterval(tick);
     aborter = null;
+    busy = false;
+    updateCreateState();
   }
 }
 
@@ -378,6 +447,7 @@ els.back.addEventListener('click', () => {
 els.newBtn.addEventListener('click', () => {
   const previous = els.transcript.value;
   const prevNote = currentNote;
+  const prevPlain = els.plain.value;
   setTranscript('');
   currentNote = null;
   showView('record');
@@ -389,6 +459,7 @@ els.newBtn.addEventListener('click', () => {
       if (prevNote) {
         currentNote = prevNote;
         renderNote(prevNote);
+        els.plain.value = prevPlain;
         showView('note');
       }
     },
@@ -424,11 +495,11 @@ async function openSettings(message) {
 }
 
 els.openSettings.addEventListener('click', () => openSettings());
+$('close-settings').addEventListener('click', () => els.settings.close('close'));
 
 els.settings.addEventListener('close', async () => {
   if (els.settings.returnValue !== 'save') return;
   const key = els.apiKey.value.trim();
-  if (key && !/^sk-ant-/.test(key)) toast('That doesn’t look like an Anthropic key. It should start with sk-ant-.');
   settings = {
     ...settings,
     clinician: els.clinician.value.trim().slice(0, 80),
@@ -438,7 +509,8 @@ els.settings.addEventListener('close', async () => {
   };
   store.saveSettings(settings);
   provider = null;
-  if (key || CONFIG.proxyUrl) toast('Settings saved.');
+  if (key && !/^sk-ant-/.test(key)) toast('Saved, but that doesn’t look like an Anthropic key. Keys start with sk-ant-.');
+  else toast('Settings saved.');
 });
 
 els.forget.addEventListener('click', () => {

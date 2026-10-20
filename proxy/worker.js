@@ -5,7 +5,9 @@
 //   ANTHROPIC_API_KEY  (secret)  the organisation's API key
 //   ALLOWED_ORIGINS    (var)     comma-separated origins allowed to call, e.g. https://ashley-pettit.github.io
 //
-// Put Cloudflare Access (or your SSO) in front of this worker so only staff can reach it.
+// REQUIRED: put Cloudflare Access (or your SSO) in front of this worker so only staff can reach it.
+// The Origin check below only stops other websites; it is not authentication.
+// In Access, allow OPTIONS preflight requests through (CORS settings: "Bypass options requests to origin").
 
 const MODELS = new Set(['claude-sonnet-5-5', 'claude-haiku-5-5']);
 const MAX_TOKENS = 4000;
@@ -16,6 +18,7 @@ function cors(origin) {
     'access-control-allow-origin': origin,
     'access-control-allow-methods': 'POST, OPTIONS',
     'access-control-allow-headers': 'content-type',
+    'access-control-allow-credentials': 'true',
     'access-control-max-age': '86400',
     vary: 'origin',
   };
@@ -51,15 +54,20 @@ export async function handle(request, env, fetchImpl = fetch) {
   }
   const model = MODELS.has(body.model) ? body.model : 'claude-sonnet-5-5';
 
-  const upstream = await fetchImpl('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'x-api-key': env.ANTHROPIC_API_KEY,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({ model, max_tokens: Math.min(Number(body.max_tokens) || MAX_TOKENS, MAX_TOKENS), messages }),
-  });
+  let upstream;
+  try {
+    upstream = await fetchImpl('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-api-key': env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({ model, max_tokens: Math.min(Number(body.max_tokens) || MAX_TOKENS, MAX_TOKENS), messages }),
+    });
+  } catch {
+    return json(502, { error: { type: 'upstream_unreachable' } }, h);
+  }
   const text = await upstream.text();
   return new Response(text, { status: upstream.status, headers: { 'content-type': 'application/json', ...h } });
 }

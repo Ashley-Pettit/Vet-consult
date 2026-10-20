@@ -206,6 +206,29 @@ test.describe('creating a note', () => {
     expect(calls).toHaveLength(0);
   });
 
+  test('double clicking create sends one request', async ({ page }) => {
+    await withKey(page);
+    const calls = await mockApi(page, { delayMs: 400 });
+    await openApp(page);
+    await page.locator('#transcript').fill(DICTATION);
+    await page.locator('#create').dblclick();
+    await page.locator('#transcript').press('Control+Enter').catch(() => {});
+    await expect(page.locator('#view-note')).toBeVisible();
+    expect(calls).toHaveLength(1);
+  });
+
+  test('start over while listening discards late words', async ({ page }) => {
+    await fakeSpeech(page);
+    await openApp(page);
+    await page.locator('#mic').click();
+    await expect(page.locator('#mic')).toHaveAttribute('aria-pressed', 'true');
+    await page.evaluate(() => window.__fakeSay('first words'));
+    await page.locator('#clear').click();
+    await page.evaluate(() => window.__fakeSay('late words'));
+    await expect(page.locator('#transcript')).toHaveValue('');
+    await expect(page.locator('#mic')).toHaveAttribute('aria-pressed', 'false');
+  });
+
   test('ctrl+enter creates the note', async ({ page }) => {
     await withKey(page);
     await mockApi(page);
@@ -238,6 +261,26 @@ test.describe('settings', () => {
     expect(local).not.toContain('sk-ant-temp');
     const session = await page.evaluate(() => sessionStorage.getItem('vcs.key'));
     expect(session).toContain('sk-ant-temp');
+  });
+
+  test('pressing Enter in a settings field saves', async ({ page }) => {
+    await openApp(page);
+    await page.locator('#open-settings').click();
+    await page.locator('#clinician').fill('Dr Enter');
+    await page.locator('#clinician').press('Enter');
+    await expect(page.locator('#settings')).toBeHidden();
+    await page.locator('#open-settings').click();
+    await expect(page.locator('#clinician')).toHaveValue('Dr Enter');
+  });
+
+  test('the close button closes without saving', async ({ page }) => {
+    await openApp(page);
+    await page.locator('#open-settings').click();
+    await page.locator('#clinician').fill('Discard me');
+    await page.locator('#close-settings').click();
+    await expect(page.locator('#settings')).toBeHidden();
+    await page.locator('#open-settings').click();
+    await expect(page.locator('#clinician')).toHaveValue('');
   });
 
   test('escape closes settings without saving', async ({ page }) => {

@@ -17,7 +17,8 @@ export class AiError extends Error {
 export const AI_MESSAGES = {
   no_provider: 'Connect to Claude first. Open Settings and add an API key.',
   bad_key: 'The API key was rejected. Check it in Settings.',
-  forbidden: 'This connection isn’t allowed to use Claude. Check the key or proxy settings.',
+  signin: 'Your organisation sign-in may have expired. Reload the page to sign in again, then try again. Your dictation is kept.',
+  forbidden: 'This connection isn’t allowed to use Claude. Sign in to your organisation again, or check the key in Settings.',
   rate_limited: 'Claude is busy or the usage limit was reached. Wait a minute, then try again.',
   overloaded: 'Claude is overloaded right now. Try again in a minute.',
   offline: 'You’re offline. Your dictation is kept. Reconnect, then try again.',
@@ -72,7 +73,7 @@ export function textFromMessage(body) {
     .join('');
 }
 
-async function callMessages(url, headers, prompt, model, signal, fetchImpl) {
+async function callMessages(url, headers, prompt, model, signal, fetchImpl, { viaProxy = false } = {}) {
   if (typeof navigator !== 'undefined' && navigator.onLine === false) throw new AiError('offline', AI_MESSAGES.offline);
   const t = withTimeout(signal, CONFIG.timeoutMs);
   let res;
@@ -86,13 +87,22 @@ async function callMessages(url, headers, prompt, model, signal, fetchImpl) {
         messages: [{ role: 'user', content: prompt }],
       }),
       signal: t.signal,
+      // The proxy sits behind the organisation's sign-in (for example Cloudflare Access), which needs its cookie.
+      credentials: viaProxy ? 'include' : 'omit',
+      // An expired organisation sign-in answers with a redirect; catch it instead of following it.
+      redirect: viaProxy ? 'manual' : 'follow',
     });
   } catch (e) {
     t.done();
     const reason = t.signal.reason;
     if (reason instanceof AiError) throw reason;
     if (typeof navigator !== 'undefined' && navigator.onLine === false) throw new AiError('offline', AI_MESSAGES.offline);
-    throw new AiError('network', AI_MESSAGES.network);
+    // Through the proxy, a blocked cross-origin answer usually means the sign-in page, not a dead connection.
+    throw new AiError(viaProxy ? 'signin' : 'network', viaProxy ? AI_MESSAGES.signin : AI_MESSAGES.network);
+  }
+  if (viaProxy && (res.type === 'opaqueredirect' || (res.status >= 300 && res.status < 400))) {
+    t.done();
+    throw new AiError('signin', AI_MESSAGES.signin);
   }
   let body = null;
   try {
@@ -102,7 +112,11 @@ async function callMessages(url, headers, prompt, model, signal, fetchImpl) {
   } finally {
     t.done();
   }
-  if (!res.ok) throw new AiError(statusToCode(res.status), AI_MESSAGES[statusToCode(res.status)]);
+  if (!res.ok) {
+    let code = statusToCode(res.status);
+    if (viaProxy && code === 'bad_key') code = 'forbidden'; // staff have no key to fix
+    throw new AiError(code, AI_MESSAGES[code]);
+  }
   const text = textFromMessage(body);
   if (!text.trim()) throw new AiError('empty', AI_MESSAGES.empty);
   return text;
@@ -150,7 +164,7 @@ export async function resolveProvider(settings = {}, env = {}) {
     return {
       id: 'proxy',
       label: 'Organisation connection',
-      generate: (prompt, signal) => callMessages(CONFIG.proxyUrl, {}, prompt, model, signal, fetchImpl),
+      generate: (prompt, signal) => callMessages(CONFIG.proxyUrl, {}, prompt, model, signal, fetchImpl, { viaProxy: true }),
     };
   }
 
