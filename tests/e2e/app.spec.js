@@ -40,16 +40,23 @@ test.describe('dictation', () => {
     await openApp(page);
     await page.locator('#mic').click();
     await expect(page.locator('#banner')).toContainText('Microphone access is blocked');
-    await expect(page.locator('#mic')).toHaveAttribute('aria-pressed', 'false');
+    // Falls straight back to the keyboard's own voice typing.
+    await expect(page.locator('#kb-coach')).toBeVisible();
+    await expect(page.locator('#transcript')).toBeFocused();
   });
 
   test('browsers without speech fall back to keyboard dictation', async ({ page }) => {
     await noSpeech(page);
     await openApp(page);
-    await expect(page.locator('#mic-status')).toContainText('keyboard');
+    expect(await page.evaluate(() => window.__scribe.voice)).toBe('keyboard');
     await page.locator('#mic').click();
-    await expect(page.locator('#banner')).toContainText('can’t take dictation');
+    await expect(page.locator('#kb-coach')).toBeVisible();
+    await expect(page.locator('#mic')).toHaveAttribute('aria-pressed', 'true');
     await expect(page.locator('#transcript')).toBeFocused();
+    await page.keyboard.type('dictated by the keyboard');
+    await page.locator('#mic').click();
+    await expect(page.locator('#kb-coach')).toBeHidden();
+    await expect(page.locator('#transcript')).toHaveValue('dictated by the keyboard');
   });
 
   test('draft survives a reload; start over can be undone', async ({ page }) => {
@@ -73,15 +80,21 @@ test.describe('dictation', () => {
 });
 
 test.describe('creating a note', () => {
-  test('no connection opens settings, saving a key works', async ({ page }) => {
+  test('public demo never asks for a key; an optional key still works', async ({ page }) => {
     await fakeSpeech(page);
     const calls = await mockApi(page);
     await openApp(page);
     await page.locator('#transcript').fill(DICTATION);
     await page.locator('#create').click();
+    await expect(page.locator('#banner')).toContainText('public demo');
+    await expect(page.locator('#settings')).toBeHidden();
+    expect(calls).toHaveLength(0);
+    await page.locator('#open-settings').click();
     const dlg = page.locator('#settings');
     await expect(dlg).toBeVisible();
-    await expect(page.locator('#conn-status')).toContainText('adding an API key');
+    await expect(page.locator('#conn-status')).toContainText('Public demo');
+    await expect(page.locator('#api-key')).toBeHidden(); // tucked away under Advanced
+    await page.locator('#key-field summary').click();
     await page.locator('#api-key').fill('sk-ant-abc');
     await page.locator('#clinician').fill('Dr Sam Lee');
     await page.locator('#remember-key').check();
@@ -100,7 +113,7 @@ test.describe('creating a note', () => {
     const errors = watchErrors(page);
     await context.grantPermissions(['clipboard-read', 'clipboard-write']);
     await withKey(page);
-    const calls = await mockApi(page, { delayMs: 300 });
+    const calls = await mockApi(page, { delayMs: 1500 });
     await openApp(page);
     await page.locator('#transcript').fill(DICTATION);
     await page.getByRole('radio', { name: 'Intake' }).check();
@@ -112,7 +125,9 @@ test.describe('creating a note', () => {
 
     await expect(page.locator('#note-title')).toHaveText('Shelter intake exam');
     await expect(page.locator('#checks')).toBeVisible();
-    await expect(page.locator('#check-list li')).toHaveCount(2);
+    // Claude's 2 checks plus 1 worked out on the device: a high temp for a dog.
+    await expect(page.locator('#check-list > li')).toHaveCount(3);
+    await expect(page.locator('#check-list .tag')).toHaveCount(1);
     await expect(page.locator('.pname strong')).toHaveText('Rusty');
     await expect(page.locator('#note')).toContainText('39.4 °C');
     await expect(page.locator('#note .meds li')).toHaveCount(3);
@@ -123,7 +138,7 @@ test.describe('creating a note', () => {
     expect(plain).toContain('- Rx: Cephalexin 22 mg/kg PO BID x 7 days');
 
     // Edits to the text are what gets copied.
-    await page.locator('summary').click();
+    await page.locator('details.edit summary').click();
     await page.locator('#plain').fill(plain + '\nAddendum: owner called.');
     await page.locator('#copy').click();
     await expect(page.locator('#copy')).toHaveText('Copied ✓');
@@ -218,7 +233,7 @@ test.describe('creating a note', () => {
     await page.locator('#back').click();
     await page.locator('#transcript').fill(DICTATION);
     await page.locator('#create').click();
-    await expect(page.locator('#settings')).toBeVisible();
+    await expect(page.locator('#banner')).toContainText('public demo');
   });
 
   test('create note while still listening keeps the last words', async ({ page }) => {
@@ -277,7 +292,7 @@ test.describe('settings', () => {
     await expect(page.locator('#conn-status')).toContainText('Connected');
     await expect(page.locator('#clinician')).toHaveValue('Dr A');
     await page.locator('#forget').click();
-    await expect(page.locator('#conn-status')).toContainText('Not connected');
+    await expect(page.locator('#conn-status')).toContainText('Public demo');
     const stored = await page.evaluate(() => localStorage.getItem('vcs.settings'));
     expect(stored).toBeNull();
   });
@@ -285,6 +300,7 @@ test.describe('settings', () => {
   test('a key not marked remember is kept only for the session', async ({ page }) => {
     await openApp(page);
     await page.locator('#open-settings').click();
+    await page.locator('#key-field summary').click();
     await page.locator('#api-key').fill('sk-ant-temp');
     await page.locator('#save-settings').click();
     const local = await page.evaluate(() => localStorage.getItem('vcs.settings'));

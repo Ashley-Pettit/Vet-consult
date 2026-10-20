@@ -30,6 +30,7 @@ export const AI_MESSAGES = {
   empty: 'Claude didn’t find a clinical note in that dictation. Add the exam and plan, then try again.',
   refused: 'Claude declined to write this note. Reword the dictation and try again.',
   cancelled: 'Stopped.',
+  photos: 'The photos couldn’t be sent. Remove them and try again, or try smaller photos.',
 };
 
 export function friendly(err) {
@@ -42,8 +43,18 @@ function statusToCode(status) {
   if (status === 403) return 'forbidden';
   if (status === 429) return 'rate_limited';
   if (status === 529 || status === 503) return 'overloaded';
-  if (status === 400 || status === 404 || status === 413) return 'bad_request';
+  if (status === 413) return 'photos';
+  if (status === 400 || status === 404) return 'bad_request';
   return 'server';
+}
+
+/** Text alone, or photos first then the text, as Messages API content blocks. */
+export function messageContent(prompt, images = []) {
+  if (!images.length) return prompt;
+  return [
+    ...images.map((i) => ({ type: 'image', source: { type: 'base64', media_type: i.mediaType || 'image/jpeg', data: i.data } })),
+    { type: 'text', text: prompt },
+  ];
 }
 
 /** Combine the user's Stop signal with a timeout. */
@@ -73,7 +84,7 @@ export function textFromMessage(body) {
     .join('');
 }
 
-async function callMessages(url, headers, prompt, model, signal, fetchImpl, { viaProxy = false } = {}) {
+async function callMessages(url, headers, prompt, model, signal, fetchImpl, { viaProxy = false, images = [] } = {}) {
   if (typeof navigator !== 'undefined' && navigator.onLine === false) throw new AiError('offline', AI_MESSAGES.offline);
   const t = withTimeout(signal, CONFIG.timeoutMs);
   let res;
@@ -84,7 +95,7 @@ async function callMessages(url, headers, prompt, model, signal, fetchImpl, { vi
       body: JSON.stringify({
         model,
         max_tokens: CONFIG.maxTokens,
-        messages: [{ role: 'user', content: prompt }],
+        messages: [{ role: 'user', content: messageContent(prompt, images) }],
       }),
       signal: t.signal,
       // The proxy sits behind the organisation's sign-in (for example Cloudflare Access), which needs its cookie.
@@ -143,15 +154,24 @@ export async function resolveProvider(settings = {}, env = {}) {
       clearTimeout(timer);
     }
     if (sample) {
+      let canImages = false;
+      try {
+        canImages = Boolean((await sample.limits())?.images);
+      } catch {
+        canImages = false;
+      }
       return {
         id: 'claude',
         label: 'Claude (this account)',
-        async generate(prompt, signal) {
+        images: canImages,
+        async generate(prompt, signal, { images = [] } = {}) {
           try {
-            const { text } = await sample(prompt, { signal, cache: false });
+            const opts = { signal, cache: false };
+            if (images.length) opts.images = images.map((i) => i.blob);
+            const { text } = await sample(prompt, opts);
             return text;
           } catch (e) {
-            const map = { not_granted: 'forbidden', sampling_disabled: 'forbidden', rate_limited: 'rate_limited', cancelled: 'cancelled', refused: 'refused', empty_completion: 'empty' };
+            const map = { not_granted: 'forbidden', sampling_disabled: 'forbidden', rate_limited: 'rate_limited', cancelled: 'cancelled', refused: 'refused', empty_completion: 'empty', images_unavailable: 'photos', image_rejected: 'photos' };
             const code = map[e && e.code] || 'server';
             throw new AiError(code, AI_MESSAGES[code]);
           }
@@ -164,7 +184,8 @@ export async function resolveProvider(settings = {}, env = {}) {
     return {
       id: 'proxy',
       label: 'Organisation connection',
-      generate: (prompt, signal) => callMessages(CONFIG.proxyUrl, {}, prompt, model, signal, fetchImpl, { viaProxy: true }),
+      images: true,
+      generate: (prompt, signal, { images = [] } = {}) => callMessages(CONFIG.proxyUrl, {}, prompt, model, signal, fetchImpl, { viaProxy: true, images }),
     };
   }
 
@@ -172,7 +193,8 @@ export async function resolveProvider(settings = {}, env = {}) {
     return {
       id: 'key',
       label: 'Your API key',
-      generate: (prompt, signal) =>
+      images: true,
+      generate: (prompt, signal, { images = [] } = {}) =>
         callMessages(
           ANTHROPIC_URL,
           {
@@ -184,6 +206,7 @@ export async function resolveProvider(settings = {}, env = {}) {
           model,
           signal,
           fetchImpl,
+          { images },
         ),
     };
   }

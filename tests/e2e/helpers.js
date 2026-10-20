@@ -19,21 +19,31 @@ export async function withKey(page, extra = {}) {
   });
 }
 
-/** Mock the Anthropic API. Returns the list of request bodies seen. */
+const textOf = (content) => (typeof content === 'string' ? content : content.filter((b) => b.type === 'text').map((b) => b.text).join(''));
+
+/**
+ * Mock the Anthropic API. `body` may be a function of the prompt text, so one mock can answer
+ * note, revision and care sheet requests differently. Returns the list of requests seen.
+ */
 export async function mockApi(page, { status = 200, body = apiReply(), delayMs = 0 } = {}) {
   const calls = [];
   await page.route('https://api.anthropic.com/v1/messages', async (route) => {
-    calls.push({ headers: route.request().headers(), body: JSON.parse(route.request().postData() || '{}') });
+    const req = JSON.parse(route.request().postData() || '{}');
+    const prompt = req.messages ? textOf(req.messages[0].content) : '';
+    calls.push({ headers: route.request().headers(), body: req, prompt });
     if (delayMs) await new Promise((r) => setTimeout(r, delayMs));
+    const reply = typeof body === 'function' ? body(prompt, req) : body;
     await route.fulfill({
       status,
       contentType: 'application/json',
       headers: { 'access-control-allow-origin': '*' },
-      body: JSON.stringify(body),
+      body: JSON.stringify(reply),
     }).catch(() => {});
   });
   return calls;
 }
+
+export const textReply = (obj) => ({ content: [{ type: 'text', text: JSON.stringify(obj) }], stop_reason: 'end_turn' });
 
 /** Collect console errors and uncaught exceptions. */
 export function watchErrors(page) {

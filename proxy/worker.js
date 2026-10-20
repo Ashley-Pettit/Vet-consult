@@ -11,7 +11,25 @@
 
 const MODELS = new Set(['claude-sonnet-5-5', 'claude-haiku-5-5']);
 const MAX_TOKENS = 4000;
-const MAX_BODY_BYTES = 200_000;
+const MAX_BODY_BYTES = 8_000_000; // up to 5 resized photos
+const MAX_IMAGES = 5;
+const IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
+
+/** A plain string, or photo blocks followed by text. Nothing else gets through. */
+function validContent(c) {
+  if (typeof c === 'string') return c.length > 0;
+  if (!Array.isArray(c) || !c.length || c.length > MAX_IMAGES + 1) return false;
+  let images = 0;
+  for (const b of c) {
+    if (b && b.type === 'text' && typeof b.text === 'string') continue;
+    if (b && b.type === 'image' && b.source && b.source.type === 'base64' && IMAGE_TYPES.has(b.source.media_type) && typeof b.source.data === 'string') {
+      images++;
+      continue;
+    }
+    return false;
+  }
+  return images <= MAX_IMAGES && c[c.length - 1].type === 'text';
+}
 
 function cors(origin) {
   return {
@@ -49,7 +67,7 @@ export async function handle(request, env, fetchImpl = fetch) {
     return json(400, { error: { type: 'invalid_json' } }, h);
   }
   const messages = Array.isArray(body.messages) ? body.messages : null;
-  if (!messages || messages.length !== 1 || messages[0].role !== 'user' || typeof messages[0].content !== 'string') {
+  if (!messages || messages.length !== 1 || messages[0].role !== 'user' || !validContent(messages[0].content)) {
     return json(400, { error: { type: 'invalid_request' } }, h);
   }
   const model = MODELS.has(body.model) ? body.model : 'claude-sonnet-5-5';

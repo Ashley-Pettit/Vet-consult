@@ -21,8 +21,11 @@ test('artifact build writes notes through the Claude runtime', async ({ page, ba
   const errors = watchErrors(page);
   await page.goto(url);
   await expect(page.locator('#view-record')).toBeVisible();
+  // Inside Claude the mic hands over to the keyboard's voice typing straight away.
+  expect(await page.evaluate(() => window.__scribe.voice)).toBe('keyboard');
   await page.locator('#mic').click();
-  await expect(page.locator('#banner')).toContainText('blocked inside Claude');
+  await expect(page.locator('#kb-coach')).toBeVisible();
+  await expect(page.locator('#transcript')).toBeFocused();
   await page.locator('#transcript').fill(DICTATION);
   await page.locator('#create').click();
   await expect(page.locator('#view-note')).toBeVisible();

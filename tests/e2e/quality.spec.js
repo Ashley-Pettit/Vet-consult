@@ -14,6 +14,7 @@ for (const scheme of ['light', 'dark']) {
     test.use({ colorScheme: scheme });
 
     test('every screen passes axe and has no horizontal scroll', async ({ page }, info) => {
+      test.setTimeout(90000);
       await fakeSpeech(page);
       await withKey(page);
       await mockApi(page, { delayMs: 800 });

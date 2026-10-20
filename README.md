@@ -6,31 +6,35 @@ Built as a prototype for RSPCA shelter vet teams. **Live app:** https://ashley-p
 
 ## How a vet uses it
 
-1. Pick the note type: **Consult**, **Intake** or **Inspectorate** (objective, evidential wording).
-2. Tap the mic and talk: the animal, history, exam, vitals, what was done and the plan.
-3. Tap the mic again to stop. Fix any misheard words in the box.
-4. Tap **Create note**.
-5. Read the **Check before saving** list first. It flags missing details, assumed values and risky combinations.
-6. Tap **Copy note** and paste it into the patient's clinical notes in the PMS.
+1. Pick the note type: **Consult**, **Intake**, **Inspectorate**, **Surgery**, **Vaccination**, **Post-op** or **Euthanasia**.
+2. Tap the mic and talk through the consult. In the Claude app the mic hands over to the phone keyboard's own voice typing.
+3. Tap **Create note**. It works while the mic is still on.
+4. Read **Check before saving**. Tap **Answer** on any item to fill the gap by voice or typing, and the note updates.
+5. Copy each part into its own PMS field: **Clinical notes**, **Prescriptions** and **Reminders** (with due dates).
+6. Optional: tap **Care sheet** for plain-English instructions for the foster carer or adopter.
+
+### Features
+
+- **Several animals:** switch it on for a litter or a seizure and get one note per animal.
+- **Photos:** attach up to 5. They are shrunk on the device and described objectively under "From photos".
+- **Dose totals:** mg/kg doses show the total for the patient's weight, marked "Calculated". Never written into the note.
+- **Species ranges:** temp, HR and RR outside the usual range for dogs, cats, rabbits, guinea pigs and ferrets are flagged.
+- **How it works:** the ? button in the header (or `#how-it-works`) opens a short tour for new users.
 
 Tips:
 
-- Say "full stop", "comma" or "new line" to punctuate. "Period" and "colon" are left as words because they are clinical terms.
+- Say "full stop", "comma" or "new line" to punctuate. "Period" and "colon" stay as words because they are clinical terms.
 - Press **Ctrl + Enter** to create the note from the keyboard.
-- The screen stays awake while the mic is on.
-- The app installs to a phone or tablet home screen (Add to Home Screen).
 
 ## Connecting to Claude
 
-The app writes notes with Claude. It uses the first connection available:
+| Version | Where | Claude | Mic |
+| --- | --- | --- | --- |
+| **Claude app version** (main) | Opened as an artifact in the Claude app | Your Claude account, no API key | Keyboard voice typing |
+| **Public demo** | GitHub Pages | None: the examples work, nothing asks for a key | Live one-tap mic |
+| Organisation deployment | Your own hosting | Proxy in `/proxy` holds the key | Live one-tap mic |
 
-| Connection | When | Set up |
-| --- | --- | --- |
-| Claude runtime | Opened as a Claude artifact | Nothing to do |
-| Organisation proxy | Production | Deploy `/proxy` and set `proxyUrl` in `src/config.js` |
-| Personal API key | Trials and demos | Settings, paste a key from the Claude Console |
-
-A personal key is stored only on that device, and only if "Remember on this device" is ticked. Otherwise it is cleared when the tab closes.
+An optional personal API key can still be added under **Settings → Advanced**, but the app never asks for one.
 
 ## Deploying for an organisation
 

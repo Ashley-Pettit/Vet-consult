@@ -52,3 +52,17 @@ test('refuses when the key is not configured', async () => {
   const r = await handle(req(good), { ALLOWED_ORIGINS: ORIGIN });
   assert.equal(r.status, 500);
 });
+
+test('photos pass through; anything else in content is refused', async () => {
+  const img = { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: 'AAAA' } };
+  let sent;
+  const ok = await handle(req({ ...good, messages: [{ role: 'user', content: [img, { type: 'text', text: 'hi' }] }] }), env, async (u, i) => ((sent = JSON.parse(i.body)), new Response('{}')));
+  assert.equal(ok.status, 200);
+  assert.equal(sent.messages[0].content[0].type, 'image');
+  const tool = await handle(req({ ...good, messages: [{ role: 'user', content: [{ type: 'tool_use', id: 'x' }, { type: 'text', text: 'hi' }] }] }), env);
+  assert.equal(tool.status, 400);
+  const tooMany = await handle(req({ ...good, messages: [{ role: 'user', content: [img, img, img, img, img, img, { type: 'text', text: 'x' }] }] }), env);
+  assert.equal(tooMany.status, 400);
+  const url = await handle(req({ ...good, messages: [{ role: 'user', content: [{ type: 'image', source: { type: 'url', url: 'https://x' } }, { type: 'text', text: 'x' }] }] }), env);
+  assert.equal(url.status, 400);
+});

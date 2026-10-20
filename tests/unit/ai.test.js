@@ -105,3 +105,27 @@ test('proxy: expired sign-in redirects and blocked answers read as sign-in probl
     CONFIG.proxyUrl = saved;
   }
 });
+
+test('photos go first as image blocks, text last', async () => {
+  const { messageContent } = await import('../../src/ai.js');
+  assert.equal(messageContent('hi'), 'hi');
+  const c = messageContent('hi', [{ mediaType: 'image/jpeg', data: 'AAA' }]);
+  assert.deepEqual(c[0], { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: 'AAA' } });
+  assert.deepEqual(c[1], { type: 'text', text: 'hi' });
+  let body;
+  const p = await resolveProvider({ apiKey: 'k' }, { claude: null, fetch: async (u, i) => ((body = JSON.parse(i.body)), jsonResponse(200, apiReply())) });
+  assert.equal(p.images, true);
+  await p.generate('x', undefined, { images: [{ mediaType: 'image/jpeg', data: 'BBB' }] });
+  assert.equal(body.messages[0].content[0].source.data, 'BBB');
+});
+
+test('Claude runtime passes photo blobs and reports image support', async () => {
+  let opts;
+  const sample = Object.assign(async (p, o) => ((opts = o), { text: 'ok' }), { limits: async () => ({ images: { maxCount: 5 } }) });
+  const p = await resolveProvider({}, { claude: { use: async () => sample } });
+  assert.equal(p.images, true);
+  await p.generate('x', undefined, { images: [{ blob: 'BLOB' }] });
+  assert.deepEqual(opts.images, ['BLOB']);
+  const plain = Object.assign(async () => ({ text: 'ok' }), { limits: async () => ({}) });
+  assert.equal((await resolveProvider({}, { claude: { use: async () => plain } })).images, false);
+});

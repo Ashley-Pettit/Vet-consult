@@ -116,3 +116,62 @@ test('plain text has every SOAP section and marks gaps', () => {
 test('formatDate pads to dd/mm/yyyy hh:mm', () => {
   assert.equal(formatDate(new Date(2026, 0, 2, 3, 4)), '02/01/2026 03:04');
 });
+
+import { buildRevisionPrompt, buildCareSheetPrompt, normaliseResult, pmsSections, dueDate, normaliseCareSheet, careSheetText, EXAMPLE_CARE_SHEET, NOTE_TYPES, NOTE_TYPE_ORDER } from '../../src/note.js';
+
+test('all seven note types have a rule and title', () => {
+  assert.equal(NOTE_TYPE_ORDER.length, 7);
+  for (const k of NOTE_TYPE_ORDER) {
+    assert.ok(NOTE_TYPES[k].rule.length > 40, k);
+    assert.match(buildPrompt('x', k), new RegExp(`"type":"${NOTE_TYPES[k].title}"`));
+  }
+  assert.match(buildPrompt('x', 'euthanasia'), /consent/);
+});
+
+test('batch and photo options change the prompt', () => {
+  const p = buildPrompt('litter', 'intake', { batch: true, photoCount: 3 });
+  assert.match(p, /\{"animals":\[NOTE, NOTE, \.\.\.\]\}/);
+  assert.match(p, /3 photo\(s\) are attached/);
+  assert.match(p, /"photo_findings":\[\]/);
+  assert.doesNotMatch(buildPrompt('x'), /photo\(s\) are attached/);
+});
+
+test('normaliseResult handles one note, several, and drops empties', () => {
+  assert.equal(normaliseResult(SAMPLE_NOTE).length, 1);
+  assert.equal(normaliseResult({ animals: [SAMPLE_NOTE, {}, SAMPLE_NOTE] }).length, 2);
+  assert.equal(normaliseResult({}).length, 0);
+});
+
+test('revision and care sheet prompts carry the note and guard rails', () => {
+  const r = buildRevisionPrompt(normaliseNote(SAMPLE_NOTE), 'Clinician name not stated', 'Doctor Sam Lee');
+  assert.match(r, /<check_item>Clinician name not stated<\/check_item>/);
+  assert.match(r, /<answer>Doctor Sam Lee<\/answer>/);
+  assert.match(r, /"name":"Rusty"/);
+  const c = buildCareSheetPrompt(normaliseNote(SAMPLE_NOTE));
+  assert.match(c, /NEVER invent doses/);
+  assert.match(c, /"watch_for":\[\]/);
+});
+
+test('due dates come from follow-up timing', () => {
+  const from = new Date(2026, 9, 21);
+  assert.equal(dueDate('Recheck in 10-14 days', from).toDateString(), new Date(2026, 9, 31).toDateString());
+  assert.equal(dueDate('Recheck in 2 weeks', from).toDateString(), new Date(2026, 10, 4).toDateString());
+  assert.equal(dueDate('Booster in 12 months', from).toDateString(), new Date(2027, 9, 21).toDateString());
+  assert.equal(dueDate('Hold for stray period', from), null);
+});
+
+test('PMS sections split notes, prescriptions and reminders', () => {
+  const s = pmsSections(normaliseNote(SAMPLE_NOTE), new Date(2026, 9, 21, 9, 0));
+  assert.match(s.clinical, /^SHELTER INTAKE EXAM/);
+  assert.equal(s.prescriptions.split('\n')[0], 'Cephalexin 22 mg/kg PO BID x 7 days');
+  assert.match(s.reminders, /Recheck and suture removal in 10-14 days \(due 31\/10\/2026\)/);
+});
+
+test('care sheet normalises and formats plainly', () => {
+  const c = normaliseCareSheet({ ...EXAMPLE_CARE_SHEET, medications: [{ name: 'A', how: 'By mouth' }, { how: 'nameless' }], junk: 1 });
+  assert.equal(c.medications.length, 1);
+  const t = careSheetText(c, 'the shelter clinic');
+  assert.match(t, /^Caring for Rusty at home/);
+  assert.match(t, /Call the shelter clinic if you notice/);
+  assert.match(t, /Next visit: Recheck/);
+});
