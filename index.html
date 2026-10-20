@@ -63,12 +63,18 @@
     <div class="field">
       <div class="field-head">
         <label for="transcript">Dictation</label>
+        <label class="chip photo-chip" id="add-photo-label" title="Add photos of wounds, body condition or evidence (up to 5)">
+          <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+          <span>Add photos</span>
+          <input type="file" id="add-photo" accept="image/*" multiple class="sr-only">
+        </label>
       </div>
       <p id="kb-coach" class="coach" hidden>
         <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="2.5" width="6" height="12" rx="3"/><path d="M5 10.5a7 7 0 0 0 14 0M12 17.5v4"/></svg>
         <span id="kb-coach-text">Tap the microphone on your keyboard and start talking.</span>
       </p>
       <textarea id="transcript" rows="7" spellcheck="true" autocomplete="off" placeholder="Your words appear here as you talk. You can also type or fix anything."></textarea>
+      <div class="photo-list" id="photo-list" aria-label="Attached photos"></div>
       <p id="interim" class="interim" aria-hidden="true"></p>
       <p class="examples" id="examples">Try an example:
         <button type="button" class="chip" id="load-example">Stray dog</button>
@@ -76,15 +82,6 @@
       </p>
     </div>
 
-    <div class="photos">
-      <div class="photo-list" id="photo-list"></div>
-      <label class="btn ghost small" id="add-photo-label">
-        <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
-        <span>Add photos</span>
-        <input type="file" id="add-photo" accept="image/*" multiple class="sr-only">
-      </label>
-      <p class="help" id="photo-help">Optional. Wounds, body condition or evidence. Up to 5.</p>
-    </div>
 
     <div class="actions">
       <button type="button" class="btn ghost" id="clear">Start over</button>

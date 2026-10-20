@@ -115,6 +115,7 @@ function updateCreateState() {
   els.create.disabled = !has || busy; // allowed while listening: it stops the mic first
   els.clear.disabled = !has && photos.length === 0;
   els.examples.hidden = has;
+  if (dictation.state === 'idle' && document.body.dataset.mic !== 'keyboard') els.micStatus.textContent = idleStatus();
 }
 
 function autoGrow(ta) {

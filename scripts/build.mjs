@@ -31,7 +31,9 @@ writeFileSync(out + '404.html', html.replace(/<main[\s\S]*<\/main>/, '<main><p>P
 const iife = await build({ ...common, entryPoints: [root + 'src/app.js'], format: 'iife', write: false });
 const body = html.match(/<body>([\s\S]*)<\/body>/)[1].replace(/<script[\s\S]*?<\/script>/, '');
 const artifact =
-  `<title>Consult Scribe</title>\n<meta name="claude:viewport-fit-sides" content="cover">\n<style>${css}</style>\n` +
+  `<title>Consult Scribe</title>\n<meta name="claude:viewport-fit-sides" content="cover">\n<style>${css}` +
+  // Inside Claude the page already sits below the status bar, so the header must not add that space again.
+  `.band{padding-top:0}.bar{padding-top:8px;padding-bottom:8px}</style>\n` +
   body +
   `<script>${iife.outputFiles[0].text.replace(/<\/script/gi, '<\\/script')}</script>\n`;
 writeFileSync(art + 'consult-scribe.html', artifact);
