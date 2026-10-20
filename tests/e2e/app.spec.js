@@ -138,7 +138,6 @@ test.describe('creating a note', () => {
     expect(plain).toContain('- Rx: Cephalexin 22 mg/kg PO BID x 7 days');
 
     // Edits to the text are what gets copied.
-    await page.locator('details.edit summary').click();
     await page.locator('#plain').fill(plain + '\nAddendum: owner called.');
     await page.locator('#copy').click();
     await expect(page.locator('#copy')).toHaveText('Copied ✓');
@@ -303,6 +302,7 @@ test.describe('settings', () => {
     await page.locator('#key-field summary').click();
     await page.locator('#api-key').fill('sk-ant-temp');
     await page.locator('#save-settings').click();
+    await expect(page.locator('#toast-text')).toContainText(/saved/i);
     const local = await page.evaluate(() => localStorage.getItem('vcs.settings'));
     expect(local).not.toContain('sk-ant-temp');
     const session = await page.evaluate(() => sessionStorage.getItem('vcs.key'));

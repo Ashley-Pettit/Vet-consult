@@ -115,11 +115,10 @@
 
     <p id="note-banner" class="banner" data-tone="info" hidden></p>
 
-    <div id="checks" class="checks" hidden>
-      <h2>Check before saving</h2>
-      <p class="help">Tap Answer to fill a gap by voice or typing.</p>
+    <details id="checks" class="checks" hidden>
+      <summary><span class="sum-title">Review before saving</span> <span class="count" id="check-count"></span><span class="sum-hint">Tap to open</span></summary>
       <ul id="check-list"></ul>
-    </div>
+    </details>
 
     <article id="note" class="note" aria-label="Formatted clinical note"></article>
 
@@ -129,11 +128,12 @@
       <div id="pms-rows"></div>
     </section>
 
-    <details class="edit">
-      <summary>Edit the clinical notes text before copying</summary>
-      <label for="plain" class="sr-only">Note text to copy</label>
+    <section class="plain-sec" aria-labelledby="plain-title">
+      <h2 id="plain-title">Clinical notes text</h2>
+      <p class="help">Exactly what Copy note pastes into your PMS. Edit anything here first.</p>
+      <label for="plain" class="sr-only">Clinical notes text to copy</label>
       <textarea id="plain" rows="14" spellcheck="true"></textarea>
-    </details>
+    </section>
 
     <div class="actions">
       <button type="button" class="btn ghost" id="care">Care sheet</button>

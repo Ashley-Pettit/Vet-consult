@@ -13,7 +13,7 @@ test('vitals outside the species range are flagged with a readable check', () =>
   const n = normaliseNote(EXAMPLE_NOTE);
   const { flags, checks } = vitalFlags(n);
   assert.deepEqual(flags, { temp_c: 'high' });
-  assert.match(checks[0], /Temp 39\.4 °C is high for a dog \(usual 38 to 39\.2\)/);
+  assert.match(checks[0], /Temp 39\.4 °C is high for a dog \(38 to 39\.2\)\. Correct\?/);
   const cat = normaliseNote({ patient: { species: 'cat' }, objective: { vitals: { temp_c: '37.0', hr_bpm: '260', rr_bpm: '30' } } });
   assert.deepEqual(vitalFlags(cat).flags, { temp_c: 'low', hr_bpm: 'high' });
   const unknown = normaliseNote({ patient: { species: 'snake' }, objective: { vitals: { temp_c: '20' } } });

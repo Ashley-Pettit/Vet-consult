@@ -8,7 +8,7 @@ const smart = (prompt) => {
     const answer = prompt.match(/<answer>([\s\S]*?)<\/answer>/)[1];
     return apiReply({ ...SAMPLE_NOTE, visit: { ...SAMPLE_NOTE.visit, clinician: answer }, check: [SAMPLE_NOTE.check[1]] });
   }
-  if (prompt.includes('home-care instructions')) return textReply(EXAMPLE_CARE_SHEET);
+  if (prompt.includes('home-care plan')) return textReply(EXAMPLE_CARE_SHEET);
   if (prompt.includes('{"animals":[NOTE')) return textReply({ animals: EXAMPLE_BATCH_NOTES });
   return apiReply();
 };
@@ -42,6 +42,7 @@ test('vital flags, dose totals and PMS field copy', async ({ page, context }) =>
   await expect(temp).toHaveCount(1);
   await expect(temp).toContainText('High');
   await expect(page.locator('.meds .calc').first()).toContainText('312.4 mg per dose');
+  await expect(page.locator('#check-count')).toHaveText('3');
   await expect(page.locator('#check-list')).toContainText('high for a dog');
 
   const rows = page.locator('.pms-row');
@@ -64,15 +65,17 @@ test('answer a check item and the note updates', async ({ page }) => {
   await page.locator('#transcript').fill(DICTATION);
   await page.locator('#create').click();
   await expect(page.locator('#view-note')).toBeVisible();
+  await expect(page.locator('#checks')).not.toHaveAttribute('open', '');
+  await page.locator('#checks summary').click();
   const first = page.locator('#check-list > li').first();
-  await expect(first).toContainText('Clinician name not stated');
+  await expect(first).toContainText('Clinician name?');
   await first.getByRole('button', { name: 'Answer' }).click();
-  await first.locator('textarea').fill('Dr Sam Lee');
+  await first.locator('input').fill('Dr Sam Lee');
   await first.getByRole('button', { name: 'Update note' }).click();
   await expect(page.locator('#toast-text')).toHaveText('Note updated.');
   await expect(page.locator('#note')).toContainText('Dr Sam Lee');
-  await expect(page.locator('#check-list')).not.toContainText('Clinician name not stated');
-  expect(calls[1].prompt).toContain('<check_item>Clinician name not stated</check_item>');
+  await expect(page.locator('#check-list')).not.toContainText('Clinician name?');
+  expect(calls[1].prompt).toContain('<check_item>Clinician name?</check_item>');
   expect(errors).toEqual([]);
 });
 
@@ -83,12 +86,13 @@ test('answer by live mic in the answer box', async ({ page }) => {
   await openApp(page);
   await page.locator('#transcript').fill(DICTATION);
   await page.locator('#create').click();
+  await page.locator('#checks summary').click();
   const first = page.locator('#check-list > li').first();
   await first.getByRole('button', { name: 'Answer' }).click();
   await first.getByRole('button', { name: 'Answer by voice' }).click();
   await expect(first.getByRole('button', { name: 'Answer by voice' })).toHaveAttribute('aria-pressed', 'true');
   await page.evaluate(() => window.__fakeSay('doctor sam lee'));
-  await expect(first.locator('textarea')).toHaveValue('Doctor sam lee');
+  await expect(first.locator('input')).toHaveValue('Doctor sam lee');
 });
 
 test('care sheet for foster carers, copied as plain text', async ({ page, context }) => {
@@ -101,7 +105,7 @@ test('care sheet for foster carers, copied as plain text', async ({ page, contex
   await page.locator('#care').click();
   await expect(page.locator('#view-care')).toBeVisible();
   await expect(page.locator('#care-title')).toHaveText('Caring for Rusty at home');
-  await expect(page.locator('.care-sec.watch li')).toHaveCount(5);
+  await expect(page.locator('.care-sec.watch li')).toHaveCount(4);
   expect(calls[1].prompt).toContain('NEVER invent doses');
   await page.locator('#care-copy').click();
   expect(await page.evaluate(() => navigator.clipboard.readText())).toMatch(/^Caring for Rusty at home/);
@@ -170,8 +174,9 @@ test('public demo: both examples and the example care sheet work with no connect
   await expect(page.locator('#care-title')).toHaveText('Caring for Rusty at home');
   // Answering needs Claude: the demo explains rather than asking for a key.
   await page.locator('#care-back').click();
+  await page.locator('#checks summary').click();
   await page.locator('#check-list > li').first().getByRole('button', { name: 'Answer' }).click();
-  await page.locator('#check-list textarea').first().fill('Dr Lee');
+  await page.locator('#check-list input').first().fill('Dr Lee');
   await page.getByRole('button', { name: 'Update note' }).click();
   await expect(page.locator('#toast-text')).toContainText('Claude app version');
   await expect(page.locator('#settings')).toBeHidden();

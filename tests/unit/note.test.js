@@ -172,6 +172,6 @@ test('care sheet normalises and formats plainly', () => {
   assert.equal(c.medications.length, 1);
   const t = careSheetText(c, 'the shelter clinic');
   assert.match(t, /^Caring for Rusty at home/);
-  assert.match(t, /Call the shelter clinic if you notice/);
+  assert.match(t, /Keeping the shelter clinic updated[\s\S]*Call straight away/);
   assert.match(t, /Next visit: Recheck/);
 });

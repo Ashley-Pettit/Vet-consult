@@ -312,13 +312,19 @@ function endKeyboardVoice() {
   }
 }
 
+// Remember whether voice typing was on before the tap blurs the text box and switches it off.
+let kbWasOn = false;
+els.mic.addEventListener('pointerdown', () => (kbWasOn = document.body.dataset.mic === 'keyboard'));
+els.mic.addEventListener('keydown', () => (kbWasOn = document.body.dataset.mic === 'keyboard'));
 els.mic.addEventListener('click', () => {
   if (busy) return;
   banner('');
   els.toast.hidden = true;
   if (els.transcript.value === EXAMPLE_DICTATION || els.transcript.value === EXAMPLE_BATCH_DICTATION) setTranscript('');
   if (keyboardVoice) {
-    if (document.body.dataset.mic === 'keyboard') {
+    const wasOn = kbWasOn || document.body.dataset.mic === 'keyboard';
+    kbWasOn = false;
+    if (wasOn) {
       els.transcript.blur();
       endKeyboardVoice();
     } else startKeyboardVoice();
@@ -519,6 +525,7 @@ function showNotes(list, example) {
   current = 0;
   isExample = example;
   careSheet = null;
+  els.checks.open = false; // closed by default: open it to review
   renderNote();
   els.noteBanner.textContent = example
     ? inClaude
@@ -568,65 +575,69 @@ function renderAnimals() {
 function renderChecks(n, local) {
   const items = [...n.check.map((t) => ({ t, auto: false })), ...local.checks.map((t) => ({ t, auto: true }))];
   els.checks.hidden = items.length === 0;
+  $('check-count').textContent = items.length ? String(items.length) : '';
   els.checkList.replaceChildren(
     ...items.map(({ t, auto }) => {
       const li = el('li', { class: 'check-item' });
-      const row = el('div', { class: 'check-row' }, [
-        el('span', { class: 'check-text' }, [auto ? el('span', { class: 'tag', title: 'Worked out on this device', text: 'Auto' }) : null, t]),
-        el('button', { type: 'button', class: 'btn tiny', onclick: () => openAnswer(li, t) }, 'Answer'),
-      ]);
-      li.append(row);
+      li.append(
+        el('button', { type: 'button', class: 'check-row', 'aria-label': `${t} Answer`, onclick: () => openAnswer(li, t) }, [
+          el('span', { class: 'check-text' }, [auto ? el('span', { class: 'tag', title: 'Worked out on this device', text: 'Auto' }) : null, t]),
+          el('span', { class: 'check-go', 'aria-hidden': 'true', text: 'Answer' }),
+        ]),
+      );
       return li;
     }),
   );
 }
 
+const ICON_MIC = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="2.5" width="6" height="12" rx="3"/><path d="M5 10.5a7 7 0 0 0 14 0M12 17.5v4"/></svg>';
+const ICON_SEND = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M13 6l6 6-6 6"/></svg>';
+
 function openAnswer(li, item) {
-  if (li.querySelector('.answer')) return li.querySelector('textarea').focus();
+  const open = li.querySelector('.answer');
+  if (open) return open.querySelector('input').focus();
+  els.checkList.querySelectorAll('.answer').forEach((a) => a.remove()); // one at a time keeps it short
   const id = 'ans-' + Math.random().toString(36).slice(2, 8);
-  const ta = el('textarea', { id, rows: '2', placeholder: keyboardVoice ? 'Type, or use your keyboard’s mic' : 'Type, or tap the mic and talk' });
-  const status = el('p', { class: 'help', 'aria-live': 'polite' });
+  const input = el('input', { id, type: 'text', autocomplete: 'off', enterkeyhint: 'send', placeholder: 'Type or speak your answer' });
   let voice = null;
-  const micBtn = el('button', {
-    type: 'button', class: 'icon-btn small-mic', 'aria-label': 'Answer by voice', 'aria-pressed': 'false',
-    onclick: () => {
-      if (keyboardVoice) {
-        ta.focus();
-        status.textContent = keyboardTip();
-        return;
-      }
-      if (voice && voice.state !== 'idle') return voice.stop();
-      voice = new Dictation({ lang: CONFIG.speechLang });
-      voice.onfinal = (t) => (ta.value = appendSegment(ta.value, t));
-      voice.onstate = (s) => {
-        micBtn.setAttribute('aria-pressed', String(s !== 'idle'));
-        status.textContent = s === 'listening' ? 'Listening…' : '';
-      };
-      voice.onerror = (c) => (status.textContent = speechErrorMessage(c));
-      unlockAudio();
-      voice.start();
-    },
+  const micBtn = el('button', { type: 'button', class: 'ans-btn', 'aria-label': 'Answer by voice', 'aria-pressed': 'false' });
+  micBtn.innerHTML = ICON_MIC;
+  micBtn.addEventListener('click', () => {
+    if (keyboardVoice) {
+      input.focus();
+      toast(keyboardTip());
+      return;
+    }
+    if (voice && voice.state !== 'idle') return voice.stop();
+    voice = new Dictation({ lang: CONFIG.speechLang });
+    voice.onfinal = (t) => (input.value = appendSegment(input.value, t));
+    voice.onstate = (st) => micBtn.setAttribute('aria-pressed', String(st !== 'idle'));
+    voice.onerror = (c) => toast(speechErrorMessage(c));
+    unlockAudio();
+    voice.start();
   });
-  micBtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="2.5" width="6" height="12" rx="3"/><path d="M5 10.5a7 7 0 0 0 14 0M12 17.5v4"/></svg>';
-  const panel = el('div', { class: 'answer' }, [
-    el('label', { for: id, class: 'sr-only', text: `Answer: ${item}` }),
-    el('div', { class: 'answer-input' }, [ta, micBtn]),
-    status,
-    el('div', { class: 'answer-actions' }, [
-      el('button', { type: 'button', class: 'btn ghost small', onclick: () => { voice && voice.cancel(); panel.remove(); } }, 'Cancel'),
-      el('button', {
-        type: 'button', class: 'btn primary small',
-        onclick: async () => {
-          voice && voice.stop();
-          const answer = ta.value.trim();
-          if (!answer) return ta.focus();
-          await applyAnswer(item, answer);
-        },
-      }, 'Update note'),
-    ]),
-  ]);
+  const send = el('button', { type: 'button', class: 'ans-btn primary', 'aria-label': 'Update note' });
+  send.innerHTML = ICON_SEND;
+  const submit = async () => {
+    voice && voice.stop();
+    const answer = input.value.trim();
+    if (!answer) return input.focus();
+    await applyAnswer(item, answer);
+  };
+  send.addEventListener('click', submit);
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      submit();
+    }
+    if (e.key === 'Escape') {
+      voice && voice.cancel();
+      panel.remove();
+    }
+  });
+  const panel = el('div', { class: 'answer' }, [el('label', { for: id, class: 'sr-only', text: `Answer: ${item}` }), input, micBtn, send]);
   li.append(panel);
-  ta.focus();
+  input.focus();
 }
 
 async function applyAnswer(item, answer) {
@@ -724,9 +735,17 @@ function renderNote() {
 
   const sec = pmsSections(n);
   els.plain.value = sec.clinical;
+  requestAnimationFrame(() => fitPlain());
   renderPms(sec);
   els.copy.textContent = 'Copy note';
 }
+
+// The full text is always on show, sized to fit so nothing hides behind a scroll.
+function fitPlain() {
+  els.plain.style.height = 'auto';
+  els.plain.style.height = els.plain.scrollHeight + 4 + 'px';
+}
+els.plain.addEventListener('input', fitPlain);
 
 // Photos belong to the consult; only show them on single-animal notes to avoid implying which animal they show.
 const photosForNote = () => (notes.length === 1 ? photos : []);
@@ -803,6 +822,20 @@ els.newBtn.addEventListener('click', () => {
 function renderCare(c) {
   const sec = (title, items, cls) => (items.length ? el('section', { class: 'care-sec ' + (cls || '') }, [el('h2', { text: title }), list(items)]) : null);
   els.careTitle.textContent = `Caring for ${c.animal || currentNote().patient.name || 'your animal'} at home`;
+  const fb = c.feedback;
+  const log = c.daily_checks.length
+    ? el('section', { class: 'care-sec' }, [
+        el('h2', { text: `Daily tick sheet (${c.log_days} days)` }),
+        el('div', { class: 'tbl', tabindex: '0', role: 'region', 'aria-label': 'Daily tick sheet' }, [
+          el('table', { class: 'ticksheet' }, [
+            el('thead', {}, [el('tr', {}, [el('th', { scope: 'col', text: 'Day' }), ...c.daily_checks.map((x) => el('th', { scope: 'col', text: x }))])]),
+            el('tbody', {}, Array.from({ length: c.log_days }, (_, d) =>
+              el('tr', {}, [el('th', { scope: 'row', text: String(d + 1) }), ...c.daily_checks.map(() => el('td', { 'aria-label': 'not ticked' }, el('span', { class: 'box' })))]),
+            )),
+          ]),
+        ]),
+      ])
+    : null;
   els.careSheet.replaceChildren(
     ...[
       c.summary ? el('p', { class: 'care-summary', text: c.summary }) : null,
@@ -810,12 +843,34 @@ function renderCare(c) {
         ? el('section', { class: 'care-sec' }, [
             el('h2', { text: 'Medications' }),
             el('ul', { class: 'meds' }, c.medications.map((m) =>
-              el('li', {}, [el('strong', { text: m.name }), el('span', { class: 'care-how', text: [m.how, m.how_often, m.how_long].filter(Boolean).join(' · ') })]),
+              el('li', {}, [
+                el('strong', { text: m.name }),
+                el('span', { class: 'care-how', text: [m.how, m.how_often, m.how_long].filter(Boolean).join(' · ') }),
+                m.tip ? el('span', { class: 'care-tip', text: `Tip: ${m.tip}` }) : null,
+              ]),
             )),
           ])
         : null,
-      sec('Day-to-day care', c.care),
-      sec('Call the clinic if you notice', c.watch_for, 'watch'),
+      c.plan.length
+        ? el('section', { class: 'care-sec' }, [
+            el('h2', { text: 'Day-by-day plan' }),
+            el('ol', { class: 'timeline' }, c.plan.map((p) => el('li', {}, [el('strong', { text: p.when }), list(p.tasks)]))),
+          ])
+        : null,
+      sec('Feeding', c.feeding),
+      sec('Activity', c.activity),
+      sec('Other care', c.care),
+      log,
+      fb.how_often || fb.what_to_report.length || fb.photos.length
+        ? el('section', { class: 'care-sec feedback' }, [
+            el('h2', { text: 'Keeping the clinic updated' }),
+            fb.how_often ? el('p', { text: fb.how_often }) : null,
+            fb.what_to_report.length ? el('p', {}, [el('strong', { text: 'Tell us about: ' }), fb.what_to_report.join(', ')]) : null,
+            fb.photos.length ? el('div', {}, [el('strong', { text: 'Photos to send' }), list(fb.photos)]) : null,
+          ])
+        : null,
+      sec('Let us know the same day if you notice', c.watch_for, 'watch'),
+      sec('Call straight away (or an emergency vet after hours) if', c.urgent, 'urgent'),
       c.next_visit ? el('section', { class: 'care-sec next' }, [el('h2', { text: 'Next visit' }), el('p', { text: c.next_visit })]) : null,
     ].filter(Boolean),
   );

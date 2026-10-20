@@ -45,7 +45,7 @@ export function vitalFlags(note) {
     if (n < lo || n > hi) {
       const dir = n < lo ? 'low' : 'high';
       flags[v.key] = dir;
-      checks.push(`${v.label} ${n} ${v.unit} is ${dir} for a ${ref.label} (usual ${lo} to ${hi}). Confirm the reading.`);
+      checks.push(`${v.label} ${n} ${v.unit} is ${dir} for a ${ref.label} (${lo} to ${hi}). Correct?`);
     }
   }
   return { flags, checks, species: key };

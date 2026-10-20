@@ -4,7 +4,7 @@ import { fakeSpeech, withKey, mockApi, SAMPLE_NOTE, apiReply, textReply } from '
 import { EXAMPLE_BATCH_NOTES, EXAMPLE_CARE_SHEET } from '../../src/note.js';
 
 const smart = (prompt) => {
-  if (prompt.includes('home-care instructions')) return textReply(EXAMPLE_CARE_SHEET);
+  if (prompt.includes('home-care plan')) return textReply(EXAMPLE_CARE_SHEET);
   if (prompt.includes('{"animals":[NOTE')) return textReply({ animals: EXAMPLE_BATCH_NOTES });
   return apiReply();
 };
@@ -33,6 +33,7 @@ for (const [size, viewport, scheme] of combos) {
       await expect(page.locator('#view-note')).toBeVisible();
       await shot(page, '03-note-top');
       await shot(page, '04-note-full', true);
+      await page.locator('#checks summary').click();
       await page.locator('#check-list > li').first().getByRole('button', { name: 'Answer' }).click();
       await shot(page, '05-answer-open');
       await page.locator('#care').click();
