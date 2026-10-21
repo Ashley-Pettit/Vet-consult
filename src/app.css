@@ -635,3 +635,32 @@ dialog.more textarea { min-height: 110px; }
 /* Can't reach a vet right now */
 .care-sec.novet { background: var(--warn-soft); border-radius: 12px; padding: 12px 14px; box-shadow: inset 0 0 0 1px var(--warn-line); }
 .novet-note { font-size: 0.9rem; font-style: italic; color: var(--warn); }
+
+/* Compact dictation screen: mic beside its status, so what's been said stays in view without scrolling */
+.hero-banner { min-height: 104px; }
+.hero-inner { padding-top: 10px; padding-bottom: 10px; }
+.hero-title { font-size: 1.7rem; }
+.hero-sub { display: none; }
+#view-record { gap: 14px; }
+.mode-intro { font-size: 0.9rem; text-align: left; }
+.mic-zone { display: grid; grid-template-columns: auto 1fr; align-items: center; column-gap: 16px; row-gap: 2px; padding: 4px 0 0; }
+.mic-zone .mic { grid-row: span 2; width: 76px; height: 76px; box-shadow: 0 0 0 6px var(--accent-soft), var(--shadow); }
+body[data-mic="listening"] .mic-zone .mic, body[data-mic="starting"] .mic-zone .mic, body[data-mic="keyboard"] .mic-zone .mic { box-shadow: 0 0 0 6px var(--rec-soft), var(--shadow); }
+.mic-zone .mic svg { width: 34px; height: 34px; }
+.mic-zone .mic .i-stop { width: 28px; height: 28px; }
+body[data-mic="listening"] .mic-zone .mic::after { top: -6px; right: -6px; bottom: -6px; left: -6px; }
+.mic-zone .mic-status { margin: 0 !important; text-align: left; font-size: 1rem; }
+.mic-zone .timer { margin: 0; }
+#transcript { min-height: 140px; }
+.role-switch { margin: 0; }
+@media (min-width: 720px) {
+  .hero-banner { min-height: 150px; }
+  .hero-title { font-size: 2.2rem; }
+  .mic-zone .mic { width: 88px; height: 88px; }
+}
+.mic-zone { grid-template-rows: 1fr auto; }
+.mic-zone .mic-status { align-self: center; }
+/* While talking or typing, give the words the room: drop the photo banner and the intro line */
+body[data-mic="keyboard"] .hero-banner, body[data-mic="listening"] .hero-banner, body:has(#transcript:focus) .hero-banner,
+body[data-mic="keyboard"] .mode-intro, body:has(#transcript:focus) .mode-intro { display: none; }
+.coach { padding: 8px 12px; font-size: 0.92rem; }
