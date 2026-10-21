@@ -54,25 +54,9 @@ test('plain text plan: release, escalation and Based on, no reporting to the vet
   assert.doesNotMatch(t, /message the|report to the vet|keep the clinic updated/i);
 });
 
-test('care plan: no-vet first aid never adds medication, and says AI can be wrong', () => {
+test('care plan has no never-give or no-vet sections', () => {
   const p = buildCarerPlanPrompt('wombat', sourcesForPrompt());
-  assert.match(p, /"no_vet":\[\]/);
-  assert.match(p, /NEVER suggest giving any medication, dose, sedation, euthanasia or procedure/);
-  const t = careSheetText(normaliseCareSheet({ ...EXAMPLE_CARER_PLAN, no_vet: ['Keep it in a warm, dark, quiet box'] }, SOURCE_IDS()), lookupSource);
-  assert.match(t, /Can't reach a vet right now\?\nThis guidance should be checked by a vet as soon as one is available\. AI tools can make mistakes\.\n- Keep it in a warm/);
-});
-
-test('never give list: sourced, no doses, footer, and only known ids are kept', async () => {
-  const { NEVER_GIVE, NEVER_GIVE_FOOTER, neverGiveForPrompt } = await import('../../src/never-give.js');
-  assert.ok(NEVER_GIVE.length >= 30);
-  for (const w of NEVER_GIVE) {
-    assert.match(w.url, /^https:\/\//, w.id);
-    assert.match(w.warning, /^(Never|Don't)/, w.id);
-    assert.doesNotMatch(w.warning + w.why, /\d\s?(mg|ml|mL)\b/, w.id);
-  }
-  assert.equal(NEVER_GIVE_FOOTER, 'Always check with a vet.');
-  assert.match(buildCarerPlanPrompt('wombat', sourcesForPrompt()), /ng-13 \| wombat \| Never feed medicated pellets/);
-  const n = normaliseCareSheet({ ...EXAMPLE_CARER_PLAN, never_give: ['ng-13', 'ng-999'] }, SOURCE_IDS());
-  assert.deepEqual(n.never_give, ['ng-13']);
-  assert.match(careSheetText(n, lookupSource), /Never give or do\n- Never feed medicated pellets[^\n]+\nAlways check with a vet\./);
+  assert.doesNotMatch(p, /never_give|no_vet|Never give or do/);
+  const t = careSheetText(normaliseCareSheet(EXAMPLE_CARER_PLAN, SOURCE_IDS()), lookupSource);
+  assert.doesNotMatch(t, /Never give or do|Can't reach a vet/);
 });

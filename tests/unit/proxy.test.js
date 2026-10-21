@@ -28,7 +28,7 @@ test('forwards with the server key, caps tokens, keeps allowed model', async () 
   assert.equal(r.status, 200);
   assert.equal(seen.init.headers['x-api-key'], 'sk-ant-server');
   const sent = JSON.parse(seen.init.body);
-  assert.equal(sent.max_tokens, 4000);
+  assert.equal(sent.max_tokens, 8000);
   assert.equal(sent.model, 'claude-haiku-5-5');
   assert.equal(r.headers.get('access-control-allow-origin'), ORIGIN);
 });

@@ -1,9 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { DOC_KINDS, buildDocPrompt, normaliseDoc, docText, dueLabel } from '../../src/note.js';
+import { DOC_KINDS, buildDocPrompt, buildIntakeAndCarePrompt, normaliseDoc, docText, dueLabel } from '../../src/note.js';
 
 test('carer document kinds, in picker order', () => {
-  assert.deepEqual(Object.keys(DOC_KINDS), ['intake', 'log', 'tovet', 'funding', 'advice']);
+  assert.deepEqual(Object.keys(DOC_KINDS), ['intake', 'log', 'tovet', 'funding']);
   for (const k of Object.values(DOC_KINDS)) assert.ok(k.label && k.copy && k.working && k.rule);
 });
 
@@ -68,12 +68,15 @@ test('funding draft never invents figures', () => {
   assert.match(p, /Wildlife Shelter 15147751/);
 });
 
-test('advice right now: first aid only, grounded in the sources it is given', () => {
-  const p = buildDocPrompt('advice', 'joey', { sourceList: 'vic-x | vic | T | point' });
-  assert.match(p, /NEVER suggest any medication, dose, sedation, euthanasia or procedure/);
+test('intake asks for the record and the care plan in one reply', () => {
+  const p = buildIntakeAndCarePrompt('wombat', { sourceList: 'vic-x | vic | T | point' });
+  assert.match(p, /PART 1, "intake"/);
+  assert.match(p, /PART 2, "care"/);
+  assert.match(p, /\{"intake":\{"title"/);
+  assert.match(p, /"care":\{"animal"/);
+  assert.match(p, /what to do right now and over the next few hours/);
   assert.match(p, /Reference sources \(id \| scope \| title \| key points\):\nvic-x \| vic/);
-  assert.match(p, /\(03\) 8400 7300/);
-  assert.doesNotMatch(buildDocPrompt('log', 'x', { sourceList: 'vic-x' }), /Reference sources/);
+  assert.doesNotMatch(p, /never_give|no_vet/);
 });
 
 test('for the vet starts with a ready-to-send text', () => {

@@ -7,7 +7,6 @@ import { preparePhoto, MAX_PHOTOS } from './photos.js';
 import { ABOUT_HTML } from './about.js';
 import { lookupSource, sourcesForPrompt, SOURCE_IDS } from './sources.js';
 import { buildWord, docModel, careModel, noteModel, wordFileName } from './word.js';
-import { lookupNeverGive, NEVER_GIVE_FOOTER } from './never-give.js';
 import {
   NOTE_TYPES,
   NOTE_TYPE_ORDER,
@@ -24,6 +23,7 @@ import {
   buildCarerPlanPrompt,
   DOC_KINDS,
   buildDocPrompt,
+  buildIntakeAndCarePrompt,
   normaliseDoc,
   docText,
   dueLabel,
@@ -42,8 +42,6 @@ import {
   normaliseResult,
   normaliseCareSheet,
   careSheetText,
-  NO_VET_NOTE,
-  ADVICE_NOTE,
   pmsSections,
   toPlainText,
 } from './note.js';
@@ -564,7 +562,6 @@ async function createNote() {
   }
   const finalText = els.transcript.value.trim() || text;
   try {
-    if (docOverride) return await createDoc(docOverride, finalText);
     if (mode() === 'carer') return await createCarePlan(finalText);
     if (DOC_KINDS[mode()]) return await createDoc(mode(), finalText);
     if (!(await ensureProvider())) {
@@ -929,7 +926,6 @@ more.addEventListener('close', async () => {
   if (more.returnValue !== 'go' || !extra) return;
   more.returnValue = '';
   setTranscript(appendSegment(els.transcript.value, extra));
-  if (currentDoc && currentDoc.kind === 'advice' && document.body.dataset.view === 'doc') return makeAdvice();
   await createNote();
 });
 more.addEventListener('click', (e) => e.target === more && more.close()); // tap outside to cancel
@@ -949,9 +945,14 @@ function renderCare(c) {
   const log = c.daily_checks.length
     ? el('section', { class: 'care-sec' }, [
         el('h2', { text: `Daily tick sheet (${c.log_days} days)` }),
+        // Phones get numbered columns with the checks listed above, so the table fits without sideways scrolling.
+        el('ol', { class: 'tick-key' }, c.daily_checks.map((x) => el('li', { text: x }))),
         el('div', { class: 'tbl', tabindex: '0', role: 'region', 'aria-label': 'Daily tick sheet' }, [
           el('table', { class: 'ticksheet' }, [
-            el('thead', {}, [el('tr', {}, [el('th', { scope: 'col', text: 'Day' }), ...c.daily_checks.map((x) => el('th', { scope: 'col', text: x }))])]),
+            el('thead', {}, [el('tr', {}, [
+              el('th', { scope: 'col', text: 'Day' }),
+              ...c.daily_checks.map((x, i) => el('th', { scope: 'col', 'aria-label': x }, [el('span', { class: 'full', text: x }), el('span', { class: 'num', 'aria-hidden': 'true', text: String(i + 1) })])),
+            ])]),
             el('tbody', {}, Array.from({ length: c.log_days }, (_, d) =>
               el('tr', {}, [el('th', { scope: 'row', text: String(d + 1) }), ...c.daily_checks.map(() => el('td', { 'aria-label': 'not ticked' }, el('span', { class: 'box' })))]),
             )),
@@ -998,14 +999,6 @@ function renderCare(c) {
       release,
       sec('Contact the vet within a day if', c.escalate.vet, 'watch'),
       sec('Get vet help straight away (or an after-hours emergency vet) if', c.escalate.urgent, 'urgent'),
-      neverGiveSection(c.never_give),
-      c.no_vet && c.no_vet.length
-        ? el('section', { class: 'care-sec novet' }, [
-            el('h2', { text: 'Can’t reach a vet right now?' }),
-            el('p', { class: 'novet-note', text: NO_VET_NOTE }),
-            list(c.no_vet),
-          ])
-        : null,
       c.next_visit ? el('section', { class: 'care-sec next' }, [el('h2', { text: 'Next visit' }), el('p', { text: c.next_visit })]) : null,
       refs.length
         ? el('section', { class: 'care-sec' }, [
@@ -1084,17 +1077,6 @@ els.careCopy.addEventListener('click', async () => {
 
 let currentDoc = null;
 
-// The never-give warnings that apply, word for word from the checked list, each linked to its source.
-function neverGiveSection(ids = []) {
-  const ws = ids.map(lookupNeverGive).filter(Boolean);
-  if (!ws.length) return null;
-  return el('section', { class: 'care-sec never' }, [
-    el('h2', { text: 'Never give or do' }),
-    el('ul', {}, ws.map((w) => el('li', {}, [el('strong', { text: w.warning }), ' ', w.why, ' ', el('a', { href: w.url, target: '_blank', rel: 'noopener', class: 'never-src', title: `${w.source_title} (${w.publisher})`, text: /DEECA/.test(w.publisher) ? 'DEECA' : /^NSW/.test(w.publisher) ? 'NSW guidelines' : 'Source' })]))),
-    el('p', { class: 'never-foot', text: NEVER_GIVE_FOOTER }),
-  ]);
-}
-
 function renderDoc(d, kind) {
   $('doc-title').textContent = d.title || DOC_KINDS[kind].label;
   $('doc-subtitle').textContent = d.subtitle;
@@ -1116,7 +1098,6 @@ function renderDoc(d, kind) {
           ]),
         ]
       : []),
-    neverGiveSection(d.never_give) || '',
   );
   $('doc-copy').textContent = DOC_KINDS[kind].copy;
 }
@@ -1147,12 +1128,20 @@ async function createDoc(kind, text) {
     return;
   }
   banner('');
+  const opts = { clinician: settings.clinician, photoCount: photos.length, sourceList: sourcesForPrompt() };
+  // An intake also gets its care plan in the same call, so "Need advice right now?" opens it instantly.
+  const both = kind === 'intake';
   const reply = await runWorking(`Writing the ${DOC_KINDS[kind].label.toLowerCase()}`, DOC_KINDS[kind].working, (signal) =>
-    provider.generate(buildDocPrompt(kind, text, { clinician: settings.clinician, photoCount: photos.length, sourceList: sourcesForPrompt() }), signal, { images: photos }),
+    provider.generate(both ? buildIntakeAndCarePrompt(text, opts) : buildDocPrompt(kind, text, opts), signal, { images: photos }),
   );
-  const d = normaliseDoc(extractJson(reply));
+  const json = extractJson(reply);
+  const d = normaliseDoc(both && json && json.intake ? json.intake : json);
   if (!d.sections.length) throw new AiError('empty', '');
-  showDoc(d, kind, kind === 'advice' ? ADVICE_NOTE : '');
+  if (both && json && json.care) {
+    const sheet = normaliseCareSheet(json.care, SOURCE_IDS());
+    if (sheet.summary || sheet.plan.length || sheet.housing.length) madeFrom.carer = { text: els.transcript.value, sheet, info: '' };
+  }
+  showDoc(d, kind);
 }
 
 $('doc-back').addEventListener('click', () => showView('record'));
@@ -1188,20 +1177,8 @@ function renderMakeNext(box, current) {
     })),
   );
 }
-// "Need advice right now?" on an intake record: first aid for the next few hours, from the same words.
-let docOverride = null;
-async function makeAdvice() {
-  if (busy || !els.transcript.value.trim()) return;
-  const prev = madeFrom.advice;
-  if (prev && prev.text === els.transcript.value) return showDoc(prev.d, 'advice', prev.info);
-  docOverride = 'advice';
-  try {
-    await createNote();
-  } finally {
-    docOverride = null;
-  }
-}
-$('advice-btn').addEventListener('click', makeAdvice);
+// "Need advice right now?" on an intake record opens the care plan, already written in the same call.
+$('advice-btn').addEventListener('click', () => makeNext('carer'));
 $('text-vet-send').addEventListener('click', async () => {
   const text = $('text-vet-body').textContent;
   if (!text) return;
@@ -1262,7 +1239,7 @@ async function saveWord(model, btn) {
     btn.lastChild.textContent = label;
   }
 }
-$('word-doc').addEventListener('click', (e) => currentDoc && saveWord(docModel(currentDoc.d, DOC_KINDS[currentDoc.kind].label, currentDoc.kind === 'advice' ? ADVICE_NOTE : ''), e.currentTarget));
+$('word-doc').addEventListener('click', (e) => currentDoc && saveWord(docModel(currentDoc.d, DOC_KINDS[currentDoc.kind].label, ''), e.currentTarget));
 $('word-care').addEventListener('click', (e) => careSheet && saveWord(careModel(careSheet, lookupSource), e.currentTarget));
 $('word-note').addEventListener('click', (e) => currentNote() && saveWord(noteModel(currentNote()), e.currentTarget));
 

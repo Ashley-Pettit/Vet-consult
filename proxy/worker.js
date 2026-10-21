@@ -10,7 +10,7 @@
 // In Access, allow OPTIONS preflight requests through (CORS settings: "Bypass options requests to origin").
 
 const MODELS = new Set(['claude-sonnet-5-5', 'claude-haiku-5-5']);
-const MAX_TOKENS = 4000;
+const MAX_TOKENS = 8000;
 const MAX_BODY_BYTES = 8_000_000; // up to 5 resized photos
 const MAX_IMAGES = 5;
 const IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
