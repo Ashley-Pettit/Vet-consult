@@ -170,21 +170,27 @@ const dictation = new Dictation({ lang: CONFIG.speechLang });
 const keyboardVoice = inClaude || !dictation.supported;
 document.body.dataset.voice = keyboardVoice ? 'keyboard' : 'live';
 
-// Android phones get step-by-step help: the keyboard mic is easy to miss and Samsung hides it.
-const ANDROID_STEPS = [
-  'Tap the 🎤 in the row just above the letters. It can be on the left or the right, depending on your keyboard.',
-  'Talk. Your words appear in the box.',
-  'Tap Create when you’re done.',
-];
-const ANDROID_NO_MIC = 'No 🎤? On a Samsung keyboard, tap ⋯ on the bar above the keys, then Voice input.';
+// Android: one short line, with the Samsung tip tucked behind a link, so the help never pushes the text box
+// down behind the keyboard. Keyboards put their mic on different sides, so the hint names the row, not a side.
+const ANDROID_TIP = 'Tap the 🎤 in the row just above the letters, then talk.';
+const ANDROID_NO_MIC = 'On a Samsung keyboard, tap ⋯ on the bar above the keys, then Voice input. On others, look for a 🎤 left or right of that bar.';
 function showCoach() {
   const box = els.coachText;
   box.replaceChildren();
   if (/Android/i.test(navigator.userAgent)) {
-    const ol = document.createElement('ol');
-    for (const step of ANDROID_STEPS) ol.append(Object.assign(document.createElement('li'), { textContent: step }));
-    box.append(ol, Object.assign(document.createElement('p'), { className: 'coach-note', textContent: ANDROID_NO_MIC }));
+    const more = el('details', { class: 'coach-more' }, [el('summary', { text: 'No 🎤?' }), el('p', { text: ANDROID_NO_MIC })]);
+    // Opening the tip mustn't close the keyboard: keep the text box focused.
+    more.addEventListener('pointerdown', (e) => e.preventDefault());
+    more.addEventListener('toggle', () => els.transcript.focus({ preventScroll: true }));
+    box.append(el('span', { text: ANDROID_TIP }), ' ', more);
   } else box.textContent = keyboardTip();
+}
+// Keep the help and the text box in view above the on-screen keyboard as it opens.
+function keepTypingInView() {
+  const show = () => document.body.dataset.mic === 'keyboard' && els.coach.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  show();
+  const vv = window.visualViewport;
+  if (vv) vv.addEventListener('resize', show, { once: true });
 }
 function keyboardTip() {
   const ua = navigator.userAgent;
@@ -303,6 +309,7 @@ dictation.onerror = (code) => {
 
 function startKeyboardVoice() {
   showCoach();
+  requestAnimationFrame(keepTypingInView);
   els.coach.hidden = false;
   document.body.dataset.mic = 'keyboard';
   els.mic.setAttribute('aria-pressed', 'true');
