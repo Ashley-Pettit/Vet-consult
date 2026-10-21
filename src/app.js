@@ -314,8 +314,6 @@ function startKeyboardVoice() {
   els.micStatus.textContent = `Voice typing. Talk, then tap ${els.create.textContent}`;
   const ta = els.transcript;
   ta.focus();
-  // Once the phone keyboard is up, bring the mic, the tip and the words into view together.
-  setTimeout(() => els.mic.closest('.mic-zone').scrollIntoView({ block: 'start', behavior: 'smooth' }), 350);
   const end = ta.value.length;
   try {
     ta.setSelectionRange(end, end);
@@ -326,6 +324,7 @@ function startKeyboardVoice() {
     ta.value += ta.value.endsWith('.') ? ' ' : '. ';
     ta.setSelectionRange(ta.value.length, ta.value.length);
   }
+  ta.scrollTop = ta.scrollHeight; // show the end of what's been said, inside the box
 }
 function endKeyboardVoice() {
   els.coach.hidden = true;

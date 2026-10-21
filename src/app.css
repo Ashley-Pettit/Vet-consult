@@ -661,6 +661,8 @@ body[data-mic="listening"] .mic-zone .mic::after { top: -6px; right: -6px; botto
 .mic-zone { grid-template-rows: 1fr auto; }
 .mic-zone .mic-status { align-self: center; }
 /* While talking or typing, give the words the room: drop the photo banner and the intro line */
-body[data-mic="keyboard"] .hero-banner, body[data-mic="listening"] .hero-banner, body:has(#transcript:focus) .hero-banner,
-body[data-mic="keyboard"] .mode-intro, body:has(#transcript:focus) .mode-intro { display: none; }
+/* (set before the box is focused, so the phone scrolls to the right place once the layout has settled) */
+body[data-mic="keyboard"] .hero-banner, body[data-mic="listening"] .hero-banner, body[data-mic="keyboard"] .mode-intro { display: none; }
+/* A long dictation scrolls inside its box, so the caret never drags the page past the mic */
+@media (max-width: 719px) { #transcript { max-height: 38vh; overflow-y: auto; } }
 .coach { padding: 8px 12px; font-size: 0.92rem; }
