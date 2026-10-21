@@ -297,6 +297,9 @@ body[data-mic="keyboard"] .mic { background: var(--rec); box-shadow: 0 0 0 10px 
   background: var(--accent); color: var(--accent-ink); font-weight: 650;
 }
 .coach svg { width: 22px; height: 22px; flex: none; }
+.coach:has(ol) { align-items: flex-start; }
+.coach ol { margin: 0; padding-left: 1.2em; display: grid; gap: 4px; }
+.coach .coach-note { margin: 8px 0 0; font-weight: 500; font-size: 0.9rem; opacity: 0.95; }
 
 /* Examples */
 .examples { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; color: var(--muted); font-size: 0.9rem; }

@@ -170,10 +170,26 @@ const dictation = new Dictation({ lang: CONFIG.speechLang });
 const keyboardVoice = inClaude || !dictation.supported;
 document.body.dataset.voice = keyboardVoice ? 'keyboard' : 'live';
 
+// Android phones get step-by-step help: the keyboard mic is easy to miss and Samsung hides it.
+const ANDROID_STEPS = [
+  'Tap the 🎤 on your keyboard. It’s usually top right.',
+  'Talk. Your words appear in the box.',
+  'Tap Create when you’re done.',
+];
+const ANDROID_NO_MIC = 'No 🎤? On a Samsung keyboard, tap ⋯ on the bar above the keys, then Voice input.';
+function showCoach() {
+  const box = els.coachText;
+  box.replaceChildren();
+  if (/Android/i.test(navigator.userAgent)) {
+    const ol = document.createElement('ol');
+    for (const step of ANDROID_STEPS) ol.append(Object.assign(document.createElement('li'), { textContent: step }));
+    box.append(ol, Object.assign(document.createElement('p'), { className: 'coach-note', textContent: ANDROID_NO_MIC }));
+  } else box.textContent = keyboardTip();
+}
 function keyboardTip() {
   const ua = navigator.userAgent;
   if (/iPhone|iPad|iPod/i.test(ua)) return 'Tap the microphone on your keyboard (bottom right) and start talking.';
-  if (/Android/i.test(ua)) return 'Tap the microphone on your keyboard and start talking.';
+  if (/Android/i.test(ua)) return 'Tap the 🎤 on your keyboard (top right) and start talking.';
   if (/Mac/i.test(ua)) return 'Press the dictation key (or Fn twice) and start talking.';
   if (/Windows/i.test(ua)) return 'Press Windows + H and start talking.';
   return 'Use your keyboard’s voice typing and start talking.';
@@ -286,7 +302,7 @@ dictation.onerror = (code) => {
 };
 
 function startKeyboardVoice() {
-  els.coachText.textContent = keyboardTip();
+  showCoach();
   els.coach.hidden = false;
   document.body.dataset.mic = 'keyboard';
   els.mic.setAttribute('aria-pressed', 'true');
