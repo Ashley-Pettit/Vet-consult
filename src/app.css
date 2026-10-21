@@ -716,3 +716,9 @@ button.brand:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
 .coach-more summary { display: inline; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; font-weight: 700; list-style: none; }
 .coach-more summary::-webkit-details-marker { display: none; }
 .coach-more p { margin: 6px 0 0; font-weight: 500; font-size: 0.9rem; }
+
+/* Example words: clearly a sample, not the user's own */
+.example-note { margin: 0; padding: 10px 14px; border-radius: 12px; background: var(--warn-soft); color: var(--ink); border: 1px dashed var(--warn-line); font-size: 0.92rem; }
+.example-note strong { color: var(--warn); }
+textarea.is-example { border-style: dashed; border-color: var(--warn-line); background: var(--warn-soft); font-style: italic; }
+@media (max-width: 400px) { .actions .btn { white-space: nowrap; padding: 0 14px; } }

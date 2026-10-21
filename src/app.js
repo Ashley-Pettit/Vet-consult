@@ -129,6 +129,7 @@ function banner(text, tone = 'warn') {
 
 
 function updateCreateState() {
+  updateExampleNote();
   const has = els.transcript.value.trim().length > 0;
   els.create.disabled = !has || busy; // allowed while listening: it stops the mic first
   els.clear.disabled = !has && photos.length === 0;
@@ -349,7 +350,7 @@ els.mic.addEventListener('click', () => {
   if (busy) return;
   banner('');
   els.toast.hidden = true;
-  if ([EXAMPLE_DICTATION, EXAMPLE_BATCH_DICTATION, EXAMPLE_CARER_DICTATION, EXAMPLE_FOSTER_DICTATION, EXAMPLE_INTAKE_DICTATION, EXAMPLE_LOG_DICTATION, EXAMPLE_TOVET_DICTATION, EXAMPLE_JOEY_CARER_DICTATION, EXAMPLE_WOMBAT_VET_DICTATION, EXAMPLE_VET_PLAN_DICTATION, EXAMPLE_FUNDING_DICTATION].includes(els.transcript.value)) setTranscript('');
+  if (isExampleText()) setTranscript('');
   if (keyboardVoice) {
     const wasOn = kbWasOn || document.body.dataset.mic === 'keyboard';
     kbWasOn = false;
@@ -378,12 +379,22 @@ els.transcript.addEventListener('input', () => {
   updateCreateState();
 });
 
+// Example words are shown as an example, not as the user's own: a note above the box and a tinted box,
+// until they edit or replace them.
+function isExampleText() {
+  return [EXAMPLE_DICTATION, EXAMPLE_BATCH_DICTATION, EXAMPLE_CARER_DICTATION, EXAMPLE_FOSTER_DICTATION, EXAMPLE_INTAKE_DICTATION, EXAMPLE_LOG_DICTATION, EXAMPLE_TOVET_DICTATION, EXAMPLE_JOEY_CARER_DICTATION, EXAMPLE_WOMBAT_VET_DICTATION, EXAMPLE_VET_PLAN_DICTATION, EXAMPLE_FUNDING_DICTATION].some((x) => x.trim() === els.transcript.value.trim());
+}
+function updateExampleNote() {
+  const on = isExampleText();
+  $('example-note').hidden = !on;
+  els.transcript.classList.toggle('is-example', on);
+}
+
 function loadExample(text) {
   dictation.cancel();
   setTranscript(text);
   banner('');
   els.create.focus();
-  toast(`Example loaded. Tap ${els.create.textContent} to see the result.`);
 }
 els.example.addEventListener('click', () => loadExample(EXAMPLE_WOMBAT_VET_DICTATION));
 $('load-intake-example').addEventListener('click', () => loadExample(EXAMPLE_INTAKE_DICTATION));
@@ -504,7 +515,7 @@ async function askJson(prompt, signal, opts = {}) {
 
 const mode = () => document.querySelector('input[name="mode"]:checked')?.value || 'vet';
 const MODES = ['intake', 'log', 'carer', 'tovet', 'funding', 'vet'];
-const ROLE_MODES = { carer: ['intake', 'log', 'carer', 'tovet', 'funding'], vet: ['carer', 'vet'] };
+const ROLE_MODES = { carer: ['carer', 'intake', 'log', 'tovet', 'funding'], vet: ['carer', 'vet'] };
 
 const MODE_TEXT = {
   vet: { button: 'Create notes', placeholder: 'Your words appear here as you talk. You can also type or fix anything.' },
@@ -527,7 +538,7 @@ function applyRoleLabel() {
   $('role-switch').textContent = settings.role === 'vet' ? 'Wildlife carer? Switch to carer tools' : 'Are you the vet? Switch to vet tools';
 }
 $('role-switch').addEventListener('click', () => {
-  if (mode() === 'funding') return chooseMode('intake'); // funding lives in Settings; this is the way back
+  if (mode() === 'funding') return chooseMode('carer'); // funding lives in Settings; this is the way back
   settings.role = settings.role === 'vet' ? 'carer' : 'vet';
   applyRole();
   applyMode();
@@ -1222,9 +1233,9 @@ $('doc-new').addEventListener('click', addMoreInfo);
 // What each tool last made, and from which words, so flicking between them doesn't rewrite (or re-bill) anything.
 const madeFrom = {};
 const MAKE_NEXT = [
+  ['carer', 'Care plan'],
   ['intake', 'Intake record'],
   ['log', 'Care log'],
-  ['carer', 'Care plan'],
   ['tovet', 'For the vet'],
 ];
 function renderMakeNext(box, current) {
@@ -1432,7 +1443,7 @@ els.forget.addEventListener('click', () => {
 
 /* ---------------- start up ---------------- */
 
-const startMode = MODES.includes(settings.mode) ? settings.mode : 'intake';
+const startMode = MODES.includes(settings.mode) ? settings.mode : 'carer';
 document.querySelector(`input[name="mode"][value="${startMode}"]`).checked = true;
 applyRole();
 applyMode();
