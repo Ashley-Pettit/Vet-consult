@@ -631,3 +631,7 @@ dialog.more textarea { min-height: 110px; }
 .mic.more-mic { width: 72px; height: 72px; flex: none; box-shadow: 0 0 0 6px var(--accent-soft); }
 .mic.more-mic svg { width: 32px; height: 32px; }
 .mic.more-mic[aria-pressed="true"] { background: var(--rec); box-shadow: 0 0 0 6px var(--rec-soft); }
+
+/* Can't reach a vet right now */
+.care-sec.novet { background: var(--warn-soft); border-radius: 12px; padding: 12px 14px; box-shadow: inset 0 0 0 1px var(--warn-line); }
+.novet-note { font-size: 0.9rem; font-style: italic; color: var(--warn); }
