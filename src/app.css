@@ -512,3 +512,10 @@ body[data-mode="carer"] .mic { background: var(--leaf); box-shadow: 0 0 0 10px c
 .doc .due li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; }
 .doc .due .when { font-weight: 700; font-variant-numeric: tabular-nums; }
 .plain-list { list-style: disc; padding: 0 16px 12px 36px !important; display: grid; gap: 4px; }
+
+/* Typing with the phone keyboard up: just the text box, the voice hint and the buttons */
+body.typing .mode, body.typing .mode-intro, body.typing .mic-zone, body.typing .examples, body.typing .foot { display: none !important; }
+body.typing #view-record { gap: 12px; }
+body.typing .coach { position: sticky; top: 0; z-index: 4; }
+.coach #kb-coach-text { flex: 1; min-width: 0; }
+.coach-done { flex: none; min-height: 36px; padding: 0 14px; border-radius: 999px; border: 0; background: var(--accent-ink); color: var(--accent); font-weight: 750; cursor: pointer; }

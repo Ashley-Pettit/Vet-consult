@@ -54,7 +54,8 @@ test.describe('dictation', () => {
     await expect(page.locator('#mic')).toHaveAttribute('aria-pressed', 'true');
     await expect(page.locator('#transcript')).toBeFocused();
     await page.keyboard.type('dictated by the keyboard');
-    await page.locator('#mic').click();
+    // On a phone the mic is tucked away while typing; Done closes voice typing everywhere.
+    await page.locator('#kb-done').click();
     await expect(page.locator('#kb-coach')).toBeHidden();
     await expect(page.locator('#transcript')).toHaveValue('dictated by the keyboard');
   });

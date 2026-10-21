@@ -173,7 +173,7 @@ document.body.dataset.voice = keyboardVoice ? 'keyboard' : 'live';
 function keyboardTip() {
   const ua = navigator.userAgent;
   if (/iPhone|iPad|iPod/i.test(ua)) return 'Tap the microphone on your keyboard (bottom right) and start talking.';
-  if (/Android/i.test(ua)) return 'Tap the microphone on your keyboard and start talking.';
+  if (/Android/i.test(ua)) return 'Tap the mic on your keyboard (top right on most phones) and start talking.';
   if (/Mac/i.test(ua)) return 'Press the dictation key (or Fn twice) and start talking.';
   if (/Windows/i.test(ua)) return 'Press Windows + H and start talking.';
   return 'Use your keyboard’s voice typing and start talking.';
@@ -247,11 +247,9 @@ function alertStopped() {
   }
 }
 
+// Short: the line above the mic already says what to talk about.
 function idleStatus() {
-  if (['inspector', 'adoption'].includes(document.body.dataset.mode)) return els.transcript.value.trim() ? 'Tap the mic to add more' : 'Tap the mic and talk it through';
-  if (document.body.dataset.mode === 'carer') return els.transcript.value.trim() ? 'Tap the mic to add more' : 'Tap the mic and describe the animal’s care';
-  if (keyboardVoice) return els.transcript.value.trim() ? 'Tap the mic to add more by voice' : 'Tap the mic, then talk through the consult';
-  return els.transcript.value.trim() ? 'Tap the mic to add more' : 'Tap the mic and talk through the consult';
+  return els.transcript.value.trim() ? 'Tap to add more' : 'Tap to talk';
 }
 
 dictation.onstate = (state) => {
@@ -290,7 +288,7 @@ function startKeyboardVoice() {
   els.coach.hidden = false;
   document.body.dataset.mic = 'keyboard';
   els.mic.setAttribute('aria-pressed', 'true');
-  els.micStatus.textContent = 'Voice typing. Talk, then tap Create note';
+  els.micStatus.textContent = 'Voice typing';
   const ta = els.transcript;
   ta.focus();
   const end = ta.value.length;
@@ -338,6 +336,21 @@ els.mic.addEventListener('click', () => {
   unlockAudio();
   dictation.start();
 });
+$('kb-done').addEventListener('click', () => {
+  els.transcript.blur();
+  document.body.classList.remove('typing');
+  endKeyboardVoice();
+});
+
+// While the phone keyboard is up, hide everything above the text box so it stays in view.
+const phone = window.matchMedia('(max-width: 719px)');
+els.transcript.addEventListener('focus', () => {
+  if (!keyboardVoice || !phone.matches) return;
+  document.body.classList.add('typing');
+  setTimeout(() => els.transcript.scrollIntoView({ block: 'start', behavior: 'smooth' }), 250);
+});
+els.transcript.addEventListener('blur', () => setTimeout(() => document.activeElement !== els.transcript && document.body.classList.remove('typing'), 150));
+
 // Keep the coach mark only while the keyboard is up.
 els.transcript.addEventListener('blur', () => setTimeout(() => document.activeElement !== els.transcript && endKeyboardVoice(), 150));
 
