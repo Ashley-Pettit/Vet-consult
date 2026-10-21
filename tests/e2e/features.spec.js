@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { fakeSpeech, withKey, mockApi, watchErrors, openApp, DICTATION, SAMPLE_NOTE, apiReply, textReply } from './helpers.js';
-import { EXAMPLE_BATCH_NOTES, EXAMPLE_CARE_SHEET, EXAMPLE_CARER_PLAN } from '../../src/note.js';
+import { EXAMPLE_BATCH_NOTES, EXAMPLE_CARE_SHEET, EXAMPLE_CARER_PLAN, EXAMPLE_INSPECTOR_DOC } from '../../src/note.js';
 
 // One mock that answers each kind of request the way Claude would.
 const smart = (prompt) => {
@@ -210,7 +210,8 @@ test('carer plan mode: talk, then straight to a plan with release and Queensland
   await openApp(page);
   await page.getByRole('radio', { name: 'Carer plan' }).check();
   await expect(page.locator('#create')).toHaveText('Create care plan');
-  await expect(page.locator('.mode-intro.carer-only')).toBeVisible();
+  await expect(page.locator('.mode-intro[data-modes="carer"]')).toBeVisible();
+  await expect(page.locator('.mode-intro[data-modes="vet"]')).toBeHidden();
   await page.locator('#transcript').fill('Adult lorikeet, window strike, bruised wing, meloxicam 3 days, release at rescue site.');
   await page.locator('#create').click();
   await expect(page.locator('#view-care')).toBeVisible();
@@ -253,5 +254,53 @@ test('carer plan examples work in the public demo with no connection', async ({ 
   await expect(page.locator('#care-title')).toHaveText('Caring for Ginger foster kitten at home');
   await expect(page.locator('.care-sec.release')).toHaveCount(0);
   await expect(page.locator('#care-sheet')).toContainText('Never give milk');
+  expect(calls).toHaveLength(0);
+});
+
+test('inspector report: objective sections, review closed, photos sent, copy as text', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await withKey(page);
+  const calls = await mockApi(page, { body: () => textReply(EXAMPLE_INSPECTOR_DOC) });
+  await openApp(page);
+  await page.getByRole('radio', { name: 'Inspector report' }).check();
+  await expect(page.locator('#create')).toHaveText('Create report');
+  await page.locator('#add-photo').setInputFiles([{ name: 'a.png', mimeType: 'image/png', buffer: PNG }]);
+  await page.locator('#transcript').fill('Case 22, kelpie, BCS 2 of 9, nails into pads.');
+  await page.locator('#create').click();
+  await expect(page.locator('#view-doc')).toBeVisible();
+  const prompt = calls[0].prompt;
+  expect(prompt).toContain('Animal Care and Protection Act 2001 (Qld)');
+  expect(prompt).toContain('Do not say whether an offence was committed');
+  expect(prompt).toContain('1 photo(s) are attached');
+  expect(calls[0].body.messages[0].content[0].type).toBe('image');
+  await expect(page.locator('#doc-title')).toContainText('QS-INS-2207');
+  await expect(page.locator('.doc-sec h2')).toContainText(['Case details', 'Animal identification', 'Examination findings', 'Photographs', 'Veterinary opinion', 'Treatment provided', 'Prognosis and recommendations', 'Declaration']);
+  await expect(page.locator('#doc-checks')).not.toHaveAttribute('open', '');
+  await expect(page.locator('#doc-check-count')).toHaveText('3');
+  await page.locator('#doc-copy').click();
+  const text = await page.evaluate(() => navigator.clipboard.readText());
+  expect(text).toMatch(/^Veterinary report: adult female kelpie/);
+  expect(text).toContain('VETERINARY OPINION');
+});
+
+test('adoption summary: due dates worked out, examples work with no connection', async ({ page }) => {
+  const calls = await mockApi(page);
+  await openApp(page);
+  await page.getByRole('radio', { name: 'Adoption summary' }).check();
+  await expect(page.locator('#load-adoption-example')).toBeVisible();
+  await expect(page.locator('#load-example')).toBeHidden();
+  await page.locator('#load-adoption-example').click();
+  await page.locator('#create').click();
+  await expect(page.locator('#doc-banner')).toContainText('example adoption summary');
+  await expect(page.locator('#doc-title')).toHaveText('Bella’s health summary');
+  await expect(page.locator('.due li')).toHaveCount(2);
+  await expect(page.locator('.due .when').first()).toHaveText(/in 1 month \(due \d\d\/\d\d\/\d{4}\)/);
+  await expect(page.locator('#doc-checks')).toBeHidden();
+  await page.locator('#doc-back').click();
+  await page.getByRole('radio', { name: 'Inspector report' }).check();
+  await page.locator('#clear').click();
+  await page.locator('#load-inspector-example').click();
+  await page.locator('#create').click();
+  await expect(page.locator('#doc-title')).toContainText('kelpie');
   expect(calls).toHaveLength(0);
 });

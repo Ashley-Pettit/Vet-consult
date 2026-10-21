@@ -63,11 +63,11 @@ export const ABOUT_HTML = `
     ${feature(I.clip, 'Paste straight into the right PMS field', 'Clinical notes, prescriptions and reminders each get their own copy button, with reminder due dates worked out for you. No more retyping the same plan three times.')}
     ${feature(I.pill, 'Doses worked out, for you to confirm', 'Say “22 mg per kg” and you’ll see the total for this patient’s weight beside it. It’s a prompt, never written into the record without you.')}
     ${feature(I.ask, 'Fill the gaps without typing', 'Forgot to say who consented, or the sedation dose? Tap Answer on the check item, say it, and the note updates in the right place.')}
-    ${feature(I.heart, 'A care sheet in one tap', 'Turn the consult into plain-English instructions for the foster carer or adopter: medications, wound care, what to watch for and when to come back.')}
-    ${feature(I.paws, 'A litter or a seizure? Dictate the lot', 'Switch on Several animals and talk through each one. You get a separate note for every animal, with the shared case details in each.')}
+    ${feature(I.heart, 'Carer plans grounded in Queensland guidance', 'Medications, a day-by-day plan, housing, feeding and, for wildlife, release. Based on the Queensland code of practice and other checked Australian sources, with the vet only for escalations.')}
+    ${feature(I.paws, 'A litter or a seizure? Dictate the lot', 'Just talk through each animal. Consult Scribe spots that there are several and writes a separate note for every one, with the shared case details in each.')}
     ${feature(I.cam, 'Photos that become findings', 'Add photos of wounds or body condition. Claude describes only what is clearly visible, objectively, so inspectorate notes stay evidence-ready.')}
     ${feature(I.pulse, 'Odd vitals get flagged', 'Temperatures, heart rates and resp rates outside the usual range for dogs, cats, rabbits, guinea pigs and ferrets are highlighted so you can double-check.')}
-    ${feature(I.list, 'Seven note types, each written properly', 'Consult, Intake, Inspectorate, Surgery, Vaccination, Post-op and Euthanasia. Each one is worded the way that record should be, including neutral, evidential language for inspectorate cases.')}
+    ${feature(I.list, 'Four outputs from one recording', 'Clinical notes for the PMS, a carer plan, a formal inspector report or a friendly adoption summary. Just say what it is: a consult, intake, surgery or euthanasia is written the way that record should be.')}
   </div>
 </section>
 

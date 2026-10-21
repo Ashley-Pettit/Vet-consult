@@ -6,20 +6,20 @@ Built as a prototype for RSPCA shelter vet teams. **Live app:** https://ashley-p
 
 ## How a vet uses it
 
-1. Pick the note type: **Consult**, **Intake**, **Inspectorate**, **Surgery**, **Vaccination**, **Post-op** or **Euthanasia**.
-2. Tap the mic and talk through the consult. In the Claude app the mic hands over to the phone keyboard's own voice typing.
-3. Tap **Create note**. It works while the mic is still on.
-4. Read **Check before saving**. Tap **Answer** on any item to fill the gap by voice or typing, and the note updates.
-5. Copy each part into its own PMS field: **Clinical notes**, **Prescriptions** and **Reminders** (with due dates).
-6. Optional: tap **Care sheet** for plain-English instructions for the foster carer or adopter.
+1. Pick the output: **Clinical notes**, **Carer plan**, **Inspector report** or **Adoption summary**.
+2. Tap the mic and talk. Say what it is (a consult, intake, surgery, euthanasia, a litter); Claude works out the record type and how many animals.
+3. Tap **Create**. It works while the mic is still on.
+4. Open **Review before saving** to answer anything missing, by voice or typing.
+5. Copy it into the PMS, an email, an SMS or the inspector's file.
 
-### Features
+### Outputs
 
-- **Several animals:** switch it on for a litter or a seizure and get one note per animal.
-- **Photos:** attach up to 5. They are shrunk on the device and described objectively under "From photos".
-- **Dose totals:** mg/kg doses show the total for the patient's weight, marked "Calculated". Never written into the note.
-- **Species ranges:** temp, HR and RR outside the usual range for dogs, cats, rabbits, guinea pigs and ferrets are flagged.
-- **How it works:** the ? button in the header (or `#how-it-works`) opens a short tour for new users.
+- **Clinical notes:** SOAP notes per animal, with separate copy for clinical notes, prescriptions and reminders (due dates worked out). Dose totals and species vital ranges are checked on the device.
+- **Carer plan:** everything a foster carer, adopter or wildlife carer needs on their own: medications, day-by-day plan, housing, feeding, activity, a daily tick sheet and, for wildlife, release. Grounded in a checked library of Queensland sources (Australian where Queensland has none) and cited. The vet appears only for escalations.
+- **Inspector report:** a formal, objective veterinary report for a Queensland animal welfare inspector, with facts kept separate from opinion and a signed declaration. No legal conclusions.
+- **Adoption summary:** a friendly health history for the new owner with what's due next.
+- **Photos:** attach up to 5; they are described objectively.
+- **How it works:** the ? button in the header (or `#how-it-works`).
 
 Tips:
 

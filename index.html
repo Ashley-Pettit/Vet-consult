@@ -42,10 +42,14 @@
       <legend class="sr-only">What do you want to create?</legend>
       <label><input type="radio" name="mode" value="vet" checked><span>Clinical notes</span></label>
       <label><input type="radio" name="mode" value="carer"><span>Carer plan</span></label>
+      <label><input type="radio" name="mode" value="inspector"><span>Inspector report</span></label>
+      <label><input type="radio" name="mode" value="adoption"><span>Adoption summary</span></label>
     </fieldset>
 
-    <p class="vet-only mode-intro">Talk through the consult, intake, surgery or any exam. One animal or a whole litter.</p>
-    <p class="carer-only mode-intro">Describe the animal, what it needs and any medications. You get a complete plan the carer can follow on their own.</p>
+    <p class="mode-intro" data-modes="vet">Talk through the consult, intake, surgery or any exam. One animal or a whole litter.</p>
+    <p class="mode-intro" data-modes="inspector">Talk through your examination findings and opinion. You get a formal, objective report for the inspector.</p>
+    <p class="mode-intro" data-modes="adoption">Talk through the animal’s health history. You get a friendly summary for the new owner, with what’s due next.</p>
+    <p class="mode-intro" data-modes="carer">Describe the animal, what it needs and any medications. You get a complete plan the carer can follow on their own.</p>
 
     <div class="mic-zone">
       <button id="mic" class="mic" type="button" aria-pressed="false" aria-describedby="mic-status">
@@ -76,10 +80,12 @@
       <div class="photo-list" id="photo-list" aria-label="Attached photos"></div>
       <p id="interim" class="interim" aria-hidden="true"></p>
       <p class="examples" id="examples">Try an example:
-        <button type="button" class="chip vet-only" id="load-example">Stray dog</button>
-        <button type="button" class="chip vet-only" id="load-batch-example">Litter of kittens</button>
-        <button type="button" class="chip carer-only" id="load-carer-example">Injured lorikeet</button>
-        <button type="button" class="chip carer-only" id="load-foster-example">Foster kitten</button>
+        <button type="button" class="chip" data-modes="vet" id="load-example">Stray dog</button>
+        <button type="button" class="chip" data-modes="vet" id="load-batch-example">Litter of kittens</button>
+        <button type="button" class="chip" data-modes="carer" id="load-carer-example">Injured lorikeet</button>
+        <button type="button" class="chip" data-modes="carer" id="load-foster-example">Foster kitten</button>
+        <button type="button" class="chip" data-modes="inspector" id="load-inspector-example">Neglect case</button>
+        <button type="button" class="chip" data-modes="adoption" id="load-adoption-example">Bella the cat</button>
       </p>
     </div>
 
@@ -157,6 +163,28 @@
     <div class="actions">
       <button type="button" class="btn ghost" id="care-back-2">Back</button>
       <button type="button" class="btn primary" id="care-copy">Copy care plan</button>
+    </div>
+  </section>
+
+  <!-- 4b. Inspector report / adoption summary -->
+  <section id="view-doc" class="view" hidden aria-labelledby="doc-title">
+    <div class="note-head">
+      <button type="button" class="link back" id="doc-back">
+        <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        Back
+      </button>
+      <h1 id="doc-title" tabindex="-1">Report</h1>
+      <p class="muted" id="doc-subtitle"></p>
+    </div>
+    <p id="doc-banner" class="banner" data-tone="info" hidden></p>
+    <details id="doc-checks" class="checks" hidden>
+      <summary><span class="sum-title">Review before sending</span> <span class="count" id="doc-check-count"></span><span class="sum-hint">Tap to open</span></summary>
+      <ul id="doc-check-list" class="plain-list"></ul>
+    </details>
+    <article id="doc" class="note doc" aria-label="Document"></article>
+    <div class="actions">
+      <button type="button" class="btn ghost" id="doc-new">New</button>
+      <button type="button" class="btn primary" id="doc-copy">Copy</button>
     </div>
   </section>
 

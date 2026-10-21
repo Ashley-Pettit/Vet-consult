@@ -77,6 +77,7 @@ test.describe('dictation', () => {
     await expect(page.locator('#batch')).toHaveCount(0);
     await expect(page.getByRole('radio', { name: 'Clinical notes' })).toBeChecked();
     await expect(page.getByRole('radio', { name: 'Carer plan' })).not.toBeChecked();
+    await expect(page.locator('input[name="mode"]')).toHaveCount(4);
   });
 });
 

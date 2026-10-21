@@ -20,6 +20,15 @@ import {
   EXAMPLE_FOSTER_DICTATION,
   EXAMPLE_FOSTER_PLAN,
   buildCarerPlanPrompt,
+  DOC_KINDS,
+  buildDocPrompt,
+  normaliseDoc,
+  docText,
+  dueLabel,
+  EXAMPLE_INSPECTOR_DICTATION,
+  EXAMPLE_INSPECTOR_DOC,
+  EXAMPLE_ADOPTION_DICTATION,
+  EXAMPLE_ADOPTION_DOC,
   appendSegment,
   buildPrompt,
   buildRevisionPrompt,
@@ -49,7 +58,7 @@ const els = {
   settings: $('settings'), openSettings: $('open-settings'), clinician: $('clinician'), model: $('model'),
   apiKey: $('api-key'), rememberKey: $('remember-key'), keyField: $('key-field'), conn: $('conn-status'),
   forget: $('forget'), toast: $('toast'), toastText: $('toast-text'), toastAction: $('toast-action'),
-  views: { record: $('view-record'), working: $('view-working'), note: $('view-note'), care: $('view-care'), about: $('view-about') },
+  views: { record: $('view-record'), working: $('view-working'), note: $('view-note'), care: $('view-care'), doc: $('view-doc'), about: $('view-about') },
 };
 
 const inClaude = Boolean(globalThis.claude);
@@ -239,6 +248,7 @@ function alertStopped() {
 }
 
 function idleStatus() {
+  if (['inspector', 'adoption'].includes(document.body.dataset.mode)) return els.transcript.value.trim() ? 'Tap the mic to add more' : 'Tap the mic and talk it through';
   if (document.body.dataset.mode === 'carer') return els.transcript.value.trim() ? 'Tap the mic to add more' : 'Tap the mic and describe the animal’s care';
   if (keyboardVoice) return els.transcript.value.trim() ? 'Tap the mic to add more by voice' : 'Tap the mic, then talk through the consult';
   return els.transcript.value.trim() ? 'Tap the mic to add more' : 'Tap the mic and talk through the consult';
@@ -311,7 +321,7 @@ els.mic.addEventListener('click', () => {
   if (busy) return;
   banner('');
   els.toast.hidden = true;
-  if ([EXAMPLE_DICTATION, EXAMPLE_BATCH_DICTATION, EXAMPLE_CARER_DICTATION, EXAMPLE_FOSTER_DICTATION].includes(els.transcript.value)) setTranscript('');
+  if ([EXAMPLE_DICTATION, EXAMPLE_BATCH_DICTATION, EXAMPLE_CARER_DICTATION, EXAMPLE_FOSTER_DICTATION, EXAMPLE_INSPECTOR_DICTATION, EXAMPLE_ADOPTION_DICTATION].includes(els.transcript.value)) setTranscript('');
   if (keyboardVoice) {
     const wasOn = kbWasOn || document.body.dataset.mic === 'keyboard';
     kbWasOn = false;
@@ -350,6 +360,8 @@ function loadExample(text) {
 els.example.addEventListener('click', () => loadExample(EXAMPLE_DICTATION));
 $('load-carer-example').addEventListener('click', () => loadExample(EXAMPLE_CARER_DICTATION));
 $('load-foster-example').addEventListener('click', () => loadExample(EXAMPLE_FOSTER_DICTATION));
+$('load-inspector-example').addEventListener('click', () => loadExample(EXAMPLE_INSPECTOR_DICTATION));
+$('load-adoption-example').addEventListener('click', () => loadExample(EXAMPLE_ADOPTION_DICTATION));
 els.batchExample.addEventListener('click', () => loadExample(EXAMPLE_BATCH_DICTATION));
 
 els.clear.addEventListener('click', () => {
@@ -449,15 +461,21 @@ async function runWorking(title, sub, job) {
 }
 
 const mode = () => document.querySelector('input[name="mode"]:checked')?.value || 'vet';
+const MODES = ['vet', 'carer', 'inspector', 'adoption'];
+
+const MODE_TEXT = {
+  vet: { button: 'Create notes', placeholder: 'Your words appear here as you talk. You can also type or fix anything.' },
+  carer: { button: 'Create care plan', placeholder: 'Describe the animal, its condition, medications and anything the carer needs to know.' },
+  inspector: { button: 'Create report', placeholder: 'Case number, the animal, your findings with measurements, your opinion and treatment given.' },
+  adoption: { button: 'Create summary', placeholder: 'The animal, desexing, microchip, vaccinations, parasite treatment, health notes and diet.' },
+};
 
 function applyMode() {
   const m = mode();
   document.body.dataset.mode = m;
-  els.create.textContent = m === 'carer' ? 'Create care plan' : 'Create note';
-  els.transcript.placeholder =
-    m === 'carer'
-      ? 'Describe the animal, its condition, medications and anything the carer needs to know.'
-      : 'Your words appear here as you talk. You can also type or fix anything.';
+  els.create.textContent = MODE_TEXT[m].button;
+  els.transcript.placeholder = MODE_TEXT[m].placeholder;
+  document.querySelectorAll('[data-modes]').forEach((n) => (n.hidden = !n.dataset.modes.split(' ').includes(m)));
   if (dictation.state === 'idle' && document.body.dataset.mic !== 'keyboard') els.micStatus.textContent = idleStatus();
 }
 document.querySelectorAll('input[name="mode"]').forEach((r) =>
@@ -482,6 +500,7 @@ async function createNote() {
   const finalText = els.transcript.value.trim() || text;
   try {
     if (mode() === 'carer') return await createCarePlan(finalText);
+    if (DOC_KINDS[mode()]) return await createDoc(mode(), finalText);
     if (!(await ensureProvider())) {
       if (finalText === EXAMPLE_DICTATION.trim()) return showNotes([normaliseNote(EXAMPLE_NOTE)], true);
       if (finalText === EXAMPLE_BATCH_DICTATION.trim()) return showNotes(EXAMPLE_BATCH_NOTES.map(normaliseNote), true);
@@ -958,6 +977,80 @@ els.careCopy.addEventListener('click', async () => {
   toast(ok ? 'Care plan copied. Paste it into an email, SMS or the discharge sheet.' : 'Couldn’t copy. Select the text and copy it instead.');
 });
 
+/* ---------------- inspector report / adoption summary ---------------- */
+
+let currentDoc = null;
+
+function renderDoc(d, kind) {
+  $('doc-title').textContent = d.title || DOC_KINDS[kind].label;
+  $('doc-subtitle').textContent = d.subtitle;
+  $('doc-subtitle').hidden = !d.subtitle;
+  const checks = $('doc-checks');
+  checks.hidden = d.check.length === 0;
+  checks.open = false;
+  $('doc-check-count').textContent = d.check.length ? String(d.check.length) : '';
+  $('doc-check-list').replaceChildren(...d.check.map((c) => el('li', { text: c })));
+  $('doc').replaceChildren(
+    ...d.sections.map((s) =>
+      el('section', { class: 'doc-sec' }, [el('h2', { text: s.heading }), s.text ? el('p', { text: s.text }) : list(s.items)]),
+    ),
+    ...(d.due.length
+      ? [
+          el('section', { class: 'doc-sec due' }, [
+            el('h2', { text: 'What’s due next' }),
+            el('ul', {}, d.due.map((x) => el('li', {}, [el('span', { text: x.what }), x.when ? el('span', { class: 'when', text: dueLabel(x.when) }) : null]))),
+          ]),
+        ]
+      : []),
+  );
+  $('doc-copy').textContent = kind === 'inspector' ? 'Copy report' : 'Copy summary';
+}
+
+function showDoc(d, kind, info = '') {
+  currentDoc = { d, kind };
+  renderDoc(d, kind);
+  $('doc-banner').textContent = info;
+  $('doc-banner').hidden = !info;
+  showView('doc');
+  $('doc-title').focus();
+}
+
+async function createDoc(kind, text) {
+  if (!(await ensureProvider())) {
+    const ex = { inspector: [EXAMPLE_INSPECTOR_DICTATION, EXAMPLE_INSPECTOR_DOC], adoption: [EXAMPLE_ADOPTION_DICTATION, EXAMPLE_ADOPTION_DOC] }[kind];
+    if (ex && text === ex[0].trim()) return showDoc(normaliseDoc(ex[1]), kind, `This is the example ${DOC_KINDS[kind].label.toLowerCase()}.`);
+    banner(NO_CLAUDE, 'info');
+    return;
+  }
+  if (photos.length && !provider.images) {
+    banner('Photos can’t be sent from this version. Remove them to continue.', 'error');
+    return;
+  }
+  banner('');
+  const reply = await runWorking(`Writing the ${DOC_KINDS[kind].label.toLowerCase()}`, kind === 'inspector' ? 'Objective findings, kept separate from opinion.' : 'Plain English for the new owner.', (signal) =>
+    provider.generate(buildDocPrompt(kind, text, { clinician: settings.clinician, photoCount: photos.length }), signal, { images: photos }),
+  );
+  const d = normaliseDoc(extractJson(reply));
+  if (!d.sections.length) throw new AiError('empty', '');
+  showDoc(d, kind);
+}
+
+$('doc-back').addEventListener('click', () => showView('record'));
+$('doc-copy').addEventListener('click', async () => {
+  if (!currentDoc) return;
+  const ok = await copyText(docText(currentDoc.d));
+  toast(ok ? 'Copied. Paste it wherever it needs to go.' : 'Couldn’t copy. Select the text and copy it instead.');
+});
+$('doc-new').addEventListener('click', () => {
+  const prev = els.transcript.value;
+  setTranscript('');
+  photos = [];
+  renderPhotos();
+  showView('record');
+  els.mic.focus();
+  toast('Ready for the next one.', { label: 'Undo', run: () => { setTranscript(prev); currentDoc && showDoc(currentDoc.d, currentDoc.kind); } });
+});
+
 /* ---------------- how it works ---------------- */
 
 els.about.innerHTML = ABOUT_HTML; // static, trusted content
@@ -1041,7 +1134,7 @@ els.forget.addEventListener('click', () => {
 
 /* ---------------- start up ---------------- */
 
-const startMode = settings.mode === 'carer' ? 'carer' : 'vet';
+const startMode = MODES.includes(settings.mode) ? settings.mode : 'vet';
 document.querySelector(`input[name="mode"][value="${startMode}"]`).checked = true;
 applyMode();
 setTranscript(store.loadDraft());

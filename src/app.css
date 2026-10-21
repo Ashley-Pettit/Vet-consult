@@ -485,16 +485,14 @@ details.checks > summary:focus-visible { outline: 3px solid var(--accent); outli
 /* Vet note / Carer plan switch */
 .mode {
   display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin: 0; padding: 4px; border: 0; min-width: 0;
-  background: var(--surface); border-radius: 999px; box-shadow: inset 0 0 0 1px var(--line);
+  background: var(--surface); border-radius: 22px; box-shadow: inset 0 0 0 1px var(--line);
 }
+@media (min-width: 640px) { .mode { grid-template-columns: repeat(4, 1fr); border-radius: 999px; } }
 .mode label { position: relative; }
 .mode input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
 .mode span { display: block; text-align: center; padding: 10px 8px; border-radius: 999px; font-weight: 750; color: var(--muted); }
 .mode input:checked + span { background: var(--accent); color: var(--accent-ink); }
 .mode input:focus-visible + span { outline: 3px solid var(--accent); outline-offset: 2px; }
-div.vet-only { display: contents; }
-body[data-mode="carer"] .vet-only { display: none !important; }
-body:not([data-mode="carer"]) .carer-only { display: none !important; }
 .mode-intro { margin: 0; color: var(--muted); text-align: center; font-size: 0.95rem; }
 body[data-mode="carer"] .mic { background: var(--leaf); box-shadow: 0 0 0 10px color-mix(in srgb, var(--leaf) 18%, transparent), var(--shadow); }
 
@@ -504,3 +502,13 @@ body[data-mode="carer"] .mic { background: var(--leaf); box-shadow: 0 0 0 10px c
 .sources { margin: 0; padding-left: 20px; font-size: 0.88rem; display: grid; gap: 4px; }
 .sources a { word-break: break-word; }
 .scope { display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 6px; font-size: 0.68rem; font-weight: 750; background: var(--accent-soft); color: var(--accent); }
+
+/* Inspector report / adoption summary */
+.doc .doc-sec { display: flex; flex-direction: column; gap: 6px; }
+.doc .doc-sec h2 { margin: 0; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent); }
+.doc .doc-sec p { margin: 0; line-height: 1.6; }
+.doc .doc-sec ul { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+.doc .due { background: var(--accent-soft); border-radius: 12px; padding: 12px 14px; }
+.doc .due li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; }
+.doc .due .when { font-weight: 700; font-variant-numeric: tabular-nums; }
+.plain-list { list-style: disc; padding: 0 16px 12px 36px !important; display: grid; gap: 4px; }
