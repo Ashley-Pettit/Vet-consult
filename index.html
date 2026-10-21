@@ -55,11 +55,12 @@
 
     <p class="mode-intro" data-modes="intake">Just picked one up? Talk through the rescue: where, when, what you saw and what you did.</p>
     <p class="mode-intro" data-modes="log">Talk through today: weight, feeds, meds, toileting and anything you’re watching.</p>
-    <p class="mode-intro" data-modes="carer">Describe the animal and what it needs. You get a plan another carer can follow on their own.</p>
+    <p class="mode-intro" data-modes="carer" data-roles-text="carer">Describe the animal and what it needs. You get a plan another carer can follow on their own.</p>
+    <p class="mode-intro" data-modes="carer" data-roles-text="vet">Talk through the animal and its treatment. Shorthand is fine. You get a plan the carer can follow on their own.</p>
     <p class="mode-intro" data-modes="tovet">Talk through what’s been happening and what you want to ask. You get a summary the vet can read in a minute.</p>
     <h2 class="mode-title" data-modes="funding">Funding submission</h2>
     <p class="mode-intro" data-modes="funding">Applying for a grant? Talk through what you need, why, the costs and the numbers. You get a draft submission to polish.</p>
-    <p class="mode-intro" data-modes="vet">For vets: talk through the exam and plan. You get tidy clinical notes.</p>
+    <p class="mode-intro" data-modes="vet">Talk through the exam and plan. Shorthand is fine. You get notes ready to copy into your system.</p>
 
     <div class="mic-zone">
       <button id="mic" class="mic" type="button" aria-pressed="false" aria-describedby="mic-status">
@@ -125,6 +126,7 @@
       </button>
       <div class="note-title-row">
         <h1 id="note-title" tabindex="-1">Clinical note</h1>
+        <button type="button" class="btn small primary copy-top" id="copy-top"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>Copy</button>
       </div>
     </div>
 
@@ -137,6 +139,11 @@
       <ul id="check-list"></ul>
     </details>
 
+    <details id="gaps" class="gaps" hidden>
+      <summary>Ideally also include <span class="count" id="gap-count"></span></summary>
+      <p class="help">Optional. The note is fine without these. Tap Add more info to add any.</p>
+      <ul id="gap-list"></ul>
+    </details>
     <article id="note" class="note" aria-label="Formatted clinical note"></article>
 
     <section class="pms" aria-labelledby="pms-title">
@@ -166,7 +173,10 @@
         <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
         <span id="care-back-label">Back to note</span>
       </button>
-      <h1 id="care-title" tabindex="-1">Care at home</h1>
+      <div class="note-title-row">
+        <h1 id="care-title" tabindex="-1">Care at home</h1>
+        <button type="button" class="btn small primary copy-top" id="care-copy-top"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>Copy</button>
+      </div>
       <p class="muted">Everything the carer needs to look after the animal on their own. Check it, then copy it into an email, SMS or the discharge sheet.</p>
     </div>
     <p id="care-banner" class="banner" data-tone="info" hidden></p>

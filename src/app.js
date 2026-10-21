@@ -483,7 +483,7 @@ async function runWorking(title, sub, job) {
 
 const mode = () => document.querySelector('input[name="mode"]:checked')?.value || 'vet';
 const MODES = ['intake', 'log', 'carer', 'tovet', 'funding', 'vet'];
-const ROLE_MODES = { carer: ['intake', 'log', 'carer', 'tovet', 'funding'], vet: ['vet', 'carer'] };
+const ROLE_MODES = { carer: ['intake', 'log', 'carer', 'tovet', 'funding'], vet: ['carer', 'vet'] };
 
 const MODE_TEXT = {
   vet: { button: 'Create notes', placeholder: 'Your words appear here as you talk. You can also type or fix anything.' },
@@ -503,7 +503,7 @@ function applyRole() {
   applyRoleLabel();
 }
 function applyRoleLabel() {
-  $('role-switch').textContent = settings.role === 'vet' ? 'Wildlife carer? Switch to carer tools' : 'Are you the vet? Switch to clinical notes';
+  $('role-switch').textContent = settings.role === 'vet' ? 'Wildlife carer? Switch to carer tools' : 'Are you the vet? Switch to vet tools';
 }
 $('role-switch').addEventListener('click', () => {
   if (mode() === 'funding') return chooseMode('intake'); // funding lives in Settings; this is the way back
@@ -584,6 +584,7 @@ async function createNote() {
     const list = normaliseResult(extractJson(result));
     if (!list.length) throw new AiError('empty', '');
     for (const n of list) if (!n.visit.type) n.visit.type = NOTE_TYPES.consult.title;
+    madeFrom.vet = { text: els.transcript.value, notes: list };
     showNotes(list, false);
   } catch (e) {
     showView('record');
@@ -756,6 +757,38 @@ async function applyAnswer(item, answer) {
   }
 }
 
+// What a full record would ideally have, worked out on the device from the empty fields. Shown collapsed.
+function noteGaps(n) {
+  const p = n.patient;
+  const vt = n.objective.vitals;
+  const euth = /euthanasia/i.test(n.visit.type);
+  return [
+    [!p.name && !p.animal_id, 'Name or animal ID'],
+    [!p.species, 'Species'],
+    [!p.sex, 'Sex'],
+    [!p.age, 'Age or life stage'],
+    [!p.weight_kg, 'Weight'],
+    [!euth && !vt.temp_c, 'Temperature'],
+    [!euth && !vt.hr_bpm, 'Heart rate'],
+    [!euth && !vt.rr_bpm, 'Respiratory rate'],
+    [!vt.bcs, 'Body condition score'],
+    [!euth && !vt.mm_crt, 'Mucous membranes and CRT'],
+    [!euth && !vt.hydration, 'Hydration'],
+    [!n.subjective, 'History or reason for visit'],
+    [!n.assessment.problems.length, 'Assessment'],
+    [!(n.plan.procedures.length || n.plan.diagnostics.length || n.plan.treatments.length || n.plan.follow_up.length), 'Plan'],
+    [!euth && !n.plan.follow_up.length, 'Follow-up or recheck'],
+    [!n.visit.clinician, 'Vet name (set it once in Settings)'],
+  ].filter(([missing]) => missing).map(([, label]) => label);
+}
+function renderGaps(n) {
+  const gaps = noteGaps(n);
+  $('gaps').hidden = !gaps.length;
+  $('gaps').open = false;
+  $('gap-count').textContent = String(gaps.length);
+  $('gap-list').replaceChildren(...gaps.map((g) => el('li', { text: g })));
+}
+
 function renderNote() {
   const n = currentNote();
   if (!n) return;
@@ -764,18 +797,19 @@ function renderNote() {
   const local = localChecks(n);
   renderAnimals();
   renderChecks(n, local);
+  renderGaps(n);
   els.noteTitle.textContent = n.visit.type || 'Clinical note';
   els.care.hidden = /euthanasia/i.test(n.visit.type);
 
   const patient = el('div', { class: 'patient' }, [
     el('p', { class: 'pname' }, [
-      el('strong', { text: p.name || 'Unnamed patient' }),
-      el('span', { text: [p.species, p.breed].filter(Boolean).join(' · ') }),
+      el('strong', { text: p.name || p.species || 'Patient' }),
+      el('span', { text: [p.name ? p.species : '', p.breed].filter(Boolean).join(' · ') }),
     ]),
     el('div', { class: 'grid' }, [
-      kv('Sex', p.sex), kv('Age', p.age), kv('Weight', p.weight_kg, ' kg'), kv('Animal ID', p.animal_id),
-      kv('Microchip', p.microchip), kv('Intake', p.intake_type), kv('Clinician', n.visit.clinician),
-    ]),
+      p.sex && kv('Sex', p.sex), p.age && kv('Age', p.age), p.weight_kg && kv('Weight', p.weight_kg, ' kg'), p.animal_id && kv('Animal ID', p.animal_id),
+      p.microchip && kv('Microchip', p.microchip), p.intake_type && kv('Intake', p.intake_type), n.visit.clinician && kv('Clinician', n.visit.clinician),
+    ].filter(Boolean)),
   ]);
 
   const vitals = el('div', { class: 'vitals' }, [
@@ -783,9 +817,12 @@ function renderNote() {
     kv('HR', vt.hr_bpm, vt.hr_bpm && /^\d+$/.test(vt.hr_bpm) ? ' bpm' : '', local.flags.hr_bpm),
     kv('RR', vt.rr_bpm, vt.rr_bpm && /^\d+$/.test(vt.rr_bpm) ? ' bpm' : '', local.flags.rr_bpm),
     kv('BCS', vt.bcs), kv('MM / CRT', vt.mm_crt), kv('Hydration', vt.hydration),
-  ]);
+  ].filter((x) => !x.querySelector('.nr')));
 
-  const exam = [vitals, list(n.objective.findings)];
+  // A quick shorthand dictation should read as a finished note: only show what was said.
+  const exam = [];
+  if (vitals.children.length) exam.push(vitals);
+  if (n.objective.findings.length) exam.push(list(n.objective.findings));
   if (n.objective.photo_findings.length || photosForNote().length) {
     exam.push(el('h3', { text: 'From photos' }));
     if (photosForNote().length) exam.push(el('div', { class: 'photo-list small' }, photosForNote().map((ph, i) => el('figure', { class: 'thumb' }, [el('img', { src: ph.url, alt: `Photo ${i + 1}` }), el('figcaption', { text: String(i + 1) })]))));
@@ -811,17 +848,16 @@ function renderNote() {
     );
   }
   if (n.plan.follow_up.length) plan.push(el('h3', { text: 'Follow-up' }), list(n.plan.follow_up));
-  if (!plan.length) plan.push(el('p', { class: 'nr', text: NOT_RECORDED }));
 
-  const assess = [list(n.assessment.problems, true)];
+  const assess = n.assessment.problems.length ? [list(n.assessment.problems, true)] : [];
   if (n.assessment.differentials.length) assess.push(el('h3', { text: 'Differentials' }), list(n.assessment.differentials));
 
   els.note.replaceChildren(
     patient,
-    soap('S', 'History', el('p', { class: n.subjective ? '' : 'nr', text: n.subjective || NOT_RECORDED })),
-    soap('O', 'Examination', exam),
-    soap('A', 'Assessment', assess),
-    soap('P', 'Plan', plan),
+    ...(n.subjective ? [soap('S', 'History', el('p', { text: n.subjective }))] : []),
+    ...(exam.length ? [soap('O', 'Examination', exam)] : []),
+    ...(assess.length ? [soap('A', 'Assessment', assess)] : []),
+    ...(plan.length ? [soap('P', 'Plan', plan)] : []),
     ...(n.welfare_notes ? [soap('W', 'Welfare notes', el('p', { text: n.welfare_notes }))] : []),
   );
 
@@ -1032,6 +1068,8 @@ async function openCare() {
   const n = currentNote();
   if (!n) return;
   if (careSheet && careFrom === 'note') return showCare(careSheet, 'note', els.careBanner.hidden ? '' : els.careBanner.textContent);
+  // Already made from these same words (a vet often makes the plan first): show it, no second call.
+  if (madeFrom.carer && madeFrom.carer.text === els.transcript.value) return showCare(madeFrom.carer.sheet, 'record', madeFrom.carer.info);
   if (!(await ensureProvider())) {
     if (isExample && n.patient.name === 'Rusty') showCare(normaliseCareSheet(EXAMPLE_CARE_SHEET, SOURCE_IDS()), 'note', 'This is the example care plan.');
     else toast(inClaude ? 'Claude isn’t available right now.' : 'Care plans for your own notes need the Claude app version.');
@@ -1058,13 +1096,16 @@ async function createCarePlan(text) {
   }
   banner('');
   const reply = await runWorking('Writing the care plan', 'Everything the carer needs, from Victorian guidance.', (signal) =>
-    provider.generate(buildCarerPlanPrompt(text, sourcesForPrompt()), signal, { images: photos }),
+    provider.generate(buildCarerPlanPrompt(text, sourcesForPrompt(), { fromVet: settings.role === 'vet' }), signal, { images: photos }),
   );
   notes = [];
   showCare(normaliseCareSheet(extractJson(reply), SOURCE_IDS()), 'record');
 }
 
 els.care.addEventListener('click', openCare);
+// Copy sits top right too, so a busy vet never has to scroll for it.
+$('copy-top').addEventListener('click', () => els.copy.click());
+$('care-copy-top').addEventListener('click', () => els.careCopy.click());
 $('care-back').addEventListener('click', () => showView(careFrom === 'note' ? 'note' : 'record'));
 // A plan made straight from the carer's words can take more info in place; one made from a vet note goes back to it.
 $('care-back-2').addEventListener('click', () => (careFrom === 'note' ? showView('note') : addMoreInfo()));
@@ -1165,7 +1206,9 @@ const MAKE_NEXT = [
   ['tovet', 'For the vet'],
 ];
 function renderMakeNext(box, current) {
-  const options = current && current !== 'funding' && settings.role !== 'vet' ? MAKE_NEXT.filter(([m]) => m !== current) : [];
+  // A vet flicks between the carer plan and clinical notes from the same words, to copy either into their system.
+  const pool = settings.role === 'vet' ? [['carer', 'Carer plan'], ['vet', 'Clinical notes']] : MAKE_NEXT;
+  const options = current && current !== 'funding' ? pool.filter(([m]) => m !== current) : [];
   box.hidden = !options.length;
   if (!options.length) return box.replaceChildren();
   box.replaceChildren(
@@ -1201,7 +1244,10 @@ async function makeNext(m) {
   settings.mode = m;
   store.saveSettings(settings);
   const prev = madeFrom[m];
-  if (prev && prev.text === els.transcript.value) return m === 'carer' ? showCare(prev.sheet, 'record', prev.info) : showDoc(prev.d, m, prev.info);
+  if (prev && prev.text === els.transcript.value) {
+    if (m === 'vet') return showNotes(prev.notes, false);
+    return m === 'carer' ? showCare(prev.sheet, 'record', prev.info) : showDoc(prev.d, m, prev.info);
+  }
   await createNote();
 }
 

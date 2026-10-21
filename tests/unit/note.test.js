@@ -94,11 +94,11 @@ test('isEmptyNote spots a blank reply', () => {
   assert.equal(isEmptyNote(normaliseNote(SAMPLE_NOTE)), false);
 });
 
-test('plain text has every SOAP section and marks gaps', () => {
+test('plain text has every SOAP section said, and no gaps for what was not', () => {
   const n = normaliseNote(SAMPLE_NOTE);
   const t = toPlainText(n, new Date(2026, 9, 21, 9, 5));
   assert.match(t, /^SHELTER INTAKE EXAM - 21\/10\/2026 09:05/);
-  assert.match(t, new RegExp(`Clinician: ${NOT_RECORDED}`));
+  assert.doesNotMatch(t, /Clinician:|Not recorded/);
   assert.match(t, /Patient: Rusty \| Canine \| Kelpie cross \| Male entire/);
   assert.match(t, /14\.2 kg/);
   assert.match(t, /\nS: Stray presented/);
@@ -107,9 +107,10 @@ test('plain text has every SOAP section and marks gaps', () => {
   assert.match(t, /- Rx: Cephalexin 22 mg\/kg PO BID x 7 days/);
   assert.match(t, /- Rx: Fluralaner \(Bravecto\) Per label PO Once/);
   const empty = toPlainText(normaliseNote({}));
-  assert.match(empty, /S: Not recorded/);
-  assert.match(empty, /A:\nNot recorded/);
-  assert.match(empty, /P:\nNot recorded/);
+  assert.doesNotMatch(empty, /Not recorded|S:|A:|P:/);
+  // Quick shorthand: only what was said, nothing that looks unfinished.
+  const quick = toPlainText(normaliseNote({ patient: { species: 'Wombat' }, plan: { follow_up: ['Recheck in 7 days'] } }));
+  assert.match(quick, /Patient: Wombat\n\nP:\n- Recheck in 7 days$/);
 });
 
 test('formatDate pads to dd/mm/yyyy hh:mm', () => {
