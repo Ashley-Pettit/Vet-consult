@@ -172,7 +172,7 @@ document.body.dataset.voice = keyboardVoice ? 'keyboard' : 'live';
 
 // Android phones get step-by-step help: the keyboard mic is easy to miss and Samsung hides it.
 const ANDROID_STEPS = [
-  'Tap the 🎤 on your keyboard. It’s usually top right.',
+  'Tap the 🎤 in the row just above the letters. It can be on the left or the right, depending on your keyboard.',
   'Talk. Your words appear in the box.',
   'Tap Create when you’re done.',
 ];
