@@ -1,4 +1,5 @@
 import { CONFIG } from './config.js';
+import { NEVER_GIVE_IDS, neverGiveForPrompt, lookupNeverGive, NEVER_GIVE_FOOTER } from './never-give.js';
 
 // Pure logic: prompt, parsing, normalising and plain-text formatting of clinical notes.
 // No DOM access here so it can be unit tested in Node.
@@ -176,7 +177,7 @@ const CARE_SHAPE = `{"animal":"","species":"","kind":"domestic|wildlife","summar
 "daily_checks":[],"log_days":7,
 "release":{"ready_when":[],"how":[],"where":""},
 "escalate":{"vet":[],"urgent":[]},"no_vet":[],
-"next_visit":"","sources":[]}`;
+"next_visit":"","sources":[],"never_give":[]}`;
 
 /** Rules shared by every carer plan, whether it starts from a vet note or straight from a dictation. */
 function careRules(sourceList) {
@@ -199,6 +200,10 @@ Rules:
 
 Reference sources (id | scope | title | key points):
 ${sourceList}
+
+- never_give: the ids of the warnings below that apply to this animal and its situation, most important first, at most 6. Only ids from this list; leave it empty if none clearly apply.
+Never give or do (id | species | warning):
+${neverGiveForPrompt()}
 
 Reply with ONLY one JSON object in this shape:
 ${CARE_SHAPE}`;
@@ -459,7 +464,16 @@ export function normaliseCareSheet(raw, knownSources = null) {
     no_vet: arr(r.no_vet, 8),
     next_visit: str(r.next_visit, 300),
     sources,
+    never_give: arr(r.never_give, 8).filter((id) => NEVER_GIVE_IDS().has(id)),
   };
+}
+
+function neverGiveText(ids = [], L) {
+  const ws = ids.map(lookupNeverGive).filter(Boolean);
+  if (!ws.length) return;
+  L.push('Never give or do');
+  ws.forEach((w) => L.push(`- ${w.warning} ${w.why}`));
+  L.push(NEVER_GIVE_FOOTER, '');
 }
 
 export const ADVICE_NOTE = 'General first aid only. Check it with a vet or Wildlife Victoria as soon as you can. AI tools can make mistakes.';
@@ -517,6 +531,7 @@ export function careSheetText(c, lookup = () => null) {
     L.push('');
   }
   if (c.next_visit) L.push(`Next visit: ${c.next_visit}`, '');
+  neverGiveText(c.never_give, L);
   const refs = c.sources.map(lookup).filter(Boolean);
   if (refs.length) {
     L.push('Based on');
@@ -777,6 +792,7 @@ export const DOC_KINDS = {
     working: 'First aid for the next few hours, from Victorian guidance.',
     title: 'Advice right now: first aid for the next few hours, until a vet or experienced carer takes over',
     sources: true,
+    neverGive: true,
     rule: `The carer has just taken this animal in. Give clear, practical first-aid advice for the next few hours, based ONLY on what they said and the Victorian reference sources below. Plain, calm Australian English, short steps, most important first.
 - "title": "Advice right now:" and the animal. "subtitle": leave empty.
 - Sections, in this order, leaving out any that do not apply: "Do this now" (the first steps, such as a warm, dark, quiet box, minimal handling, keeping pets and children away), "Over the next few hours" (warmth, fluids or food only as the sources allow for this kind of animal, checking on it, what to record), "Don't" (things that could harm it, from the sources, for example giving food or water to a joey, or any medication), "Get help straight away if" (signs that need a vet or Wildlife Victoria urgently), "Who to call".
@@ -787,7 +803,7 @@ export const DOC_KINDS = {
   }
 };
 
-const DOC_SHAPE = `{"title":"","subtitle":"","sections":[{"heading":"","text":"","items":[]}],"due":[{"what":"","when":""}],"check":[]}`;
+const DOC_SHAPE = `{"title":"","subtitle":"","sections":[{"heading":"","text":"","items":[]}],"due":[{"what":"","when":""}],"check":[],"never_give":[]}`;
 
 export function buildDocPrompt(kind, dictation, opts = {}) {
   const k = DOC_KINDS[kind];
@@ -798,7 +814,9 @@ export function buildDocPrompt(kind, dictation, opts = {}) {
     : '';
   return `You are a scribe for a wildlife carer at ${CONFIG.clinicDescription}. Turn the carer's spoken comments into this document: ${k.title}.
 ${k.rule}
-${k.sources && opts.sourceList ? `\nReference sources (id | scope | title | key points):\n${opts.sourceList}\n` : ''}${clinician}${photos}General rules:
+${k.sources && opts.sourceList ? `\nReference sources (id | scope | title | key points):\n${opts.sourceList}\n` : ''}${k.neverGive ? `\n- never_give: the ids of the warnings below that apply to this animal and its situation, most important first, at most 6. Only ids from this list; leave it empty if none clearly apply.
+Never give or do (id | species | warning):
+${neverGiveForPrompt()}\n` : ''}${clinician}${photos}General rules:
 - Australian English and metric units.
 - NEVER invent findings, values, doses, dates, names or numbers. Leave out what was not said.
 - Speech recognition may mishear drug, species and place names; correct obvious mishearings and add each to "check".
@@ -832,6 +850,7 @@ export function normaliseDoc(raw) {
       .filter((d) => d.what)
       .slice(0, 12),
     check: arr(r.check, 5),
+    never_give: arr(r.never_give, 8).filter((id) => NEVER_GIVE_IDS().has(id)),
   };
 }
 
@@ -854,7 +873,9 @@ export function docText(d, date = new Date()) {
   if (d.due.length) {
     L.push("WHAT'S DUE NEXT");
     d.due.forEach((x) => L.push(`- ${x.what}${x.when ? ': ' + dueLabel(x.when, date) : ''}`));
+    L.push('');
   }
+  neverGiveText(d.never_give, L);
   return L.join('\n').trim();
 }
 

@@ -5,6 +5,7 @@ import {
   Paragraph, ShadingType, Table, TableCell, TableLayoutType, TableRow, TextRun, VerticalAlign, WidthType,
 } from 'docx';
 import { LOGO_PNG_BASE64 } from './brand-logo.js';
+import { lookupNeverGive, NEVER_GIVE_FOOTER } from './never-give.js';
 import { dueLabel, formatDate, NOT_RECORDED, NO_VET_NOTE } from './note.js';
 
 const OLIVE = '647C50';
@@ -179,6 +180,11 @@ export async function buildWord(model, { preparedBy = '', date = new Date() } = 
 
 /* ---------------- adapters: each screen's content into the printout model ---------------- */
 
+function neverGiveBlock(ids = []) {
+  const ws = ids.map(lookupNeverGive).filter(Boolean);
+  return ws.length ? [{ heading: 'Never give or do', items: ws.map((w) => `${w.warning} ${w.why}`), note: NEVER_GIVE_FOOTER }] : [];
+}
+
 export function docModel(d, kindLabel, note = '') {
   return {
     docType: kindLabel,
@@ -193,6 +199,7 @@ export function docModel(d, kindLabel, note = '') {
         if (items.length >= 3 && pairs.every(Boolean)) return { heading: s.heading, table: { head: ['Field', 'Detail'], rows: pairs.map((m) => [m[1], m[2]]), widths: [2800, PAGE_W - 2800] } };
         return { heading: s.heading, text: s.text, items };
       }),
+      ...neverGiveBlock(d.never_give),
       ...(d.due.length ? [{ heading: 'What’s due', table: { head: ['What', 'When'], rows: d.due.map((x) => [x.what, x.when ? dueLabel(x.when) : '']), widths: [5800, PAGE_W - 5800] } }] : []),
     ],
   };
@@ -225,6 +232,7 @@ export function careModel(c, lookup) {
   }
   blocks.push({ heading: 'Call the vet within a day if', items: c.escalate.vet });
   blocks.push({ heading: 'Get vet help straight away if', items: c.escalate.urgent });
+  blocks.push(...neverGiveBlock(c.never_give));
   if (c.no_vet && c.no_vet.length) blocks.push({ heading: 'Can’t reach a vet right now?', items: c.no_vet, note: NO_VET_NOTE, noteFirst: true });
   if (c.next_visit) blocks.push({ heading: 'Next vet visit', text: c.next_visit });
   return {

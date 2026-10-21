@@ -7,6 +7,7 @@ import { preparePhoto, MAX_PHOTOS } from './photos.js';
 import { ABOUT_HTML } from './about.js';
 import { lookupSource, sourcesForPrompt, SOURCE_IDS } from './sources.js';
 import { buildWord, docModel, careModel, noteModel, wordFileName } from './word.js';
+import { lookupNeverGive, NEVER_GIVE_FOOTER } from './never-give.js';
 import {
   NOTE_TYPES,
   NOTE_TYPE_ORDER,
@@ -997,6 +998,7 @@ function renderCare(c) {
       release,
       sec('Contact the vet within a day if', c.escalate.vet, 'watch'),
       sec('Get vet help straight away (or an after-hours emergency vet) if', c.escalate.urgent, 'urgent'),
+      neverGiveSection(c.never_give),
       c.no_vet && c.no_vet.length
         ? el('section', { class: 'care-sec novet' }, [
             el('h2', { text: 'Can’t reach a vet right now?' }),
@@ -1082,6 +1084,17 @@ els.careCopy.addEventListener('click', async () => {
 
 let currentDoc = null;
 
+// The never-give warnings that apply, word for word from the checked list, each linked to its source.
+function neverGiveSection(ids = []) {
+  const ws = ids.map(lookupNeverGive).filter(Boolean);
+  if (!ws.length) return null;
+  return el('section', { class: 'care-sec never' }, [
+    el('h2', { text: 'Never give or do' }),
+    el('ul', {}, ws.map((w) => el('li', {}, [el('strong', { text: w.warning }), ' ', w.why, ' ', el('a', { href: w.url, target: '_blank', rel: 'noopener', class: 'never-src', text: w.publisher })]))),
+    el('p', { class: 'never-foot', text: NEVER_GIVE_FOOTER }),
+  ]);
+}
+
 function renderDoc(d, kind) {
   $('doc-title').textContent = d.title || DOC_KINDS[kind].label;
   $('doc-subtitle').textContent = d.subtitle;
@@ -1103,6 +1116,7 @@ function renderDoc(d, kind) {
           ]),
         ]
       : []),
+    neverGiveSection(d.never_give) || '',
   );
   $('doc-copy').textContent = DOC_KINDS[kind].copy;
 }
