@@ -1,12 +1,12 @@
 {
-  "name": "Consult Scribe",
-  "short_name": "Scribe",
+  "name": "Care Scribe",
+  "short_name": "Care Scribe",
   "description": "Dictate a vet consult and get a formal SOAP clinical note.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#f3f6f9",
-  "theme_color": "#0b5fa5",
+  "background_color": "#f6f5ea",
+  "theme_color": "#647c50",
   "lang": "en-AU",
   "icons": [
     { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },

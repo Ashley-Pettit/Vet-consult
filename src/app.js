@@ -445,7 +445,7 @@ async function ensureProvider() {
 
 const NO_CLAUDE = inClaude
   ? 'Claude isn’t available right now. Check you are signed in, then try again.'
-  : 'This public demo can’t write notes from your own dictation. Open Consult Scribe in the Claude app to use it with your Claude account. The examples work here.';
+  : 'This public demo can’t write notes from your own dictation. Open Care Scribe in the Claude app to use it with your Claude account. The examples work here.';
 
 function waitForIdle(ms = 2500) {
   return new Promise((resolve) => {
@@ -575,7 +575,7 @@ function showNotes(list, example) {
   els.noteBanner.textContent = example
     ? inClaude
       ? 'This is the example note. Dictate your own consult to see Claude write one.'
-      : 'This is the example note. In the Claude app, Consult Scribe writes notes like this from your own dictation.'
+      : 'This is the example note. In the Claude app, Care Scribe writes notes like this from your own dictation.'
     : '';
   els.noteBanner.hidden = !example;
   showView('note');
@@ -1074,7 +1074,7 @@ async function refreshConnection() {
     ? `Connected: ${p.label}`
     : inClaude
       ? 'Claude isn’t available right now.'
-      : 'Public demo. The examples work here. Open Consult Scribe in the Claude app to write notes with your Claude account.';
+      : 'Public demo. The examples work here. Open Care Scribe in the Claude app to write notes with your Claude account.';
   return p;
 }
 

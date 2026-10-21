@@ -4,7 +4,7 @@ import { SAMPLE_NOTE, DICTATION, watchErrors } from './helpers.js';
 
 // The single-file Claude artifact build, with a stand-in for Claude's runtime.
 test('artifact build writes notes through the Claude runtime', async ({ page, baseURL }) => {
-  const html = readFileSync('dist-artifact/consult-scribe.html', 'utf8');
+  const html = readFileSync('dist-artifact/care-scribe.html', 'utf8');
   const doc = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>${html}</body></html>`;
   const url = new URL('__artifact', baseURL).href;
   await page.route(url, (r) => r.fulfill({ contentType: 'text/html', body: doc }));

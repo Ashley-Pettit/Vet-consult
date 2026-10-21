@@ -25,16 +25,16 @@ const html = readFileSync(root + 'index.html', 'utf8').replace("connect-src 'sel
 writeFileSync(out + 'index.html', html.replace('app.js"', `app.js?v=${version}"`).replace('app.css"', `app.css?v=${version}"`));
 writeFileSync(out + 'sw.js', readFileSync(out + 'sw.js', 'utf8').replace('__VERSION__', version));
 writeFileSync(out + '.nojekyll', '');
-writeFileSync(out + '404.html', html.replace(/<main[\s\S]*<\/main>/, '<main><p>Page not found. <a href="./">Open Consult Scribe</a></p></main>').replace(/<script[\s\S]*?<\/script>/g, ''));
+writeFileSync(out + '404.html', html.replace(/<main[\s\S]*<\/main>/, '<main><p>Page not found. <a href="./">Open Care Scribe</a></p></main>').replace(/<script[\s\S]*?<\/script>/g, ''));
 
 // Single-file artifact build: inline everything, no CSP meta, no manifest/service worker.
 const iife = await build({ ...common, entryPoints: [root + 'src/app.js'], format: 'iife', write: false });
 const body = html.match(/<body>([\s\S]*)<\/body>/)[1].replace(/<script[\s\S]*?<\/script>/, '');
 const artifact =
-  `<title>Consult Scribe</title>\n<meta name="claude:viewport-fit-sides" content="cover">\n<style>${css}` +
+  `<title>Care Scribe</title>\n<meta name="claude:viewport-fit-sides" content="cover">\n<style>${css}` +
   // Inside Claude the page already sits below the status bar, so the header must not add that space again.
   `.band{padding-top:0}.bar{padding-top:8px;padding-bottom:8px}</style>\n` +
   body +
   `<script>${iife.outputFiles[0].text.replace(/<\/script/gi, '<\\/script')}</script>\n`;
-writeFileSync(art + 'consult-scribe.html', artifact);
+writeFileSync(art + 'care-scribe.html', artifact);
 console.log(`built ${version}: app.js ${js.length} B, app.css ${css.length} B, artifact ${artifact.length} B`);

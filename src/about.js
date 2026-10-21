@@ -1,4 +1,4 @@
-// "How it works": a short, user-first tour of what Consult Scribe does for a shelter vet.
+// "How it works": a short, user-first tour of what Care Scribe does for a shelter vet.
 // Static, trusted markup only.
 const icon = (d) =>
   `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
@@ -27,7 +27,7 @@ export const ABOUT_HTML = `
 <div class="hero">
   <p class="eyebrow">How it works</p>
   <h1 tabindex="-1">Spend your time on the animals, not the keyboard</h1>
-  <p class="lede">Talk through the consult the way you would to a colleague. Consult Scribe turns it into tidy SOAP notes, ready to paste into your PMS before the next patient is on the table.</p>
+  <p class="lede">Talk through the consult the way you would to a colleague. Care Scribe turns it into tidy SOAP notes, ready to paste into your PMS before the next patient is on the table.</p>
   <div class="hero-ctas">
     <button type="button" class="btn primary" data-action="start">Start a consult</button>
     <button type="button" class="btn ghost" data-action="example">Try the example</button>
@@ -64,7 +64,7 @@ export const ABOUT_HTML = `
     ${feature(I.pill, 'Doses worked out, for you to confirm', 'Say “22 mg per kg” and you’ll see the total for this patient’s weight beside it. It’s a prompt, never written into the record without you.')}
     ${feature(I.ask, 'Fill the gaps without typing', 'Forgot to say who consented, or the sedation dose? Tap Answer on the check item, say it, and the note updates in the right place.')}
     ${feature(I.heart, 'Carer plans grounded in Queensland guidance', 'Medications, a day-by-day plan, housing, feeding and, for wildlife, release. Based on the Queensland code of practice and other checked Australian sources, with the vet only for escalations.')}
-    ${feature(I.paws, 'A litter or a seizure? Dictate the lot', 'Just talk through each animal. Consult Scribe spots that there are several and writes a separate note for every one, with the shared case details in each.')}
+    ${feature(I.paws, 'A litter or a seizure? Dictate the lot', 'Just talk through each animal. Care Scribe spots that there are several and writes a separate note for every one, with the shared case details in each.')}
     ${feature(I.cam, 'Photos that become findings', 'Add photos of wounds or body condition. Claude describes only what is clearly visible, objectively, so inspectorate notes stay evidence-ready.')}
     ${feature(I.pulse, 'Odd vitals get flagged', 'Temperatures, heart rates and resp rates outside the usual range for dogs, cats, rabbits, guinea pigs and ferrets are highlighted so you can double-check.')}
     ${feature(I.list, 'Four outputs from one recording', 'Clinical notes for the PMS, a carer plan, a formal inspector report or a friendly adoption summary. Just say what it is: a consult, intake, surgery or euthanasia is written the way that record should be.')}
@@ -85,7 +85,7 @@ export const ABOUT_HTML = `
   <div class="safe-icon">${I.shield}</div>
   <div>
     <h2>You stay in charge of the record</h2>
-    <p>Consult Scribe drafts. The vet decides. Nothing is saved to a server by the app and it never writes to your PMS on its own. Every note, dose and care sheet is reviewed and pasted by a person.</p>
+    <p>Care Scribe drafts. The vet decides. Nothing is saved to a server by the app and it never writes to your PMS on its own. Every note, dose and care sheet is reviewed and pasted by a person.</p>
   </div>
 </section>
 
@@ -95,7 +95,7 @@ export const ABOUT_HTML = `
   <details class="faq"><summary>Does it connect to our PMS?</summary><p>It works with any PMS by copy and paste, so there’s nothing to install or integrate. Each part goes into its own field.</p></details>
   <details class="faq"><summary>What if it mishears a drug name?</summary><p>It corrects obvious veterinary mishearings and tells you it did, in the check list, so you can confirm before saving.</p></details>
   <details class="faq"><summary>Which devices does it work on?</summary><p>Phones, tablets and computers. On a phone it uses your keyboard’s own voice typing, which is fast and accurate on both iPhone and Android.</p></details>
-  <details class="faq"><summary>Where does my dictation go?</summary><p>Your words are turned into text by your phone or browser’s voice typing (Apple, Google or Microsoft, depending on the device), and the note is written by Claude. Nothing is stored by Consult Scribe. Avoid dictating owner contact details unless your organisation has approved it.</p></details>
+  <details class="faq"><summary>Where does my dictation go?</summary><p>Your words are turned into text by your phone or browser’s voice typing (Apple, Google or Microsoft, depending on the device), and the note is written by Claude. Nothing is stored by Care Scribe. Avoid dictating owner contact details unless your organisation has approved it.</p></details>
 </section>
 
 <div class="about-cta">
