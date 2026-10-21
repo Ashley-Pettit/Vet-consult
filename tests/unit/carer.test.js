@@ -53,3 +53,11 @@ test('plain text plan: release, escalation and Based on, no reporting to the vet
   assert.match(t, /https:\/\/vic\.gov\.au\//);
   assert.doesNotMatch(t, /message the|report to the vet|keep the clinic updated/i);
 });
+
+test('care plan: no-vet first aid never adds medication, and says AI can be wrong', () => {
+  const p = buildCarerPlanPrompt('wombat', sourcesForPrompt());
+  assert.match(p, /"no_vet":\[\]/);
+  assert.match(p, /NEVER suggest giving any medication, dose, sedation, euthanasia or procedure/);
+  const t = careSheetText(normaliseCareSheet({ ...EXAMPLE_CARER_PLAN, no_vet: ['Keep it in a warm, dark, quiet box'] }, SOURCE_IDS()), lookupSource);
+  assert.match(t, /Can't reach a vet right now\?\nThis guidance should be checked by a vet as soon as one is available\. AI tools can make mistakes\.\n- Keep it in a warm/);
+});

@@ -5,7 +5,7 @@ import {
   Paragraph, ShadingType, Table, TableCell, TableLayoutType, TableRow, TextRun, VerticalAlign, WidthType,
 } from 'docx';
 import { LOGO_PNG_BASE64 } from './brand-logo.js';
-import { dueLabel, formatDate, NOT_RECORDED } from './note.js';
+import { dueLabel, formatDate, NOT_RECORDED, NO_VET_NOTE } from './note.js';
 
 const OLIVE = '647C50';
 const TERRA = 'AB6555';
@@ -144,10 +144,11 @@ export async function buildWord(model, { preparedBy = '', date = new Date() } = 
   for (const b of model.blocks) {
     if (!b.heading || (!b.text && !(b.items && b.items.length) && !b.table)) continue;
     body.push(heading(b.heading));
+    if (b.note && b.noteFirst) body.push(new Paragraph({ spacing: { after: 80 }, children: [run(b.note, { italics: true, color: TERRA, size: 19 })] }));
     if (b.text) String(b.text).split(/\n+/).forEach((t) => body.push(para(t)));
     if (b.items) b.items.forEach((t) => body.push(bullet(t)));
     if (b.table) body.push(table(b.table.head, b.table.rows, b.table.widths), new Paragraph({ spacing: { after: 60 }, children: [] }));
-    if (b.note) body.push(new Paragraph({ spacing: { before: 60 }, children: [run(b.note, { italics: true, color: MUTED, size: 18 })] }));
+    if (b.note && !b.noteFirst) body.push(new Paragraph({ spacing: { before: 60 }, children: [run(b.note, { italics: true, color: MUTED, size: 18 })] }));
   }
   if (model.sources && model.sources.length) {
     body.push(heading('Based on'));
@@ -223,6 +224,7 @@ export function careModel(c, lookup) {
   }
   blocks.push({ heading: 'Call the vet within a day if', items: c.escalate.vet });
   blocks.push({ heading: 'Get vet help straight away if', items: c.escalate.urgent });
+  if (c.no_vet && c.no_vet.length) blocks.push({ heading: 'Can’t reach a vet right now?', items: c.no_vet, note: NO_VET_NOTE, noteFirst: true });
   if (c.next_visit) blocks.push({ heading: 'Next vet visit', text: c.next_visit });
   return {
     docType: 'Care plan',

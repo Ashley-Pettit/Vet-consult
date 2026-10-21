@@ -41,6 +41,7 @@ import {
   normaliseResult,
   normaliseCareSheet,
   careSheetText,
+  NO_VET_NOTE,
   pmsSections,
   toPlainText,
 } from './note.js';
@@ -969,6 +970,13 @@ function renderCare(c) {
       release,
       sec('Contact the vet within a day if', c.escalate.vet, 'watch'),
       sec('Get vet help straight away (or an after-hours emergency vet) if', c.escalate.urgent, 'urgent'),
+      c.no_vet && c.no_vet.length
+        ? el('section', { class: 'care-sec novet' }, [
+            el('h2', { text: 'Can’t reach a vet right now?' }),
+            el('p', { class: 'novet-note', text: NO_VET_NOTE }),
+            list(c.no_vet),
+          ])
+        : null,
       c.next_visit ? el('section', { class: 'care-sec next' }, [el('h2', { text: 'Next visit' }), el('p', { text: c.next_visit })]) : null,
       refs.length
         ? el('section', { class: 'care-sec' }, [
