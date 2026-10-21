@@ -46,7 +46,7 @@ test('vital flags, dose totals and PMS field copy', async ({ page, context }) =>
   await expect(page.locator('#check-list')).toContainText('high for a dog');
 
   // Prescriptions and reminders each show in full, with Copy top right.
-  const rows = page.locator('.pms-row');
+  const rows = page.locator('.pms-part');
   await expect(rows).toHaveCount(2);
   await expect(rows.nth(0).locator('.pms-full')).toContainText('Meloxicam 0.1 mg/kg PO SID x 5 days');
   await rows.nth(0).getByRole('button').click();

@@ -893,7 +893,7 @@ function renderPms(sec) {
         if (ok) toast(`${label} copied. Paste into that field in your system.`);
         setTimeout(() => (btn.textContent = 'Copy'), 2500);
       });
-      return el('section', { class: 'plain-sec pms-row' }, [
+      return el('section', { class: 'plain-sec pms-part' }, [
         el('div', { class: 'sec-head' }, [el('h2', { text: label }), btn]),
         el('pre', { class: 'pms-full', text: sec[key] }),
       ]);
@@ -1110,6 +1110,7 @@ els.care.addEventListener('click', openCare);
 // Copy sits top right too, so a busy vet never has to scroll for it.
 $('copy-top').addEventListener('click', () => els.copy.click());
 $('care-copy-top').addEventListener('click', () => els.careCopy.click());
+$('doc-copy-top').addEventListener('click', () => $('doc-copy').click());
 $('care-back').addEventListener('click', () => showView(careFrom === 'note' ? 'note' : 'record'));
 // A plan made straight from the carer's words can take more info in place; one made from a vet note goes back to it.
 $('care-back-2').addEventListener('click', () => (careFrom === 'note' ? showView('note') : addMoreInfo()));

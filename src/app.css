@@ -361,10 +361,6 @@ label.btn:focus-within { outline: 3px solid var(--accent); outline-offset: 2px; 
 /* PMS copy rows */
 .pms { background: var(--surface); border-radius: var(--radius); box-shadow: inset 0 0 0 1px var(--line); padding: 16px 18px; display: flex; flex-direction: column; gap: 4px; }
 .pms h2 { margin: 0; font-size: 1.05rem; }
-.pms-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line); }
-.pms-row:first-child { border-top: 0; }
-.pms-text { display: flex; flex-direction: column; min-width: 0; }
-.pms-preview { color: var(--muted); font-size: 0.85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* Care sheet */
 .care { border-top-color: var(--leaf); }
