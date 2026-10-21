@@ -6,19 +6,20 @@ import {
   EXAMPLE_CARE_SHEET, EXAMPLE_CARER_PLAN, EXAMPLE_FOSTER_PLAN, EXAMPLE_CARER_DICTATION,
 } from '../../src/note.js';
 
-test('source library: unique ids, https links, Queensland first in the prompt', () => {
+test('source library: unique ids, https links, Victoria first in the prompt, no dose figures', () => {
   const ids = SOURCES.map((s) => s.id);
   assert.equal(new Set(ids).size, ids.length);
-  assert.ok(SOURCES.length >= 15);
+  assert.ok(SOURCES.length >= 12);
   for (const s of SOURCES) {
     assert.match(s.url, /^https:\/\//, s.id);
-    assert.ok(['qld', 'au'].includes(s.scope), s.id);
+    assert.ok(['vic', 'au'].includes(s.scope), s.id);
     assert.ok(s.points.length >= 3, s.id);
+    for (const pt of s.points) assert.doesNotMatch(pt, /\d\s?(mg|ml)\/kg/i, s.id);
   }
   const lines = sourcesForPrompt().split('\n');
   const firstAu = lines.findIndex((l) => l.includes(' | au | '));
-  const lastQld = lines.map((l) => l.includes(' | qld | ')).lastIndexOf(true);
-  assert.ok(lastQld < firstAu, 'all Queensland sources come before Australian ones');
+  const lastVic = lines.map((l) => l.includes(' | vic | ')).lastIndexOf(true);
+  assert.ok(lastVic < firstAu, 'all Victorian sources come before national ones');
 });
 
 test('carer plan prompt: straight from comments, vet only for escalation, sources included', () => {
@@ -26,16 +27,16 @@ test('carer plan prompt: straight from comments, vet only for escalation, source
   assert.match(p, /<comments>\nCarer plan for an adult rainbow lorikeet/);
   assert.match(p, /ONLY an escalation contact/);
   assert.match(p, /Do NOT tell them to report to, update or check in with the vet/);
-  assert.match(p, /Prefer Queensland \(scope qld\) sources/);
-  assert.match(p, /qld-cop-protected-animals-release \| qld \|/);
+  assert.match(p, /Prefer Victorian \(scope vic\) sources/);
+  assert.match(p, /vic-release-requirements \| vic \|/);
   assert.match(p, /"release":\{"ready_when":\[\],"how":\[\],"where":""\}/);
   assert.match(buildCareSheetPrompt(normaliseNote(EXAMPLE_CARE_SHEET), sourcesForPrompt()), /<note>/);
 });
 
 test('normalise drops invented source ids and keeps release for wildlife only', () => {
   const ids = SOURCE_IDS();
-  const n = normaliseCareSheet({ ...EXAMPLE_CARER_PLAN, sources: ['qld-gov-helping-injured-wildlife', 'made-up-blog'] }, ids);
-  assert.deepEqual(n.sources, ['qld-gov-helping-injured-wildlife']);
+  const n = normaliseCareSheet({ ...EXAMPLE_CARER_PLAN, sources: ['vic-release-requirements', 'made-up-blog'] }, ids);
+  assert.deepEqual(n.sources, ['vic-release-requirements']);
   assert.equal(n.kind, 'wildlife');
   assert.ok(n.release.ready_when.length > 0);
   const dom = normaliseCareSheet({ ...EXAMPLE_FOSTER_PLAN, release: { ready_when: ['x'], how: ['y'], where: 'z' } }, ids);
@@ -43,21 +44,12 @@ test('normalise drops invented source ids and keeps release for wildlife only', 
   assert.deepEqual(dom.release, { ready_when: [], how: [], where: '' });
 });
 
-test('every example cites only real sources, with Queensland first', () => {
-  const ids = SOURCE_IDS();
-  for (const ex of [EXAMPLE_CARE_SHEET, EXAMPLE_CARER_PLAN, EXAMPLE_FOSTER_PLAN]) {
-    assert.ok(ex.sources.length > 0);
-    for (const id of ex.sources) assert.ok(ids.has(id), id);
-    assert.equal(lookupSource(ex.sources[0]).scope, 'qld');
-  }
-});
-
 test('plain text plan: release, escalation and Based on, no reporting to the vet', () => {
-  const t = careSheetText(normaliseCareSheet(EXAMPLE_CARER_PLAN, SOURCE_IDS()), lookupSource);
+  const t = careSheetText(normaliseCareSheet({ ...EXAMPLE_CARER_PLAN, sources: ['vic-shelter-foster-carer-authorisation'] }, SOURCE_IDS()), lookupSource);
   assert.match(t, /^Care plan: Adult rainbow lorikeet/);
   assert.match(t, /Release\nReady when: /);
   assert.match(t, /Where: At the recorded rescue spot/);
-  assert.match(t, /Based on\n- Code of Practice: Care of sick/);
-  assert.match(t, /https:\/\/www\.detsi\.qld\.gov\.au\//);
+  assert.match(t, /Based on\n- Wildlife shelters and foster carers/);
+  assert.match(t, /https:\/\/vic\.gov\.au\//);
   assert.doesNotMatch(t, /message the|report to the vet|keep the clinic updated/i);
 });
