@@ -618,3 +618,9 @@ dialog.more form { display: flex; flex-direction: column; gap: 12px; padding: 18
 dialog.more h2 { margin: 0; font: 700 1.3rem/1.2 var(--display); text-transform: uppercase; letter-spacing: 1px; }
 dialog.more textarea { min-height: 110px; }
 .more-actions { display: grid; grid-template-columns: auto 1fr; gap: 10px; }
+
+/* Make from this too */
+.make-next { display: flex; flex-direction: column; gap: 8px; }
+.make-next h2 { margin: 0; font: 700 0.95rem/1.2 var(--display); text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
+.make-next-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.make-next-row .chip { min-height: 44px; padding: 8px 16px; font-size: 0.95rem; }

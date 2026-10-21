@@ -959,6 +959,8 @@ function renderCare(c) {
 function showCare(sheet, from, info = '') {
   careSheet = sheet;
   careFrom = from;
+  renderMakeNext($('make-next-care'), from === 'record' ? 'carer' : null);
+  if (from === 'record') madeFrom.carer = { text: els.transcript.value, sheet, info };
   renderCare(sheet);
   els.careBanner.textContent = info;
   els.careBanner.hidden = !info;
@@ -1042,6 +1044,8 @@ function renderDoc(d, kind) {
 
 function showDoc(d, kind, info = '') {
   currentDoc = { d, kind };
+  renderMakeNext($('make-next-doc'), kind);
+  madeFrom[kind] = { text: els.transcript.value, d, info };
   renderDoc(d, kind);
   $('doc-banner').textContent = info;
   $('doc-banner').hidden = !info;
@@ -1074,6 +1078,42 @@ $('doc-copy').addEventListener('click', async () => {
   toast(ok ? 'Copied. Paste it wherever it needs to go.' : 'Couldn’t copy. Select the text and copy it instead.');
 });
 $('doc-new').addEventListener('click', addMoreInfo);
+
+/* ---------------- make another from the same words ---------------- */
+
+// After an intake record (say) the carer often wants the care plan or the vet summary too. These buttons reuse
+// what was already said, so there's no going back and starting again.
+// What each tool last made, and from which words, so flicking between them doesn't rewrite (or re-bill) anything.
+const madeFrom = {};
+const MAKE_NEXT = [
+  ['intake', 'Intake record'],
+  ['log', 'Care log'],
+  ['carer', 'Care plan'],
+  ['tovet', 'For the vet'],
+];
+function renderMakeNext(box, current) {
+  const options = current && current !== 'funding' && settings.role !== 'vet' ? MAKE_NEXT.filter(([m]) => m !== current) : [];
+  box.hidden = !options.length;
+  if (!options.length) return box.replaceChildren();
+  box.replaceChildren(
+    el('h2', { text: 'Make from this too' }),
+    el('div', { class: 'make-next-row' }, options.map(([m, label]) => {
+      const b = el('button', { type: 'button', class: 'chip', text: label });
+      b.addEventListener('click', () => makeNext(m));
+      return b;
+    })),
+  );
+}
+async function makeNext(m) {
+  if (busy || !els.transcript.value.trim()) return;
+  document.querySelector(`input[name="mode"][value="${m}"]`).checked = true;
+  applyMode();
+  settings.mode = m;
+  store.saveSettings(settings);
+  const prev = madeFrom[m];
+  if (prev && prev.text === els.transcript.value) return m === 'carer' ? showCare(prev.sheet, 'record', prev.info) : showDoc(prev.d, m, prev.info);
+  await createNote();
+}
 
 /* ---------------- Word printouts ---------------- */
 
