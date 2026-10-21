@@ -25,10 +25,11 @@ import {
   normaliseDoc,
   docText,
   dueLabel,
-  EXAMPLE_INSPECTOR_DICTATION,
-  EXAMPLE_INSPECTOR_DOC,
-  EXAMPLE_ADOPTION_DICTATION,
-  EXAMPLE_ADOPTION_DOC,
+  EXAMPLE_INTAKE_DICTATION,
+  EXAMPLE_LOG_DICTATION,
+  EXAMPLE_TOVET_DICTATION,
+  EXAMPLE_JOEY_CARER_DICTATION,
+  EXAMPLE_WOMBAT_VET_DICTATION,
   appendSegment,
   buildPrompt,
   buildRevisionPrompt,
@@ -46,7 +47,7 @@ const $ = (id) => document.getElementById(id);
 const els = {
   mic: $('mic'), micStatus: $('mic-status'), timer: $('timer'), coach: $('kb-coach'), coachText: $('kb-coach-text'),
   banner: $('banner'), transcript: $('transcript'), interim: $('interim'), examples: $('examples'),
-  example: $('load-example'), batchExample: $('load-batch-example'),
+  example: $('load-example'),
   photoInput: $('add-photo'), photoList: $('photo-list'), photoLabel: $('add-photo-label'),
   clear: $('clear'), create: $('create'), stop: $('stop'), elapsed: $('working-elapsed'),
   workingTitle: $('working-title'), workingSub: $('working-sub'),
@@ -264,7 +265,7 @@ function alertStopped() {
 }
 
 function idleStatus() {
-  if (['inspector', 'adoption'].includes(document.body.dataset.mode)) return els.transcript.value.trim() ? 'Tap the mic to add more' : 'Tap the mic and talk it through';
+  if (['intake', 'log', 'tovet'].includes(document.body.dataset.mode)) return els.transcript.value.trim() ? 'Tap the mic to add more' : 'Tap the mic and talk it through';
   if (document.body.dataset.mode === 'carer') return els.transcript.value.trim() ? 'Tap the mic to add more' : 'Tap the mic and describe the animal’s care';
   if (keyboardVoice) return els.transcript.value.trim() ? 'Tap the mic to add more by voice' : 'Tap the mic, then talk through the consult';
   return els.transcript.value.trim() ? 'Tap the mic to add more' : 'Tap the mic and talk through the consult';
@@ -337,7 +338,7 @@ els.mic.addEventListener('click', () => {
   if (busy) return;
   banner('');
   els.toast.hidden = true;
-  if ([EXAMPLE_DICTATION, EXAMPLE_BATCH_DICTATION, EXAMPLE_CARER_DICTATION, EXAMPLE_FOSTER_DICTATION, EXAMPLE_INSPECTOR_DICTATION, EXAMPLE_ADOPTION_DICTATION].includes(els.transcript.value)) setTranscript('');
+  if ([EXAMPLE_DICTATION, EXAMPLE_BATCH_DICTATION, EXAMPLE_CARER_DICTATION, EXAMPLE_FOSTER_DICTATION, EXAMPLE_INTAKE_DICTATION, EXAMPLE_LOG_DICTATION, EXAMPLE_TOVET_DICTATION, EXAMPLE_JOEY_CARER_DICTATION, EXAMPLE_WOMBAT_VET_DICTATION].includes(els.transcript.value)) setTranscript('');
   if (keyboardVoice) {
     const wasOn = kbWasOn || document.body.dataset.mic === 'keyboard';
     kbWasOn = false;
@@ -373,12 +374,11 @@ function loadExample(text) {
   els.create.focus();
   toast('Example loaded. Tap Create note to see the result.');
 }
-els.example.addEventListener('click', () => loadExample(EXAMPLE_DICTATION));
-$('load-carer-example').addEventListener('click', () => loadExample(EXAMPLE_CARER_DICTATION));
-$('load-foster-example').addEventListener('click', () => loadExample(EXAMPLE_FOSTER_DICTATION));
-$('load-inspector-example').addEventListener('click', () => loadExample(EXAMPLE_INSPECTOR_DICTATION));
-$('load-adoption-example').addEventListener('click', () => loadExample(EXAMPLE_ADOPTION_DICTATION));
-els.batchExample.addEventListener('click', () => loadExample(EXAMPLE_BATCH_DICTATION));
+els.example.addEventListener('click', () => loadExample(EXAMPLE_WOMBAT_VET_DICTATION));
+$('load-intake-example').addEventListener('click', () => loadExample(EXAMPLE_INTAKE_DICTATION));
+$('load-log-example').addEventListener('click', () => loadExample(EXAMPLE_LOG_DICTATION));
+$('load-joey-example').addEventListener('click', () => loadExample(EXAMPLE_JOEY_CARER_DICTATION));
+$('load-tovet-example').addEventListener('click', () => loadExample(EXAMPLE_TOVET_DICTATION));
 
 els.clear.addEventListener('click', () => {
   const previous = els.transcript.value;
@@ -477,14 +477,32 @@ async function runWorking(title, sub, job) {
 }
 
 const mode = () => document.querySelector('input[name="mode"]:checked')?.value || 'vet';
-const MODES = ['vet', 'carer', 'inspector', 'adoption'];
+const MODES = ['intake', 'log', 'carer', 'tovet', 'vet'];
+const ROLE_MODES = { carer: ['intake', 'log', 'carer', 'tovet'], vet: ['vet', 'carer'] };
 
 const MODE_TEXT = {
   vet: { button: 'Create notes', placeholder: 'Your words appear here as you talk. You can also type or fix anything.' },
   carer: { button: 'Create care plan', placeholder: 'Describe the animal, its condition, medications and anything the carer needs to know.' },
-  inspector: { button: 'Create report', placeholder: 'Case number, the animal, your findings with measurements, your opinion and treatment given.' },
-  adoption: { button: 'Create summary', placeholder: 'The animal, desexing, microchip, vaccinations, parasite treatment, health notes and diet.' },
+  intake: { button: 'Create record', placeholder: 'Wildlife Victoria case number, the animal, exactly where it was found, its condition and what you did.' },
+  log: { button: 'Create log', placeholder: 'The animal, weight, feeds, medications given, toileting, behaviour and anything you’re watching.' },
+  tovet: { button: 'Create summary', placeholder: 'The animal, its history in care, what you’ve noticed, current meds and your questions.' },
 };
+
+// Carers see their four tools; a vet the carer works with switches to clinical notes and care plans.
+function applyRole() {
+  const role = settings.role === 'vet' ? 'vet' : 'carer';
+  document.body.dataset.role = role;
+  document.querySelectorAll('#mode label[data-roles]').forEach((l) => (l.hidden = !l.dataset.roles.split(' ').includes(role)));
+  if (!ROLE_MODES[role].includes(mode())) document.querySelector(`input[name="mode"][value="${ROLE_MODES[role][0]}"]`).checked = true;
+  $('role-switch').textContent = role === 'vet' ? 'Wildlife carer? Switch to carer tools' : 'Are you the vet? Switch to clinical notes';
+}
+$('role-switch').addEventListener('click', () => {
+  settings.role = settings.role === 'vet' ? 'carer' : 'vet';
+  applyRole();
+  applyMode();
+  settings.mode = mode();
+  store.saveSettings(settings);
+});
 
 function applyMode() {
   const m = mode();
@@ -909,7 +927,7 @@ function renderCare(c) {
               el('li', {}, [
                 el('a', { href: s.url, target: '_blank', rel: 'noopener', text: s.title }),
                 ` (${s.publisher})`,
-                el('span', { class: 'scope', text: s.scope === 'qld' ? 'QLD' : 'AU' }),
+                el('span', { class: 'scope', text: String(s.scope || 'au').toUpperCase() }),
               ]),
             )),
           ])
@@ -938,7 +956,7 @@ async function openCare() {
     return;
   }
   try {
-    const reply = await runWorking('Writing the care plan', 'Everything the carer needs, from Queensland guidance.', (signal) =>
+    const reply = await runWorking('Writing the care plan', 'Everything the carer needs, from Victorian guidance.', (signal) =>
       provider.generate(buildCareSheetPrompt(n, sourcesForPrompt()), signal),
     );
     showCare(normaliseCareSheet(extractJson(reply), SOURCE_IDS()), 'note');
@@ -957,7 +975,7 @@ async function createCarePlan(text) {
     return;
   }
   banner('');
-  const reply = await runWorking('Writing the care plan', 'Everything the carer needs, from Queensland guidance.', (signal) =>
+  const reply = await runWorking('Writing the care plan', 'Everything the carer needs, from Victorian guidance.', (signal) =>
     provider.generate(buildCarerPlanPrompt(text, sourcesForPrompt()), signal, { images: photos }),
   );
   notes = [];
@@ -971,7 +989,7 @@ els.careCopy.addEventListener('click', async () => {
   toast(ok ? 'Care plan copied. Paste it into an email, SMS or the discharge sheet.' : 'Couldn’t copy. Select the text and copy it instead.');
 });
 
-/* ---------------- inspector report / adoption summary ---------------- */
+/* ---------------- intake record / care log / for the vet ---------------- */
 
 let currentDoc = null;
 
@@ -997,7 +1015,7 @@ function renderDoc(d, kind) {
         ]
       : []),
   );
-  $('doc-copy').textContent = kind === 'inspector' ? 'Copy report' : 'Copy summary';
+  $('doc-copy').textContent = DOC_KINDS[kind].copy;
 }
 
 function showDoc(d, kind, info = '') {
@@ -1011,8 +1029,6 @@ function showDoc(d, kind, info = '') {
 
 async function createDoc(kind, text) {
   if (!(await ensureProvider())) {
-    const ex = { inspector: [EXAMPLE_INSPECTOR_DICTATION, EXAMPLE_INSPECTOR_DOC], adoption: [EXAMPLE_ADOPTION_DICTATION, EXAMPLE_ADOPTION_DOC] }[kind];
-    if (ex && text === ex[0].trim()) return showDoc(normaliseDoc(ex[1]), kind, `This is the example ${DOC_KINDS[kind].label.toLowerCase()}.`);
     banner(NO_CLAUDE, 'info');
     return;
   }
@@ -1021,7 +1037,7 @@ async function createDoc(kind, text) {
     return;
   }
   banner('');
-  const reply = await runWorking(`Writing the ${DOC_KINDS[kind].label.toLowerCase()}`, kind === 'inspector' ? 'Objective findings, kept separate from opinion.' : 'Plain English for the new owner.', (signal) =>
+  const reply = await runWorking(`Writing the ${DOC_KINDS[kind].label.toLowerCase()}`, DOC_KINDS[kind].working, (signal) =>
     provider.generate(buildDocPrompt(kind, text, { clinician: settings.clinician, photoCount: photos.length }), signal, { images: photos }),
   );
   const d = normaliseDoc(extractJson(reply));
@@ -1057,7 +1073,9 @@ els.about.addEventListener('click', (e) => {
   }
   if (t.dataset.action === 'example') {
     showView('record');
-    loadExample(EXAMPLE_DICTATION, false, 'intake');
+    if (settings.role !== 'vet') document.querySelector('input[name="mode"][value="intake"]').checked = true;
+    applyMode();
+    loadExample(settings.role === 'vet' ? EXAMPLE_WOMBAT_VET_DICTATION : EXAMPLE_INTAKE_DICTATION);
   }
 });
 
@@ -1120,8 +1138,9 @@ els.forget.addEventListener('click', () => {
 
 /* ---------------- start up ---------------- */
 
-const startMode = MODES.includes(settings.mode) ? settings.mode : 'vet';
+const startMode = MODES.includes(settings.mode) ? settings.mode : 'intake';
 document.querySelector(`input[name="mode"][value="${startMode}"]`).checked = true;
+applyRole();
 applyMode();
 setTranscript(store.loadDraft());
 renderPhotos();

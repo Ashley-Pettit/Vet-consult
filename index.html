@@ -45,16 +45,19 @@
 
     <fieldset class="mode" id="mode">
       <legend class="sr-only">What do you want to create?</legend>
-      <label><input type="radio" name="mode" value="vet" aria-label="Clinical notes" checked><span><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4h6v3H9z"/><path d="M9 12h6M9 16h4"/></svg><b><span class="sm">Notes</span><span class="lg">Clinical notes</span></b></span></label>
-      <label><input type="radio" name="mode" value="carer" aria-label="Carer plan"><span><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg><b><span class="sm">Carer</span><span class="lg">Carer plan</span></b></span></label>
-      <label><input type="radio" name="mode" value="inspector" aria-label="Inspector report"><span><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg><b><span class="sm">Inspector</span><span class="lg">Inspector report</span></b></span></label>
-      <label><input type="radio" name="mode" value="adoption" aria-label="Adoption summary"><span><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l8-7 8 7"/><path d="M6 9.5V20h12V9.5"/><path d="M10 20v-5h4v5"/></svg><b><span class="sm">Adoption</span><span class="lg">Adoption summary</span></b></span></label>
+      <label data-roles="carer"><input type="radio" name="mode" value="intake" aria-label="Intake record" checked><span><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16v13H4z"/><path d="M9 7V4h6v3"/><path d="M12 11v6M9 14h6"/></svg><b><span class="sm">Intake</span><span class="lg">Intake record</span></b></span></label>
+      <label data-roles="carer"><input type="radio" name="mode" value="log" aria-label="Daily care log"><span><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M8 3v4M16 3v4M4 10h16M8 14h3M8 17h6"/></svg><b><span class="sm">Care log</span><span class="lg">Daily care log</span></b></span></label>
+      <label data-roles="carer vet"><input type="radio" name="mode" value="carer" aria-label="Care plan"><span><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg><b><span class="sm">Care plan</span><span class="lg">Care plan</span></b></span></label>
+      <label data-roles="carer"><input type="radio" name="mode" value="tovet" aria-label="For the vet"><span><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v6a4 4 0 0 0 8 0V3"/><path d="M10 13v3a4 4 0 0 0 8 0v-2"/><circle cx="18" cy="12" r="2"/></svg><b><span class="sm">To vet</span><span class="lg">For the vet</span></b></span></label>
+      <label data-roles="vet"><input type="radio" name="mode" value="vet" aria-label="Clinical notes"><span><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4h6v3H9z"/><path d="M9 12h6M9 16h4"/></svg><b><span class="sm">Notes</span><span class="lg">Clinical notes</span></b></span></label>
     </fieldset>
 
-    <p class="mode-intro" data-modes="vet">Talk through the consult, intake, surgery or any exam. One animal or a whole litter.</p>
-    <p class="mode-intro" data-modes="inspector">Talk through your examination findings and opinion. You get a formal, objective report for the inspector.</p>
-    <p class="mode-intro" data-modes="adoption">Talk through the animal’s health history. You get a friendly summary for the new owner, with what’s due next.</p>
-    <p class="mode-intro" data-modes="carer">Describe the animal, what it needs and any medications. You get a complete plan the carer can follow on their own.</p>
+    <p class="mode-intro" data-modes="intake">Just picked one up? Talk through the rescue: where, when, what you saw and what you did.</p>
+    <p class="mode-intro" data-modes="log">Talk through today: weight, feeds, meds, toileting and anything you’re watching.</p>
+    <p class="mode-intro" data-modes="carer">Describe the animal and what it needs. You get a plan another carer can follow on their own.</p>
+    <p class="mode-intro" data-modes="tovet">Talk through what’s been happening and what you want to ask. You get a summary the vet can read in a minute.</p>
+    <p class="mode-intro" data-modes="vet">For vets: talk through the exam and plan. You get tidy clinical notes.</p>
+    <p class="role-switch"><button type="button" class="link" id="role-switch"></button></p>
 
     <div class="mic-zone">
       <button id="mic" class="mic" type="button" aria-pressed="false" aria-describedby="mic-status">
@@ -85,12 +88,11 @@
       <div class="photo-list" id="photo-list" aria-label="Attached photos"></div>
       <p id="interim" class="interim" aria-hidden="true"></p>
       <p class="examples" id="examples">Try an example:
-        <button type="button" class="chip" data-modes="vet" id="load-example">Stray dog</button>
-        <button type="button" class="chip" data-modes="vet" id="load-batch-example">Litter of kittens</button>
-        <button type="button" class="chip" data-modes="carer" id="load-carer-example">Injured lorikeet</button>
-        <button type="button" class="chip" data-modes="carer" id="load-foster-example">Foster kitten</button>
-        <button type="button" class="chip" data-modes="inspector" id="load-inspector-example">Neglect case</button>
-        <button type="button" class="chip" data-modes="adoption" id="load-adoption-example">Bella the cat</button>
+        <button type="button" class="chip" data-modes="intake" id="load-intake-example">Wombat, car strike</button>
+        <button type="button" class="chip" data-modes="log" id="load-log-example">Roo joey</button>
+        <button type="button" class="chip" data-modes="carer" id="load-joey-example">Ringtail joey</button>
+        <button type="button" class="chip" data-modes="tovet" id="load-tovet-example">Wombat losing weight</button>
+        <button type="button" class="chip" data-modes="vet" id="load-example">Wombat consult</button>
       </p>
     </div>
 
@@ -195,7 +197,7 @@
   <!-- 5. How it works -->
   <section id="view-about" class="view about" hidden aria-labelledby="about-title"></section>
 
-  <p class="foot">The vet is responsible for the record. Review every field and dose before saving. Speech is processed by your browser’s speech service and the note by Claude.</p>
+  <p class="foot">You’re responsible for the record. Check every detail and dose before saving. Speech is processed by your browser’s speech service and the note by Claude.</p>
   <footer class="site-foot">
     <div class="sos">
       <p class="sos-title">Emergency response</p>
@@ -219,8 +221,8 @@
     <p class="conn" id="conn-status" role="status"></p>
 
     <div class="field">
-      <label for="clinician">Your name (added to every note)</label>
-      <input id="clinician" type="text" autocomplete="name" placeholder="e.g. Dr Sam Lee">
+      <label for="clinician">Your name (added to every record)</label>
+      <input id="clinician" type="text" autocomplete="name" placeholder="e.g. Sam Lee">
     </div>
 
     <div class="field">

@@ -43,7 +43,8 @@ export const store = {
       clinician: typeof s.clinician === 'string' ? s.clinician : '',
       model: typeof s.model === 'string' ? s.model : '',
       noteType: typeof s.noteType === 'string' ? s.noteType : 'consult',
-      mode: ['carer', 'inspector', 'adoption'].includes(s.mode) ? s.mode : 'vet',
+      mode: ['vet', 'carer', 'intake', 'log', 'tovet'].includes(s.mode) ? s.mode : 'intake',
+      role: s.role === 'vet' ? 'vet' : 'carer',
       rememberKey: Boolean(s.rememberKey),
       apiKey: (s.rememberKey && typeof s.apiKey === 'string' ? s.apiKey : sessionKey) || '',
     };
@@ -53,7 +54,8 @@ export const store = {
       clinician: s.clinician || '',
       model: s.model || '',
       noteType: s.noteType || 'consult',
-      mode: ['carer', 'inspector', 'adoption'].includes(s.mode) ? s.mode : 'vet',
+      mode: ['vet', 'carer', 'intake', 'log', 'tovet'].includes(s.mode) ? s.mode : 'intake',
+      role: s.role === 'vet' ? 'vet' : 'carer',
       rememberKey: Boolean(s.rememberKey),
       apiKey: s.rememberKey ? s.apiKey || '' : '',
     });

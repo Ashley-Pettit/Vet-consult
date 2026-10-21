@@ -1,4 +1,4 @@
-// "How it works": a short, user-first tour of what Care Scribe does for a shelter vet.
+// "How it works": a short tour of Care Scribe for wildlife carers at Bunurong Wildlife Care, and the vets they work with.
 // Static, trusted markup only.
 const icon = (d) =>
   `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
@@ -13,6 +13,9 @@ const I = {
   cam: icon('<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>'),
   pulse: icon('<path d="M3 12h4l2-5 4 10 2-5h6"/>'),
   list: icon('<path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/>'),
+  pin: icon('<path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>'),
+  cal: icon('<rect x="4" y="5" width="16" height="16" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/>'),
+  steth: icon('<path d="M6 3v6a4 4 0 0 0 8 0V3"/><path d="M10 13v3a4 4 0 0 0 8 0v-2"/><circle cx="18" cy="12" r="2"/>'),
   shield: icon('<path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/>'),
 };
 
@@ -26,57 +29,58 @@ const feature = (ic, title, body) => `
 export const ABOUT_HTML = `
 <div class="hero">
   <p class="eyebrow">How it works</p>
-  <h1 tabindex="-1">Spend your time on the animals, not the keyboard</h1>
-  <p class="lede">Talk through the consult the way you would to a colleague. Care Scribe turns it into tidy SOAP notes, ready to paste into your PMS before the next patient is on the table.</p>
+  <h1 tabindex="-1">More time with the animals, less time writing it up</h1>
+  <p class="lede">Talk through the rescue, the day’s care or what you want to ask the vet, the way you would to another carer. Care Scribe writes it up properly, ready to copy into your records, a text or an email.</p>
   <div class="hero-ctas">
-    <button type="button" class="btn primary" data-action="start">Start a consult</button>
+    <button type="button" class="btn primary" data-action="start">Start talking</button>
     <button type="button" class="btn ghost" data-action="example">Try the example</button>
   </div>
   <div class="mock" aria-hidden="true">
     <div class="mock-said">
       <span class="mock-label">You say</span>
-      <p>“Rusty, kelpie cross, stray. Temp 39.4, heart rate 120. Four centimetre lac on the left fore, sutured. Cephalexin 22 mg per kg twice a day for a week…”</p>
+      <p>“Wombat, car strike on the Bass Highway near Kilcunda, picked her up at 9.40. About 24 kilos, bad mange on her flanks, graze on the left shoulder…”</p>
     </div>
     <div class="mock-arrow">${I.mic}</div>
     <div class="mock-note">
       <span class="mock-label">You get</span>
-      <p><b>S</b> Stray presented by inspector, left forelimb lameness.</p>
-      <p><b>O</b> T 39.4 °C <span class="mock-pill">High</span> · HR 120 bpm · 4 cm laceration, lateral L forelimb.</p>
-      <p><b>A</b> 1. Laceration, left forelimb</p>
-      <p><b>P</b> Cephalexin 22 mg/kg PO BID x 7 days <span class="mock-calc">= 312.4 mg</span></p>
+      <p><b>Where found</b> Gravel pull-over, south side of the Bass Highway, east of the Kilcunda bridge</p>
+      <p><b>Animal</b> Bare-nosed wombat, adult female, 24 kg</p>
+      <p><b>Condition</b> Severe mange, flanks and back; graze, left shoulder</p>
+      <p><b>Check</b> Wildlife Victoria case number?</p>
     </div>
   </div>
 </div>
 
 <section class="about-sec">
-  <h2>Three steps, every consult</h2>
-  <ol class="steps">
-    <li><span class="step-n">1</span><div><h3>Talk</h3><p>Tap the big mic and talk through history, exam, assessment and plan. Pause, ramble, correct yourself. It copes.</p></div></li>
-    <li><span class="step-n">2</span><div><h3>Check</h3><p>The note arrives with a short <b>Check before saving</b> list at the top: a missing dose, an odd vital, a word it might have misheard.</p></div></li>
-    <li><span class="step-n">3</span><div><h3>Paste</h3><p>Copy the clinical notes, prescriptions and reminders straight into the right fields in your PMS. Done.</p></div></li>
-  </ol>
-</section>
-
-<section class="about-sec">
-  <h2>Built for how shelter vets actually work</h2>
+  <h2>Four tools for carers</h2>
   <div class="feats">
-    ${feature(I.clip, 'Paste straight into the right PMS field', 'Clinical notes, prescriptions and reminders each get their own copy button, with reminder due dates worked out for you. No more retyping the same plan three times.')}
-    ${feature(I.pill, 'Doses worked out, for you to confirm', 'Say “22 mg per kg” and you’ll see the total for this patient’s weight beside it. It’s a prompt, never written into the record without you.')}
-    ${feature(I.ask, 'Fill the gaps without typing', 'Forgot to say who consented, or the sedation dose? Tap Answer on the check item, say it, and the note updates in the right place.')}
-    ${feature(I.heart, 'Carer plans grounded in Queensland guidance', 'Medications, a day-by-day plan, housing, feeding and, for wildlife, release. Based on the Queensland code of practice and other checked Australian sources, with the vet only for escalations.')}
-    ${feature(I.paws, 'A litter or a seizure? Dictate the lot', 'Just talk through each animal. Care Scribe spots that there are several and writes a separate note for every one, with the shared case details in each.')}
-    ${feature(I.cam, 'Photos that become findings', 'Add photos of wounds or body condition. Claude describes only what is clearly visible, objectively, so inspectorate notes stay evidence-ready.')}
-    ${feature(I.pulse, 'Odd vitals get flagged', 'Temperatures, heart rates and resp rates outside the usual range for dogs, cats, rabbits, guinea pigs and ferrets are highlighted so you can double-check.')}
-    ${feature(I.list, 'Four outputs from one recording', 'Clinical notes for the PMS, a carer plan, a formal inspector report or a friendly adoption summary. Just say what it is: a consult, intake, surgery or euthanasia is written the way that record should be.')}
+    ${feature(I.pin, 'Intake record', 'Just picked one up? Talk through where, when and what you saw. The exact rescue spot is kept word for word, so release goes back to the right place, and anything missing for your register is flagged.')}
+    ${feature(I.cal, 'Daily care log', 'Weight, feeds, meds, toileting and behaviour in one tidy entry. If something sounds worrying, like weight loss or going off food, it suggests a vet check.')}
+    ${feature(I.heart, 'Care plan', 'Handing an animal to another carer? Get a complete plan: medications, a day-by-day routine, housing, feeding and release, based on Victorian wildlife guidance.')}
+    ${feature(I.steth, 'For the vet', 'Before a vet visit, talk through what’s been happening. You get a one-minute summary with your questions written out, so nothing gets forgotten in the room.')}
   </div>
 </section>
 
 <section class="about-sec">
-  <h2>Made for a busy clinic floor</h2>
+  <h2>Three steps</h2>
+  <ol class="steps">
+    <li><span class="step-n">1</span><div><h3>Pick and talk</h3><p>Choose what you’re making, tap the big mic and talk. Pause, ramble, correct yourself. It copes.</p></div></li>
+    <li><span class="step-n">2</span><div><h3>Check</h3><p>A short <b>check</b> list shows anything missing or unclear, like a case number or an exact location.</p></div></li>
+    <li><span class="step-n">3</span><div><h3>Copy</h3><p>Copy it into your records, a spreadsheet, a text or an email. Tap <b>Add more info</b> if you forgot something.</p></div></li>
+  </ol>
+</section>
+
+<section class="about-sec">
+  <h2>Working with a vet?</h2>
+  <p>Hand them the app. Under the picker, tap <b>Are you the vet? Switch to clinical notes</b>. They talk through the exam and get tidy clinical notes, then can turn them straight into a care plan for you. Tap the same link to switch back.</p>
+</section>
+
+<section class="about-sec">
+  <h2>Made for carers on the go</h2>
   <ul class="ticks">
-    <li><b>One-handed and phone-first.</b> Big buttons, a mic you can hit with a gloved thumb, and the screen stays awake while you talk.</li>
-    <li><b>Speaks vet.</b> Australian English, metric units and the abbreviations you already use: PO, SC, BID, BCS 3/9, CRT.</li>
-    <li><b>Never invents.</b> If you didn’t say it, it isn’t in the note. Anything it had to assume is marked and added to the check list.</li>
+    <li><b>Phone-first.</b> Big buttons, a mic you can hit with a gloved thumb, and the screen stays awake while you talk.</li>
+    <li><b>Never invents.</b> If you didn’t say it, it isn’t in the record. Doses are only ever written as you said them.</li>
+    <li><b>Photos help.</b> Add a photo of a wound or the animal’s coat and it describes only what’s clearly visible.</li>
     <li><b>Tells you if it stops listening.</b> A double beep and a buzz, so you’re not talking to a sleeping phone.</li>
   </ul>
 </section>
@@ -84,22 +88,22 @@ export const ABOUT_HTML = `
 <section class="about-sec safe">
   <div class="safe-icon">${I.shield}</div>
   <div>
-    <h2>You stay in charge of the record</h2>
-    <p>Care Scribe drafts. The vet decides. Nothing is saved to a server by the app and it never writes to your PMS on its own. Every note, dose and care sheet is reviewed and pasted by a person.</p>
+    <h2>You stay in charge</h2>
+    <p>Care Scribe drafts. You decide. Nothing is saved to a server by the app. Check every record, and always follow your vet’s instructions for medications.</p>
   </div>
 </section>
 
 <section class="about-sec">
-  <h2>Questions vets ask</h2>
-  <details class="faq"><summary>Do I need to change how I talk?</summary><p>No. Talk the way you would to a nurse or colleague. Say “full stop” or “new line” if you like, but you don’t have to.</p></details>
-  <details class="faq"><summary>Does it connect to our PMS?</summary><p>It works with any PMS by copy and paste, so there’s nothing to install or integrate. Each part goes into its own field.</p></details>
-  <details class="faq"><summary>What if it mishears a drug name?</summary><p>It corrects obvious veterinary mishearings and tells you it did, in the check list, so you can confirm before saving.</p></details>
-  <details class="faq"><summary>Which devices does it work on?</summary><p>Phones, tablets and computers. On a phone it uses your keyboard’s own voice typing, which is fast and accurate on both iPhone and Android.</p></details>
-  <details class="faq"><summary>Where does my dictation go?</summary><p>Your words are turned into text by your phone or browser’s voice typing (Apple, Google or Microsoft, depending on the device), and the note is written by Claude. Nothing is stored by Care Scribe. Avoid dictating owner contact details unless your organisation has approved it.</p></details>
+  <h2>Questions</h2>
+  <details class="faq"><summary>Do I need to talk a special way?</summary><p>No. Talk the way you would to another carer. Say “full stop” or “new line” if you like, but you don’t have to.</p></details>
+  <details class="faq"><summary>What if it mishears a species or place?</summary><p>It fixes obvious mishearings and lists them in the check list so you can confirm.</p></details>
+  <details class="faq"><summary>Which devices does it work on?</summary><p>Phones, tablets and computers. On a phone it uses your keyboard’s own voice typing, which works well on iPhone and Android.</p></details>
+  <details class="faq"><summary>Where do my words go?</summary><p>Your phone or browser’s voice typing turns speech into text, and Claude writes the record. Nothing is stored by Care Scribe.</p></details>
+  <details class="faq"><summary>Emergency?</summary><p>Call Wildlife Victoria 24/7 on <a href="tel:+61384007300">03 8400 7300</a>.</p></details>
 </section>
 
 <div class="about-cta">
-  <h2>Ready for your next consult?</h2>
-  <button type="button" class="btn primary" data-action="start">Start a consult</button>
+  <h2>Ready when you are</h2>
+  <button type="button" class="btn primary" data-action="start">Start talking</button>
 </div>
 `;

@@ -1,29 +1,39 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { DOC_KINDS, buildDocPrompt, normaliseDoc, docText, dueLabel, EXAMPLE_INSPECTOR_DOC, EXAMPLE_ADOPTION_DOC } from '../../src/note.js';
+import { DOC_KINDS, buildDocPrompt, normaliseDoc, docText, dueLabel } from '../../src/note.js';
 
-test('inspector prompt keeps facts and opinion apart and makes no legal finding', () => {
-  const p = buildDocPrompt('inspector', 'kelpie BCS 2', { clinician: 'Dr Lee', photoCount: 2 });
-  assert.match(p, /Animal Care and Protection Act 2001 \(Qld\)/);
-  assert.match(p, /Keep observed FACTS .* separate from veterinary OPINION/);
-  assert.match(p, /Do not say whether an offence was committed/);
+test('carer document kinds, in picker order', () => {
+  assert.deepEqual(Object.keys(DOC_KINDS), ['intake', 'log', 'tovet']);
+  for (const k of Object.values(DOC_KINDS)) assert.ok(k.label && k.copy && k.working && k.rule);
+});
+
+test('intake prompt keeps the exact rescue location and flags what is missing', () => {
+  const p = buildDocPrompt('intake', 'wombat Kilcunda', { clinician: 'Sam', photoCount: 2 });
+  assert.match(p, /Record the rescue location exactly as said/);
+  assert.match(p, /Wildlife Victoria case number/);
   assert.match(p, /2 photo\(s\) are attached/);
-  assert.match(p, /The vet is Dr Lee/);
-  assert.match(p, /<comments>\nkelpie BCS 2\n<\/comments>/);
+  assert.match(p, /The carer is Sam/);
+  assert.match(p, /<comments>\nwombat Kilcunda\n<\/comments>/);
   assert.throws(() => buildDocPrompt('nope', 'x'));
 });
 
-test('adoption prompt never invents vaccines, dates or chip numbers', () => {
-  const p = buildDocPrompt('adoption', 'Bella');
-  assert.match(p, /Never invent vaccination products, dates, microchip numbers/);
+test('care log never works out doses and suggests a vet for red flags', () => {
+  const p = buildDocPrompt('log', 'joey');
+  assert.match(p, /Never work out or change doses/);
+  assert.match(p, /suggesting a vet check/);
   assert.match(p, /"due":\[\{"what":"","when":""\}\]/);
-  assert.deepEqual(Object.keys(DOC_KINDS), ['inspector', 'adoption']);
+});
+
+test('vet summary turns worries into questions', () => {
+  const p = buildDocPrompt('tovet', 'Willow');
+  assert.match(p, /Questions for the vet/);
+  assert.match(p, /Never invent doses, results or diagnoses/);
 });
 
 test('normaliseDoc: text or items per section, drops empties, caps checks', () => {
   const d = normaliseDoc({
     title: 'T', sections: [{ heading: 'A', text: 'para', items: ['x'] }, { heading: 'B', text: 'only text' }, { heading: '', items: ['y'] }, { heading: 'C' }],
-    due: [{ what: 'Vaccine', when: 'in 12 months' }, { when: 'orphan' }], check: ['1', '2', '3', '4', '5', '6'],
+    due: [{ what: 'Weigh', when: 'in 12 months' }, { when: 'orphan' }], check: ['1', '2', '3', '4', '5', '6'],
   });
   assert.deepEqual(d.sections.map((s) => s.heading), ['A', 'B']);
   assert.equal(d.sections[0].text, ''); // items win
@@ -34,11 +44,15 @@ test('normaliseDoc: text or items per section, drops empties, caps checks', () =
 test('due labels and plain text', () => {
   assert.equal(dueLabel('in 12 months', new Date(2026, 9, 21)), 'in 12 months (due 21/10/2027)');
   assert.equal(dueLabel('at the next visit'), 'at the next visit');
-  const t = docText(normaliseDoc(EXAMPLE_ADOPTION_DOC), new Date(2026, 9, 21));
-  assert.match(t, /^Bella’s health summary\nFor Bella’s new family/);
-  assert.match(t, /HEALTH AT A GLANCE\n- Desexed: yes/);
-  assert.match(t, /- F3 vaccination booster: in 12 months \(due 21\/10\/2027\)/);
-  const r = docText(normaliseDoc(EXAMPLE_INSPECTOR_DOC));
-  assert.ok(r.indexOf('EXAMINATION FINDINGS') < r.indexOf('VETERINARY OPINION'));
-  assert.match(r, /DECLARATION\n- This report is a true and accurate record/);
+  const t = docText(
+    normaliseDoc({
+      title: 'Oliver care log', subtitle: 'Thursday',
+      sections: [{ heading: 'Weight', text: '2.31 kg, up 40 g' }, { heading: 'Feeding', items: ['4 bottle feeds'] }],
+      due: [{ what: 'Weigh', when: 'in 12 months' }],
+    }),
+    new Date(2026, 9, 21),
+  );
+  assert.match(t, /^Oliver care log\nThursday\n\nWEIGHT\n2\.31 kg, up 40 g/);
+  assert.match(t, /FEEDING\n- 4 bottle feeds/);
+  assert.match(t, /- Weigh: in 12 months \(due 21\/10\/2027\)/);
 });

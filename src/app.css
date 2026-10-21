@@ -487,7 +487,7 @@ details.checks > summary:focus-visible { outline: 3px solid var(--accent); outli
 
 /* Vet note / Carer plan switch */
 .mode {
-  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 2px; margin: 0; padding: 3px; border: 0; min-width: 0;
+  display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 2px; margin: 0; padding: 3px; border: 0; min-width: 0;
   background: var(--surface); border-radius: 14px; box-shadow: inset 0 0 0 1px var(--line);
 }
 .mode label { position: relative; display: flex; min-width: 0; }
@@ -597,3 +597,11 @@ body[data-view="about"] .site-foot { display: none; }
 .sos-phone:hover { text-decoration: underline; }
 .motto { margin: 18px 0 2px; font: 700 0.9rem/1.3 var(--display); text-transform: uppercase; letter-spacing: 0.12em; color: var(--accent); }
 .charity { margin: 0; font-size: 0.8rem; color: var(--muted); }
+
+/* Carer / vet switch under the picker */
+.role-switch { margin: -8px 0 0; text-align: center; }
+.role-switch .link { font-size: 0.9rem; color: var(--muted); text-decoration-color: var(--line); }
+.role-switch .link:hover { color: var(--accent); }
+.mock-note b { width: auto; margin-right: 6px; }
+.about-sec > p { margin: 0; }
+body[data-role="vet"] .mode label[data-roles="vet"] { order: -1; }
