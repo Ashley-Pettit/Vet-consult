@@ -24,7 +24,7 @@ test('source library: unique ids, https links, Victoria first in the prompt, no 
 
 test('carer plan prompt: straight from comments, vet only for escalation, sources included', () => {
   const p = buildCarerPlanPrompt(EXAMPLE_CARER_DICTATION, sourcesForPrompt());
-  assert.match(p, /<comments>\nCarer plan for an adult rainbow lorikeet/);
+  assert.match(p, /<comments>\nCare plan for a common ringtail possum joey/);
   assert.match(p, /ONLY an escalation contact/);
   assert.match(p, /Do NOT tell them to report to, update or check in with the vet/);
   assert.match(p, /Prefer Victorian \(scope vic\) sources/);
@@ -46,9 +46,9 @@ test('normalise drops invented source ids and keeps release for wildlife only', 
 
 test('plain text plan: release, escalation and Based on, no reporting to the vet', () => {
   const t = careSheetText(normaliseCareSheet({ ...EXAMPLE_CARER_PLAN, sources: ['vic-shelter-foster-carer-authorisation'] }, SOURCE_IDS()), lookupSource);
-  assert.match(t, /^Care plan: Adult rainbow lorikeet/);
+  assert.match(t, /^Care plan: Ringtail possum joey \(female\)/);
   assert.match(t, /Release\nReady when: /);
-  assert.match(t, /Where: At the recorded rescue spot/);
+  assert.match(t, /Where: Back near where she was found in Wonthaggi/);
   assert.match(t, /Based on\n- Wildlife shelters and foster carers/);
   assert.match(t, /https:\/\/vic\.gov\.au\//);
   assert.doesNotMatch(t, /message the|report to the vet|keep the clinic updated/i);
@@ -70,4 +70,12 @@ test('species care points are woven into the plan, not listed, and general bans 
   assert.match(p, /work it into the section it belongs to/);
   assert.match(p, /Never make a separate list of warnings/);
   assert.match(p, /Only tell the carer what not to do when it is specific to this animal or its species/);
+});
+
+test('example plan is Victorian: known sources only, species points woven in, no QLD left', async () => {
+  const n = normaliseCareSheet(EXAMPLE_CARER_PLAN, SOURCE_IDS());
+  assert.equal(n.sources.length, EXAMPLE_CARER_PLAN.sources.length);
+  assert.ok(n.feeding.some((x) => /Only possum milk: cow’s milk/.test(x)));
+  const all = JSON.stringify(EXAMPLE_CARER_PLAN);
+  assert.doesNotMatch(all, /qld|Moorooka|Queensland/i);
 });

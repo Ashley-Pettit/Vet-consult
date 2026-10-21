@@ -588,7 +588,7 @@ export const EXAMPLE_CARE_SHEET = {
     urgent: ['The wound opens or the stitches come out', 'Black or bloody stools, or repeated vomiting', 'He is very flat, weak or collapses'],
   },
   next_visit: 'Recheck and stitch removal in 10 to 14 days.',
-  sources: ['rspca-qld-foster', 'ava-vetvoice-post-surgery', 'usyd-vet-emergency-signs'],
+  sources: [],
 };
 
 /** A litter dictation used to demo batch mode. */
@@ -622,63 +622,62 @@ export const EXAMPLE_BATCH_NOTES = [
 
 /* ---------- Carer plan mode examples (grounded in src/sources.js) ---------- */
 
-export const EXAMPLE_CARER_DICTATION = `Carer plan for an adult rainbow lorikeet, found on the ground in a Moorooka backyard yesterday after hitting a window. Exact rescue spot recorded. Vet checked it this morning, bright and alert, no fractures, bruising on the left wing, can't sustain flight yet. Weighs 128 grams. Meloxicam as dispensed once a day for 3 days. Cage rest for 5 days in a small hospital cage, then move to a flight aviary. Going to a permitted wildlife carer. Release back at the rescue site once it's flying strongly and the wildlife vet clears it.`;
+export const EXAMPLE_CARER_DICTATION = `Care plan for a common ringtail possum joey going to a foster carer. Female, about 120 grams, furred, eyes open. Came in yesterday after a cat attack in Wonthaggi, vet checked her this morning, no puncture wounds found, on the antibiotic the vet dispensed once a day for 5 days. Needs a heat pad at about 30 degrees, pouch inside a small enclosure. Feeds of Wombaroo possum milk every 4 hours, toilet after each feed. Weigh daily. Start offering native leaves and flowers. Release back near the rescue site once she's weaned and around 600 grams, with a soft release.`;
 
+// The example plan, Victorian edition: what a carer gets back from the ringtail joey example.
+// Species points from the checked guidance are woven into the sections they belong to, not listed separately.
 export const EXAMPLE_CARER_PLAN = {
-  animal: 'Adult rainbow lorikeet',
-  species: 'Rainbow lorikeet',
+  animal: 'Ringtail possum joey (female)',
+  species: 'Common ringtail possum',
   kind: 'wildlife',
   summary:
-    'This adult lorikeet hit a window and has a bruised left wing. Nothing is broken. It needs a few days of quiet cage rest, pain relief for 3 days, then time in a flight aviary to build strength before it goes home to where it was found.',
+    'This little female ringtail joey, about 120 grams, came in after a cat caught her in Wonthaggi. The vet found no puncture wounds, and she is on a 5-day antibiotic course. She needs steady warmth, possum milk every 4 hours with toileting after each feed, a daily weigh, and native leaves and flowers to start learning to eat. Once she is weaned and around 600 grams, she goes back near where she was found with a soft release.',
   medications: [
-    { name: 'Meloxicam (pain relief)', how: 'By mouth, as dispensed by the clinic', how_often: 'Once a day, at the same time each morning', how_long: 'For 3 days', tip: 'Give it quickly and calmly with minimal handling, then leave the bird to rest in the covered cage.' },
+    { name: 'Antibiotic (after the cat attack)', how: 'By mouth, as dispensed by the vet', how_often: 'Once a day, at the same time each day', how_long: 'For 5 days, finishing the whole course even if she seems well', tip: 'Give it just before a milk feed, while she is warm and settled.' },
   ],
   plan: [
-    { when: 'Days 1 to 3', tasks: ['Give meloxicam once a day', 'Keep the hospital cage partly covered in a quiet, warm room', 'Check the bird twice a day without handling it', 'Remove droppings and leftover food, and clean the food and water dishes every day'] },
-    { when: 'Days 4 to 5', tasks: ['Pain relief has finished', 'Continue quiet cage rest', 'Weigh the bird and record the weight'] },
-    { when: 'Day 6 onwards', tasks: ['Move the bird to a flight aviary', 'Watch for strong, level flight and normal feeding', 'Weigh at least once a week', 'Arrange the wildlife vet check before release'] },
+    { when: 'Days 1 to 5', tasks: ['Antibiotic once a day', 'Possum milk every 4 hours, toileting after each feed', 'Weigh every morning before the first feed and write it down', 'Check the pouch is warm and dry at every feed'] },
+    { when: 'Day 6 onwards', tasks: ['Antibiotic course finished', 'Keep up 4-hourly feeds, toileting and the daily weigh', 'Offer fresh native leaves and flowers every evening', 'Watch for steady weight gain'] },
+    { when: 'Weaning, towards about 600 grams', tasks: ['Milk feeds reduce as she eats more leaves', 'Move her to a larger enclosure with branches to climb', 'Plan the soft release with the shelter'] },
   ],
   housing: [
-    'A small hospital cage in a warm, quiet room, away from pets, children and other species',
-    'Keep it out of sight of other animals and limit visitors and noise',
-    'Never keep the bird with or near domestic cats or dogs',
+    'A fabric pouch inside a small enclosure, in a quiet room away from pets, children and noise',
+    'A heat pad under part of the enclosure set to about 30 degrees, so she can move off it if she gets too warm',
+    'Keep the enclosure covered and dim during the day, as ringtails are active at night',
   ],
   feeding: [
-    'Offer the species-appropriate lorikeet diet supplied by the wildlife hospital. Lorikeets eat nectar and pollen in the wild, so don’t substitute seed or bread',
-    'Fresh food and clean water every day',
-    'If the bird isn’t eating, it needs to be checked by the vet or an experienced carer',
+    'Wombaroo possum milk every 4 hours. Only possum milk: cow’s milk upsets a joey’s gut',
+    'If she feels cool, warm her up in the pouch before feeding. A cold joey can’t digest milk properly',
+    'Gently stimulate her to toilet after every feed',
+    'Start offering native leaves and flowers each evening so she learns to eat them',
   ],
   activity: [
-    'Handle as little as possible. Every handling is stressful for wildlife',
-    'Wear gloves and a mask when cleaning or handling, and wash your hands before and after',
-    'Talk quietly and don’t treat the bird as a pet, so it stays wild',
+    'Handle only for feeds, toileting, weighing and medication',
+    'Speak quietly and don’t treat her as a pet, so she stays wild and wary of people',
+    'Once she is moving about, add branches and leafy cover to climb and hide in',
   ],
   care: [
-    'Keep a record of the exact rescue spot, every dose, weights and the outcome',
-    'This bird can only be kept by a permitted wildlife carer',
+    'Keep the record of the exact rescue spot in Wonthaggi, as release goes back there',
+    'Record every weight, feed and dose',
+    'Wash your hands before and after handling her',
   ],
-  daily_checks: ['Meloxicam (days 1 to 3)', 'Eating', 'Droppings normal', 'Cage cleaned', 'Alert and perching'],
+  daily_checks: ['Antibiotic (days 1 to 5)', 'Weighed', 'Feeds every 4 hours', 'Toileted after feeds', 'Pouch warm and dry'],
   log_days: 7,
   release: {
-    ready_when: [
-      'The wildlife vet or an experienced rehabilitator has checked it and cleared it as fit',
-      'It flies strongly and level in the aviary',
-      'It is a normal weight and feeds itself',
-      'It is alert, wary of people and pets, and not used to being handled',
-    ],
+    ready_when: ['Fully weaned and eating native leaves and flowers on her own', 'Around 600 grams and gaining steadily', 'Climbing confidently and wary of people'],
     how: [
-      'Release in the morning, about an hour after dawn, when lorikeets are active',
-      'Don’t release in storms, strong wind or extreme heat',
-      'A short-stay bird like this suits a hard release. Open the carrier and let it fly off on its own',
+      'Soft release: a nest box or drey near the release spot, with food left out for the first nights',
+      'Release at dusk, when ringtails become active',
+      'Release within 24 hours of her being ready, as the Victorian release conditions require',
     ],
-    where: 'At the recorded rescue spot in Moorooka, as long as it still has trees, food and water and is away from roads. If it isn’t suitable, release as close to it as possible.',
+    where: 'Back near where she was found in Wonthaggi, if it is still suitable. If not, the closest suitable spot within her home range.',
   },
   escalate: {
-    vet: ['Not eating or drinking for a day', 'Can’t perch, or keeps falling', 'Wing droops more or any swelling appears', 'Fluffed up and sleepy during the day'],
-    urgent: ['Any contact with a cat or dog, even a small scratch', 'Breathing with an open beak or tail bobbing', 'Bleeding, or the bird is lying on the floor of the cage'],
+    vet: ['Losing weight, or not gaining for two days in a row', 'Not feeding well, or milk bubbling from her nose', 'Diarrhoea or no droppings after toileting'],
+    urgent: ['Any swelling, wound or discharge where the cat may have caught her', 'Breathing that is fast, noisy or open-mouthed', 'Cold, limp or not responding'],
   },
-  next_visit: 'Wildlife vet check before release.',
-  sources: ['qld-cop-protected-animals-care', 'qld-cop-protected-animals-release', 'qld-des-rescue-and-rehabilitation', 'qld-gov-helping-injured-wildlife', 'nsw-code-native-birds'],
+  next_visit: 'Vet check before release.',
+  sources: ['vic-release-requirements', 'vic-rehab-guidelines-part-a', 'vic-shelter-foster-carer-authorisation', 'vic-cop-welfare-wildlife-rehabilitation'],
 };
 
 export const EXAMPLE_FOSTER_DICTATION = `Carer plan for a foster kitten. Ginger male, about 8 weeks old, 820 grams. Mild cat flu, sneezing and clear discharge from both eyes, eating well, bright. Doxycycline as dispensed once a day for 10 days. Wipe his eyes twice a day. Keep him away from other cats. Weigh him every few days. Recheck in 10 days.`;
@@ -719,7 +718,7 @@ export const EXAMPLE_FOSTER_PLAN = {
     urgent: ['Breathing with his mouth open or struggling to breathe', 'Very weak, floppy or hard to wake', 'Skin stays tented when gently pinched (severe dehydration)'],
   },
   next_visit: 'Recheck in 10 days.',
-  sources: ['awlq-foster-carer-manual', 'rspca-qld-foster', 'rspca-act-kitten-foster-manual'],
+  sources: [],
 };
 
 /* ---------- Extra outputs: inspector report and adoption summary ---------- */
@@ -855,8 +854,11 @@ export const EXAMPLE_LOG_DICTATION = `Care log for Oliver, eastern grey kangaroo
 
 export const EXAMPLE_TOVET_DICTATION = `For the vet. Willow, juvenile wombat, female, came in five weeks ago after her mum was hit on the Inverloch road. She's on the mange treatment the vet prescribed, last dose was ten days ago. Weight's dropped from 6.2 to 6.0 kilos over the last week. Eating fewer pellets, still grazing. Loose droppings for two days. Scratching more again. I want to know if the weight drop is a worry, whether she needs another mange dose, and when she can go out to the outdoor enclosure.`;
 
-export const EXAMPLE_JOEY_CARER_DICTATION = `Care plan for a common ringtail possum joey going to a foster carer. Female, about 120 grams, furred, eyes open. Came in yesterday after a cat attack in Wonthaggi, vet checked her this morning, no puncture wounds found, on the antibiotic the vet dispensed once a day for 5 days. Needs a heat pad at about 30 degrees, pouch inside a small enclosure. Feeds of Wombaroo possum milk every 4 hours, toilet after each feed. Weigh daily. Start offering native leaves and flowers. Release back near the rescue site once she's weaned and around 600 grams, with a soft release.`;
+export const EXAMPLE_JOEY_CARER_DICTATION = EXAMPLE_CARER_DICTATION;
 
-export const EXAMPLE_WOMBAT_VET_DICTATION = `Wildlife consult. Adult female bare-nosed wombat, car strike last night on the Bass Highway near Kilcunda, brought in by the carer. Weight 24 kilos. Bright, alert, hissing. Temp 36.1, heart rate 80, resp 20. Severe sarcoptic mange, alopecia and crusting over both flanks, dorsum and both pinnae, fissuring around the eyes. Abrasion 3 by 2 centimetres over the left shoulder, superficial. No fractures palpable, ambulating normally. Pouch empty. Assessment: mange, moderate to severe, and minor road trauma. Plan: clean abrasion, mange treatment per our wombat protocol, recheck in one week, carer to monitor appetite and weight.`;
+export const EXAMPLE_WOMBAT_VET_DICTATION = `Wombat, adult F, car strike Bass Hwy last night, carer brought her in. 24 kg. BAR, hissing. T 36.1, HR 80, RR 20. Sarcoptic mange severe, flanks, dorsum, both pinnae, fissures round eyes. Abrasion L shoulder 3 by 2 cm, superficial. No fx palpable, ambulating fine. Pouch empty. Clean abrasion, mange tx per our wombat protocol. Recheck 1 week.`;
+
+// A vet's quick instructions for the carer, the way a vet actually says them.
+export const EXAMPLE_VET_PLAN_DICTATION = `Plan for the carer. Same wombat, adult F, 24 kg, severe mange, superficial graze L shoulder. First mange tx given today, I'll do the next one at recheck in 1 week. Saline clean of the graze once a day. Quiet pen, hide box, minimal handling. Grass hay, native grasses, fresh water. Weigh weekly. Release back at the Kilcunda pull-over once the coat's growing back and the skin's healed.`;
 
 export const EXAMPLE_FUNDING_DICTATION = `Funding submission for the Bass Coast Shire community grants, environment stream. We want a second wildlife ambulance trailer and a portable wombat burrow-flap kit so we can treat mange in the wild instead of bringing every wombat in. Last year we took in 214 animals, about a third of them wombats, and 60 of the wombats had mange. We have 18 trained volunteers. Asking for 8,500 dollars: trailer 5,200, burrow flap kit and treatment supplies 2,100, volunteer training day 1,200. Would run from February to December next year. We'd measure it by number of wombats treated in the wild and how many we see recover on the trail cameras. Wildlife Victoria and the local vets already refer animals to us.`;

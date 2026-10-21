@@ -31,6 +31,7 @@ import {
   EXAMPLE_TOVET_DICTATION,
   EXAMPLE_JOEY_CARER_DICTATION,
   EXAMPLE_WOMBAT_VET_DICTATION,
+  EXAMPLE_VET_PLAN_DICTATION,
   EXAMPLE_FUNDING_DICTATION,
   appendSegment,
   buildPrompt,
@@ -341,7 +342,7 @@ els.mic.addEventListener('click', () => {
   if (busy) return;
   banner('');
   els.toast.hidden = true;
-  if ([EXAMPLE_DICTATION, EXAMPLE_BATCH_DICTATION, EXAMPLE_CARER_DICTATION, EXAMPLE_FOSTER_DICTATION, EXAMPLE_INTAKE_DICTATION, EXAMPLE_LOG_DICTATION, EXAMPLE_TOVET_DICTATION, EXAMPLE_JOEY_CARER_DICTATION, EXAMPLE_WOMBAT_VET_DICTATION, EXAMPLE_FUNDING_DICTATION].includes(els.transcript.value)) setTranscript('');
+  if ([EXAMPLE_DICTATION, EXAMPLE_BATCH_DICTATION, EXAMPLE_CARER_DICTATION, EXAMPLE_FOSTER_DICTATION, EXAMPLE_INTAKE_DICTATION, EXAMPLE_LOG_DICTATION, EXAMPLE_TOVET_DICTATION, EXAMPLE_JOEY_CARER_DICTATION, EXAMPLE_WOMBAT_VET_DICTATION, EXAMPLE_VET_PLAN_DICTATION, EXAMPLE_FUNDING_DICTATION].includes(els.transcript.value)) setTranscript('');
   if (keyboardVoice) {
     const wasOn = kbWasOn || document.body.dataset.mic === 'keyboard';
     kbWasOn = false;
@@ -381,6 +382,7 @@ els.example.addEventListener('click', () => loadExample(EXAMPLE_WOMBAT_VET_DICTA
 $('load-intake-example').addEventListener('click', () => loadExample(EXAMPLE_INTAKE_DICTATION));
 $('load-log-example').addEventListener('click', () => loadExample(EXAMPLE_LOG_DICTATION));
 $('load-joey-example').addEventListener('click', () => loadExample(EXAMPLE_JOEY_CARER_DICTATION));
+$('load-vet-plan-example').addEventListener('click', () => loadExample(EXAMPLE_VET_PLAN_DICTATION));
 $('load-tovet-example').addEventListener('click', () => loadExample(EXAMPLE_TOVET_DICTATION));
 $('load-funding-example').addEventListener('click', () => loadExample(EXAMPLE_FUNDING_DICTATION));
 
@@ -1360,7 +1362,7 @@ els.about.addEventListener('click', (e) => {
     showView('record');
     if (settings.role !== 'vet') document.querySelector('input[name="mode"][value="intake"]').checked = true;
     applyMode();
-    loadExample(settings.role === 'vet' ? EXAMPLE_WOMBAT_VET_DICTATION : EXAMPLE_INTAKE_DICTATION);
+    loadExample(settings.role !== 'vet' ? EXAMPLE_INTAKE_DICTATION : mode() === 'vet' ? EXAMPLE_WOMBAT_VET_DICTATION : EXAMPLE_VET_PLAN_DICTATION);
   }
 });
 

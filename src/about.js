@@ -54,9 +54,9 @@ export const ABOUT_HTML = `
 <section class="about-sec">
   <h2>Four tools for carers</h2>
   <div class="feats">
-    ${feature(I.pin, 'Intake record', 'Just picked one up? Talk through where, when and what you saw. The exact rescue spot is kept word for word, so release goes back to the right place, and anything missing for your register is flagged.')}
+    ${feature(I.pin, 'Intake record', 'Just picked one up? Talk through where, when and what you saw. The exact rescue spot is kept word for word, so release goes back to the right place, and anything missing for your register is flagged. A care plan for right now starts at the same time: tap <b>Need advice right now?</b> to open it.')}
     ${feature(I.cal, 'Daily care log', 'Weight, feeds, meds, toileting and behaviour in one tidy entry. If something sounds worrying, like weight loss or going off food, it suggests a vet check.')}
-    ${feature(I.heart, 'Care plan', 'Handing an animal to another carer? Get a complete plan: medications, a day-by-day routine, housing, feeding and release, based on Victorian wildlife guidance.')}
+    ${feature(I.heart, 'Care plan', 'Handing an animal to another carer? Get a complete plan: medications, a day-by-day routine, housing, feeding and release, based on Victorian wildlife guidance, with the species-specific points right where you need them.')}
     ${feature(I.steth, 'For the vet', 'Before a vet visit, talk through what’s been happening. You get a one-minute summary with your questions written out, so nothing gets forgotten in the room.')}
   </div>
 </section>
@@ -72,7 +72,7 @@ export const ABOUT_HTML = `
 
 <section class="about-sec">
   <h2>Working with a vet?</h2>
-  <p>Hand them the app. Under the picker, tap <b>Are you the vet? Switch to clinical notes</b>. They talk through the exam and get tidy clinical notes, then can turn them straight into a care plan for you. Tap the same link to switch back.</p>
+  <p>Hand them the app. Under the picker, tap <b>Are you the vet? Switch to vet tools</b>. Shorthand is fine. They get a <b>care plan</b> written for you, and <b>clinical notes</b> to copy straight into their own system, both from the same few words. Tap the same link to switch back.</p>
 </section>
 
 <section class="about-sec">
