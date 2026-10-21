@@ -7,6 +7,7 @@ import { preparePhoto, MAX_PHOTOS } from './photos.js';
 import { ABOUT_HTML } from './about.js';
 import { lookupSource, sourcesForPrompt, SOURCE_IDS } from './sources.js';
 import { buildWord, docModel, careModel, noteModel, wordFileName } from './word.js';
+import { isNative, shareFile } from './native.js';
 import {
   NOTE_TYPES,
   NOTE_TYPE_ORDER,
@@ -446,9 +447,16 @@ async function ensureProvider() {
   return provider;
 }
 
-const NO_CLAUDE = inClaude
+const NO_CLAUDE = isNative
+  ? 'Connect Claude first: open Settings (the gear, top right) and add the Anthropic API key.'
+  : inClaude
   ? 'Claude isn’t available right now. Check you are signed in, then try again.'
   : 'This public demo can’t write notes from your own dictation. Open Care Scribe in the Claude app to use it with your Claude account. The examples work here.';
+
+function noClaude() {
+  banner(NO_CLAUDE, 'info');
+  if (isNative) openSettings('Add the Anthropic API key to connect Claude.');
+}
 
 function waitForIdle(ms = 2500) {
   return new Promise((resolve) => {
@@ -542,7 +550,7 @@ async function createNote() {
     if (!(await ensureProvider())) {
       if (finalText === EXAMPLE_DICTATION.trim()) return showNotes([normaliseNote(EXAMPLE_NOTE)], true);
       if (finalText === EXAMPLE_BATCH_DICTATION.trim()) return showNotes(EXAMPLE_BATCH_NOTES.map(normaliseNote), true);
-      banner(NO_CLAUDE, 'info');
+      noClaude();
       return;
     }
     if (photos.length && !provider.images) {
@@ -1023,7 +1031,7 @@ async function createCarePlan(text) {
   if (!(await ensureProvider())) {
     if (text === EXAMPLE_CARER_DICTATION.trim()) return showCare(normaliseCareSheet(EXAMPLE_CARER_PLAN, SOURCE_IDS()), 'record', 'This is the example care plan.');
     if (text === EXAMPLE_FOSTER_DICTATION.trim()) return showCare(normaliseCareSheet(EXAMPLE_FOSTER_PLAN, SOURCE_IDS()), 'record', 'This is the example care plan.');
-    banner(NO_CLAUDE, 'info');
+    noClaude();
     return;
   }
   banner('');
@@ -1085,7 +1093,7 @@ function showDoc(d, kind, info = '') {
 
 async function createDoc(kind, text) {
   if (!(await ensureProvider())) {
-    banner(NO_CLAUDE, 'info');
+    noClaude();
     return;
   }
   if (photos.length && !provider.images) {
@@ -1155,6 +1163,10 @@ async function saveWord(model, btn) {
   try {
     const blob = await buildWord(model, { preparedBy: settings.clinician });
     const filename = wordFileName(model.title);
+    if (isNative) {
+      await shareFile(blob, filename, model.title);
+      return;
+    }
     const downloads = inClaude && globalThis.claude.use ? await globalThis.claude.use('downloads') : null;
     if (downloads) {
       try {
@@ -1288,7 +1300,7 @@ document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible' && dictation.state !== 'idle') keepAwake(true);
 });
 
-if ('serviceWorker' in navigator && location.protocol === 'https:' && !inClaude) {
+if ('serviceWorker' in navigator && location.protocol === 'https:' && !inClaude && !isNative) {
   navigator.serviceWorker.register('sw.js').catch(() => {});
 }
 

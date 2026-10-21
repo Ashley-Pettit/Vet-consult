@@ -1,3 +1,4 @@
+import { isNative, NativeDictation } from './native.js';
 // Thin, resilient wrapper around the browser's Web Speech API.
 // Emits: onstate('idle'|'starting'|'listening'), oninterim(text), onfinal(text), onerror(code)
 
@@ -10,7 +11,7 @@ const FATAL = new Set(['not-allowed', 'service-not-allowed', 'audio-capture', 'l
 const QUICK_END_MS = 2000; // a session shorter than this counts as a failed restart
 const MAX_QUICK_FAILS = 5;
 
-export class Dictation {
+class WebDictation {
   constructor({ lang = 'en-AU', win = globalThis, now = () => Date.now() } = {}) {
     this.win = win;
     this.lang = lang;
@@ -208,3 +209,6 @@ export function speechErrorMessage(code) {
       return 'Dictation stopped unexpectedly. Tap the mic to carry on.';
   }
 }
+
+/** The Android app uses the phone's own recogniser; browsers use the Web Speech API. */
+export const Dictation = isNative ? NativeDictation : WebDictation;

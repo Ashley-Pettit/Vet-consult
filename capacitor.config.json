@@ -1,0 +1,7 @@
+{
+  "appId": "au.bunurongwildlifecare.carescribe",
+  "appName": "Care Scribe",
+  "webDir": "dist",
+  "android": { "allowMixedContent": false },
+  "server": { "androidScheme": "https" }
+}

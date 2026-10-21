@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Bunurong Wildlife Care: olive, darker olive for the status bar, terracotta accent -->
+    <color name="colorPrimary">#647C50</color>
+    <color name="colorPrimaryDark">#4E6640</color>
+    <color name="colorAccent">#AB6555</color>
+</resources>
