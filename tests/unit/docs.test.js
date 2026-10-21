@@ -70,8 +70,19 @@ test('funding draft never invents figures', () => {
 
 test('advice right now: first aid only, grounded in the sources it is given', () => {
   const p = buildDocPrompt('advice', 'joey', { sourceList: 'vic-x | vic | T | point' });
-  assert.match(p, /NEVER suggest any medication, dose, sedation, euthanasia or procedure/);
+  assert.match(p, /Never suggest sedation, euthanasia or a procedure/);
+  assert.match(p, /Never name a drug or dose that a vet has not directed/);
   assert.match(p, /Reference sources \(id \| scope \| title \| key points\):\nvic-x \| vic/);
   assert.match(p, /\(03\) 8400 7300/);
   assert.doesNotMatch(buildDocPrompt('log', 'x', { sourceList: 'vic-x' }), /Reference sources/);
+});
+
+test('pain and medicines: practical but lawful, in intake, log and advice', () => {
+  for (const k of ['intake', 'log', 'advice']) {
+    const p = buildDocPrompt(k, 'x', { sourceList: 'a' });
+    assert.match(p, /a wildlife carer can give first aid only; pain relief and other medicines need a vet's direction/, k);
+    assert.match(p, /Never name a drug or dose that a vet has not directed/, k);
+    assert.match(p, /attribute it to the vet/, k);
+  }
+  assert.match(buildDocPrompt('tovet', 'x'), /"Text to your vet": one plain message of at most 450 characters/);
 });

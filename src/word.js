@@ -186,7 +186,7 @@ export function docModel(d, kindLabel, note = '') {
     subtitle: d.subtitle,
     blocks: [
       ...(note ? [{ heading: 'Please note', text: note }] : []),
-      ...d.sections.map((s) => {
+      ...d.sections.filter((s) => !/^text to your vet$/i.test(s.heading)).map((s) => {
         // "Field: value" lists (like the register entry) print as a two-column table an auditor can scan.
         const items = s.items || [];
         const pairs = items.map((x) => /^([^:]{1,40}):\s+(.+)$/.exec(x));
