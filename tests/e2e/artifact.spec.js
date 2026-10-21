@@ -1,6 +1,9 @@
 import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
-import { SAMPLE_NOTE, DICTATION, watchErrors } from './helpers.js';
+import { SAMPLE_NOTE, DICTATION, watchErrors, asVet } from './helpers.js';
+
+// These tests cover the vet's clinical notes; the app opens on the carer tools by default.
+test.beforeEach(async ({ page }) => asVet(page));
 
 // The single-file Claude artifact build, with a stand-in for Claude's runtime.
 test('artifact build writes notes through the Claude runtime', async ({ page, baseURL }) => {

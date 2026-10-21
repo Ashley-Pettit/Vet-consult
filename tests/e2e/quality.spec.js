@@ -1,6 +1,9 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
-import { fakeSpeech, withKey, mockApi, openApp, DICTATION } from './helpers.js';
+import { fakeSpeech, withKey, mockApi, openApp, DICTATION, asVet } from './helpers.js';
+
+// These tests cover the vet's clinical notes; the app opens on the carer tools by default.
+test.beforeEach(async ({ page }) => asVet(page));
 
 const SHOTS = process.env.SHOTS_DIR || 'test-results/shots';
 

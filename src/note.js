@@ -1,3 +1,4 @@
+import { speciesCareForPrompt } from './species-care.js';
 import { CONFIG } from './config.js';
 
 // Pure logic: prompt, parsing, normalising and plain-text formatting of clinical notes.
@@ -199,6 +200,11 @@ Rules:
 
 Reference sources (id | scope | title | key points):
 ${sourceList}
+
+Species-specific care points (species | point | why), from checked Victorian and NSW guidance:
+${speciesCareForPrompt()}
+- Where one of these points applies to this animal, work it into the section it belongs to (medications, feeding, housing, activity and handling, other care, release, or the day-by-day plan), in plain words with the reason, and where possible say what TO do (for example "Feed a low-lactose formula made for macropods, as cow's milk gives joeys diarrhoea"). Never make a separate list of warnings.
+- Only tell the carer what not to do when it is specific to this animal or its species. Leave out general prohibitions (such as not giving medicine without a vet); escalate already covers when to get help.
 ${shape ? `
 Reply with ONLY one JSON object in this shape:
 ${CARE_SHAPE}` : ''}`;

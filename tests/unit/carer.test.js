@@ -60,3 +60,14 @@ test('care plan has no never-give or no-vet sections', () => {
   const t = careSheetText(normaliseCareSheet(EXAMPLE_CARER_PLAN, SOURCE_IDS()), lookupSource);
   assert.doesNotMatch(t, /Never give or do|Can't reach a vet/);
 });
+
+test('species care points are woven into the plan, not listed, and general bans are left out', async () => {
+  const { SPECIES_CARE } = await import('../../src/species-care.js');
+  assert.ok(SPECIES_CARE.length >= 30);
+  assert.ok(SPECIES_CARE.every((w) => w.species !== 'all' && /^https:\/\//.test(w.url)));
+  const p = buildCarerPlanPrompt('joey', sourcesForPrompt());
+  assert.match(p, /macropod \| Never give a joey cow's milk/);
+  assert.match(p, /work it into the section it belongs to/);
+  assert.match(p, /Never make a separate list of warnings/);
+  assert.match(p, /Only tell the carer what not to do when it is specific to this animal or its species/);
+});

@@ -1,6 +1,9 @@
 import { test, expect } from '@playwright/test';
-import { fakeSpeech, withKey, mockApi, watchErrors, openApp, DICTATION, SAMPLE_NOTE, apiReply, textReply } from './helpers.js';
-import { EXAMPLE_BATCH_NOTES, EXAMPLE_CARE_SHEET, EXAMPLE_CARER_PLAN, EXAMPLE_INSPECTOR_DOC } from '../../src/note.js';
+import { fakeSpeech, withKey, mockApi, watchErrors, openApp, DICTATION, SAMPLE_NOTE, apiReply, textReply, asVet } from './helpers.js';
+import { EXAMPLE_BATCH_NOTES, EXAMPLE_CARE_SHEET, EXAMPLE_CARER_PLAN } from '../../src/note.js';
+
+// These tests cover the vet's clinical notes; the app opens on the carer tools by default.
+test.beforeEach(async ({ page }) => asVet(page));
 
 // One mock that answers each kind of request the way Claude would.
 const smart = (prompt) => {
@@ -9,7 +12,7 @@ const smart = (prompt) => {
     return apiReply({ ...SAMPLE_NOTE, visit: { ...SAMPLE_NOTE.visit, clinician: answer }, check: [SAMPLE_NOTE.check[1]] });
   }
   if (prompt.includes('<comments>')) return textReply({ ...EXAMPLE_CARER_PLAN, sources: [...EXAMPLE_CARER_PLAN.sources, 'not-a-real-source'] });
-  if (prompt.includes('home-care plan')) return textReply(EXAMPLE_CARE_SHEET);
+  if (prompt.includes('based on the clinical note below')) return textReply(EXAMPLE_CARE_SHEET);
   if (prompt.includes('Litter of three')) return textReply({ animals: EXAMPLE_BATCH_NOTES });
   return apiReply();
 };
@@ -42,13 +45,15 @@ test('vital flags, dose totals and PMS field copy', async ({ page, context }) =>
   await expect(page.locator('#check-count')).toHaveText('3');
   await expect(page.locator('#check-list')).toContainText('high for a dog');
 
+  // Prescriptions and reminders each show in full, with Copy top right.
   const rows = page.locator('.pms-row');
-  await expect(rows).toHaveCount(3);
-  await rows.nth(1).getByRole('button').click();
+  await expect(rows).toHaveCount(2);
+  await expect(rows.nth(0).locator('.pms-full')).toContainText('Meloxicam 0.1 mg/kg PO SID x 5 days');
+  await rows.nth(0).getByRole('button').click();
   expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
     'Cephalexin 22 mg/kg PO BID x 7 days\nMeloxicam 0.1 mg/kg PO SID x 5 days\nFluralaner (Bravecto) Per label PO Once',
   );
-  await rows.nth(2).getByRole('button').click();
+  await rows.nth(1).getByRole('button').click();
   expect(await page.evaluate(() => navigator.clipboard.readText())).toMatch(/Recheck and suture removal in 10-14 days \(due \d\d\/\d\d\/\d{4}\)/);
   // Calculated totals never leak into what gets pasted.
   expect(await page.locator('#plain').inputValue()).not.toContain('312.4');
@@ -152,37 +157,12 @@ test('photos are shrunk, numbered, sent first and shown with the findings', asyn
   expect(await page.locator('#plain').inputValue()).toContain('- Photo 1: 4 cm linear wound');
 });
 
-test('public demo: both examples and the example care sheet work with no connection', async ({ page }) => {
-  const calls = await mockApi(page);
-  await openApp(page);
-  await page.locator('#load-batch-example').click();
-  await page.locator('#create').click();
-  await expect(page.locator('#animals .animal')).toHaveCount(3);
-  await expect(page.locator('#note-banner')).toContainText('example note');
-  await page.locator('#back').click();
-  await page.locator('#clear').click();
-  await page.locator('#load-example').click();
-  await page.locator('#create').click();
-  await page.locator('#care').click();
-  await expect(page.locator('#care-banner')).toContainText('example care plan');
-  await expect(page.locator('#care-title')).toHaveText('Caring for Rusty at home');
-  // Answering needs Claude: the demo explains rather than asking for a key.
-  await page.locator('#care-back').click();
-  await page.locator('#checks summary').click();
-  await page.locator('#check-list > li').first().getByRole('button', { name: 'Answer' }).click();
-  await page.locator('#check-list input').first().fill('Dr Lee');
-  await page.getByRole('button', { name: 'Update note' }).click();
-  await expect(page.locator('#toast-text')).toContainText('Claude app version');
-  await expect(page.locator('#settings')).toBeHidden();
-  expect(calls).toHaveLength(0);
-});
-
 test('How it works: opens from the header and its buttons lead into the app', async ({ page }) => {
   await openApp(page);
   await page.locator('#open-about').click();
   await expect(page.locator('#view-about')).toBeVisible();
   await expect(page.locator('#view-about h1')).toBeFocused();
-  await expect(page.locator('.feat')).toHaveCount(8);
+  await expect(page.locator('.feat')).toHaveCount(4);
   await expect(page.locator('.steps li')).toHaveCount(3);
   await page.locator('.hero [data-action="example"]').click();
   await expect(page.locator('#view-record')).toBeVisible();
@@ -203,105 +183,22 @@ test('euthanasia notes have no care sheet button', async ({ page }) => {
   await expect(page.locator('#care')).toBeHidden();
 });
 
-test('carer plan mode: talk, then straight to a plan with release and Queensland sources', async ({ page, context }) => {
+test('carer plan for a carer: Victorian sources, vet only for escalation, species points woven in', async ({ page, context }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
   const errors = watchErrors(page);
-  await withKey(page);
-  const calls = await mockApi(page, { body: smart });
+  await withKey(page, { role: 'carer', mode: 'carer' });
+  const calls = await mockApi(page, { body: () => textReply(EXAMPLE_CARE_SHEET) });
   await openApp(page);
-  await page.getByRole('radio', { name: 'Carer plan' }).check();
   await expect(page.locator('#create')).toHaveText('Create care plan');
-  await expect(page.locator('.mode-intro[data-modes="carer"]')).toBeVisible();
-  await expect(page.locator('.mode-intro[data-modes="vet"]')).toBeHidden();
-  await page.locator('#transcript').fill('Adult lorikeet, window strike, bruised wing, meloxicam 3 days, release at rescue site.');
+  await page.locator('#transcript').fill('Ringtail possum joey, 120 grams, cat attack, antibiotic 5 days.');
   await page.locator('#create').click();
   await expect(page.locator('#view-care')).toBeVisible();
   expect(calls).toHaveLength(1);
   expect(calls[0].prompt).toContain('ONLY an escalation contact');
-  expect(calls[0].prompt).toContain('qld-cop-protected-animals-release | qld |');
-  await expect(page.locator('#care-title')).toHaveText('Care plan: Adult rainbow lorikeet');
-  await expect(page.locator('.care-sec.release')).toContainText('about an hour after dawn');
-  const refs = page.locator('.sources li');
-  await expect(refs).toHaveCount(5); // the invented id is dropped
-  await expect(refs.first().locator('.scope')).toHaveText('QLD');
-  await expect(page.locator('#care-sheet')).not.toContainText('Keeping the clinic updated');
-  await page.locator('#care-copy').click();
-  expect(await page.evaluate(() => navigator.clipboard.readText())).toContain('Based on');
-  await expect(page.locator('#care-back-label')).toHaveText('Back');
-  await page.locator('#care-back').click();
-  await expect(page.locator('#view-record')).toBeVisible();
-  // Mode is remembered (the key helper rewrites settings on reload, so read what was saved).
-  expect(JSON.parse(await page.evaluate(() => localStorage.getItem('vcs.settings'))).mode).toBe('carer');
+  expect(calls[0].prompt).toContain('vic-release-requirements | vic |');
+  expect(calls[0].prompt).toContain('work it into the section it belongs to');
+  await expect(page.locator('.care-sec.watch li')).toHaveCount(4);
+  await page.locator('#care-copy-top').click();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toMatch(/^Caring for Rusty at home/);
   expect(errors).toEqual([]);
-});
-
-test('carer plan examples work in the public demo with no connection', async ({ page }) => {
-  const calls = await mockApi(page);
-  await openApp(page);
-  await page.getByRole('radio', { name: 'Carer plan' }).check();
-  await page.locator('#load-carer-example').click();
-  await page.locator('#create').click();
-  await expect(page.locator('#care-banner')).toContainText('example care plan');
-  await expect(page.locator('.care-sec.release')).toBeVisible();
-  await page.locator('#care-back').click();
-  await page.locator('#clear').click();
-  await page.locator('#load-foster-example').click();
-  await page.locator('#create').click();
-  await expect(page.locator('#care-title')).toHaveText('Caring for Ginger foster kitten at home');
-  await page.reload();
-  await expect(page.locator('input[name="mode"][value="carer"]')).toBeChecked();
-  await expect(page.locator('#transcript')).not.toHaveValue(''); // draft kept, so straight to Create
-  await page.locator('#create').click();
-  await expect(page.locator('#care-title')).toHaveText('Caring for Ginger foster kitten at home');
-  await expect(page.locator('.care-sec.release')).toHaveCount(0);
-  await expect(page.locator('#care-sheet')).toContainText('Never give milk');
-  expect(calls).toHaveLength(0);
-});
-
-test('inspector report: objective sections, review closed, photos sent, copy as text', async ({ page, context }) => {
-  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
-  await withKey(page);
-  const calls = await mockApi(page, { body: () => textReply(EXAMPLE_INSPECTOR_DOC) });
-  await openApp(page);
-  await page.getByRole('radio', { name: 'Inspector report' }).check();
-  await expect(page.locator('#create')).toHaveText('Create report');
-  await page.locator('#add-photo').setInputFiles([{ name: 'a.png', mimeType: 'image/png', buffer: PNG }]);
-  await page.locator('#transcript').fill('Case 22, kelpie, BCS 2 of 9, nails into pads.');
-  await page.locator('#create').click();
-  await expect(page.locator('#view-doc')).toBeVisible();
-  const prompt = calls[0].prompt;
-  expect(prompt).toContain('Animal Care and Protection Act 2001 (Qld)');
-  expect(prompt).toContain('Do not say whether an offence was committed');
-  expect(prompt).toContain('1 photo(s) are attached');
-  expect(calls[0].body.messages[0].content[0].type).toBe('image');
-  await expect(page.locator('#doc-title')).toContainText('QS-INS-2207');
-  await expect(page.locator('.doc-sec h2')).toContainText(['Case details', 'Animal identification', 'Examination findings', 'Photographs', 'Veterinary opinion', 'Treatment provided', 'Prognosis and recommendations', 'Declaration']);
-  await expect(page.locator('#doc-checks')).not.toHaveAttribute('open', '');
-  await expect(page.locator('#doc-check-count')).toHaveText('3');
-  await page.locator('#doc-copy').click();
-  const text = await page.evaluate(() => navigator.clipboard.readText());
-  expect(text).toMatch(/^Veterinary report: adult female kelpie/);
-  expect(text).toContain('VETERINARY OPINION');
-});
-
-test('adoption summary: due dates worked out, examples work with no connection', async ({ page }) => {
-  const calls = await mockApi(page);
-  await openApp(page);
-  await page.getByRole('radio', { name: 'Adoption summary' }).check();
-  await expect(page.locator('#load-adoption-example')).toBeVisible();
-  await expect(page.locator('#load-example')).toBeHidden();
-  await page.locator('#load-adoption-example').click();
-  await page.locator('#create').click();
-  await expect(page.locator('#doc-banner')).toContainText('example adoption summary');
-  await expect(page.locator('#doc-title')).toHaveText('Bella’s health summary');
-  await expect(page.locator('.due li')).toHaveCount(2);
-  await expect(page.locator('.due .when').first()).toHaveText(/in 1 month \(due \d\d\/\d\d\/\d{4}\)/);
-  await expect(page.locator('#doc-checks')).toBeHidden();
-  await page.locator('#doc-back').click();
-  await page.getByRole('radio', { name: 'Inspector report' }).check();
-  await page.locator('#clear').click();
-  await page.locator('#load-inspector-example').click();
-  await page.locator('#create').click();
-  await expect(page.locator('#doc-title')).toContainText('kelpie');
-  expect(calls).toHaveLength(0);
 });

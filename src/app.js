@@ -865,7 +865,7 @@ function renderNote() {
   els.plain.value = sec.clinical;
   requestAnimationFrame(() => fitPlain());
   renderPms(sec);
-  els.copy.textContent = 'Copy note';
+  els.copy.lastChild.textContent = 'Copy';
 }
 
 // The full text is always on show, sized to fit so nothing hides behind a scroll.
@@ -878,28 +878,24 @@ els.plain.addEventListener('input', fitPlain);
 // Photos belong to the consult; only show them on single-animal notes to avoid implying which animal they show.
 const photosForNote = () => (notes.length === 1 ? photos : []);
 
+// Prescriptions and reminders each get their own box, shown in full, with Copy top right.
 function renderPms(sec) {
   const rows = [
-    ['Clinical notes', 'clinical', () => els.plain.value],
-    ['Prescriptions', 'prescriptions', () => sec.prescriptions],
-    ['Reminders', 'reminders', () => sec.reminders],
+    ['Prescriptions', 'prescriptions'],
+    ['Reminders', 'reminders'],
   ].filter(([, key]) => sec[key]);
   els.pmsRows.replaceChildren(
-    ...rows.map(([label, key, get]) => {
-      const btn = el('button', { type: 'button', class: 'btn ghost small', 'aria-label': `Copy ${label.toLowerCase()}` }, 'Copy');
+    ...rows.map(([label, key]) => {
+      const btn = el('button', { type: 'button', class: 'btn small ghost copy-top', 'aria-label': `Copy ${label.toLowerCase()}` }, 'Copy');
       btn.addEventListener('click', async () => {
-        const ok = await copyText(get(), key === 'clinical' ? els.plain : null);
+        const ok = await copyText(sec[key]);
         btn.textContent = ok ? 'Copied ✓' : 'Copy';
-        if (ok) toast(`${label} copied. Paste into that field in your PMS.`);
+        if (ok) toast(`${label} copied. Paste into that field in your system.`);
         setTimeout(() => (btn.textContent = 'Copy'), 2500);
       });
-      const preview = get().split('\n').filter(Boolean);
-      return el('div', { class: 'pms-row' }, [
-        el('div', { class: 'pms-text' }, [
-          el('strong', { text: label }),
-          el('span', { class: 'pms-preview', text: preview.slice(0, 2).join(' · ') + (preview.length > 2 ? ' …' : '') }),
-        ]),
-        btn,
+      return el('section', { class: 'plain-sec pms-row' }, [
+        el('div', { class: 'sec-head' }, [el('h2', { text: label }), btn]),
+        el('pre', { class: 'pms-full', text: sec[key] }),
       ]);
     }),
   );
@@ -908,9 +904,9 @@ function renderPms(sec) {
 els.copy.addEventListener('click', async () => {
   const ok = await copyText(els.plain.value, els.plain);
   if (ok) {
-    els.copy.textContent = 'Copied ✓';
+    els.copy.lastChild.textContent = 'Copied ✓';
     toast('Copied. Paste it into the clinical notes in your PMS.');
-    setTimeout(() => (els.copy.textContent = 'Copy note'), 2500);
+    setTimeout(() => (els.copy.lastChild.textContent = 'Copy'), 2500);
   } else toast('Text selected. Press Ctrl+C, or long-press and choose Copy.');
 });
 
@@ -966,6 +962,14 @@ more.addEventListener('close', async () => {
 });
 more.addEventListener('click', (e) => e.target === more && more.close()); // tap outside to cancel
 els.back.addEventListener('click', addMoreInfo);
+$('note-more').addEventListener('click', addMoreInfo);
+// The logo always goes home.
+$('home').addEventListener('click', () => {
+  if (busy) return;
+  if (els.settings.open) els.settings.close();
+  showView('record');
+  els.mic.focus();
+});
 
 
 /* ---------------- care plan ---------------- */

@@ -14,9 +14,19 @@ export async function noSpeech(page) {
 
 /** Pre-save an API key so the app has a provider. */
 export async function withKey(page, extra = {}) {
+  await mergeSettings(page, { rememberKey: true, apiKey: 'sk-ant-test', ...extra });
+}
+
+/** Merge into saved settings before the app loads (keeps anything an earlier helper set). */
+export async function mergeSettings(page, extra) {
   await page.addInitScript({
-    content: `try { localStorage.setItem('vcs.settings', ${JSON.stringify(JSON.stringify({ rememberKey: true, apiKey: 'sk-ant-test', ...extra }))}); } catch (e) {}`,
+    content: `try { const s = JSON.parse(localStorage.getItem('vcs.settings') || '{}'); localStorage.setItem('vcs.settings', JSON.stringify(Object.assign(s, ${JSON.stringify(extra)}))); } catch (e) {}`,
   });
+}
+
+/** Open the app as a vet on clinical notes (the carer tools are the default). */
+export async function asVet(page) {
+  await mergeSettings(page, { role: 'vet', mode: 'vet' });
 }
 
 const textOf = (content) => (typeof content === 'string' ? content : content.filter((b) => b.type === 'text').map((b) => b.text).join(''));

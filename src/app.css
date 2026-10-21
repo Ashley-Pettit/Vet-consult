@@ -11,6 +11,7 @@
   --accent: #647c50;
   --accent-ink: #ffffff;
   --accent-soft: #eef2e8;
+  --chip-ink: #556b44; /* accent text on the soft chip background, AA contrast */
   --rec: #c62828;
   --rec-soft: #fde3e3;
   --warn: #8a5300;
@@ -31,7 +32,7 @@
   :root:not([data-theme="light"]) {
     --bg: #1d2226; --surface: #262d33; --ink: #e8ead8; --muted: #a9ad9f; --line: #3a434a;
     --brand: #2b3138; --brand-ink: #ffffff; --leaf: #c47a68;
-    --accent: #a9c08f; --accent-ink: #13190f; --accent-soft: #2f3a2a;
+    --accent: #a9c08f; --accent-ink: #13190f; --accent-soft: #2f3a2a; --chip-ink: #a9c08f;
     --rec: #ff7a6e; --rec-soft: #3a1d1b; --warn: #f4bd66; --warn-soft: #2b2213; --warn-line: #5a4520;
     --err: #ff8a7a; --err-soft: #3a1b17; --logo-ink: #04121f;
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.3); color-scheme: dark;
@@ -40,7 +41,7 @@
 :root[data-theme="dark"] {
   --bg: #1d2226; --surface: #262d33; --ink: #e8ead8; --muted: #a9ad9f; --line: #3a434a;
   --brand: #2b3138; --brand-ink: #ffffff; --leaf: #c47a68;
-  --accent: #a9c08f; --accent-ink: #13190f; --accent-soft: #2f3a2a;
+  --accent: #a9c08f; --accent-ink: #13190f; --accent-soft: #2f3a2a; --chip-ink: #a9c08f;
   --rec: #ff7a6e; --rec-soft: #3a1d1b; --warn: #f4bd66; --warn-soft: #2b2213; --warn-line: #5a4520;
   --err: #ff8a7a; --err-soft: #3a1b17; --logo-ink: #04121f;
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.3); color-scheme: dark;
@@ -305,7 +306,7 @@ body[data-mic="keyboard"] .mic { background: var(--rec); box-shadow: 0 0 0 10px 
 .examples { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; color: var(--muted); font-size: 0.9rem; }
 .chip {
   border: 0; cursor: pointer; padding: 7px 14px; border-radius: 999px; font-weight: 650; font-size: 0.88rem;
-  background: var(--accent-soft); color: var(--accent); min-height: 36px;
+  background: var(--accent-soft); color: var(--chip-ink, var(--accent)); min-height: 36px;
 }
 .chip:hover { filter: brightness(0.97); }
 
@@ -343,7 +344,7 @@ label.btn:focus-within { outline: 3px solid var(--accent); outline-offset: 2px; 
 .check-item:first-child { border-top: 0; }
 .check-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .check-text { min-width: 0; }
-.tag { display: inline-block; margin-right: 6px; padding: 1px 7px; border-radius: 6px; font-size: 0.7rem; font-weight: 750; letter-spacing: 0.04em; text-transform: uppercase; background: var(--accent-soft); color: var(--accent); vertical-align: 1px; }
+.tag { display: inline-block; margin-right: 6px; padding: 1px 7px; border-radius: 6px; font-size: 0.7rem; font-weight: 750; letter-spacing: 0.04em; text-transform: uppercase; background: var(--accent-soft); color: var(--chip-ink, var(--accent)); vertical-align: 1px; }
 .answer { display: flex; flex-direction: column; gap: 8px; background: var(--surface); border-radius: 12px; padding: 10px; box-shadow: inset 0 0 0 1px var(--line); }
 .answer-input { display: flex; gap: 8px; align-items: flex-start; }
 .answer textarea { min-height: 64px; }
@@ -641,7 +642,6 @@ dialog.more textarea { min-height: 110px; }
 .mic.more-mic svg { width: 32px; height: 32px; }
 .mic.more-mic[aria-pressed="true"] { background: var(--rec); box-shadow: 0 0 0 6px var(--rec-soft); }
 
-/* Can't reach a vet right now */
 
 /* Compact dictation screen: mic beside its status, so what's been said stays in view without scrolling */
 .hero-banner { min-height: 104px; }
@@ -707,3 +707,13 @@ body[data-role="vet"] [data-roles-text="carer"], body:not([data-role="vet"]) [da
 .gaps ul { margin: 6px 0 0; padding: 0 16px 14px 36px; display: grid; gap: 2px; }
 @media (min-width: 560px) { .gaps ul { display: block; columns: 2; } }
 .gaps li { break-inside: avoid; }
+
+/* Logo is the home button */
+button.brand { background: none; border: 0; padding: 0; margin: 0; color: inherit; cursor: pointer; border-radius: 999px; }
+button.brand:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+
+/* Each part to copy: heading left, Copy top right, full text below */
+.sec-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+#pms-rows { display: flex; flex-direction: column; gap: 16px; }
+#pms-rows:empty { display: none; }
+.pms-full { margin: 4px 0 0; padding: 12px 14px; border-radius: 10px; background: var(--bg); font-family: var(--mono); font-size: 0.85rem; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }

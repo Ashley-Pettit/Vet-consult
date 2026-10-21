@@ -1,5 +1,8 @@
 import { test, expect } from '@playwright/test';
-import { fakeSpeech, noSpeech, withKey, mockApi, watchErrors, openApp, DICTATION, apiReply } from './helpers.js';
+import { fakeSpeech, noSpeech, withKey, mockApi, watchErrors, openApp, DICTATION, apiReply, asVet } from './helpers.js';
+
+// These tests cover the vet's clinical notes; the app opens on the carer tools by default.
+test.beforeEach(async ({ page }) => asVet(page));
 
 test.describe('dictation', () => {
   test('mic starts, captures speech, and stops', async ({ page }) => {
@@ -71,13 +74,12 @@ test.describe('dictation', () => {
     await expect(page.locator('#transcript')).toHaveValue(DICTATION);
   });
 
-  test('no note type buttons: one choice between clinical notes and a carer plan', async ({ page }) => {
+  test('vet has two choices: care plan or clinical notes', async ({ page }) => {
     await openApp(page);
     await expect(page.locator('#types')).toHaveCount(0);
-    await expect(page.locator('#batch')).toHaveCount(0);
+    await expect(page.locator('#mode label:visible')).toHaveCount(2);
     await expect(page.getByRole('radio', { name: 'Clinical notes' })).toBeChecked();
-    await expect(page.getByRole('radio', { name: 'Carer plan' })).not.toBeChecked();
-    await expect(page.locator('input[name="mode"]')).toHaveCount(4);
+    await expect(page.getByRole('radio', { name: 'Care plan' })).not.toBeChecked();
   });
 });
 
@@ -132,7 +134,9 @@ test.describe('creating a note', () => {
     await expect(page.locator('.pname strong')).toHaveText('Rusty');
     await expect(page.locator('#note')).toContainText('39.4 °C');
     await expect(page.locator('#note .meds li')).toHaveCount(3);
-    await expect(page.locator('#note')).toContainText('Not recorded'); // clinician gap
+    // Gaps aren't shown in the note; they're in the optional "Ideally also include" list.
+    await expect(page.locator('#note')).not.toContainText('Not recorded');
+    await expect(page.locator('#gap-list')).toContainText('Vet name');
 
     const plain = await page.locator('#plain').inputValue();
     expect(plain).toMatch(/^SHELTER INTAKE EXAM - \d\d\/\d\d\/\d{4} \d\d:\d\d/);
@@ -145,9 +149,10 @@ test.describe('creating a note', () => {
     const clip = await page.evaluate(() => navigator.clipboard.readText());
     expect(clip).toContain('Addendum: owner called.');
 
-    // Add more info keeps the dictation; Start over clears it with undo.
     await expect(page.locator('#back')).toHaveText('Add more info');
-    await page.locator('#back').click();
+    // The logo goes home, with the dictation kept; Start over clears it with undo.
+    await page.locator('#home').click();
+    await expect(page.locator('#view-record')).toBeVisible();
     await expect(page.locator('#transcript')).toHaveValue(DICTATION);
     await page.locator('#clear').click();
     await expect(page.locator('#transcript')).toHaveValue('');
@@ -221,19 +226,14 @@ test.describe('creating a note', () => {
     expect(calls).toHaveLength(1);
   });
 
-  test('the example works with no connection and is labelled as an example', async ({ page }) => {
+  test('the wombat example fills the dictation; with no connection it explains instead of failing', async ({ page }) => {
     const calls = await mockApi(page);
     await openApp(page);
     await page.locator('#load-example').click();
+    await expect(page.locator('#transcript')).toHaveValue(/wombat/i);
     await page.locator('#create').click();
-    await expect(page.locator('#view-note')).toBeVisible();
-    await expect(page.locator('#note-banner')).toContainText('example note');
-    await expect(page.locator('.pname strong')).toHaveText('Rusty');
+    await expect(page.locator('#banner')).toBeVisible();
     expect(calls).toHaveLength(0);
-    await page.locator('#back').click();
-    await page.locator('#transcript').fill(DICTATION);
-    await page.locator('#create').click();
-    await expect(page.locator('#banner')).toContainText('public demo');
   });
 
   test('create note while still listening keeps the last words', async ({ page }) => {
