@@ -495,7 +495,7 @@ details.checks > summary:focus-visible { outline: 3px solid var(--accent); outli
 div.vet-only { display: contents; }
 body[data-mode="carer"] .vet-only { display: none !important; }
 body:not([data-mode="carer"]) .carer-only { display: none !important; }
-.carer-intro { margin: 0; color: var(--muted); text-align: center; font-size: 0.95rem; }
+.mode-intro { margin: 0; color: var(--muted); text-align: center; font-size: 0.95rem; }
 body[data-mode="carer"] .mic { background: var(--leaf); box-shadow: 0 0 0 10px color-mix(in srgb, var(--leaf) 18%, transparent), var(--shadow); }
 
 /* Carer plan extras */

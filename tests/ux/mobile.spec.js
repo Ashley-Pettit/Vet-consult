@@ -10,7 +10,7 @@ const claudeStub = `
   const care = ${JSON.stringify(JSON.stringify(EXAMPLE_CARE_SHEET))};
   const sample = Object.assign(async (p) => {
     await new Promise((r) => setTimeout(r, 700));
-    return { text: p.includes('home-care') ? care : p.includes('{"animals":[NOTE') ? batch : note };
+    return { text: p.includes('home-care') ? care : p.includes('Litter of three') ? batch : note };
   }, { limits: async () => ({ images: { maxCount: 5 } }) });
   window.claude = { use: async (n) => (n === 'sample' ? sample : null) };`;
 

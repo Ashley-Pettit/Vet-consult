@@ -71,11 +71,12 @@ test.describe('dictation', () => {
     await expect(page.locator('#transcript')).toHaveValue(DICTATION);
   });
 
-  test('note type choice is remembered', async ({ page }) => {
+  test('no note type buttons: one choice between clinical notes and a carer plan', async ({ page }) => {
     await openApp(page);
-    await page.getByRole('radio', { name: 'Inspectorate' }).check();
-    await page.reload();
-    await expect(page.locator('input[value="inspectorate"]')).toBeChecked();
+    await expect(page.locator('#types')).toHaveCount(0);
+    await expect(page.locator('#batch')).toHaveCount(0);
+    await expect(page.getByRole('radio', { name: 'Clinical notes' })).toBeChecked();
+    await expect(page.getByRole('radio', { name: 'Carer plan' })).not.toBeChecked();
   });
 });
 
@@ -116,11 +117,10 @@ test.describe('creating a note', () => {
     const calls = await mockApi(page, { delayMs: 1500 });
     await openApp(page);
     await page.locator('#transcript').fill(DICTATION);
-    await page.getByRole('radio', { name: 'Intake' }).check();
     await page.locator('#create').click();
     await expect(page.locator('#view-working')).toBeVisible();
     await expect(page.locator('#view-note')).toBeVisible();
-    expect(calls[0].body.messages[0].content).toContain('shelter intake examination');
+    expect(calls[0].body.messages[0].content).toContain('Work out from the dictation which kind of record this is');
     expect(calls[0].body.model).toBe('claude-sonnet-5-5');
 
     await expect(page.locator('#note-title')).toHaveText('Shelter intake exam');

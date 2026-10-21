@@ -39,23 +39,13 @@
     <h1 id="record-title" class="sr-only">Dictate a consult</h1>
 
     <fieldset class="mode" id="mode">
-      <legend class="sr-only">What are you writing?</legend>
-      <label><input type="radio" name="mode" value="vet" checked><span>Vet note</span></label>
+      <legend class="sr-only">What do you want to create?</legend>
+      <label><input type="radio" name="mode" value="vet" checked><span>Clinical notes</span></label>
       <label><input type="radio" name="mode" value="carer"><span>Carer plan</span></label>
     </fieldset>
 
-    <div class="vet-only">
-      <fieldset class="types" id="types">
-        <legend class="sr-only">Note type</legend>
-      </fieldset>
-
-      <label class="switch">
-        <input type="checkbox" id="batch">
-        <span class="track" aria-hidden="true"></span>
-        <span>Several animals <span class="muted-inline">(litter or seizure)</span></span>
-      </label>
-    </div>
-    <p class="carer-only carer-intro">Describe the animal, what it needs and any medications. You get a complete plan the carer can follow on their own.</p>
+    <p class="vet-only mode-intro">Talk through the consult, intake, surgery or any exam. One animal or a whole litter.</p>
+    <p class="carer-only mode-intro">Describe the animal, what it needs and any medications. You get a complete plan the carer can follow on their own.</p>
 
     <div class="mic-zone">
       <button id="mic" class="mic" type="button" aria-pressed="false" aria-describedby="mic-status">
@@ -147,7 +137,7 @@
     </section>
 
     <div class="actions">
-      <button type="button" class="btn ghost" id="care">Care sheet</button>
+      <button type="button" class="btn ghost" id="care">Carer plan</button>
       <button type="button" class="btn primary" id="copy">Copy note</button>
     </div>
   </section>
@@ -166,7 +156,7 @@
     <article id="care-sheet" class="note care" aria-label="Care instructions"></article>
     <div class="actions">
       <button type="button" class="btn ghost" id="care-back-2">Back</button>
-      <button type="button" class="btn primary" id="care-copy">Copy care sheet</button>
+      <button type="button" class="btn primary" id="care-copy">Copy care plan</button>
     </div>
   </section>
 

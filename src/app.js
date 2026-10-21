@@ -37,7 +37,7 @@ const $ = (id) => document.getElementById(id);
 const els = {
   mic: $('mic'), micStatus: $('mic-status'), timer: $('timer'), coach: $('kb-coach'), coachText: $('kb-coach-text'),
   banner: $('banner'), transcript: $('transcript'), interim: $('interim'), examples: $('examples'),
-  example: $('load-example'), batchExample: $('load-batch-example'), types: $('types'), batch: $('batch'),
+  example: $('load-example'), batchExample: $('load-batch-example'),
   photoInput: $('add-photo'), photoList: $('photo-list'), photoLabel: $('add-photo-label'),
   clear: $('clear'), create: $('create'), stop: $('stop'), elapsed: $('working-elapsed'),
   workingTitle: $('working-title'), workingSub: $('working-sub'),
@@ -114,7 +114,6 @@ function banner(text, tone = 'warn') {
   els.banner.hidden = !text;
 }
 
-const noteType = () => els.types.querySelector('input:checked')?.value || 'consult';
 
 function updateCreateState() {
   const has = els.transcript.value.trim().length > 0;
@@ -154,21 +153,6 @@ async function copyText(text, fallbackEl) {
     }
   }
 }
-
-/* ---------------- note types ---------------- */
-
-for (const key of NOTE_TYPE_ORDER) {
-  els.types.append(
-    el('label', {}, [
-      el('input', { type: 'radio', name: 'type', value: key }),
-      el('span', { text: NOTE_TYPES[key].label }),
-    ]),
-  );
-}
-els.types.addEventListener('change', () => {
-  settings.noteType = noteType();
-  store.saveSettings(settings);
-});
 
 /* ---------------- voice: live mic or the keyboard's own voice typing ---------------- */
 
@@ -356,19 +340,17 @@ els.transcript.addEventListener('input', () => {
   updateCreateState();
 });
 
-function loadExample(text, batch, type) {
+function loadExample(text) {
   dictation.cancel();
   setTranscript(text);
-  els.batch.checked = batch;
-  els.types.querySelector(`input[value="${type}"]`).checked = true;
   banner('');
   els.create.focus();
   toast('Example loaded. Tap Create note to see the result.');
 }
-els.example.addEventListener('click', () => loadExample(EXAMPLE_DICTATION, false, 'intake'));
-$('load-carer-example').addEventListener('click', () => loadExample(EXAMPLE_CARER_DICTATION, false, noteType()));
-$('load-foster-example').addEventListener('click', () => loadExample(EXAMPLE_FOSTER_DICTATION, false, noteType()));
-els.batchExample.addEventListener('click', () => loadExample(EXAMPLE_BATCH_DICTATION, true, 'intake'));
+els.example.addEventListener('click', () => loadExample(EXAMPLE_DICTATION));
+$('load-carer-example').addEventListener('click', () => loadExample(EXAMPLE_CARER_DICTATION));
+$('load-foster-example').addEventListener('click', () => loadExample(EXAMPLE_FOSTER_DICTATION));
+els.batchExample.addEventListener('click', () => loadExample(EXAMPLE_BATCH_DICTATION));
 
 els.clear.addEventListener('click', () => {
   const previous = els.transcript.value;
@@ -498,8 +480,6 @@ async function createNote() {
     await waitForIdle();
   }
   const finalText = els.transcript.value.trim() || text;
-  const type = noteType();
-  const batch = els.batch.checked;
   try {
     if (mode() === 'carer') return await createCarePlan(finalText);
     if (!(await ensureProvider())) {
@@ -513,15 +493,15 @@ async function createNote() {
       return;
     }
     banner('');
-    const prompt = buildPrompt(finalText, type, { clinician: settings.clinician, batch, photoCount: photos.length });
+    const prompt = buildPrompt(finalText, { clinician: settings.clinician, photoCount: photos.length });
     const result = await runWorking(
-      batch ? 'Writing a note for each animal' : 'Writing the clinical note',
+      'Writing the clinical notes',
       'Claude is turning your words into SOAP notes.',
       (signal) => provider.generate(prompt, signal, { images: photos }),
     );
     const list = normaliseResult(extractJson(result));
     if (!list.length) throw new AiError('empty', '');
-    for (const n of list) if (!n.visit.type) n.visit.type = NOTE_TYPES[type].title;
+    for (const n of list) if (!n.visit.type) n.visit.type = NOTE_TYPES.consult.title;
     showNotes(list, false);
   } catch (e) {
     showView('record');
@@ -1064,8 +1044,6 @@ els.forget.addEventListener('click', () => {
 const startMode = settings.mode === 'carer' ? 'carer' : 'vet';
 document.querySelector(`input[name="mode"][value="${startMode}"]`).checked = true;
 applyMode();
-const startType = settings.noteType in NOTE_TYPES ? settings.noteType : 'consult';
-els.types.querySelector(`input[value="${startType}"]`).checked = true;
 setTranscript(store.loadDraft());
 renderPhotos();
 showView(location.hash === '#how-it-works' ? 'about' : 'record');

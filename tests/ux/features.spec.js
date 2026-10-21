@@ -5,7 +5,7 @@ import { EXAMPLE_BATCH_NOTES, EXAMPLE_CARE_SHEET } from '../../src/note.js';
 
 const smart = (prompt) => {
   if (prompt.includes('home-care plan')) return textReply(EXAMPLE_CARE_SHEET);
-  if (prompt.includes('{"animals":[NOTE')) return textReply({ animals: EXAMPLE_BATCH_NOTES });
+  if (prompt.includes('Litter of three')) return textReply({ animals: EXAMPLE_BATCH_NOTES });
   return apiReply();
 };
 const OUT = 'test-results/ux';
