@@ -42,6 +42,7 @@ import {
   normaliseCareSheet,
   careSheetText,
   NO_VET_NOTE,
+  ADVICE_NOTE,
   pmsSections,
   toPlainText,
 } from './note.js';
@@ -500,9 +501,13 @@ function applyRole() {
   document.body.dataset.role = role;
   document.querySelectorAll('#mode label[data-roles]').forEach((l) => (l.hidden = !l.dataset.roles.split(' ').includes(role)));
   if (!ROLE_MODES[role].includes(mode())) document.querySelector(`input[name="mode"][value="${ROLE_MODES[role][0]}"]`).checked = true;
-  $('role-switch').textContent = role === 'vet' ? 'Wildlife carer? Switch to carer tools' : 'Are you the vet? Switch to clinical notes';
+  applyRoleLabel();
+}
+function applyRoleLabel() {
+  $('role-switch').textContent = settings.role === 'vet' ? 'Wildlife carer? Switch to carer tools' : 'Are you the vet? Switch to clinical notes';
 }
 $('role-switch').addEventListener('click', () => {
+  if (mode() === 'funding') return chooseMode('intake'); // funding lives in Settings; this is the way back
   settings.role = settings.role === 'vet' ? 'carer' : 'vet';
   applyRole();
   applyMode();
@@ -510,9 +515,28 @@ $('role-switch').addEventListener('click', () => {
   store.saveSettings(settings);
 });
 
+function chooseMode(m) {
+  document.querySelector(`input[name="mode"][value="${m}"]`).checked = true;
+  applyMode();
+  settings.mode = m;
+  store.saveSettings(settings);
+}
+$('open-funding').addEventListener('click', () => {
+  if (settings.role === 'vet') {
+    settings.role = 'carer';
+    applyRole();
+  }
+  els.settings.close();
+  chooseMode('funding');
+  showView('record');
+  els.mic.focus();
+});
+
 function applyMode() {
   const m = mode();
   document.body.dataset.mode = m;
+  if (m === 'funding') $('role-switch').textContent = 'Back to carer tools';
+  else applyRoleLabel();
   els.create.textContent = MODE_TEXT[m].button;
   els.transcript.placeholder = MODE_TEXT[m].placeholder;
   document.querySelectorAll('[data-modes]').forEach((n) => (n.hidden = !n.dataset.modes.split(' ').includes(m)));
@@ -539,6 +563,7 @@ async function createNote() {
   }
   const finalText = els.transcript.value.trim() || text;
   try {
+    if (docOverride) return await createDoc(docOverride, finalText);
     if (mode() === 'carer') return await createCarePlan(finalText);
     if (DOC_KINDS[mode()]) return await createDoc(mode(), finalText);
     if (!(await ensureProvider())) {
@@ -903,6 +928,7 @@ more.addEventListener('close', async () => {
   if (more.returnValue !== 'go' || !extra) return;
   more.returnValue = '';
   setTranscript(appendSegment(els.transcript.value, extra));
+  if (currentDoc && currentDoc.kind === 'advice' && document.body.dataset.view === 'doc') return makeAdvice();
   await createNote();
 });
 more.addEventListener('click', (e) => e.target === more && more.close()); // tap outside to cancel
@@ -1084,6 +1110,7 @@ function renderDoc(d, kind) {
 function showDoc(d, kind, info = '') {
   currentDoc = { d, kind };
   renderMakeNext($('make-next-doc'), kind);
+  $('advice-cta').hidden = kind !== 'intake';
   madeFrom[kind] = { text: els.transcript.value, d, info };
   renderDoc(d, kind);
   $('doc-banner').textContent = info;
@@ -1103,11 +1130,11 @@ async function createDoc(kind, text) {
   }
   banner('');
   const reply = await runWorking(`Writing the ${DOC_KINDS[kind].label.toLowerCase()}`, DOC_KINDS[kind].working, (signal) =>
-    provider.generate(buildDocPrompt(kind, text, { clinician: settings.clinician, photoCount: photos.length }), signal, { images: photos }),
+    provider.generate(buildDocPrompt(kind, text, { clinician: settings.clinician, photoCount: photos.length, sourceList: sourcesForPrompt() }), signal, { images: photos }),
   );
   const d = normaliseDoc(extractJson(reply));
   if (!d.sections.length) throw new AiError('empty', '');
-  showDoc(d, kind);
+  showDoc(d, kind, kind === 'advice' ? ADVICE_NOTE : '');
 }
 
 $('doc-back').addEventListener('click', () => showView('record'));
@@ -1143,6 +1170,21 @@ function renderMakeNext(box, current) {
     })),
   );
 }
+// "Need advice right now?" on an intake record: first aid for the next few hours, from the same words.
+let docOverride = null;
+async function makeAdvice() {
+  if (busy || !els.transcript.value.trim()) return;
+  const prev = madeFrom.advice;
+  if (prev && prev.text === els.transcript.value) return showDoc(prev.d, 'advice', prev.info);
+  docOverride = 'advice';
+  try {
+    await createNote();
+  } finally {
+    docOverride = null;
+  }
+}
+$('advice-btn').addEventListener('click', makeAdvice);
+
 async function makeNext(m) {
   if (busy || !els.transcript.value.trim()) return;
   document.querySelector(`input[name="mode"][value="${m}"]`).checked = true;
@@ -1188,7 +1230,7 @@ async function saveWord(model, btn) {
     btn.lastChild.textContent = label;
   }
 }
-$('word-doc').addEventListener('click', (e) => currentDoc && saveWord(docModel(currentDoc.d, DOC_KINDS[currentDoc.kind].label), e.currentTarget));
+$('word-doc').addEventListener('click', (e) => currentDoc && saveWord(docModel(currentDoc.d, DOC_KINDS[currentDoc.kind].label, currentDoc.kind === 'advice' ? ADVICE_NOTE : ''), e.currentTarget));
 $('word-care').addEventListener('click', (e) => careSheet && saveWord(careModel(careSheet, lookupSource), e.currentTarget));
 $('word-note').addEventListener('click', (e) => currentNote() && saveWord(noteModel(currentNote()), e.currentTarget));
 
