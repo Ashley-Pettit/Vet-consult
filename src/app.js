@@ -6,6 +6,7 @@ import { localChecks } from './clinical.js';
 import { preparePhoto, MAX_PHOTOS } from './photos.js';
 import { ABOUT_HTML } from './about.js';
 import { lookupSource, sourcesForPrompt, SOURCE_IDS } from './sources.js';
+import { buildWord, docModel, careModel, noteModel, wordFileName } from './word.js';
 import {
   NOTE_TYPES,
   NOTE_TYPE_ORDER,
@@ -30,6 +31,7 @@ import {
   EXAMPLE_TOVET_DICTATION,
   EXAMPLE_JOEY_CARER_DICTATION,
   EXAMPLE_WOMBAT_VET_DICTATION,
+  EXAMPLE_FUNDING_DICTATION,
   appendSegment,
   buildPrompt,
   buildRevisionPrompt,
@@ -265,7 +267,7 @@ function alertStopped() {
 }
 
 function idleStatus() {
-  if (['intake', 'log', 'tovet'].includes(document.body.dataset.mode)) return els.transcript.value.trim() ? 'Tap the mic to add more' : 'Tap the mic and talk it through';
+  if (['intake', 'log', 'tovet', 'funding'].includes(document.body.dataset.mode)) return els.transcript.value.trim() ? 'Tap the mic to add more' : 'Tap the mic and talk it through';
   if (document.body.dataset.mode === 'carer') return els.transcript.value.trim() ? 'Tap the mic to add more' : 'Tap the mic and describe the animal’s care';
   if (keyboardVoice) return els.transcript.value.trim() ? 'Tap the mic to add more by voice' : 'Tap the mic, then talk through the consult';
   return els.transcript.value.trim() ? 'Tap the mic to add more' : 'Tap the mic and talk through the consult';
@@ -338,7 +340,7 @@ els.mic.addEventListener('click', () => {
   if (busy) return;
   banner('');
   els.toast.hidden = true;
-  if ([EXAMPLE_DICTATION, EXAMPLE_BATCH_DICTATION, EXAMPLE_CARER_DICTATION, EXAMPLE_FOSTER_DICTATION, EXAMPLE_INTAKE_DICTATION, EXAMPLE_LOG_DICTATION, EXAMPLE_TOVET_DICTATION, EXAMPLE_JOEY_CARER_DICTATION, EXAMPLE_WOMBAT_VET_DICTATION].includes(els.transcript.value)) setTranscript('');
+  if ([EXAMPLE_DICTATION, EXAMPLE_BATCH_DICTATION, EXAMPLE_CARER_DICTATION, EXAMPLE_FOSTER_DICTATION, EXAMPLE_INTAKE_DICTATION, EXAMPLE_LOG_DICTATION, EXAMPLE_TOVET_DICTATION, EXAMPLE_JOEY_CARER_DICTATION, EXAMPLE_WOMBAT_VET_DICTATION, EXAMPLE_FUNDING_DICTATION].includes(els.transcript.value)) setTranscript('');
   if (keyboardVoice) {
     const wasOn = kbWasOn || document.body.dataset.mic === 'keyboard';
     kbWasOn = false;
@@ -379,6 +381,7 @@ $('load-intake-example').addEventListener('click', () => loadExample(EXAMPLE_INT
 $('load-log-example').addEventListener('click', () => loadExample(EXAMPLE_LOG_DICTATION));
 $('load-joey-example').addEventListener('click', () => loadExample(EXAMPLE_JOEY_CARER_DICTATION));
 $('load-tovet-example').addEventListener('click', () => loadExample(EXAMPLE_TOVET_DICTATION));
+$('load-funding-example').addEventListener('click', () => loadExample(EXAMPLE_FUNDING_DICTATION));
 
 els.clear.addEventListener('click', () => {
   const previous = els.transcript.value;
@@ -477,14 +480,15 @@ async function runWorking(title, sub, job) {
 }
 
 const mode = () => document.querySelector('input[name="mode"]:checked')?.value || 'vet';
-const MODES = ['intake', 'log', 'carer', 'tovet', 'vet'];
-const ROLE_MODES = { carer: ['intake', 'log', 'carer', 'tovet'], vet: ['vet', 'carer'] };
+const MODES = ['intake', 'log', 'carer', 'tovet', 'funding', 'vet'];
+const ROLE_MODES = { carer: ['intake', 'log', 'carer', 'tovet', 'funding'], vet: ['vet', 'carer'] };
 
 const MODE_TEXT = {
   vet: { button: 'Create notes', placeholder: 'Your words appear here as you talk. You can also type or fix anything.' },
   carer: { button: 'Create care plan', placeholder: 'Describe the animal, its condition, medications and anything the carer needs to know.' },
   intake: { button: 'Create record', placeholder: 'Wildlife Victoria case number, the animal, exactly where it was found, its condition and what you did.' },
   log: { button: 'Create log', placeholder: 'The animal, weight, feeds, medications given, toileting, behaviour and anything you’re watching.' },
+  funding: { button: 'Create draft', placeholder: 'The funder, what you need and why, costs, numbers of animals and volunteers, timeline and how you’ll measure success.' },
   tovet: { button: 'Create summary', placeholder: 'The animal, its history in care, what you’ve noticed, current meds and your questions.' },
 };
 
@@ -1052,6 +1056,44 @@ $('doc-copy').addEventListener('click', async () => {
   toast(ok ? 'Copied. Paste it wherever it needs to go.' : 'Couldn’t copy. Select the text and copy it instead.');
 });
 $('doc-new').addEventListener('click', addMoreInfo);
+
+/* ---------------- Word printouts ---------------- */
+
+async function saveWord(model, btn) {
+  if (!model) return;
+  const label = btn.lastChild.textContent;
+  btn.disabled = true;
+  btn.lastChild.textContent = 'Making printout…';
+  try {
+    const blob = await buildWord(model, { preparedBy: settings.clinician });
+    const filename = wordFileName(model.title);
+    const downloads = inClaude && globalThis.claude.use ? await globalThis.claude.use('downloads') : null;
+    if (downloads) {
+      try {
+        await downloads.save({ filename, data: blob });
+        toast('Saved. Open it in Word to print or email.');
+      } catch (e) {
+        if (e && e.code !== 'declined') toast('Couldn’t save the printout here. Try again in a moment.');
+      }
+      return;
+    }
+    const url = URL.createObjectURL(blob);
+    const a = Object.assign(document.createElement('a'), { href: url, download: filename });
+    document.body.append(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+    toast('Downloaded. Open it in Word to print or email.');
+  } catch {
+    toast('Couldn’t make the printout. Try again.');
+  } finally {
+    btn.disabled = false;
+    btn.lastChild.textContent = label;
+  }
+}
+$('word-doc').addEventListener('click', (e) => currentDoc && saveWord(docModel(currentDoc.d, DOC_KINDS[currentDoc.kind].label), e.currentTarget));
+$('word-care').addEventListener('click', (e) => careSheet && saveWord(careModel(careSheet, lookupSource), e.currentTarget));
+$('word-note').addEventListener('click', (e) => currentNote() && saveWord(noteModel(currentNote()), e.currentTarget));
 
 /* ---------------- how it works ---------------- */
 

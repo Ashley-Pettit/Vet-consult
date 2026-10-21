@@ -718,7 +718,8 @@ export const DOC_KINDS = {
     working: 'Rescue details first, so release goes back to the right spot.',
     title: 'Rescue and intake record for the shelter register',
     rule: `Write the rescue and intake record a Victorian wildlife shelter keeps for every animal admitted, in plain, objective Australian English.
-- Sections, in this order, leaving out any with nothing stated: "Rescue details" (date and time, Wildlife Victoria case number, who found or rescued it and how it came into care), "Where it was found" (the exact location as stated, word for word, because release should be back at that spot), "Animal" (species, sex, age or life stage, name or ID, weight), "Condition on arrival" (only what was observed), "First aid and care given", "Vet" (vet seen or booked, and what they found or said), "Plan".
+- First section "Register entry": a list with exactly these items, in this order, each as "Field: value", writing "Not recorded" when it was not said: "Case number", "Common name", "Species code", "Date in", "Sex (M, F or U)", "Age class", "Main injury", "Cause", "Where found", "Status". This matches the Victorian wildlife shelter record sheet, so an auditor can read it at a glance. Only give codes that were actually said.
+- Then these sections, in this order, leaving out any with nothing stated: "Rescue details" (date and time, Wildlife Victoria case number, who found or rescued it and how it came into care), "Where it was found" (the exact location as stated, word for word, because release should be back at that spot), "Animal" (species, sex, age or life stage, name or ID, weight), "Condition on arrival" (only what was observed), "First aid and care given", "Vet" (vet seen or booked, and what they found or said), "Plan".
 - Record the rescue location exactly as said. Never generalise it. If it is vague (a suburb or road only), add a check asking for the precise spot.
 - "due": vet visits, medications and weigh-ins that are due, with timing exactly as stated.
 - Always add a check if any of these are missing: exact rescue location, rescue date, species, weight, Wildlife Victoria case number.`,
@@ -746,6 +747,18 @@ export const DOC_KINDS = {
 - Never invent doses, results or diagnoses. Record medications only as the carer said them.
 - "due": rechecks or treatments due, timing exactly as stated.`,
   },
+  funding: {
+    label: 'Funding submission',
+    copy: 'Copy submission',
+    working: 'Grant-ready sections, using only the facts and figures you gave.',
+    title: 'Draft funding or grant submission',
+    rule: `Write a draft funding or grant submission for Bunurong Wildlife Care Inc, a registered charity and authorised wildlife shelter (Wildlife Shelter 15147751) in Inverloch, Victoria, that rescues, rehabilitates and releases native wildlife across Bass Coast and South Gippsland. Write in the shelter's voice ("we"), plain and confident Australian English, warm but not overblown. No hype words like "passionate", "world-class" or "game-changing".
+- "title": a short project title. "subtitle": the funder or grant round if stated.
+- Sections, in this order, leaving out any with nothing stated: "Project summary" (2 to 3 sentences), "About us", "The need", "What we will do", "Budget" (each item as "Item: amount", only amounts that were stated, then the total if stated), "Timeline", "Outcomes and how we will measure them", "Who benefits", "Partners and support", "Why us".
+- "About us" may use the facts in the first line of these rules. Everything else must come from the comments.
+- NEVER invent numbers, animal counts, dollar amounts, dates, quotes, partners or outcomes. If a typical funder would expect a figure that was not given (amount requested, number of animals, volunteers, timeframe), add a check for it instead.
+- "due": deadlines or milestones if stated.`,
+  }
 };
 
 const DOC_SHAPE = `{"title":"","subtitle":"","sections":[{"heading":"","text":"","items":[]}],"due":[{"what":"","when":""}],"check":[]}`;
@@ -830,3 +843,5 @@ export const EXAMPLE_TOVET_DICTATION = `For the vet. Willow, juvenile wombat, fe
 export const EXAMPLE_JOEY_CARER_DICTATION = `Care plan for a common ringtail possum joey going to a foster carer. Female, about 120 grams, furred, eyes open. Came in yesterday after a cat attack in Wonthaggi, vet checked her this morning, no puncture wounds found, on the antibiotic the vet dispensed once a day for 5 days. Needs a heat pad at about 30 degrees, pouch inside a small enclosure. Feeds of Wombaroo possum milk every 4 hours, toilet after each feed. Weigh daily. Start offering native leaves and flowers. Release back near the rescue site once she's weaned and around 600 grams, with a soft release.`;
 
 export const EXAMPLE_WOMBAT_VET_DICTATION = `Wildlife consult. Adult female bare-nosed wombat, car strike last night on the Bass Highway near Kilcunda, brought in by the carer. Weight 24 kilos. Bright, alert, hissing. Temp 36.1, heart rate 80, resp 20. Severe sarcoptic mange, alopecia and crusting over both flanks, dorsum and both pinnae, fissuring around the eyes. Abrasion 3 by 2 centimetres over the left shoulder, superficial. No fractures palpable, ambulating normally. Pouch empty. Assessment: mange, moderate to severe, and minor road trauma. Plan: clean abrasion, mange treatment per our wombat protocol, recheck in one week, carer to monitor appetite and weight.`;
+
+export const EXAMPLE_FUNDING_DICTATION = `Funding submission for the Bass Coast Shire community grants, environment stream. We want a second wildlife ambulance trailer and a portable wombat burrow-flap kit so we can treat mange in the wild instead of bringing every wombat in. Last year we took in 214 animals, about a third of them wombats, and 60 of the wombats had mange. We have 18 trained volunteers. Asking for 8,500 dollars: trailer 5,200, burrow flap kit and treatment supplies 2,100, volunteer training day 1,200. Would run from February to December next year. We'd measure it by number of wombats treated in the wild and how many we see recover on the trail cameras. Wildlife Victoria and the local vets already refer animals to us.`;

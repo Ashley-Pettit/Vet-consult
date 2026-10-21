@@ -605,3 +605,8 @@ body[data-view="about"] .site-foot { display: none; }
 .mock-note b { width: auto; margin-right: 6px; }
 .about-sec > p { margin: 0; }
 body[data-role="vet"] .mode label[data-roles="vet"] { order: -1; }
+
+/* Word printout button */
+.word-btn { width: 100%; gap: 10px; }
+.word-btn svg { width: 20px; height: 20px; flex: none; }
+.word-btn:disabled { opacity: .6; }

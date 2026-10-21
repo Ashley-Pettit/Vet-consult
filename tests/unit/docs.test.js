@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { DOC_KINDS, buildDocPrompt, normaliseDoc, docText, dueLabel } from '../../src/note.js';
 
 test('carer document kinds, in picker order', () => {
-  assert.deepEqual(Object.keys(DOC_KINDS), ['intake', 'log', 'tovet']);
+  assert.deepEqual(Object.keys(DOC_KINDS), ['intake', 'log', 'tovet', 'funding']);
   for (const k of Object.values(DOC_KINDS)) assert.ok(k.label && k.copy && k.working && k.rule);
 });
 
@@ -55,4 +55,15 @@ test('due labels and plain text', () => {
   assert.match(t, /^Oliver care log\nThursday\n\nWEIGHT\n2\.31 kg, up 40 g/);
   assert.match(t, /FEEDING\n- 4 bottle feeds/);
   assert.match(t, /- Weigh: in 12 months \(due 21\/10\/2027\)/);
+});
+
+test('intake starts with the Victorian register fields', () => {
+  const p = buildDocPrompt('intake', 'x');
+  assert.match(p, /"Case number", "Common name", "Species code", "Date in", "Sex \(M, F or U\)", "Age class", "Main injury", "Cause", "Where found", "Status"/);
+});
+
+test('funding draft never invents figures', () => {
+  const p = buildDocPrompt('funding', 'trailer');
+  assert.match(p, /NEVER invent numbers, animal counts, dollar amounts/);
+  assert.match(p, /Wildlife Shelter 15147751/);
 });
