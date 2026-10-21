@@ -311,9 +311,11 @@ function startKeyboardVoice() {
   els.coach.hidden = false;
   document.body.dataset.mic = 'keyboard';
   els.mic.setAttribute('aria-pressed', 'true');
-  els.micStatus.textContent = 'Voice typing. Talk, then tap Create note';
+  els.micStatus.textContent = `Voice typing. Talk, then tap ${els.create.textContent}`;
   const ta = els.transcript;
   ta.focus();
+  // Once the phone keyboard is up, bring the mic, the tip and the words into view together.
+  setTimeout(() => els.mic.closest('.mic-zone').scrollIntoView({ block: 'start', behavior: 'smooth' }), 350);
   const end = ta.value.length;
   try {
     ta.setSelectionRange(end, end);
@@ -376,7 +378,7 @@ function loadExample(text) {
   setTranscript(text);
   banner('');
   els.create.focus();
-  toast('Example loaded. Tap Create note to see the result.');
+  toast(`Example loaded. Tap ${els.create.textContent} to see the result.`);
 }
 els.example.addEventListener('click', () => loadExample(EXAMPLE_WOMBAT_VET_DICTATION));
 $('load-intake-example').addEventListener('click', () => loadExample(EXAMPLE_INTAKE_DICTATION));
