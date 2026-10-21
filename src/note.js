@@ -462,6 +462,7 @@ export function normaliseCareSheet(raw, knownSources = null) {
   };
 }
 
+export const ADVICE_NOTE = 'General first aid only. Check it with a vet or Wildlife Victoria as soon as you can. AI tools can make mistakes.';
 export const NO_VET_NOTE = 'This guidance should be checked by a vet as soon as one is available. AI tools can make mistakes.';
 
 export function careSheetText(c, lookup = () => null) {
@@ -768,6 +769,20 @@ export const DOC_KINDS = {
 - "About us" may use the facts in the first line of these rules. Everything else must come from the comments.
 - NEVER invent numbers, animal counts, dollar amounts, dates, quotes, partners or outcomes. If a typical funder would expect a figure that was not given (amount requested, number of animals, volunteers, timeframe), add a check for it instead.
 - "due": deadlines or milestones if stated.`,
+  },
+  advice: {
+    label: 'Advice right now',
+    copy: 'Copy advice',
+    working: 'First aid for the next few hours, from Victorian guidance.',
+    title: 'Advice right now: first aid for the next few hours, until a vet or experienced carer takes over',
+    sources: true,
+    rule: `The carer has just taken this animal in. Give clear, practical first-aid advice for the next few hours, based ONLY on what they said and the Victorian reference sources below. Plain, calm Australian English, short steps, most important first.
+- "title": "Advice right now:" and the animal. "subtitle": leave empty.
+- Sections, in this order, leaving out any that do not apply: "Do this now" (the first steps, such as a warm, dark, quiet box, minimal handling, keeping pets and children away), "Over the next few hours" (warmth, fluids or food only as the sources allow for this kind of animal, checking on it, what to record), "Don't" (things that could harm it, from the sources, for example giving food or water to a joey, or any medication), "Get help straight away if" (signs that need a vet or Wildlife Victoria urgently), "Who to call".
+- "Who to call": Wildlife Victoria 24/7 on (03) 8400 7300, a local wildlife vet, and the Emergency Animal Disease Hotline on 1800 675 888 only if the comments suggest disease, a sick or dead bird of an at-risk group, or several sick animals.
+- NEVER suggest any medication, dose, sedation, euthanasia or procedure. First aid and supportive care only.
+- Remind them the animal must be assessed by a vet or experienced person within 48 hours, and a foster carer must tell their shelter within 24 hours.
+- Do not repeat the intake record back. "check": questions whose answers would change the advice (for example "Is it bleeding?").`,
   }
 };
 
@@ -782,7 +797,7 @@ export function buildDocPrompt(kind, dictation, opts = {}) {
     : '';
   return `You are a scribe for a wildlife carer at ${CONFIG.clinicDescription}. Turn the carer's spoken comments into this document: ${k.title}.
 ${k.rule}
-${clinician}${photos}General rules:
+${k.sources && opts.sourceList ? `\nReference sources (id | scope | title | key points):\n${opts.sourceList}\n` : ''}${clinician}${photos}General rules:
 - Australian English and metric units.
 - NEVER invent findings, values, doses, dates, names or numbers. Leave out what was not said.
 - Speech recognition may mishear drug, species and place names; correct obvious mishearings and add each to "check".

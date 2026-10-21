@@ -179,12 +179,13 @@ export async function buildWord(model, { preparedBy = '', date = new Date() } = 
 
 /* ---------------- adapters: each screen's content into the printout model ---------------- */
 
-export function docModel(d, kindLabel) {
+export function docModel(d, kindLabel, note = '') {
   return {
     docType: kindLabel,
     title: d.title || kindLabel,
     subtitle: d.subtitle,
     blocks: [
+      ...(note ? [{ heading: 'Please note', text: note }] : []),
       ...d.sections.map((s) => {
         // "Field: value" lists (like the register entry) print as a two-column table an auditor can scan.
         const items = s.items || [];
