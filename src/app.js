@@ -858,12 +858,42 @@ els.copy.addEventListener('click', async () => {
 // rewritten in place, so nobody has to go back, find the end of the text and press Create again.
 const more = $('more');
 const moreText = $('more-text');
+const moreMic = $('more-mic');
+const moreHelp = $('more-help');
+let moreVoice = null;
+const MORE_HELP = 'It’s added to what you already said and the record is rewritten.';
 function addMoreInfo() {
   moreText.value = '';
   $('more-go').disabled = true;
+  moreHelp.textContent = keyboardVoice ? `${keyboardTip()} ${MORE_HELP}` : `Tap the mic and say what you missed. ${MORE_HELP}`;
   more.showModal();
-  moreText.focus(); // inside the tap, so the phone keyboard (and its mic key) opens straight away
+  if (keyboardVoice) moreText.focus(); // inside the tap, so the phone keyboard (and its mic key) opens straight away
+  else startMoreVoice();
 }
+function startMoreVoice() {
+  if (moreVoice && moreVoice.state !== 'idle') return moreVoice.stop();
+  moreVoice = new Dictation({ lang: CONFIG.speechLang });
+  moreVoice.onfinal = (t) => {
+    moreText.value = appendSegment(moreText.value, t);
+    $('more-go').disabled = !moreText.value.trim();
+  };
+  moreVoice.onstate = (st) => {
+    moreMic.setAttribute('aria-pressed', String(st !== 'idle'));
+    more.dataset.mic = st;
+  };
+  moreVoice.onerror = (c) => (moreHelp.textContent = speechErrorMessage(c));
+  unlockAudio();
+  moreVoice.start();
+}
+moreMic.addEventListener('click', () => {
+  if (keyboardVoice) {
+    moreText.focus();
+    moreHelp.textContent = `${keyboardTip()} ${MORE_HELP}`;
+    return;
+  }
+  startMoreVoice();
+});
+more.addEventListener('close', () => moreVoice && moreVoice.cancel());
 $('more-cancel').addEventListener('click', () => more.close());
 moreText.addEventListener('input', () => ($('more-go').disabled = !moreText.value.trim()));
 more.addEventListener('close', async () => {

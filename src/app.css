@@ -624,3 +624,10 @@ dialog.more textarea { min-height: 110px; }
 .make-next h2 { margin: 0; font: 700 0.95rem/1.2 var(--display); text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
 .make-next-row { display: flex; flex-wrap: wrap; gap: 8px; }
 .make-next-row .chip { min-height: 44px; padding: 8px 16px; font-size: 0.95rem; }
+
+/* Mic in the Add more info sheet */
+.more-mic-zone { display: flex; align-items: center; gap: 16px; }
+.more-mic-zone .help { margin: 0; }
+.mic.more-mic { width: 72px; height: 72px; flex: none; box-shadow: 0 0 0 6px var(--accent-soft); }
+.mic.more-mic svg { width: 32px; height: 32px; }
+.mic.more-mic[aria-pressed="true"] { background: var(--rec); box-shadow: 0 0 0 6px var(--rec-soft); }
