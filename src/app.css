@@ -610,3 +610,11 @@ body[data-role="vet"] .mode label[data-roles="vet"] { order: -1; }
 .word-btn { width: 100%; gap: 10px; }
 .word-btn svg { width: 20px; height: 20px; flex: none; }
 .word-btn:disabled { opacity: .6; }
+
+/* Add more info sheet: sits over the result, keyboard opens straight away */
+dialog.more { margin: auto auto 0; width: min(560px, 100vw); max-width: 100vw; border-radius: 14px 14px 0 0; padding: 0; }
+@media (min-width: 720px) { dialog.more { margin: auto; border-radius: 14px; } }
+dialog.more form { display: flex; flex-direction: column; gap: 12px; padding: 18px var(--gutter-r) calc(18px + env(safe-area-inset-bottom, 0px)) var(--gutter-l); }
+dialog.more h2 { margin: 0; font: 700 1.3rem/1.2 var(--display); text-transform: uppercase; letter-spacing: 1px; }
+dialog.more textarea { min-height: 110px; }
+.more-actions { display: grid; grid-template-columns: auto 1fr; gap: 10px; }

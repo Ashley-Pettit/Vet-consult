@@ -854,11 +854,26 @@ els.copy.addEventListener('click', async () => {
 });
 
 // Add more info: back to the dictation with everything kept, ready to add what was missed.
+// Add more info: a small sheet over the result. What they add joins the original dictation and the record is
+// rewritten in place, so nobody has to go back, find the end of the text and press Create again.
+const more = $('more');
+const moreText = $('more-text');
 function addMoreInfo() {
-  showView('record');
-  els.mic.focus();
-  toast('Add what you missed, then create it again. Start over clears everything.');
+  moreText.value = '';
+  $('more-go').disabled = true;
+  more.showModal();
+  moreText.focus(); // inside the tap, so the phone keyboard (and its mic key) opens straight away
 }
+$('more-cancel').addEventListener('click', () => more.close());
+moreText.addEventListener('input', () => ($('more-go').disabled = !moreText.value.trim()));
+more.addEventListener('close', async () => {
+  const extra = moreText.value.trim();
+  if (more.returnValue !== 'go' || !extra) return;
+  more.returnValue = '';
+  setTranscript(appendSegment(els.transcript.value, extra));
+  await createNote();
+});
+more.addEventListener('click', (e) => e.target === more && more.close()); // tap outside to cancel
 els.back.addEventListener('click', addMoreInfo);
 
 
@@ -871,6 +886,7 @@ function renderCare(c) {
   const name = c.animal || currentNote()?.patient.name || '';
   els.careTitle.textContent = c.kind === 'wildlife' ? `Care plan: ${name || 'wildlife in care'}` : `Caring for ${name || 'your animal'} at home`;
   $('care-back-label').textContent = careFrom === 'note' ? 'Back to note' : 'Back';
+  $('care-back-2').textContent = careFrom === 'note' ? 'Back' : 'Add more info';
   const log = c.daily_checks.length
     ? el('section', { class: 'care-sec' }, [
         el('h2', { text: `Daily tick sheet (${c.log_days} days)` }),
@@ -987,7 +1003,9 @@ async function createCarePlan(text) {
 }
 
 els.care.addEventListener('click', openCare);
-for (const b of [$('care-back'), $('care-back-2')]) b.addEventListener('click', () => showView(careFrom === 'note' ? 'note' : 'record'));
+$('care-back').addEventListener('click', () => showView(careFrom === 'note' ? 'note' : 'record'));
+// A plan made straight from the carer's words can take more info in place; one made from a vet note goes back to it.
+$('care-back-2').addEventListener('click', () => (careFrom === 'note' ? showView('note') : addMoreInfo()));
 els.careCopy.addEventListener('click', async () => {
   const ok = await copyText(careSheetText(careSheet, lookupSource));
   toast(ok ? 'Care plan copied. Paste it into an email, SMS or the discharge sheet.' : 'Couldn’t copy. Select the text and copy it instead.');

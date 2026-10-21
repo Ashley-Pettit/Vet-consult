@@ -252,6 +252,19 @@
   </form>
 </dialog>
 
+<dialog id="more" class="more" aria-labelledby="more-title">
+  <form method="dialog" id="more-form">
+    <h2 id="more-title">Add more info</h2>
+    <p class="help" id="more-help">Tap the mic on your keyboard and say what you missed. It’s added to what you already said and the record is rewritten.</p>
+    <label for="more-text" class="sr-only">What you missed</label>
+    <textarea id="more-text" rows="4" spellcheck="true" placeholder="e.g. She weighed 24.6 kilos, and the case number is 26-04417."></textarea>
+    <div class="more-actions">
+      <button type="button" class="btn ghost" id="more-cancel">Cancel</button>
+      <button type="submit" class="btn primary" id="more-go" value="go">Update</button>
+    </div>
+  </form>
+</dialog>
+
 <div id="toast" class="toast" role="status" aria-live="polite" hidden>
   <span id="toast-text"></span>
   <button type="button" class="link" id="toast-action" hidden></button>
