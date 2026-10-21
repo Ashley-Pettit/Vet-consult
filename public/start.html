@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Try Consult Scribe</title>
+<meta name="description" content="How to try Consult Scribe, a voice-to-clinical-notes prototype for shelter vet teams.">
+<style>
+:root{--bg:#f4f7fa;--card:#fff;--ink:#0f2236;--muted:#4a5d70;--line:#d7e0e8;--brand:#0b5fa5;--brand-ink:#fff;--soft:#e7f0f8}
+@media (prefers-color-scheme:dark){:root{--bg:#0a1b2e;--card:#112840;--ink:#e8eff6;--muted:#a9bccd;--line:#24405c;--brand:#5aa9e6;--brand-ink:#04121f;--soft:#163452}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{background:var(--brand);color:var(--brand-ink);padding:28px 16px 24px}
+header h1{margin:0 0 4px;font-size:1.6rem;line-height:1.2}
+header p{margin:0;opacity:.92}
+main{max-width:640px;margin:0 auto;padding:20px 16px 40px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;margin:0 0 16px}
+.card h2{margin:0 0 4px;font-size:1.2rem}
+.tag{display:inline-block;font-size:.8rem;font-weight:600;background:var(--soft);color:var(--ink);border-radius:999px;padding:2px 10px;margin-bottom:10px}
+ol{margin:12px 0 0;padding-left:1.3em}
+li{margin:0 0 10px}
+.btn{display:block;text-align:center;background:var(--brand);color:var(--brand-ink);text-decoration:none;font-weight:600;border-radius:10px;padding:14px 16px;margin:16px 0 0;min-height:48px}
+.btn.alt{background:transparent;color:var(--brand);border:2px solid var(--brand)}
+a{color:var(--brand)}
+.muted{color:var(--muted);font-size:.92rem}
+kbd{font:inherit;font-size:.9em;border:1px solid var(--line);border-radius:5px;padding:0 5px;background:var(--soft)}
+footer{max-width:640px;margin:0 auto;padding:0 16px 32px;color:var(--muted);font-size:.85rem}
+</style>
+</head>
+<body>
+<header>
+  <h1>Try Consult Scribe</h1>
+  <p>Talk through a consult. Get clinical notes, a carer plan, an inspector report or an adoption summary.</p>
+</header>
+<main>
+  <section class="card">
+    <span class="tag">Full version · about 3 minutes</span>
+    <h2>Use it inside Claude</h2>
+    <p class="muted">The AI runs on your own Claude account. A free account works.</p>
+    <ol>
+      <li><strong>Create a free Claude account.</strong> Go to <a href="https://claude.ai" rel="noopener">claude.ai</a> and sign up with your email or Google account.</li>
+      <li><strong>Open Consult Scribe</strong> with the button below, on the same phone or computer. Sign in if asked.</li>
+      <li><strong>Pick the output</strong> you want, such as Clinical notes or Carer plan.</li>
+      <li><strong>Talk using your keyboard's mic key.</strong> Tap the big mic, then the mic on your keyboard (Gboard or Samsung on Android, the iPhone keyboard, or <kbd>Windows</kbd> + <kbd>H</kbd> on a PC). Tap Done when finished.</li>
+      <li><strong>Tap Create</strong>, then check the result before using it.</li>
+    </ol>
+    <a class="btn" href="https://claude.ai/artifact/X4sEhngJMFmhnAEq2iFwxC" rel="noopener">Open Consult Scribe in Claude</a>
+  </section>
+
+  <section class="card">
+    <span class="tag">Quick look · no account</span>
+    <h2>See the demo</h2>
+    <p>Load the built-in examples to see every output. The live mic works here too, but writing new notes needs the Claude version above.</p>
+    <a class="btn alt" href="./">Open the demo</a>
+  </section>
+
+  <section class="card">
+    <h2>Before you start</h2>
+    <ul>
+      <li>This is a prototype. Check everything before saving it anywhere.</li>
+      <li>Don't use real owner names, addresses or phone numbers.</li>
+      <li>If the Claude link says you don't have access, ask the person who sent it to share it again.</li>
+    </ul>
+  </section>
+</main>
+<footer>Independent prototype. Not affiliated with or endorsed by any animal welfare organisation.</footer>
+</body>
+</html>
