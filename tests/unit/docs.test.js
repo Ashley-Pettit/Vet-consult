@@ -75,3 +75,7 @@ test('advice right now: first aid only, grounded in the sources it is given', ()
   assert.match(p, /\(03\) 8400 7300/);
   assert.doesNotMatch(buildDocPrompt('log', 'x', { sourceList: 'vic-x' }), /Reference sources/);
 });
+
+test('for the vet starts with a ready-to-send text', () => {
+  assert.match(buildDocPrompt('tovet', 'x'), /"Text to your vet": one plain message of at most 450 characters/);
+});

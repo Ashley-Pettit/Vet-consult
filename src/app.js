@@ -1092,7 +1092,7 @@ function renderDoc(d, kind) {
   $('doc-check-count').textContent = d.check.length ? String(d.check.length) : '';
   $('doc-check-list').replaceChildren(...d.check.map((c) => el('li', { text: c })));
   $('doc').replaceChildren(
-    ...d.sections.map((s) =>
+    ...d.sections.filter((s) => !(kind === 'tovet' && /^text to your vet$/i.test(s.heading))).map((s) =>
       el('section', { class: 'doc-sec' }, [el('h2', { text: s.heading }), s.text ? el('p', { text: s.text }) : list(s.items)]),
     ),
     ...(d.due.length
@@ -1110,6 +1110,10 @@ function renderDoc(d, kind) {
 function showDoc(d, kind, info = '') {
   currentDoc = { d, kind };
   renderMakeNext($('make-next-doc'), kind);
+  // "For the vet" leads with a ready-to-send text message.
+  const textSec = kind === 'tovet' ? d.sections.find((x) => /^text to your vet$/i.test(x.heading)) : null;
+  $('text-vet').hidden = !textSec;
+  $('text-vet-body').textContent = textSec ? textSec.text || textSec.items.join(' ') : '';
   $('advice-cta').hidden = kind !== 'intake';
   madeFrom[kind] = { text: els.transcript.value, d, info };
   renderDoc(d, kind);
@@ -1184,6 +1188,20 @@ async function makeAdvice() {
   }
 }
 $('advice-btn').addEventListener('click', makeAdvice);
+$('text-vet-send').addEventListener('click', async () => {
+  const text = $('text-vet-body').textContent;
+  if (!text) return;
+  try {
+    if (navigator.share) {
+      await navigator.share({ text });
+      return;
+    }
+  } catch (e) {
+    if (e && e.name === 'AbortError') return;
+  }
+  const ok = await copyText(text);
+  toast(ok ? 'Copied. Paste it into a text to your vet, and add a photo.' : 'Couldn’t copy. Select the text and copy it instead.');
+});
 
 async function makeNext(m) {
   if (busy || !els.transcript.value.trim()) return;

@@ -753,7 +753,8 @@ export const DOC_KINDS = {
     working: 'A clear summary and your questions, ready for the vet.',
     title: 'Summary for the vet visit, from the carer',
     rule: `Write a concise summary a wildlife carer hands to a vet before or during a visit, in clear clinical Australian English with metric units. The vet should be able to read it in under a minute.
-- Sections, in this order, leaving out any with nothing stated: "Animal" (species, sex, age or stage, name or ID, current weight), "Reason for visit", "History in care" (rescue date and circumstances, time in care, earlier problems and treatment), "Recent observations" (weights with dates or trend, feeding, toileting, behaviour, wounds), "Current medications and treatment" (exactly as stated), "Questions for the vet" (each as a clear question), "What the carer needs back" (for example written dosing instructions, a recheck date, or a release decision).
+- First section "Text to your vet": one plain message of at most 450 characters the carer can paste straight into a text, covering the animal, what happened, the key findings and their main question. No headings or lists in it.
+- Then these sections, in this order, leaving out any with nothing stated: "Animal" (species, sex, age or stage, name or ID, current weight), "Reason for visit", "History in care" (rescue date and circumstances, time in care, earlier problems and treatment), "Recent observations" (weights with dates or trend, feeding, toileting, behaviour, wounds), "Current medications and treatment" (exactly as stated), "Questions for the vet" (each as a clear question), "What the carer needs back" (for example written dosing instructions, a recheck date, or a release decision).
 - Turn worries the carer mentions into clear questions under "Questions for the vet".
 - Never invent doses, results or diagnoses. Record medications only as the carer said them.
 - "due": rechecks or treatments due, timing exactly as stated.`,
