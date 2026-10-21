@@ -5,6 +5,7 @@ import { store } from './storage.js';
 import { localChecks } from './clinical.js';
 import { preparePhoto, MAX_PHOTOS } from './photos.js';
 import { ABOUT_HTML } from './about.js';
+import { lookupSource, sourcesForPrompt, SOURCE_IDS } from './sources.js';
 import {
   NOTE_TYPES,
   NOTE_TYPE_ORDER,
@@ -14,6 +15,11 @@ import {
   EXAMPLE_BATCH_DICTATION,
   EXAMPLE_BATCH_NOTES,
   EXAMPLE_CARE_SHEET,
+  EXAMPLE_CARER_DICTATION,
+  EXAMPLE_CARER_PLAN,
+  EXAMPLE_FOSTER_DICTATION,
+  EXAMPLE_FOSTER_PLAN,
+  buildCarerPlanPrompt,
   appendSegment,
   buildPrompt,
   buildRevisionPrompt,
@@ -249,6 +255,7 @@ function alertStopped() {
 }
 
 function idleStatus() {
+  if (document.body.dataset.mode === 'carer') return els.transcript.value.trim() ? 'Tap the mic to add more' : 'Tap the mic and describe the animal’s care';
   if (keyboardVoice) return els.transcript.value.trim() ? 'Tap the mic to add more by voice' : 'Tap the mic, then talk through the consult';
   return els.transcript.value.trim() ? 'Tap the mic to add more' : 'Tap the mic and talk through the consult';
 }
@@ -320,7 +327,7 @@ els.mic.addEventListener('click', () => {
   if (busy) return;
   banner('');
   els.toast.hidden = true;
-  if (els.transcript.value === EXAMPLE_DICTATION || els.transcript.value === EXAMPLE_BATCH_DICTATION) setTranscript('');
+  if ([EXAMPLE_DICTATION, EXAMPLE_BATCH_DICTATION, EXAMPLE_CARER_DICTATION, EXAMPLE_FOSTER_DICTATION].includes(els.transcript.value)) setTranscript('');
   if (keyboardVoice) {
     const wasOn = kbWasOn || document.body.dataset.mic === 'keyboard';
     kbWasOn = false;
@@ -359,6 +366,8 @@ function loadExample(text, batch, type) {
   toast('Example loaded. Tap Create note to see the result.');
 }
 els.example.addEventListener('click', () => loadExample(EXAMPLE_DICTATION, false, 'intake'));
+$('load-carer-example').addEventListener('click', () => loadExample(EXAMPLE_CARER_DICTATION, false, noteType()));
+$('load-foster-example').addEventListener('click', () => loadExample(EXAMPLE_FOSTER_DICTATION, false, noteType()));
 els.batchExample.addEventListener('click', () => loadExample(EXAMPLE_BATCH_DICTATION, true, 'intake'));
 
 els.clear.addEventListener('click', () => {
@@ -457,6 +466,26 @@ async function runWorking(title, sub, job) {
   }
 }
 
+const mode = () => document.querySelector('input[name="mode"]:checked')?.value || 'vet';
+
+function applyMode() {
+  const m = mode();
+  document.body.dataset.mode = m;
+  els.create.textContent = m === 'carer' ? 'Create care plan' : 'Create note';
+  els.transcript.placeholder =
+    m === 'carer'
+      ? 'Describe the animal, its condition, medications and anything the carer needs to know.'
+      : 'Your words appear here as you talk. You can also type or fix anything.';
+  if (dictation.state === 'idle' && document.body.dataset.mic !== 'keyboard') els.micStatus.textContent = idleStatus();
+}
+document.querySelectorAll('input[name="mode"]').forEach((r) =>
+  r.addEventListener('change', () => {
+    applyMode();
+    settings.mode = mode();
+    store.saveSettings(settings);
+  }),
+);
+
 async function createNote() {
   if (busy) return;
   const text = els.transcript.value.trim();
@@ -472,6 +501,7 @@ async function createNote() {
   const type = noteType();
   const batch = els.batch.checked;
   try {
+    if (mode() === 'carer') return await createCarePlan(finalText);
     if (!(await ensureProvider())) {
       if (finalText === EXAMPLE_DICTATION.trim()) return showNotes([normaliseNote(EXAMPLE_NOTE)], true);
       if (finalText === EXAMPLE_BATCH_DICTATION.trim()) return showNotes(EXAMPLE_BATCH_NOTES.map(normaliseNote), true);
@@ -817,12 +847,15 @@ els.newBtn.addEventListener('click', () => {
   });
 });
 
-/* ---------------- care sheet ---------------- */
+/* ---------------- care plan ---------------- */
+
+let careFrom = 'note'; // where Back goes: the vet note, or the dictation screen
 
 function renderCare(c) {
   const sec = (title, items, cls) => (items.length ? el('section', { class: 'care-sec ' + (cls || '') }, [el('h2', { text: title }), list(items)]) : null);
-  els.careTitle.textContent = `Caring for ${c.animal || currentNote().patient.name || 'your animal'} at home`;
-  const fb = c.feedback;
+  const name = c.animal || currentNote()?.patient.name || '';
+  els.careTitle.textContent = c.kind === 'wildlife' ? `Care plan: ${name || 'wildlife in care'}` : `Caring for ${name || 'your animal'} at home`;
+  $('care-back-label').textContent = careFrom === 'note' ? 'Back to note' : 'Back';
   const log = c.daily_checks.length
     ? el('section', { class: 'care-sec' }, [
         el('h2', { text: `Daily tick sheet (${c.log_days} days)` }),
@@ -836,6 +869,16 @@ function renderCare(c) {
         ]),
       ])
     : null;
+  const r = c.release;
+  const release = r.ready_when.length || r.how.length || r.where
+    ? el('section', { class: 'care-sec release' }, [
+        el('h2', { text: 'Release' }),
+        r.ready_when.length ? el('div', {}, [el('h3', { text: 'Ready when' }), list(r.ready_when)]) : null,
+        r.how.length ? el('div', {}, [el('h3', { text: 'How to release' }), list(r.how)]) : null,
+        r.where ? el('div', {}, [el('h3', { text: 'Where' }), el('p', { text: r.where })]) : null,
+      ])
+    : null;
+  const refs = c.sources.map(lookupSource).filter(Boolean);
   els.careSheet.replaceChildren(
     ...[
       c.summary ? el('p', { class: 'care-summary', text: c.summary }) : null,
@@ -857,65 +900,82 @@ function renderCare(c) {
             el('ol', { class: 'timeline' }, c.plan.map((p) => el('li', {}, [el('strong', { text: p.when }), list(p.tasks)]))),
           ])
         : null,
+      sec('Housing', c.housing),
       sec('Feeding', c.feeding),
-      sec('Activity', c.activity),
+      sec('Activity and handling', c.activity),
       sec('Other care', c.care),
       log,
-      fb.how_often || fb.what_to_report.length || fb.photos.length
-        ? el('section', { class: 'care-sec feedback' }, [
-            el('h2', { text: 'Keeping the clinic updated' }),
-            fb.how_often ? el('p', { text: fb.how_often }) : null,
-            fb.what_to_report.length ? el('p', {}, [el('strong', { text: 'Tell us about: ' }), fb.what_to_report.join(', ')]) : null,
-            fb.photos.length ? el('div', {}, [el('strong', { text: 'Photos to send' }), list(fb.photos)]) : null,
+      release,
+      sec('Contact the vet within a day if', c.escalate.vet, 'watch'),
+      sec('Get vet help straight away (or an after-hours emergency vet) if', c.escalate.urgent, 'urgent'),
+      c.next_visit ? el('section', { class: 'care-sec next' }, [el('h2', { text: 'Next visit' }), el('p', { text: c.next_visit })]) : null,
+      refs.length
+        ? el('section', { class: 'care-sec' }, [
+            el('h2', { text: 'Based on' }),
+            el('ol', { class: 'sources' }, refs.map((s) =>
+              el('li', {}, [
+                el('a', { href: s.url, target: '_blank', rel: 'noopener', text: s.title }),
+                ` (${s.publisher})`,
+                el('span', { class: 'scope', text: s.scope === 'qld' ? 'QLD' : 'AU' }),
+              ]),
+            )),
           ])
         : null,
-      sec('Let us know the same day if you notice', c.watch_for, 'watch'),
-      sec('Call straight away (or an emergency vet after hours) if', c.urgent, 'urgent'),
-      c.next_visit ? el('section', { class: 'care-sec next' }, [el('h2', { text: 'Next visit' }), el('p', { text: c.next_visit })]) : null,
     ].filter(Boolean),
   );
+}
+
+function showCare(sheet, from, info = '') {
+  careSheet = sheet;
+  careFrom = from;
+  renderCare(sheet);
+  els.careBanner.textContent = info;
+  els.careBanner.hidden = !info;
+  showView('care');
+  els.careTitle.focus();
 }
 
 async function openCare() {
   const n = currentNote();
   if (!n) return;
-  if (careSheet) {
-    renderCare(careSheet);
-    showView('care');
-    return;
-  }
-  const exampleRusty = isExample && n.patient.name === 'Rusty';
+  if (careSheet && careFrom === 'note') return showCare(careSheet, 'note', els.careBanner.hidden ? '' : els.careBanner.textContent);
   if (!(await ensureProvider())) {
-    if (exampleRusty) {
-      careSheet = normaliseCareSheet(EXAMPLE_CARE_SHEET);
-      renderCare(careSheet);
-      els.careBanner.textContent = 'This is the example care sheet.';
-      els.careBanner.hidden = false;
-      showView('care');
-      els.careTitle.focus();
-    } else toast(inClaude ? 'Claude isn’t available right now.' : 'Care sheets for your own notes need the Claude app version.');
+    if (isExample && n.patient.name === 'Rusty') showCare(normaliseCareSheet(EXAMPLE_CARE_SHEET, SOURCE_IDS()), 'note', 'This is the example care plan.');
+    else toast(inClaude ? 'Claude isn’t available right now.' : 'Care plans for your own notes need the Claude app version.');
     return;
   }
   try {
-    const reply = await runWorking('Writing the care sheet', 'Plain English for the foster carer or adopter.', (signal) =>
-      provider.generate(buildCareSheetPrompt(n), signal),
+    const reply = await runWorking('Writing the care plan', 'Everything the carer needs, from Queensland guidance.', (signal) =>
+      provider.generate(buildCareSheetPrompt(n, sourcesForPrompt()), signal),
     );
-    careSheet = normaliseCareSheet(extractJson(reply));
-    renderCare(careSheet);
-    els.careBanner.hidden = true;
-    showView('care');
-    els.careTitle.focus();
+    showCare(normaliseCareSheet(extractJson(reply), SOURCE_IDS()), 'note');
   } catch (e) {
     showView('note');
     toast(e && e.code === 'cancelled' ? 'Stopped.' : friendly(e));
   }
 }
 
+/** Carer plan mode: spoken comments go straight to a plan, no vet note in between. */
+async function createCarePlan(text) {
+  if (!(await ensureProvider())) {
+    if (text === EXAMPLE_CARER_DICTATION.trim()) return showCare(normaliseCareSheet(EXAMPLE_CARER_PLAN, SOURCE_IDS()), 'record', 'This is the example care plan.');
+    if (text === EXAMPLE_FOSTER_DICTATION.trim()) return showCare(normaliseCareSheet(EXAMPLE_FOSTER_PLAN, SOURCE_IDS()), 'record', 'This is the example care plan.');
+    banner(NO_CLAUDE, 'info');
+    return;
+  }
+  banner('');
+  const reply = await runWorking('Writing the care plan', 'Everything the carer needs, from Queensland guidance.', (signal) =>
+    provider.generate(buildCarerPlanPrompt(text, sourcesForPrompt()), signal, { images: photos }),
+  );
+  notes = [];
+  showCare(normaliseCareSheet(extractJson(reply), SOURCE_IDS()), 'record');
+}
+
 els.care.addEventListener('click', openCare);
-for (const b of [$('care-back'), $('care-back-2')]) b.addEventListener('click', () => showView('note'));
+for (const b of [$('care-back'), $('care-back-2')]) b.addEventListener('click', () => showView(careFrom === 'note' ? 'note' : 'record'));
 els.careCopy.addEventListener('click', async () => {
-  const ok = await copyText(careSheetText(careSheet));
-  toast(ok ? 'Care sheet copied. Paste it into an email, SMS or the discharge sheet.' : 'Couldn’t copy. Select the text and copy it instead.');
+  const ok = await copyText(careSheetText(careSheet, lookupSource));
+  toast(ok ? 'Care plan copied. Paste it into an email, SMS or the discharge sheet.' : 'Couldn’t copy. Select the text and copy it instead.');
 });
 
 /* ---------------- how it works ---------------- */
@@ -1001,6 +1061,9 @@ els.forget.addEventListener('click', () => {
 
 /* ---------------- start up ---------------- */
 
+const startMode = settings.mode === 'carer' ? 'carer' : 'vet';
+document.querySelector(`input[name="mode"][value="${startMode}"]`).checked = true;
+applyMode();
 const startType = settings.noteType in NOTE_TYPES ? settings.noteType : 'consult';
 els.types.querySelector(`input[value="${startType}"]`).checked = true;
 setTranscript(store.loadDraft());

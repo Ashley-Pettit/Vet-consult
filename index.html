@@ -38,15 +38,24 @@
   <section id="view-record" class="view" aria-labelledby="record-title">
     <h1 id="record-title" class="sr-only">Dictate a consult</h1>
 
-    <fieldset class="types" id="types">
-      <legend class="sr-only">Note type</legend>
+    <fieldset class="mode" id="mode">
+      <legend class="sr-only">What are you writing?</legend>
+      <label><input type="radio" name="mode" value="vet" checked><span>Vet note</span></label>
+      <label><input type="radio" name="mode" value="carer"><span>Carer plan</span></label>
     </fieldset>
 
-    <label class="switch">
-      <input type="checkbox" id="batch">
-      <span class="track" aria-hidden="true"></span>
-      <span>Several animals <span class="muted-inline">(litter or seizure)</span></span>
-    </label>
+    <div class="vet-only">
+      <fieldset class="types" id="types">
+        <legend class="sr-only">Note type</legend>
+      </fieldset>
+
+      <label class="switch">
+        <input type="checkbox" id="batch">
+        <span class="track" aria-hidden="true"></span>
+        <span>Several animals <span class="muted-inline">(litter or seizure)</span></span>
+      </label>
+    </div>
+    <p class="carer-only carer-intro">Describe the animal, what it needs and any medications. You get a complete plan the carer can follow on their own.</p>
 
     <div class="mic-zone">
       <button id="mic" class="mic" type="button" aria-pressed="false" aria-describedby="mic-status">
@@ -77,8 +86,10 @@
       <div class="photo-list" id="photo-list" aria-label="Attached photos"></div>
       <p id="interim" class="interim" aria-hidden="true"></p>
       <p class="examples" id="examples">Try an example:
-        <button type="button" class="chip" id="load-example">Stray dog</button>
-        <button type="button" class="chip" id="load-batch-example">Litter of kittens</button>
+        <button type="button" class="chip vet-only" id="load-example">Stray dog</button>
+        <button type="button" class="chip vet-only" id="load-batch-example">Litter of kittens</button>
+        <button type="button" class="chip carer-only" id="load-carer-example">Injured lorikeet</button>
+        <button type="button" class="chip carer-only" id="load-foster-example">Foster kitten</button>
       </p>
     </div>
 
@@ -146,15 +157,15 @@
     <div class="note-head">
       <button type="button" class="link back" id="care-back">
         <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-        Back to note
+        <span id="care-back-label">Back to note</span>
       </button>
       <h1 id="care-title" tabindex="-1">Care at home</h1>
-      <p class="muted">For foster carers and adopters. Check it, then copy it into an email, SMS or the discharge sheet.</p>
+      <p class="muted">Everything the carer needs to look after the animal on their own. Check it, then copy it into an email, SMS or the discharge sheet.</p>
     </div>
     <p id="care-banner" class="banner" data-tone="info" hidden></p>
     <article id="care-sheet" class="note care" aria-label="Care instructions"></article>
     <div class="actions">
-      <button type="button" class="btn ghost" id="care-back-2">Back to note</button>
+      <button type="button" class="btn ghost" id="care-back-2">Back</button>
       <button type="button" class="btn primary" id="care-copy">Copy care sheet</button>
     </div>
   </section>
