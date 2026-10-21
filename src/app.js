@@ -1090,7 +1090,7 @@ function neverGiveSection(ids = []) {
   if (!ws.length) return null;
   return el('section', { class: 'care-sec never' }, [
     el('h2', { text: 'Never give or do' }),
-    el('ul', {}, ws.map((w) => el('li', {}, [el('strong', { text: w.warning }), ' ', w.why, ' ', el('a', { href: w.url, target: '_blank', rel: 'noopener', class: 'never-src', text: w.publisher })]))),
+    el('ul', {}, ws.map((w) => el('li', {}, [el('strong', { text: w.warning }), ' ', w.why, ' ', el('a', { href: w.url, target: '_blank', rel: 'noopener', class: 'never-src', title: `${w.source_title} (${w.publisher})`, text: /DEECA/.test(w.publisher) ? 'DEECA' : /^NSW/.test(w.publisher) ? 'NSW guidelines' : 'Source' })]))),
     el('p', { class: 'never-foot', text: NEVER_GIVE_FOOTER }),
   ]);
 }
