@@ -145,14 +145,14 @@ test.describe('creating a note', () => {
     const clip = await page.evaluate(() => navigator.clipboard.readText());
     expect(clip).toContain('Addendum: owner called.');
 
-    // Back keeps the dictation; new consult clears it with undo.
+    // Add more info keeps the dictation; Start over clears it with undo.
+    await expect(page.locator('#back')).toHaveText('Add more info');
     await page.locator('#back').click();
     await expect(page.locator('#transcript')).toHaveValue(DICTATION);
-    await page.locator('#create').click();
-    await page.locator('#new').click();
+    await page.locator('#clear').click();
     await expect(page.locator('#transcript')).toHaveValue('');
     await page.locator('#toast-action').click();
-    await expect(page.locator('#view-note')).toBeVisible();
+    await expect(page.locator('#transcript')).toHaveValue(DICTATION);
     expect(errors).toEqual([]);
   });
 

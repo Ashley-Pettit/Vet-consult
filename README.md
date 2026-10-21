@@ -55,7 +55,7 @@ With a proxy configured, staff never see or handle an API key.
 - **The vet owns the record.** Every note must be reviewed before saving. The app never writes to the PMS itself.
 - **Speech** is converted by the browser's speech service (Google for Chrome, Microsoft for Edge, Apple for Safari). Check this meets the organisation's privacy requirements before using it with real cases.
 - **Notes** are written by Claude through the chosen connection. Avoid dictating owner names, addresses or phone numbers unless the organisation has approved it.
-- **Nothing is kept on a server by this app.** The dictation draft is kept in the browser tab only and is cleared with Start over or New consult.
+- **Nothing is kept on a server by this app.** The dictation draft is kept in the browser tab only and is cleared with Start over.
 - Claude is told never to invent values. Anything it assumes is marked "(assumed)" and added to the check list.
 
 ## Browser support

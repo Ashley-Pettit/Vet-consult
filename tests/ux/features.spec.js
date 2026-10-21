@@ -40,7 +40,8 @@ for (const [size, viewport, scheme] of combos) {
       await expect(page.locator('#view-care')).toBeVisible();
       await shot(page, '06-care', true);
       await page.locator('#care-back').click();
-      await page.locator('#new').click();
+      await page.locator('#back').click();
+      await page.locator('#clear').click();
       await page.locator('#load-batch-example').click();
       await page.locator('#create').click();
       await expect(page.locator('#animals')).toBeVisible();

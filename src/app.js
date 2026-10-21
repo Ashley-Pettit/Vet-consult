@@ -52,7 +52,7 @@ const els = {
   workingTitle: $('working-title'), workingSub: $('working-sub'),
   back: $('back'), noteTitle: $('note-title'), animals: $('animals'), noteBanner: $('note-banner'),
   checks: $('checks'), checkList: $('check-list'), note: $('note'), pmsRows: $('pms-rows'),
-  plain: $('plain'), copy: $('copy'), newBtn: $('new'), care: $('care'),
+  plain: $('plain'), copy: $('copy'), care: $('care'),
   careSheet: $('care-sheet'), careBanner: $('care-banner'), careTitle: $('care-title'), careCopy: $('care-copy'),
   about: $('view-about'), openAbout: $('open-about'),
   settings: $('settings'), openSettings: $('open-settings'), clinician: $('clinician'), model: $('model'),
@@ -831,36 +831,14 @@ els.copy.addEventListener('click', async () => {
   } else toast('Text selected. Press Ctrl+C, or long-press and choose Copy.');
 });
 
-els.back.addEventListener('click', () => {
-  showView('record');
-  els.transcript.focus();
-});
-
-els.newBtn.addEventListener('click', () => {
-  const prev = { text: els.transcript.value, notes, current, isExample, photos, plain: els.plain.value };
-  setTranscript('');
-  notes = [];
-  photos = [];
-  renderPhotos();
+// Add more info: back to the dictation with everything kept, ready to add what was missed.
+function addMoreInfo() {
   showView('record');
   els.mic.focus();
-  toast('Ready for the next consult.', {
-    label: 'Undo',
-    run: () => {
-      setTranscript(prev.text);
-      photos = prev.photos;
-      renderPhotos();
-      if (prev.notes.length) {
-        notes = prev.notes;
-        current = prev.current;
-        isExample = prev.isExample;
-        renderNote();
-        els.plain.value = prev.plain;
-        showView('note');
-      }
-    },
-  });
-});
+  toast('Add what you missed, then create it again. Start over clears everything.');
+}
+els.back.addEventListener('click', addMoreInfo);
+
 
 /* ---------------- care plan ---------------- */
 
@@ -1057,15 +1035,7 @@ $('doc-copy').addEventListener('click', async () => {
   const ok = await copyText(docText(currentDoc.d));
   toast(ok ? 'Copied. Paste it wherever it needs to go.' : 'Couldn’t copy. Select the text and copy it instead.');
 });
-$('doc-new').addEventListener('click', () => {
-  const prev = els.transcript.value;
-  setTranscript('');
-  photos = [];
-  renderPhotos();
-  showView('record');
-  els.mic.focus();
-  toast('Ready for the next one.', { label: 'Undo', run: () => { setTranscript(prev); currentDoc && showDoc(currentDoc.d, currentDoc.kind); } });
-});
+$('doc-new').addEventListener('click', addMoreInfo);
 
 /* ---------------- how it works ---------------- */
 

@@ -159,7 +159,8 @@ test('public demo: both examples and the example care sheet work with no connect
   await page.locator('#create').click();
   await expect(page.locator('#animals .animal')).toHaveCount(3);
   await expect(page.locator('#note-banner')).toContainText('example note');
-  await page.locator('#new').click();
+  await page.locator('#back').click();
+  await page.locator('#clear').click();
   await page.locator('#load-example').click();
   await page.locator('#create').click();
   await page.locator('#care').click();
