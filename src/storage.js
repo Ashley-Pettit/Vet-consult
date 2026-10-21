@@ -44,6 +44,12 @@ export const store = {
       model: typeof s.model === 'string' ? s.model : '',
       noteType: typeof s.noteType === 'string' ? s.noteType : 'consult',
       mode: ['carer', 'inspector', 'adoption'].includes(s.mode) ? s.mode : 'vet',
+      org: {
+        name: typeof s.org?.name === 'string' ? s.org.name : '',
+        style: typeof s.org?.style === 'string' ? s.org.style : '',
+        primary: typeof s.org?.primary === 'string' ? s.org.primary : '',
+        secondary: typeof s.org?.secondary === 'string' ? s.org.secondary : '',
+      },
       rememberKey: Boolean(s.rememberKey),
       apiKey: (s.rememberKey && typeof s.apiKey === 'string' ? s.apiKey : sessionKey) || '',
     };
@@ -54,6 +60,7 @@ export const store = {
       model: s.model || '',
       noteType: s.noteType || 'consult',
       mode: ['carer', 'inspector', 'adoption'].includes(s.mode) ? s.mode : 'vet',
+      org: s.org || { name: '', style: '', primary: '', secondary: '' },
       rememberKey: Boolean(s.rememberKey),
       apiKey: s.rememberKey ? s.apiKey || '' : '',
     });

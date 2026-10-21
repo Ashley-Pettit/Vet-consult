@@ -20,7 +20,7 @@
   <div class="bar">
     <div class="brand">
       <svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="16" fill="#ffffff"/><path d="M11 9v6a5 5 0 0 0 10 0V9" fill="none" stroke="var(--brand)" stroke-width="2.4" stroke-linecap="round"/><path d="M16 20v3" stroke="var(--brand)" stroke-width="2.4" stroke-linecap="round"/><circle cx="16" cy="25" r="1.8" fill="var(--leaf)"/></svg>
-      <span class="brand-text"><span class="brand-name">Consult Scribe</span><span class="brand-sub">Shelter vet clinic</span></span>
+      <span class="brand-text"><span class="brand-name">Consult Scribe</span><span class="brand-sub" id="brand-sub">Shelter vet clinic</span></span>
     </div>
     <div class="bar-actions">
     <button class="icon-btn" id="open-about" type="button" aria-label="How it works" title="How it works">
@@ -32,6 +32,7 @@
     </div>
   </div>
 </header>
+<p class="affil" id="affil" hidden></p>
 
 <main id="main">
   <!-- 1. Dictate -->
@@ -210,6 +211,29 @@
       <label for="clinician">Your name (added to every note)</label>
       <input id="clinician" type="text" autocomplete="name" placeholder="e.g. Dr Sam Lee">
     </div>
+
+    <fieldset class="org-field">
+      <legend>Your organisation <span class="muted-inline">(optional)</span></legend>
+      <div class="field">
+        <label for="org-name">Organisation name</label>
+        <div class="org-row">
+          <input id="org-name" type="text" autocomplete="organization" placeholder="e.g. your shelter or council">
+          <button type="button" class="btn ghost small" id="brand-lookup">Look up colours</button>
+        </div>
+      </div>
+      <div class="swatches">
+        <label class="swatch"><input type="color" id="brand-primary" value="#0b5fa5"> <span>Main colour</span></label>
+        <label class="swatch"><input type="color" id="brand-secondary" value="#3ba935"> <span>Accent</span></label>
+        <button type="button" class="link" id="brand-reset">Default look</button>
+      </div>
+      <p class="help" id="brand-status" aria-live="polite"></p>
+      <div class="field">
+        <label for="org-style">How your organisation likes records written</label>
+        <textarea id="org-style" rows="4" placeholder="Paste guidance from your templates or training materials: section order, headings, wording, abbreviations to use or avoid."></textarea>
+        <p class="help">Every note, plan and report follows this. It never adds facts.</p>
+      </div>
+      <p class="help">Saved on this device only. Consult Scribe is an independent tool and always shows that it isn’t affiliated with or endorsed by your organisation.</p>
+    </fieldset>
 
     <div class="field">
       <label for="model">Note writer</label>

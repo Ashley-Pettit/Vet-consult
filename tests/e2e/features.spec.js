@@ -304,3 +304,59 @@ test('adoption summary: due dates worked out, examples work with no connection',
   await expect(page.locator('#doc-title')).toContainText('kelpie');
   expect(calls).toHaveLength(0);
 });
+
+test('organisation: colours and name are the viewer’s choice, with a not-affiliated line, and house style reaches Claude', async ({ page }) => {
+  const errors = watchErrors(page);
+  await withKey(page);
+  const calls = await mockApi(page, {
+    body: (prompt) => (prompt.includes('main brand colours') ? textReply({ primary: '#7a1fa2', secondary: '#f5a623', known: true }) : apiReply()),
+  });
+  await openApp(page);
+  await expect(page.locator('#affil')).toBeHidden();
+  await expect(page.locator('#brand-sub')).toHaveText('Shelter vet clinic');
+
+  await page.locator('#open-settings').click();
+  await page.locator('#org-name').fill('Example Animal Shelter');
+  await page.locator('#brand-lookup').click();
+  await expect(page.locator('#brand-status')).toContainText('Suggested colours applied');
+  await expect(page.locator('#brand-primary')).toHaveValue('#7a1fa2');
+  // Live preview, then Close puts it back.
+  expect(await page.evaluate(() => document.documentElement.style.getPropertyValue('--brand'))).not.toBe('');
+  await page.locator('#close-settings').click();
+  expect(await page.evaluate(() => document.documentElement.style.getPropertyValue('--brand'))).toBe('');
+
+  await page.locator('#open-settings').click();
+  await page.locator('#org-name').fill('Example Animal Shelter');
+  await page.locator('#brand-lookup').click();
+  await page.locator('#org-style').fill('Use headings in capitals. Write "twice daily", never BID.');
+  await page.locator('#save-settings').click();
+  await expect(page.locator('#brand-sub')).toHaveText('for Example Animal Shelter');
+  await expect(page.locator('#affil')).toHaveText('Independent tool. Not affiliated with or endorsed by Example Animal Shelter.');
+  expect(await page.evaluate(() => getComputedStyle(document.querySelector('.band')).backgroundColor)).not.toBe('rgb(11, 95, 165)');
+
+  await page.locator('#transcript').fill(DICTATION);
+  await page.locator('#create').click();
+  await expect(page.locator('#view-note')).toBeVisible();
+  const notePrompt = calls.at(-1).prompt;
+  expect(notePrompt).toContain('scribe for Example Animal Shelter');
+  expect(notePrompt).toContain('<house_style>\nUse headings in capitals.');
+
+  await page.locator('#open-settings').click();
+  await page.locator('#brand-reset').click();
+  await page.locator('#save-settings').click();
+  expect(await page.evaluate(() => document.documentElement.style.getPropertyValue('--brand'))).toBe('');
+  await expect(page.locator('#affil')).toBeVisible(); // name still set
+  expect(errors).toEqual([]);
+});
+
+test('organisation colours work without Claude: swatches only, look-up explains why', async ({ page }) => {
+  await openApp(page);
+  await page.locator('#open-settings').click();
+  await page.locator('#org-name').fill('Another Shelter');
+  await page.locator('#brand-lookup').click();
+  await expect(page.locator('#brand-status')).toContainText('needs Claude');
+  await page.locator('#brand-primary').fill('#aa3300');
+  await page.locator('#save-settings').click();
+  await expect(page.locator('#brand-sub')).toHaveText('for Another Shelter');
+  expect(await page.evaluate(() => document.documentElement.style.getPropertyValue('--brand').trim())).toMatch(/^#/);
+});

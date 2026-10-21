@@ -6,6 +6,7 @@ import { localChecks } from './clinical.js';
 import { preparePhoto, MAX_PHOTOS } from './photos.js';
 import { ABOUT_HTML } from './about.js';
 import { lookupSource, sourcesForPrompt, SOURCE_IDS } from './sources.js';
+import { DEFAULT_BRAND, isHex, brandVars, BRAND_VAR_NAMES, buildBrandPrompt, parseBrandReply } from './brand.js';
 import {
   NOTE_TYPES,
   NOTE_TYPE_ORDER,
@@ -30,6 +31,7 @@ import {
   EXAMPLE_ADOPTION_DICTATION,
   EXAMPLE_ADOPTION_DOC,
   appendSegment,
+  setOrg,
   buildPrompt,
   buildRevisionPrompt,
   buildCareSheetPrompt,
@@ -1088,6 +1090,92 @@ els.about.addEventListener('click', (e) => {
   }
 });
 
+/* ---------------- organisation: name, colours and house style ---------------- */
+
+// Colours are set as variables on the page root (allowed by the site's security policy, unlike injected styles).
+let brandSet = null;
+const darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
+function isDark() {
+  const t = document.documentElement.dataset.theme;
+  return t === 'dark' || (t !== 'light' && darkQuery.matches);
+}
+function paintBrand() {
+  const root = document.documentElement.style;
+  if (!brandSet) return BRAND_VAR_NAMES.forEach((n) => root.removeProperty(n));
+  for (const [k, v] of Object.entries(isDark() ? brandSet.dark : brandSet.light)) root.setProperty(k, v);
+}
+darkQuery.addEventListener?.('change', paintBrand);
+new MutationObserver(paintBrand).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+function applyOrg(org) {
+  setOrg(org);
+  brandSet = isHex(org.primary) ? brandVars({ primary: org.primary, secondary: org.secondary }) : null;
+  paintBrand();
+  $('brand-sub').textContent = org.name ? `for ${org.name}` : 'Shelter vet clinic';
+  const affil = $('affil');
+  affil.textContent = org.name ? `Independent tool. Not affiliated with or endorsed by ${org.name}.` : '';
+  affil.hidden = !org.name;
+}
+
+const orgFromForm = () => ({
+  name: $('org-name').value.trim().slice(0, 100),
+  style: $('org-style').value.trim().slice(0, 8000),
+  primary: $('brand-primary').dataset.set ? $('brand-primary').value : '',
+  secondary: $('brand-secondary').dataset.set ? $('brand-secondary').value : '',
+});
+function fillOrgForm(org) {
+  $('org-name').value = org.name || '';
+  $('org-style').value = org.style || '';
+  for (const [id, v, d] of [['brand-primary', org.primary, DEFAULT_BRAND.primary], ['brand-secondary', org.secondary, DEFAULT_BRAND.secondary]]) {
+    $(id).value = isHex(v) ? v : d;
+    if (isHex(v)) $(id).dataset.set = '1';
+    else delete $(id).dataset.set;
+  }
+  $('brand-status').textContent = '';
+}
+for (const id of ['brand-primary', 'brand-secondary']) {
+  $(id).addEventListener('input', () => {
+    $(id).dataset.set = '1';
+    if (!$('brand-secondary').dataset.set && id === 'brand-primary') $('brand-secondary').value = $('brand-primary').value;
+    applyOrg(orgFromForm()); // live preview; Close puts it back
+  });
+}
+$('brand-reset').addEventListener('click', () => {
+  fillOrgForm({ ...orgFromForm(), primary: '', secondary: '' });
+  applyOrg(orgFromForm());
+  $('brand-status').textContent = 'Back to the default look.';
+});
+$('brand-lookup').addEventListener('click', async () => {
+  const name = $('org-name').value.trim();
+  const status = $('brand-status');
+  if (!name) {
+    status.textContent = 'Type your organisation’s name first.';
+    $('org-name').focus();
+    return;
+  }
+  if (!(await ensureProvider())) {
+    status.textContent = 'Looking up colours needs Claude. Pick your colours with the swatches instead.';
+    return;
+  }
+  const btn = $('brand-lookup');
+  btn.disabled = true;
+  status.textContent = 'Looking up colours…';
+  try {
+    const found = parseBrandReply(extractJson(await provider.generate(buildBrandPrompt(name))));
+    if (!found) {
+      status.textContent = `Couldn’t find colours for ${name}. Pick them with the swatches.`;
+      return;
+    }
+    fillOrgForm({ ...orgFromForm(), primary: found.primary, secondary: found.secondary });
+    applyOrg(orgFromForm());
+    status.textContent = 'Suggested colours applied. Check them against your brand guide, then Save.';
+  } catch (e) {
+    status.textContent = friendly(e);
+  } finally {
+    btn.disabled = false;
+  }
+});
+
 /* ---------------- settings ---------------- */
 
 for (const m of CONFIG.models) els.model.append(el('option', { value: m.id, text: m.label }));
@@ -1110,6 +1198,7 @@ async function openSettings(message) {
   els.model.value = settings.model || CONFIG.defaultModel;
   els.apiKey.value = settings.apiKey;
   els.rememberKey.checked = settings.rememberKey;
+  fillOrgForm(settings.org);
   await refreshConnection();
   if (message) {
     els.conn.textContent = message;
@@ -1125,9 +1214,13 @@ els.openSettings.addEventListener('click', () => openSettings());
 $('close-settings').addEventListener('click', () => els.settings.close('close'));
 
 els.settings.addEventListener('close', async () => {
-  if (els.settings.returnValue !== 'save') return;
+  if (els.settings.returnValue !== 'save') {
+    applyOrg(settings.org); // undo any live preview
+    return;
+  }
   const key = els.apiKey.value.trim();
-  settings = { ...settings, clinician: els.clinician.value.trim().slice(0, 80), model: els.model.value, apiKey: key, rememberKey: els.rememberKey.checked };
+  settings = { ...settings, clinician: els.clinician.value.trim().slice(0, 80), model: els.model.value, apiKey: key, rememberKey: els.rememberKey.checked, org: orgFromForm() };
+  applyOrg(settings.org);
   store.saveSettings(settings);
   provider = null;
   if (key && !/^sk-ant-/.test(key)) toast('Saved, but that doesn’t look like an Anthropic key. Keys start with sk-ant-.');
@@ -1141,12 +1234,15 @@ els.forget.addEventListener('click', () => {
   els.apiKey.value = '';
   els.rememberKey.checked = false;
   els.model.value = CONFIG.defaultModel;
+  fillOrgForm(settings.org);
+  applyOrg(settings.org);
   refreshConnection();
   toast('Saved settings removed from this device.');
 });
 
 /* ---------------- start up ---------------- */
 
+applyOrg(settings.org);
 const startMode = MODES.includes(settings.mode) ? settings.mode : 'vet';
 document.querySelector(`input[name="mode"][value="${startMode}"]`).checked = true;
 applyMode();
