@@ -23,7 +23,6 @@ import {
   buildCarerPlanPrompt,
   DOC_KINDS,
   buildDocPrompt,
-  buildIntakeAndCarePrompt,
   normaliseDoc,
   docText,
   dueLabel,
@@ -481,6 +480,19 @@ async function runWorking(title, sub, job) {
   }
 }
 
+// Ask Claude for JSON. If the reply can't be read (cut off, or stray text), ask once more for a tighter reply
+// before showing an error, so a long answer doesn't cost the vet or carer a retry.
+const RETRY_NOTE = '\n\nImportant: your last reply could not be read. Reply with ONLY the JSON object, no other text, and keep every list short so the whole reply fits.';
+async function askJson(prompt, signal, opts = {}) {
+  const first = await provider.generate(prompt, signal, opts);
+  try {
+    return extractJson(first);
+  } catch (e) {
+    if (!e || e.code !== 'invalid_json' || (signal && signal.aborted)) throw e;
+    return extractJson(await provider.generate(prompt + RETRY_NOTE, signal, opts));
+  }
+}
+
 const mode = () => document.querySelector('input[name="mode"]:checked')?.value || 'vet';
 const MODES = ['intake', 'log', 'carer', 'tovet', 'funding', 'vet'];
 const ROLE_MODES = { carer: ['intake', 'log', 'carer', 'tovet', 'funding'], vet: ['carer', 'vet'] };
@@ -579,7 +591,7 @@ async function createNote() {
     const result = await runWorking(
       'Writing the clinical notes',
       'Claude is turning your words into SOAP notes.',
-      (signal) => provider.generate(prompt, signal, { images: photos }),
+      (signal) => askJson(prompt, signal, { images: photos }),
     );
     const list = normaliseResult(extractJson(result));
     if (!list.length) throw new AiError('empty', '');
@@ -741,7 +753,7 @@ async function applyAnswer(item, answer) {
   const idx = current;
   try {
     const reply = await runWorking('Updating the note', 'Adding your answer in the right place.', (signal) =>
-      provider.generate(buildRevisionPrompt(notes[idx], item, answer), signal),
+      askJson(buildRevisionPrompt(notes[idx], item, answer), signal),
     );
     const [updated] = normaliseResult(extractJson(reply));
     if (!updated) throw new AiError('empty', '');
@@ -1081,7 +1093,7 @@ async function openCare() {
   }
   try {
     const reply = await runWorking('Writing the care plan', 'Everything the carer needs, from Victorian guidance.', (signal) =>
-      provider.generate(buildCareSheetPrompt(n, sourcesForPrompt()), signal),
+      askJson(buildCareSheetPrompt(n, sourcesForPrompt()), signal),
     );
     showCare(normaliseCareSheet(extractJson(reply), SOURCE_IDS()), 'note');
   } catch (e) {
@@ -1100,7 +1112,7 @@ async function createCarePlan(text) {
   }
   banner('');
   const reply = await runWorking('Writing the care plan', 'Everything the carer needs, from Victorian guidance.', (signal) =>
-    provider.generate(buildCarerPlanPrompt(text, sourcesForPrompt(), { fromVet: settings.role === 'vet' }), signal, { images: photos }),
+    askJson(buildCarerPlanPrompt(text, sourcesForPrompt(), { fromVet: settings.role === 'vet' }), signal, { images: photos }),
   );
   notes = [];
   showCare(normaliseCareSheet(extractJson(reply), SOURCE_IDS()), 'record');
@@ -1175,18 +1187,14 @@ async function createDoc(kind, text) {
   }
   banner('');
   const opts = { clinician: settings.clinician, photoCount: photos.length, sourceList: sourcesForPrompt() };
-  // An intake also gets its care plan in the same call, so "Need advice right now?" opens it instantly.
-  const both = kind === 'intake';
+  // An intake starts its care plan at the same moment, in a second call, so "Need advice right now?" is ready
+  // (or nearly) by the time the record is read. Two shorter replies, so neither gets cut off.
+  if (kind === 'intake') startIntakeCare();
   const reply = await runWorking(`Writing the ${DOC_KINDS[kind].label.toLowerCase()}`, DOC_KINDS[kind].working, (signal) =>
-    provider.generate(both ? buildIntakeAndCarePrompt(text, opts) : buildDocPrompt(kind, text, opts), signal, { images: photos }),
+    askJson(buildDocPrompt(kind, text, opts), signal, { images: photos }),
   );
-  const json = extractJson(reply);
-  const d = normaliseDoc(both && json && json.intake ? json.intake : json);
+  const d = normaliseDoc(reply);
   if (!d.sections.length) throw new AiError('empty', '');
-  if (both && json && json.care) {
-    const sheet = normaliseCareSheet(json.care, SOURCE_IDS());
-    if (sheet.summary || sheet.plan.length || sheet.housing.length) madeFrom.carer = { text: els.transcript.value, sheet, info: '' };
-  }
   showDoc(d, kind);
 }
 
@@ -1227,6 +1235,37 @@ function renderMakeNext(box, current) {
 }
 // "Need advice right now?" on an intake record opens the care plan, already written in the same call.
 $('advice-btn').addEventListener('click', () => makeNext('carer'));
+
+// The care plan an intake starts in the background: { text, promise } resolving to a sheet, or null if it failed.
+let pendingCare = null;
+function startIntakeCare() {
+  const text = els.transcript.value;
+  const promise = askJson(buildCarerPlanPrompt(text.trim(), sourcesForPrompt(), { justIn: true }), undefined, { images: photos })
+    .then((r) => {
+      const sheet = normaliseCareSheet(r, SOURCE_IDS());
+      if (!(sheet.summary || sheet.plan.length || sheet.housing.length)) return null;
+      if (els.transcript.value === text) madeFrom.carer = { text, sheet, info: '' };
+      return sheet;
+    })
+    .catch(() => null);
+  pendingCare = { text, promise };
+}
+// Wait for that background plan (Stop still works). Null means make one the normal way.
+async function waitForIntakeCare() {
+  if (!pendingCare || pendingCare.text !== els.transcript.value) return null;
+  const { promise } = pendingCare;
+  busy = true;
+  try {
+    return await runWorking('Finishing the care plan', 'It started when you made the intake record, so it’s nearly done.', (signal) =>
+      Promise.race([promise, new Promise((_, reject) => signal.addEventListener('abort', () => reject(new AiError('cancelled', '')), { once: true }))]),
+    );
+  } catch {
+    showView('doc');
+    return false;
+  } finally {
+    busy = false;
+  }
+}
 $('text-vet-send').addEventListener('click', async () => {
   const text = $('text-vet-body').textContent;
   if (!text) return;
@@ -1252,6 +1291,11 @@ async function makeNext(m) {
   if (prev && prev.text === els.transcript.value) {
     if (m === 'vet') return showNotes(prev.notes, false);
     return m === 'carer' ? showCare(prev.sheet, 'record', prev.info) : showDoc(prev.d, m, prev.info);
+  }
+  if (m === 'carer') {
+    const sheet = await waitForIntakeCare();
+    if (sheet === false) return; // stopped
+    if (sheet) return showCare(sheet, 'record');
   }
   await createNote();
 }

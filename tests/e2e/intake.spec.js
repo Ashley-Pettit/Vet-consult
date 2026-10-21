@@ -2,14 +2,15 @@ import { test, expect } from '@playwright/test';
 import { withKey, mockApi, openApp, textReply } from './helpers.js';
 import { EXAMPLE_CARER_PLAN } from '../../src/note.js';
 
-test('intake writes the care plan in the same call, and "Need advice right now?" opens it instantly', async ({ page }) => {
+test('intake starts the care plan alongside the record, and "Need advice right now?" opens it instantly', async ({ page }) => {
   await withKey(page, { role: 'carer', mode: 'intake' });
   const intake = {
     title: 'Intake record: bare-nosed wombat', subtitle: 'Case 26-04417',
     sections: [{ heading: 'Where it was found', text: 'Gravel pull-over, south side of the Bass Highway, east of the Kilcunda bridge.', items: [] }],
     due: [], check: [],
   };
-  const calls = await mockApi(page, { body: () => textReply({ intake, care: EXAMPLE_CARER_PLAN }) });
+  // Two calls start together: the record, and the care plan in the background.
+  const calls = await mockApi(page, { body: (p) => (p.includes('just taken this animal in') ? textReply(EXAMPLE_CARER_PLAN) : textReply(intake)) });
   await openApp(page);
   await page.locator('#transcript').fill('Intake. Adult wombat, car strike, Kilcunda.');
   await page.locator('#create').click();
@@ -23,5 +24,18 @@ test('intake writes the care plan in the same call, and "Need advice right now?"
   await expect(page.locator('#view-care')).toBeVisible();
   await expect(page.locator('#care-sheet')).not.toContainText('Never give or do');
   await expect(page.locator('#care-sheet')).not.toContainText('reach a vet');
-  expect(calls.length).toBe(1);
+  expect(calls.length).toBe(2); // no extra call when the plan is opened
+});
+
+test('a reply that comes back unreadable is retried once, quietly', async ({ page }) => {
+  await withKey(page, { role: 'carer', mode: 'log' });
+  const good = { title: 'Oliver care log', subtitle: '', sections: [{ heading: 'Summary', text: 'Good day.', items: [] }], due: [], check: [] };
+  let n = 0;
+  const calls = await mockApi(page, { body: () => (n++ === 0 ? { content: [{ type: 'text', text: '{"title":"Oliver care log","sections":[{"heading":"Summ' }] } : textReply(good)) });
+  await openApp(page);
+  await page.locator('#transcript').fill('Oliver, good day.');
+  await page.locator('#create').click();
+  await expect(page.locator('#doc-title')).toHaveText('Oliver care log');
+  expect(calls.length).toBe(2);
+  expect(calls[1].prompt).toContain('your last reply could not be read');
 });
