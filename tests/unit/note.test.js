@@ -104,13 +104,15 @@ test('plain text has every SOAP section said, and no gaps for what was not', () 
   assert.match(t, /\nS: Stray presented/);
   assert.match(t, /\nO: T 39\.4 °C \| HR 120 bpm/);
   assert.match(t, /\n1\. Laceration, left forelimb/);
-  assert.match(t, /- Rx: Cephalexin 22 mg\/kg PO BID x 7 days/);
-  assert.match(t, /- Rx: Fluralaner \(Bravecto\) Per label PO Once/);
+  assert.match(t, /P:\nGiven today:\n- Sedation[^\n]*\n/);
+  assert.match(t, /Medications to continue:\n- Cephalexin 22 mg\/kg PO BID x 7 days/);
+  assert.match(t, /- Fluralaner \(Bravecto\) Per label PO Once/);
+  assert.doesNotMatch(t, /Rx:|Dx:/);
   const empty = toPlainText(normaliseNote({}));
   assert.doesNotMatch(empty, /Not recorded|S:|A:|P:/);
   // Quick shorthand: only what was said, nothing that looks unfinished.
   const quick = toPlainText(normaliseNote({ patient: { species: 'Wombat' }, plan: { follow_up: ['Recheck in 7 days'] } }));
-  assert.match(quick, /Patient: Wombat\n\nP:\n- Recheck in 7 days$/);
+  assert.match(quick, /Patient: Wombat\n\nP:\nFollow-up:\n- Recheck in 7 days$/);
 });
 
 test('formatDate pads to dd/mm/yyyy hh:mm', () => {
@@ -175,4 +177,25 @@ test('care sheet normalises and formats plainly', () => {
   assert.match(t, /Contact the vet within a day if[\s\S]*Get vet help straight away/);
   assert.doesNotMatch(t, /Keeping|update|report/i);
   assert.match(t, /Next visit: Recheck/);
+});
+
+test('plan: given today and to continue are kept apart, each item once, and only continuing meds are prescriptions', () => {
+  const n = normaliseNote({
+    plan: {
+      procedures: ['Abrasion cleaned'],
+      treatments: [
+        { drug: 'Meloxicam', dose: '0.1 mg/kg', route: 'SC', when: 'given' },
+        { drug: 'Meloxicam', dose: '0.1 mg/kg', route: 'PO', frequency: 'SID', duration: '4 days', when: 'continue' },
+        { drug: 'Mange treatment per protocol', dose: 'Per protocol', when: 'given' },
+      ],
+      diagnostics: ['Haematology'],
+      home_care: ['Quiet pen with a hide box'],
+      follow_up: ['Recheck in 1 week'],
+    },
+  });
+  const t = toPlainText(n);
+  assert.match(t, /P:\nGiven today:\n- Abrasion cleaned\n- Meloxicam 0\.1 mg\/kg SC\n- Mange treatment per protocol\nMedications to continue:\n- Meloxicam 0\.1 mg\/kg PO SID x 4 days\nDiagnostics planned:\n- Haematology\nHome care:\n- Quiet pen with a hide box\nFollow-up:\n- Recheck in 1 week/);
+  assert.equal(pmsSections(n).prescriptions, 'Meloxicam 0.1 mg/kg PO SID x 4 days');
+  assert.match(buildPrompt('x'), /never repeat an item in two places/);
+  assert.match(buildPrompt('x'), /Conditional plans go here, not in diagnostics/);
 });

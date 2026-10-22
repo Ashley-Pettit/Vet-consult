@@ -238,7 +238,8 @@ export function noteModel(n) {
   const p = n.patient;
   const v = n.objective.vitals;
   const nr = (x) => x || NOT_RECORDED;
-  const rx = n.plan.treatments.map((t) => [t.drug, [t.dose, t.route].filter(Boolean).join(' '), t.frequency, t.duration]);
+  const given = n.plan.treatments.filter((t) => t.when === 'given').map((t) => [t.drug, t.dose, t.route].filter(Boolean).join(' '));
+  const rx = n.plan.treatments.filter((t) => t.when !== 'given').map((t) => [t.drug, [t.dose, t.route].filter(Boolean).join(' '), t.frequency, t.duration]);
   return {
     docType: 'Clinical notes',
     title: [p.name, p.species].filter(Boolean).join(', ') || 'Clinical notes',
@@ -250,8 +251,10 @@ export function noteModel(n) {
       { heading: 'Vitals', table: { head: ['Temp', 'Heart rate', 'Resp rate', 'BCS', 'Hydration'], rows: [[v.temp_c ? `${v.temp_c} °C` : '-', v.hr_bpm ? `${v.hr_bpm} bpm` : '-', v.rr_bpm ? `${v.rr_bpm} bpm` : '-', v.bcs || '-', v.hydration || '-']] } },
       { heading: 'Findings', items: [...n.objective.findings, ...n.objective.photo_findings] },
       { heading: 'Assessment', items: n.assessment.problems },
-      { heading: 'Procedures and diagnostics', items: [...n.plan.procedures, ...n.plan.diagnostics] },
-      ...(rx.length ? [{ heading: 'Medications', table: { head: ['Drug', 'Dose and route', 'Frequency', 'Duration'], rows: rx, widths: [2800, 2600, 2200, PAGE_W - 7600] } }] : []),
+      { heading: 'Given today', items: [...n.plan.procedures, ...given] },
+      ...(rx.length ? [{ heading: 'Medications to continue', table: { head: ['Drug', 'Dose and route', 'Frequency', 'Duration'], rows: rx, widths: [2800, 2600, 2200, PAGE_W - 7600] } }] : []),
+      { heading: 'Diagnostics planned', items: n.plan.diagnostics },
+      { heading: 'Home care', items: n.plan.home_care || [] },
       { heading: 'Follow-up', items: n.plan.follow_up },
       { heading: 'Welfare notes', text: n.welfare_notes },
     ],

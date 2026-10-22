@@ -66,7 +66,7 @@ export const EMPTY_NOTE = Object.freeze({
   subjective: '',
   objective: { vitals: { temp_c: '', hr_bpm: '', rr_bpm: '', bcs: '', mm_crt: '', hydration: '' }, findings: [] },
   assessment: { problems: [], differentials: [] },
-  plan: { procedures: [], diagnostics: [], treatments: [], follow_up: [] },
+  plan: { procedures: [], diagnostics: [], treatments: [], home_care: [], follow_up: [] },
   welfare_notes: '',
   check: [],
 });
@@ -107,7 +107,7 @@ const NOTE_SHAPE = (title) => `{"patient":{"name":"","species":"","breed":"","se
 "subjective":"",
 "objective":{"vitals":{"temp_c":"","hr_bpm":"","rr_bpm":"","bcs":"","mm_crt":"","hydration":""},"findings":[],"photo_findings":[]},
 "assessment":{"problems":[],"differentials":[]},
-"plan":{"procedures":[],"diagnostics":[],"treatments":[{"drug":"","dose":"","route":"","frequency":"","duration":""}],"follow_up":[]},
+"plan":{"procedures":[],"diagnostics":[],"treatments":[{"drug":"","dose":"","route":"","frequency":"","duration":"","when":"given|continue"}],"home_care":[],"follow_up":[]},
 "welfare_notes":"",
 "check":[]}`;
 
@@ -119,7 +119,12 @@ const RULES = `Rules:
 - If you must assume something to make the record readable, mark it "(assumed)" and add it to "check".
 - Record explicit negatives as findings (for example microchip "Scanned, none detected") rather than leaving the field empty.
 - Assessment problems: only what the vet assessed. A sign mentioned elsewhere but not assessed may be added only with "(assumed)".
-- Treatments hold medications, vaccines and fluids only. Sedation, anaesthesia, wound care, surgery and feeding go in procedures or follow_up. A product dosed by label uses "Per label" as the dose. Fluids with no type stated use "Fluids (type not stated)" as the drug.
+- Plan (P). Sort every plan item into exactly ONE place, the way a vet writes P, and never repeat an item in two places:
+  - procedures: things physically DONE this visit that are not drugs (for example "Abrasion over left shoulder cleaned", "Sutured under sedation"). Past tense.
+  - treatments: every medication, vaccine, parasite treatment or fluid. "when": "given" if it was administered during this visit, "continue" if it is dispensed or is to be given after today. A drug given today AND continued is two entries. Treatments described by protocol are still treatments: the drug is what it treats (for example "Mange treatment") and the dose is the protocol (for example "Per wombat protocol"). A product dosed by label uses "Per label" as the dose. Fluids with no type stated use "Fluids (type not stated)" as the drug.
+  - diagnostics: tests still to be done or awaiting results (for example "Haematology and biochemistry"). A test already done with a result belongs in objective findings (for example "Skin scrape: Sarcoptes mites seen"), not here.
+  - home_care: instructions for the carer or owner at home (housing, diet, wound care, handling, restrictions), only as dictated.
+  - follow_up: rechecks and anything to do later or only if something happens (for example "Recheck in 1 week", "Bloods if not eating by Monday"). Conditional plans go here, not in diagnostics.
 - Do not calculate doses. Keep doses as stated (for example mg/kg). The app works out totals for the vet separately.
 - follow_up: write timing as stated (for example "Recheck in 10-14 days: suture removal").
 - welfare_notes: only welfare observations the vet actually dictated; otherwise an empty string.
@@ -286,6 +291,8 @@ export function normaliseNote(raw) {
         route: str(x.route, 40),
         frequency: str(x.frequency, 40),
         duration: str(x.duration, 60),
+        // Given during this visit, or to continue (dispensed). Older notes without it are treated as dispensed.
+        when: /given|today|administered|in clinic/i.test(str(x.when, 30)) ? 'given' : 'continue',
       };
     })
     .filter((t) => t.drug || t.dose)
@@ -323,6 +330,7 @@ export function normaliseNote(raw) {
       procedures: arr(pl.procedures),
       diagnostics: arr(pl.diagnostics),
       treatments,
+      home_care: arr(pl.home_care),
       follow_up: arr(pl.follow_up),
     },
     welfare_notes: str(r.welfare_notes, 4000),
@@ -387,19 +395,33 @@ export function toPlainText(n, date = new Date()) {
     if (n.assessment.differentials.length) L.push(`DDx: ${n.assessment.differentials.join('; ')}`);
     L.push('');
   }
-  const plan = [
-    ...n.plan.procedures.map((x) => `- ${x}`),
-    ...n.plan.diagnostics.map((x) => `- Dx: ${x}`),
-    ...n.plan.treatments.map((t) => `- Rx: ${[t.drug, t.dose, t.route, t.frequency].filter(Boolean).join(' ')}${t.duration ? ' x ' + t.duration : ''}`.replace(/\s+/g, ' ')),
-    ...n.plan.follow_up.map((x) => `- ${x}`),
-  ];
+  // P in the order vets write it, each part under its own heading, nothing repeated.
+  const plan = planParts(n)
+    .map(([heading, items]) => [`${heading}:`, ...items.map((x) => `- ${x}`)])
+    .flat();
   if (plan.length) L.push('P:', ...plan, '');
   if (n.welfare_notes) L.push(`Welfare/inspectorate: ${n.welfare_notes}`);
   return L.join('\n').trim();
 }
 
+// A dose already spelled out in the drug name ("Mange treatment per protocol" + "Per protocol") is said once.
+const doseOf = (t) => (t.dose && t.drug.toLowerCase().includes(t.dose.toLowerCase()) ? '' : t.dose);
+const givenLine = (t) => [t.drug, doseOf(t), t.route].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
+
+/** The plan as [heading, lines] pairs, in the order vets write P. Empty parts are left out. */
+export function planParts(n) {
+  const pl = n.plan;
+  return [
+    ['Given today', [...pl.procedures, ...pl.treatments.filter((t) => t.when === 'given').map(givenLine)]],
+    ['Medications to continue', pl.treatments.filter((t) => t.when !== 'given').map(rxLine)],
+    ['Diagnostics planned', pl.diagnostics],
+    ['Home care', pl.home_care || []],
+    ['Follow-up', pl.follow_up],
+  ].filter(([, items]) => items.length);
+}
+
 const rxLine = (t) =>
-  `${[t.drug, t.dose, t.route, t.frequency].filter(Boolean).join(' ')}${t.duration ? ' x ' + t.duration : ''}`.replace(/\s+/g, ' ').trim();
+  `${[t.drug, doseOf(t), t.route, t.frequency].filter(Boolean).join(' ')}${t.duration ? ' x ' + t.duration : ''}`.replace(/\s+/g, ' ').trim();
 
 /** Work out a due date from "in 10-14 days", "in 3 weeks", "in 6 months". Uses the earliest day of a range. */
 export function dueDate(text, from = new Date()) {
@@ -422,7 +444,7 @@ const ddmmyyyy = (d) => `${String(d.getDate()).padStart(2, '0')}/${String(d.getM
  */
 export function pmsSections(n, date = new Date()) {
   const clinical = toPlainText(n, date);
-  const prescriptions = n.plan.treatments.map(rxLine).join('\n');
+  const prescriptions = n.plan.treatments.filter((t) => t.when !== 'given').map(rxLine).join('\n');
   const reminders = n.plan.follow_up
     .map((f) => {
       const due = dueDate(f, date);

@@ -130,7 +130,7 @@ test.describe('creating a note', () => {
 
     const plain = await page.locator('#plain').inputValue();
     expect(plain).toMatch(/^SHELTER INTAKE EXAM - \d\d\/\d\d\/\d{4} \d\d:\d\d/);
-    expect(plain).toContain('- Rx: Cephalexin 22 mg/kg PO BID x 7 days');
+    expect(plain).toContain('Medications to continue:\n- Cephalexin 22 mg/kg PO BID x 7 days');
 
     // Edits to the text are what gets copied.
     await page.locator('#plain').fill(plain + '\nAddendum: owner called.');

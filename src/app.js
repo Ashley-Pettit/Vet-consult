@@ -808,7 +808,7 @@ function noteGaps(n) {
     [!euth && !vt.hydration, 'Hydration'],
     [!n.subjective, 'History or reason for visit'],
     [!n.assessment.problems.length, 'Assessment'],
-    [!(n.plan.procedures.length || n.plan.diagnostics.length || n.plan.treatments.length || n.plan.follow_up.length), 'Plan'],
+    [!(n.plan.procedures.length || n.plan.diagnostics.length || n.plan.treatments.length || n.plan.home_care.length || n.plan.follow_up.length), 'Plan'],
     [!euth && !n.plan.follow_up.length, 'Follow-up or recheck'],
     [!n.visit.clinician, 'Vet name (set it once in Settings)'],
   ].filter(([missing]) => missing).map(([, label]) => label);
@@ -861,24 +861,30 @@ function renderNote() {
     if (n.objective.photo_findings.length) exam.push(list(n.objective.photo_findings));
   }
 
+  // P in the order vets write it: given today, to continue, tests planned, home care, follow-up.
   const plan = [];
-  if (n.plan.procedures.length) plan.push(el('h3', { text: 'Procedures' }), list(n.plan.procedures));
-  if (n.plan.diagnostics.length) plan.push(el('h3', { text: 'Diagnostics' }), list(n.plan.diagnostics));
-  if (n.plan.treatments.length) {
-    const totals = new Map(local.doses.map((d) => [d.index, d]));
-    plan.push(
-      el('h3', { text: 'Medications' }),
-      el('ul', { class: 'meds' }, n.plan.treatments.map((t, i) =>
-        el('li', {}, [
-          el('strong', { text: t.drug || 'Unnamed drug' }),
-          el('span', { class: 'regimen', text: [t.dose, t.route, t.frequency, t.duration].filter(Boolean).join(' · ') || NOT_RECORDED }),
-          totals.has(i)
-            ? el('span', { class: 'calc' }, [el('span', { class: 'tag', text: 'Calculated' }), `${totals.get(i).total} per dose (${totals.get(i).working}). Confirm.`])
-            : null,
-        ]),
-      )),
-    );
+  const totals = new Map(local.doses.map((d) => [d.index, d]));
+  // Said once: a dose already in the drug name ("per protocol") isn't repeated.
+  const dose = (t) => (t.dose && t.drug.toLowerCase().includes(t.dose.toLowerCase()) ? '' : t.dose);
+  const medItem = (t, i, given) =>
+    el('li', {}, [
+      el('strong', { text: t.drug || 'Unnamed drug' }),
+      el('span', { class: 'regimen', text: (given ? [dose(t), t.route] : [dose(t), t.route, t.frequency, t.duration]).filter(Boolean).join(' · ') }),
+      totals.has(i)
+        ? el('span', { class: 'calc' }, [el('span', { class: 'tag', text: 'Calculated' }), `${totals.get(i).total} per dose (${totals.get(i).working}). Confirm.`])
+        : null,
+    ]);
+  const meds = (given) => n.plan.treatments.map((t, i) => [t, i]).filter(([t]) => (t.when === 'given') === given);
+  const givenMeds = meds(true);
+  const contMeds = meds(false);
+  if (n.plan.procedures.length || givenMeds.length) {
+    plan.push(el('h3', { text: 'Given today' }));
+    if (n.plan.procedures.length) plan.push(list(n.plan.procedures));
+    if (givenMeds.length) plan.push(el('ul', { class: 'meds' }, givenMeds.map(([t, i]) => medItem(t, i, true))));
   }
+  if (contMeds.length) plan.push(el('h3', { text: 'Medications to continue' }), el('ul', { class: 'meds' }, contMeds.map(([t, i]) => medItem(t, i, false))));
+  if (n.plan.diagnostics.length) plan.push(el('h3', { text: 'Diagnostics planned' }), list(n.plan.diagnostics));
+  if (n.plan.home_care.length) plan.push(el('h3', { text: 'Home care' }), list(n.plan.home_care));
   if (n.plan.follow_up.length) plan.push(el('h3', { text: 'Follow-up' }), list(n.plan.follow_up));
 
   const assess = n.assessment.problems.length ? [list(n.assessment.problems, true)] : [];
