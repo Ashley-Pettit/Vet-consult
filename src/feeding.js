@@ -30,6 +30,7 @@ export function feedingForPrompt(text = '') {
 - Pick the row for this species and stage (age, weight, fur or feather stage). Follow its food, how often and amount; where rows from different sources differ, follow the Victorian or Queensland source for the user's state, then the most specific one.
 - feed_calc: when a row gives the daily amount as a percentage of body weight and the feeds a day for this stage, use exactly those figures, name the source in "basis" and set "sure" true. If a row gives an amount per feed as a percentage of body weight, multiply it by the feeds a day. If no row matches this stage exactly, use the nearest row and set "sure" false.
 - Never give a food, product or figure that conflicts with these rows.
+- Warmth: the checked temperatures the app shows for the species group come first. Use a warmth figure from these rows only where the app shows none for that stage.
 ${rows.map(fmt).join('\n')}`;
 }
 
