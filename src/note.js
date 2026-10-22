@@ -277,10 +277,11 @@ ${JSON.stringify(note)}
 // Photos in plans: identify what can be seen, honestly hedged.
 export function photoLookRule(n, where = 'care') {
   if (!n) return '';
+  const guess = 'Where the photo gives you a reasonable idea, include your best guess at the animal\'s age or stage, its sex and its approximate weight, each clearly marked as a guess (for example "Age: probably 4 to 6 months (a guess from the photo)", "Weight: maybe 1.5 to 2 kg (a guess from the photo)"). If you have no real idea about one of these, leave it out entirely rather than saying you can\'t tell. A guessed weight is never used for doses, the feed calculator or "weight_g": those use only a weight that was stated.';
   const own = where === 'doc'
-    ? 'Also add a section headed "What the photo shows", placed near the end (after the care steps, before "Call back straight away if"), with 2 to 4 short items: what you can see that matters for this animal.'
-    : 'Also put what you can see in "photo_findings": 2 to 4 short items (the likely species and age or stage, any injuries or wounds, body condition, and anything else that matters), each one hedged as needed.';
-  return `${n} photo(s) are attached. Look at them carefully and use what they show: the likely species and age or stage, visible injuries or wounds, body condition, fur or feathers, posture, and anything else that changes the care. Use it in the plan where it belongs. ${own} Be honest about how sure you are: say "looks like", "probably", "maybe" or "I can't tell from the photo" whenever you are not certain, and never state a guess as fact. What the person said always beats what a photo seems to show; if they conflict, follow their words and add the difference to "check".\n`;
+    ? 'Also add a section headed "What the photo shows", placed near the end (after the care steps, before "Call back straight away if"), with 2 to 6 short items: what you can see that matters for this animal, including the guesses below.'
+    : 'Also put what you can see in "photo_findings": 2 to 6 short items (the likely species, guessed age, sex and weight as below, any injuries or wounds, body condition, and anything else that matters), each one hedged as needed.';
+  return `${n} photo(s) are attached. Look at them carefully and use what they show: the likely species and age or stage, visible injuries or wounds, body condition, fur or feathers, posture, and anything else that changes the care. Use it in the plan where it belongs. ${own} ${guess} Be honest about how sure you are: say "looks like", "probably", "maybe" or "I can't tell from the photo" whenever you are not certain, and never state a guess as fact. What the person said always beats what a photo seems to show; if they conflict, follow their words and add the difference to "check".\n`;
 }
 
 export function buildCarerPlanPrompt(dictation, sourceList = '', { fromVet = false, justIn = false, drugs = '', photoCount = 0 } = {}) {

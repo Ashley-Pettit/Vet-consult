@@ -273,3 +273,13 @@ test('share links: a plan packs into a short link and comes back exactly', async
   assert.ok(url.length < JSON.stringify(data).length, `link ${url.length} vs json ${JSON.stringify(data).length}`);
   assert.equal(linkCode(new URL(url).hash), code);
 });
+
+test('photos: age, sex and weight are guessed only when there is a real idea, marked as guesses, and never feed the calculator', async () => {
+  const { buildCarerPlanPrompt, buildDocPrompt } = await import('../../src/note.js');
+  for (const p of [buildCarerPlanPrompt('wombat', '', { photoCount: 1 }), buildDocPrompt('mop', 'wombat', { photoCount: 1 })]) {
+    assert.match(p, /a guess from the photo/);
+    assert.match(p, /leave it out entirely/);
+    assert.match(p, /A guessed weight is never used for doses, the feed calculator/);
+  }
+  assert.doesNotMatch(buildCarerPlanPrompt('wombat', ''), /a guess from the photo/);
+});
