@@ -36,6 +36,17 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 7
+      # Care Scribe (Bunurong Wildlife Care) lives on its own branch and is published at /care/.
+      - name: Build Care Scribe into /care/
+        if: github.ref == 'refs/heads/main'
+        run: |
+          git fetch --depth 1 origin bunurong-wildlife
+          git worktree add ../care-scribe FETCH_HEAD
+          cd ../care-scribe
+          npm ci
+          npm run test:unit
+          npm run build
+          cp -r dist "$GITHUB_WORKSPACE/dist/care"
       - uses: actions/upload-pages-artifact@v3
         if: github.ref == 'refs/heads/main'
         with:
