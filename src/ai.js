@@ -84,6 +84,44 @@ export function textFromMessage(body) {
     .join('');
 }
 
+/** Read a streamed Messages reply (server-sent events) into the same shape as a normal reply. */
+export async function readStream(res) {
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let text = '';
+  let stopReason = null;
+  const handle = (block) => {
+    const data = block.split('\n').filter((l) => l.startsWith('data:')).map((l) => l.slice(5).trim()).join('');
+    if (!data) return;
+    let ev;
+    try {
+      ev = JSON.parse(data);
+    } catch {
+      return;
+    }
+    if (ev.type === 'content_block_delta' && ev.delta && ev.delta.type === 'text_delta') text += ev.delta.text;
+    else if (ev.type === 'message_delta' && ev.delta && ev.delta.stop_reason) stopReason = ev.delta.stop_reason;
+    else if (ev.type === 'error') {
+      const t = ev.error && ev.error.type;
+      const code = t === 'overloaded_error' ? 'overloaded' : t === 'rate_limit_error' ? 'rate_limited' : 'server';
+      throw new AiError(code, AI_MESSAGES[code]);
+    }
+  };
+  for (;;) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true }).replace(/\r\n/g, '\n');
+    let i;
+    while ((i = buffer.indexOf('\n\n')) !== -1) {
+      handle(buffer.slice(0, i));
+      buffer = buffer.slice(i + 2);
+    }
+  }
+  if (buffer.trim()) handle(buffer);
+  return { content: [{ type: 'text', text }], stop_reason: stopReason };
+}
+
 async function callMessages(url, headers, prompt, model, signal, fetchImpl, { viaProxy = false, images = [] } = {}) {
   if (typeof navigator !== 'undefined' && navigator.onLine === false) throw new AiError('offline', AI_MESSAGES.offline);
   const t = withTimeout(signal, CONFIG.timeoutMs);
@@ -96,6 +134,8 @@ async function callMessages(url, headers, prompt, model, signal, fetchImpl, { vi
         model,
         max_tokens: CONFIG.maxTokens,
         messages: [{ role: 'user', content: messageContent(prompt, images) }],
+        // Through the connection the reply streams in, so long care plans never sit silent and get dropped.
+        ...(viaProxy ? { stream: true } : {}),
       }),
       signal: t.signal,
       // The proxy sits behind the organisation's sign-in (for example Cloudflare Access), which needs its cookie.
@@ -108,17 +148,21 @@ async function callMessages(url, headers, prompt, model, signal, fetchImpl, { vi
     const reason = t.signal.reason;
     if (reason instanceof AiError) throw reason;
     if (typeof navigator !== 'undefined' && navigator.onLine === false) throw new AiError('offline', AI_MESSAGES.offline);
-    // Through the proxy, a blocked cross-origin answer usually means the sign-in page, not a dead connection.
-    throw new AiError(viaProxy ? 'signin' : 'network', viaProxy ? AI_MESSAGES.signin : AI_MESSAGES.network);
+    throw new AiError('network', AI_MESSAGES.network);
   }
   if (viaProxy && (res.type === 'opaqueredirect' || (res.status >= 300 && res.status < 400))) {
     t.done();
     throw new AiError('signin', AI_MESSAGES.signin);
   }
   let body = null;
+  const streamed = res.ok && /event-stream/.test((res.headers && res.headers.get && res.headers.get('content-type')) || '');
   try {
-    body = await res.json();
-  } catch {
+    body = streamed ? await readStream(res) : await res.json();
+  } catch (e) {
+    if (e instanceof AiError) throw e;
+    const reason = t.signal.reason;
+    if (reason instanceof AiError) throw reason;
+    if (streamed) throw new AiError('network', AI_MESSAGES.network);
     body = null;
   } finally {
     t.done();

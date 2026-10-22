@@ -72,6 +72,7 @@ export async function handle(request, env, fetchImpl = fetch) {
     return json(400, { error: { type: 'invalid_request' } }, h);
   }
   const model = MODELS.has(body.model) ? body.model : 'claude-sonnet-5-5';
+  const stream = body.stream === true;
 
   let upstream;
   try {
@@ -82,10 +83,15 @@ export async function handle(request, env, fetchImpl = fetch) {
         'x-api-key': env.ANTHROPIC_API_KEY,
         'anthropic-version': '2023-06-01',
       },
-      body: JSON.stringify({ model, max_tokens: Math.min(Number(body.max_tokens) || MAX_TOKENS, MAX_TOKENS), messages }),
+      body: JSON.stringify({ model, max_tokens: Math.min(Number(body.max_tokens) || MAX_TOKENS, MAX_TOKENS), messages, ...(stream ? { stream: true } : {}) }),
     });
   } catch {
     return json(502, { error: { type: 'upstream_unreachable' } }, h);
+  }
+  // Streaming: pass Claude's reply through as it is written, so the connection is never silent long enough
+  // for a phone network or firewall to drop it.
+  if (stream && upstream.ok && upstream.body) {
+    return new Response(upstream.body, { status: 200, headers: { 'content-type': 'text/event-stream', 'cache-control': 'no-cache', ...h } });
   }
   const text = await upstream.text();
   return new Response(text, { status: upstream.status, headers: { 'content-type': 'application/json', ...h } });

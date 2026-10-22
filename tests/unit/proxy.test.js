@@ -66,3 +66,22 @@ test('photos pass through; anything else in content is refused', async () => {
   const url = await handle(req({ ...good, messages: [{ role: 'user', content: [{ type: 'image', source: { type: 'url', url: 'https://x' } }, { type: 'text', text: 'x' }] }] }), env);
   assert.equal(url.status, 400);
 });
+
+test('streaming requests are passed through as they arrive', async () => {
+  const { handle } = await import('../../proxy/worker.js');
+  let sent;
+  const fetchImpl = async (url, init) => {
+    sent = JSON.parse(init.body);
+    return new Response('data: {"type":"message_stop"}\n\n', { status: 200, headers: { 'content-type': 'text/event-stream' } });
+  };
+  const req = new Request('https://proxy.example', {
+    method: 'POST',
+    headers: { origin: 'https://ashley-pettit.github.io', 'content-type': 'application/json' },
+    body: JSON.stringify({ stream: true, messages: [{ role: 'user', content: 'hi' }] }),
+  });
+  const res = await handle(req, { ANTHROPIC_API_KEY: 'k' }, fetchImpl);
+  assert.equal(sent.stream, true);
+  assert.match(res.headers.get('content-type'), /event-stream/);
+  assert.equal(res.headers.get('access-control-allow-origin'), 'https://ashley-pettit.github.io');
+  assert.match(await res.text(), /message_stop/);
+});

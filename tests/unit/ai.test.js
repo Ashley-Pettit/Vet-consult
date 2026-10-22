@@ -88,7 +88,7 @@ test('friendly() always returns readable text', () => {
   assert.equal(friendly(undefined), AI_MESSAGES.server);
 });
 
-test('proxy: expired sign-in redirects and blocked answers read as sign-in problems', async () => {
+test('proxy: sign-in redirects read as sign-in; a dropped connection reads as a connection problem', async () => {
   const { CONFIG } = await import('../../src/config.js');
   const saved = CONFIG.proxyUrl;
   CONFIG.proxyUrl = 'https://proxy.example/';
@@ -102,7 +102,7 @@ test('proxy: expired sign-in redirects and blocked answers read as sign-in probl
     assert.equal(init.headers['x-api-key'], undefined, 'no key leaves the device');
 
     const blocked = await resolveProvider({}, { claude: null, fetch: async () => { throw new TypeError('Failed to fetch'); } });
-    await assert.rejects(blocked.generate('x'), (e) => e.code === 'signin');
+    await assert.rejects(blocked.generate('x'), (e) => e.code === 'network');
 
     const denied = await resolveProvider({}, { claude: null, fetch: async () => ({ ok: false, status: 401, type: 'cors', json: async () => ({}) }) });
     await assert.rejects(denied.generate('x'), (e) => e.code === 'forbidden');
@@ -151,4 +151,23 @@ test('the deployed connection is used ahead of a personal key, with sign-in cook
   } finally {
     CONFIG.proxyUrl = '';
   }
+});
+
+test('a streamed reply is read in pieces into the full text', async () => {
+  const { readStream } = await import('../../src/ai.js');
+  const ev = (o) => `event: x\ndata: ${JSON.stringify(o)}\n\n`;
+  const sse = ev({ type: 'message_start' }) + ev({ type: 'content_block_delta', delta: { type: 'text_delta', text: '{"a":' } }) +
+    ev({ type: 'content_block_delta', delta: { type: 'text_delta', text: '1}' } }) + ev({ type: 'message_delta', delta: { stop_reason: 'end_turn' } });
+  // Split mid-event to prove partial chunks are stitched together.
+  const parts = [sse.slice(0, 37), sse.slice(37, 120), sse.slice(120)];
+  const body = new ReadableStream({ start(c) { parts.forEach((p) => c.enqueue(new TextEncoder().encode(p))); c.close(); } });
+  const msg = await readStream({ body });
+  assert.equal(textFromMessage(msg), '{"a":1}');
+  assert.equal(msg.stop_reason, 'end_turn');
+});
+
+test('an overloaded error inside the stream becomes a friendly message', async () => {
+  const { readStream } = await import('../../src/ai.js');
+  const body = new ReadableStream({ start(c) { c.enqueue(new TextEncoder().encode('data: {"type":"error","error":{"type":"overloaded_error"}}\n\n')); c.close(); } });
+  await assert.rejects(readStream({ body }), (e) => e.code === 'overloaded');
 });
