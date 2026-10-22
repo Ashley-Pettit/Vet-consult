@@ -8,7 +8,8 @@ import { ABOUT_HTML } from './about.js';
 import { lookupSource, sourcesForPrompt, SOURCE_IDS } from './sources.js';
 import { region, setRegion } from './region.js';
 import { rangesFor } from './species-ranges.js';
-import { videoFor, watchUrl, embedUrl, thumbUrl } from './videos.js';
+import { videoFor, videoForTags, watchUrl, embedUrl, thumbUrl } from './videos.js';
+import { groupsIn } from './species-vet.js';
 import { buildWord, docModel, careModel, noteModel, wordFileName } from './word.js';
 import {
   NOTE_TYPES,
@@ -1325,6 +1326,12 @@ let currentDoc = null;
 // Documents that open with a ready-to-send text message, and the heading Claude gives it.
 const TEXT_HEADING = { tovet: /^text to your vet$/i, mop: /^text to send$/i };
 
+// The MOP plan's video is for the animal named in the plan; nothing if no animal with a good video is named.
+function mopVideo(d) {
+  const text = [d.title, d.subtitle, ...d.sections.map((x) => [x.heading, x.text, ...(x.items || [])].join(' '))].join(' ');
+  return videoForTags(groupsIn(text), text);
+}
+
 function renderDoc(d, kind) {
   $('doc-title').textContent = d.title || DOC_KINDS[kind].label;
   $('doc-subtitle').textContent = d.subtitle;
@@ -1339,7 +1346,7 @@ function renderDoc(d, kind) {
     ...d.sections.filter((s) => !(TEXT_HEADING[kind] && TEXT_HEADING[kind].test(s.heading))).map((s) =>
       el('section', { class: 'doc-sec' }, [el('h2', { text: s.heading }), s.text ? el('p', { text: s.text }) : list(s.items)]),
     ),
-    ...(kind === 'mop' ? [videoSection(videoFor('general'))] : []),
+    ...(kind === 'mop' ? [videoSection(mopVideo(d))] : []),
     ...(d.due.length
       ? [
           el('section', { class: 'doc-sec due' }, [

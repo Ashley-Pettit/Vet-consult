@@ -619,7 +619,7 @@ export function careSheetText(c, lookup = () => null) {
     g.notes.forEach((x) => L.push(`- ${x}`));
     L.push(`From: ${g.sources.map((x) => `${x.title} (${x.publisher}, ${x.date})`).join('; ')}`, '');
   }
-  const v = videoFor(c.species_group);
+  const v = videoFor(c.species_group, [c.title, c.summary, c.animal].filter(Boolean).join(' '));
   if (v) L.push(`Watch: ${v.title} (${v.channel}): ${watchUrl(v)}`, '');
   if (c.rehydration && c.rehydration.needed) {
     L.push('Rehydration');

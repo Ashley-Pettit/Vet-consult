@@ -138,3 +138,15 @@ test('carer plans leave out drugs only given at the clinic, and baby-bird videos
   assert.equal(videoFor('bird', 'Magpie nestling fell from nest').title, 'How to help a baby bird');
   assert.equal(videoFor('koala', '').title, 'Getting help for sick koalas');
 });
+
+test('MOP and plan videos match the animal: never a bird video for a koala', async () => {
+  const { videoFor, videoForTags } = await import('../../src/videos.js');
+  const { groupsIn } = await import('../../src/species-vet.js');
+  const koala = 'Short-term care plan: koala with a sore eye found at the base of a tree';
+  assert.match(videoForTags(groupsIn(koala), koala).title, /koala/i);
+  const roo = 'Care plan for an adult eastern grey kangaroo';
+  const v = videoForTags(groupsIn(roo), roo);
+  assert.ok(!v || !/bird/i.test(v.title));
+  assert.equal(videoForTags(groupsIn('injured animal, not sure what it is'), ''), null);
+  assert.equal(videoFor('wombat', 'adult wombat').channel, 'WIRES');
+});

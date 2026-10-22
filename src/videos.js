@@ -18,14 +18,33 @@ export const VIDEOS = {
   general: { id: 'PVqgAgfDFyk', title: 'How to contain an injured bird or small animal', channel: 'Wildlife Victoria', date: '2019' },
 };
 
-// Videos about young animals (baby birds, ducklings) only show when the plan is about a young animal;
-// otherwise the general containment video is closer to what the carer needs.
+// Videos about young animals (baby birds, ducklings) only show when the plan is about a young animal.
 const YOUNG = /\b(chick|chicks|nestling|fledgling|hatchling|branchling|baby|babies|duckling|ducklings|cygnet|juvenile|orphan|orphaned|joey|pinky|pinkie)\b/i;
+// The general containment video is about birds and small animals, so it never stands in for a large or risky animal.
+const SMALL = new Set(['bird', 'ringtail', 'brushtail', 'glider', 'bandicoot', 'dasyurid', 'general']);
 export const videoFor = (group, context = '') => {
   const v = VIDEOS[group] || null;
-  if (v && v.young && !YOUNG.test(context)) return VIDEOS.general;
+  if (v && v.young && !YOUNG.test(context)) return SMALL.has(group) ? VIDEOS.general : null;
+  if (!v && SMALL.has(group)) return VIDEOS.general;
   return v;
 };
+
+// Detected species tags (see species-vet.js) to the video groups above.
+const TAG_TO_VIDEO = {
+  passerine: 'bird', magpie: 'bird', parrot: 'bird', lorikeet: 'bird', pigeon: 'bird', 'frogmouth-owl': 'bird', kookaburra: 'bird', shorebird: 'bird', bird: 'bird',
+  seabird: 'waterbird', penguin: 'waterbird', waterbird: 'waterbird',
+  'freshwater-turtle': 'turtle', 'sea-turtle': 'turtle',
+};
+/** The video for the first animal named in a document's text, or none. */
+export function videoForTags(tags = [], context = '') {
+  for (const t of tags) {
+    const g = TAG_TO_VIDEO[t] || t;
+    const v = videoFor(g, context);
+    if (v) return v;
+  }
+  return null;
+}
+
 export const watchUrl = (v) => `https://www.youtube.com/watch?v=${v.id}`;
 export const embedUrl = (v) => `https://www.youtube-nocookie.com/embed/${v.id}?rel=0&modestbranding=1&autoplay=1`;
 export const thumbUrl = (v) => `https://i.ytimg.com/vi/${v.id}/hqdefault.jpg`;
