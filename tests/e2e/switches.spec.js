@@ -77,7 +77,7 @@ test('a call interrupts: the dictation and the last care plan survive closing th
   expect(calls).toHaveLength(0);
 });
 
-test('New asks first; keeping it changes nothing, starting new clears the words and keeps Last made', async ({ page }) => {
+test('New asks first; keeping it changes nothing, starting new clears the words and keeps it under Recent', async ({ page }) => {
   await mockApi(page, { body: () => textReply(EXAMPLE_CARER_PLAN) });
   await openApp(page);
   await expect(page).toHaveTitle(/Animal Welfare Companion/);
@@ -201,4 +201,24 @@ test('Share offers a Word document first, text second, and a link to the app as 
   const f = await page.evaluate(() => window.__shared[0].files[0]);
   expect(f.name).toMatch(/\.docx$/);
   expect(f.size).toBeGreaterThan(3000);
+});
+
+test('Recent: each plan is kept on the device, the animal leads, and any one reopens without calling Claude', async ({ page }) => {
+  let n = 0;
+  const animals = ['koala (not doing well, found at the base of a gum tree near the school)', 'ringtail possum joey (female)'];
+  const calls = await mockApi(page, { body: () => textReply({ ...EXAMPLE_CARER_PLAN, animal: animals[n++ % 2] }) });
+  await openApp(page);
+  for (const words of ['Koala at the school, not doing well.', 'Ringtail joey, cat attack.']) {
+    await page.locator('#transcript').fill(words);
+    await page.locator('#create').click();
+    await expect(page.locator('#view-care')).toBeVisible();
+    await page.locator('#new-care').click();
+    await page.getByRole('button', { name: 'Start new' }).click();
+  }
+  await expect(page.locator('#resume-title')).toContainText('Ringtail possum joey');
+  await page.locator('#resume-all').click();
+  await expect(page.locator('#recent-dlg .recent-item')).toHaveCount(2);
+  await page.locator('#recent-dlg .recent-item', { hasText: 'Koala' }).click();
+  await expect(page.locator('#care-title')).toContainText(/koala/i);
+  expect(calls).toHaveLength(2);
 });

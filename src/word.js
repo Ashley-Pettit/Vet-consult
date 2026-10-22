@@ -48,6 +48,7 @@ function heading(text) {
   });
 }
 const para = (text) => new Paragraph({ spacing: { after: 100, line: 300 }, children: [run(text)] });
+const check = (text) => new Paragraph({ spacing: { after: 80, line: 288 }, indent: { left: 120 }, children: [new TextRun({ text: '☐  ', font: 'Segoe UI Symbol', size: 26, color: '7A847A' }), run(text)] });
 const bullet = (text) => new Paragraph({ numbering: { reference: 'dots', level: 0 }, spacing: { after: 60, line: 288 }, children: [run(text)] });
 
 function cell(text, { head = false, width, shade } = {}) {
@@ -135,7 +136,7 @@ function footer(label) {
  */
 export async function buildWord(model, { preparedBy = '', date = new Date(), template = 'bunurong' } = {}) {
   useTheme(template);
-  const meta = [['Document', model.docType], ['Date', formatDate(date)], ...(preparedBy ? [['Prepared by', preparedBy]] : []), ...(model.meta || [])].filter((m) => m[1]);
+  const meta = [['Document', model.docType], ['Date', formatDate(date)], ...(preparedBy ? [['Prepared by', preparedBy]] : []), ...(model.meta || []).filter((m) => !(m[0] === 'Vet' && m[1] === preparedBy))].filter((m) => m[1]);
   const body = [
     new Paragraph({ spacing: { before: 120, after: 0 }, children: [new TextRun({ text: String(model.docType).toUpperCase(), font: HEAD_FONT, bold: true, size: 20, color: TERRA, characterSpacing: 40 })] }),
     new Paragraph({ spacing: { after: model.subtitle ? 40 : 160 }, children: [new TextRun({ text: model.title, font: HEAD_FONT, bold: true, size: 44, color: INK })] }),
@@ -157,12 +158,15 @@ export async function buildWord(model, { preparedBy = '', date = new Date(), tem
       })),
     }),
   ];
+  // The AI note sits quietly under the details, not as a section of its own.
+  if (model.aiNote) body.push(new Paragraph({ spacing: { before: 140, after: 40 }, children: [run(`ⓘ  ${model.aiNote}`, { italics: true, color: MUTED, size: 18 })] }));
   for (const b of model.blocks) {
-    if (!b.heading || (!b.text && !(b.items && b.items.length) && !b.table && !(b.labels && b.labels.length))) continue;
+    if (!b.heading || (!b.text && !(b.items && b.items.length) && !(b.checks && b.checks.length) && !b.table && !(b.labels && b.labels.length))) continue;
     body.push(heading(b.heading));
     if (b.note && b.noteFirst) body.push(new Paragraph({ spacing: { after: 80 }, children: [run(b.note, { italics: true, color: TERRA, size: 19 })] }));
     if (b.text) String(b.text).split(/\n+/).forEach((t) => body.push(para(t)));
     if (b.items) b.items.forEach((t) => body.push(bullet(t)));
+    if (b.checks) b.checks.forEach((t) => body.push(check(t)));
     if (b.table) body.push(table(b.table.head, b.table.rows, b.table.widths), new Paragraph({ spacing: { after: 60 }, children: [] }));
     if (b.labels) b.labels.forEach((l) => body.push(medLabel(l), new Paragraph({ spacing: { after: 120 }, children: [] })));
     if (b.note && !b.noteFirst) body.push(new Paragraph({ spacing: { before: 60 }, children: [run(b.note, { italics: true, color: MUTED, size: 18 })] }));
@@ -266,8 +270,8 @@ export function docModel(d, kindLabel, note = '') {
     docType: kindLabel,
     title: d.title || kindLabel,
     subtitle: d.subtitle,
+    aiNote: note,
     blocks: [
-      ...(note ? [{ heading: 'Please note', text: note }] : []),
       ...d.sections.filter((s) => !/^text to your vet$/i.test(s.heading)).map((s) => {
         // "Field: value" lists (like the register entry) print as a two-column table an auditor can scan.
         const items = s.items || [];
@@ -321,7 +325,6 @@ function feedBlocks(f, note) {
 export function careModel(c, lookup) {
   const meds = c.medications.map((m) => [m.name, m.how, m.how_often, m.how_long]);
   const blocks = [
-    { heading: 'Please note', text: careAiNote(c) },
     { heading: 'Summary', text: c.summary },
     ...(meds.length ? [{ heading: 'Medications', table: { head: ['Medication', 'How', 'How often', 'How long'], rows: meds, widths: [2600, 2600, 2400, PAGE_W - 7600] }, note: c.medications.map((m) => (m.tip ? `${m.name}: ${m.tip}` : '')).filter(Boolean).join('  ') || undefined }] : []),
     ...rangesBlocks(c.species_group),
@@ -337,7 +340,7 @@ export function careModel(c, lookup) {
   if (c.daily_checks.length) blocks.push({ heading: 'Daily tick sheet', text: `On the last page, sized to print and stick on the fridge (${tickDays} days).` });
   if (c.release.ready_when.length || c.release.how.length || c.release.where) {
     if (c.release.target_weight) blocks.push({ heading: 'Target release weight', text: c.release.target_weight });
-    blocks.push({ heading: 'Release checklist', items: c.release.ready_when.map((x) => `☐  ${x}`) });
+    blocks.push({ heading: 'Release checklist', checks: c.release.ready_when });
     blocks.push({ heading: 'How to release', items: c.release.how });
     blocks.push({ heading: 'Where to release', text: c.release.where });
   }
@@ -347,6 +350,7 @@ export function careModel(c, lookup) {
   return {
     docType: 'Care plan',
     title: c.animal ? `Care plan: ${c.animal}` : 'Care plan',
+    aiNote: careAiNote(c),
     blocks,
     tickSheet: c.daily_checks.length ? { items: c.daily_checks, days: tickDays } : null,
     sources: c.sources.map(lookup).filter(Boolean),
@@ -406,6 +410,7 @@ export function dischargeModel(c, note, lookup, vet = '', date = new Date()) {
   return {
     docType: 'Discharge pack',
     title: `Discharge pack: ${animal}`,
+    aiNote: care.aiNote,
     meta: [['Vet', vet || (note && note.visit.clinician) || '']],
     blocks: [
       ...clinical,

@@ -2117,26 +2117,49 @@ function ago(ms) {
   return h < 24 ? `${h} h ago` : `${Math.round(h / 24)} d ago`;
 }
 // The last thing made stays one tap away, even after the app was closed (for example to answer the phone).
+const capFirst = (t) => (t ? t[0].toUpperCase() + t.slice(1) : t);
+const lastLabel = (last) => (last.type === 'doc' && DOC_KINDS[last.data.kind] ? DOC_KINDS[last.data.kind].label : LAST_LABEL[last.type]);
 function renderResume() {
   const last = store.loadLast();
   const fresh = last && Date.now() - last.at < 7 * 864e5;
-  $('resume').hidden = !fresh;
-  if (!fresh) return;
-  const label = last.type === 'doc' && DOC_KINDS[last.data.kind] ? DOC_KINDS[last.data.kind].label : LAST_LABEL[last.type];
+  const recent = store.loadRecent();
+  $('resume').hidden = !fresh && !recent.length;
+  $('resume-all').hidden = recent.length < 2;
+  $('resume-all').textContent = `All recent (${recent.length})`;
+  const shown = fresh ? last : recent[0];
+  if (!shown) return;
   // The animal leads, so it's easy to tell which one this was.
-  const title = String(last.title || '').trim();
-  const name = title ? title[0].toUpperCase() + title.slice(1) : label;
-  $('resume-title').textContent = name;
-  $('resume-text').textContent = `${title ? `${label} · ` : ''}${ago(Date.now() - last.at)}`;
-  $('resume-open').setAttribute('aria-label', `Open ${name}`);
+  const label = lastLabel(shown);
+  const title = capFirst(String(shown.title || '').trim());
+  $('resume-title').textContent = title || label;
+  $('resume-text').textContent = `${title ? `${label} · ` : ''}${ago(Date.now() - shown.at)}`;
+  $('resume-open').setAttribute('aria-label', `Open ${title || label}`);
+  $('resume-open').onclick = () => openSaved(shown);
 }
-$('resume-open').addEventListener('click', () => {
-  const last = store.loadLast();
+function openSaved(last) {
   if (!last) return;
   if (last.text && !els.transcript.value.trim()) setTranscript(last.text);
   if (last.type === 'care') showCare(normaliseCareSheet(last.data.sheet, null), last.data.from === 'note' ? 'record' : last.data.from);
   else if (last.type === 'doc') showDoc(normaliseDoc(last.data.d), last.data.kind);
   else if (last.type === 'notes') showNotes(last.data.map(normaliseNote), false);
+}
+$('resume-all').addEventListener('click', () => {
+  const list = $('recent-list');
+  list.replaceChildren(...store.loadRecent().map((r) => {
+    const label = lastLabel(r);
+    const title = capFirst(String(r.title || '').trim()) || label;
+    return el('li', {}, [el('button', { type: 'button', class: 'recent-item', onclick: () => { $('recent-dlg').close(); openSaved(r); } }, [
+      el('span', { class: 'recent-title', text: title }),
+      el('span', { class: 'recent-meta', text: `${title !== label ? `${label} · ` : ''}${ago(Date.now() - r.at)}` }),
+    ])]);
+  }));
+  $('recent-dlg').showModal();
+});
+$('recent-clear').addEventListener('click', () => {
+  store.clearRecent();
+  $('recent-dlg').close();
+  renderResume();
+  toast('Recent cleared.');
 });
 
 /* ---------------- start up ---------------- */

@@ -34,6 +34,8 @@ function write(store, key, value) {
 const SETTINGS = 'css.settings';
 const DRAFT = 'css.draft';
 const LAST = 'css.last';
+const RECENT = 'css.recent';
+const RECENT_MAX = 12;
 const SESSION_KEY = 'css.key';
 
 const USAGE = 'css.usage';
@@ -123,6 +125,17 @@ export const store = {
   },
   saveLast(v) {
     write(local, LAST, v);
+    // Recent plans: newest first, one entry per title, and older ones dropped if the phone runs short of space.
+    let list = [v, ...this.loadRecent().filter((x) => !(x.type === v.type && x.title && x.title === v.title))].slice(0, RECENT_MAX);
+    while (list.length && !write(local, RECENT, list)) list = list.slice(0, -1);
+  },
+  loadRecent() {
+    const v = read(local, RECENT, []);
+    return Array.isArray(v) ? v.filter((x) => x && typeof x === 'object' && x.type && x.data) : [];
+  },
+  clearRecent() {
+    write(local, RECENT, null);
+    write(local, LAST, null);
   },
   clearAll() {
     write(local, SETTINGS, null);
@@ -130,5 +143,6 @@ export const store = {
     write(session, DRAFT, null);
     write(local, DRAFT, null);
     write(local, LAST, null);
+    write(local, RECENT, null);
   },
 };

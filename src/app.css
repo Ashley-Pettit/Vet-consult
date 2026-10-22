@@ -1016,10 +1016,24 @@ dialog.crop-dlg h2 { margin: 0; font: 700 1.2rem/1.2 var(--display); text-transf
 .ai-check.top { margin-bottom: 2px; }
 
 /* Reassurance under the dictation box */
-.tx-hint { display: flex; align-items: center; gap: 6px; margin: 6px 2px 0; font-size: 0.8rem; color: var(--muted, #5b6b62); line-height: 1.35; }
+.tx-hint { display: flex; align-items: center; gap: 6px; margin: 2px 0 8px; font-size: 0.8rem; color: var(--muted, #5b6b62); line-height: 1.35; }
 .tx-hint svg { width: 14px; height: 14px; flex: none; opacity: 0.8; }
 
 /* Resume card: the animal is the headline and wraps instead of being cut off */
 .resume-kicker { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--accent); }
 .resume .resume-label { font-size: 0.98rem; font-weight: 700; color: var(--ink); white-space: normal; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 #resume-text { white-space: normal; }
+/* Keep Clear readable when the text runs under it */
+.tx-clear { background: var(--surface, #fff); box-shadow: 0 0 0 1px var(--line); text-decoration: none; }
+.src-meta .scope { flex: 0 0 auto !important; width: auto; }
+/* Recent plans */
+.resume { grid-template-columns: auto 1fr auto; }
+.resume-all { grid-column: 2 / -1; justify-self: start; font-size: 0.85rem; font-weight: 600; margin-top: -4px; }
+.resume-all[hidden] { display: none; }
+.recent-dlg { width: min(440px, calc(100vw - 32px)); }
+.recent-sub { margin: 4px 0 10px; color: var(--muted); font-size: 0.88rem; }
+.recent-list { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 8px; max-height: 60vh; overflow: auto; }
+.recent-item { width: 100%; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; padding: 10px 12px; min-height: 48px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface, var(--bg)); color: var(--ink); font: inherit; cursor: pointer; }
+.recent-item:hover, .recent-item:focus-visible { border-color: var(--accent); background: var(--accent-soft); }
+.recent-title { font-weight: 700; overflow-wrap: anywhere; }
+.recent-meta { font-size: 0.82rem; color: var(--muted); }
