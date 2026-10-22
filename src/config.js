@@ -4,7 +4,7 @@ export const CONFIG = {
   clinicDescription: 'Bunurong Wildlife Care, a registered wildlife shelter in Inverloch, Victoria',
   // Production: set this to your deployed proxy (see /proxy). Staff then never handle API keys.
   // Leave empty to let each user paste their own Anthropic API key in Settings.
-  proxyUrl: '',
+  proxyUrl: 'https://care-scribe-proxy.ashley-98e.workers.dev',
   // Model used for notes. Sonnet balances accuracy and speed; Haiku is faster and cheaper.
   models: [
     { id: 'claude-sonnet-5-5', label: 'Accurate (Sonnet 5.5)' },

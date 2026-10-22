@@ -293,7 +293,7 @@ test.describe('settings', () => {
     await expect(page.locator('#clinician')).toHaveValue('Dr A');
     await page.locator('#forget').click();
     await expect(page.locator('#conn-status')).toContainText('Public demo');
-    const stored = await page.evaluate(() => localStorage.getItem('vcs.settings'));
+    const stored = await page.evaluate(() => localStorage.getItem('css.settings'));
     expect(stored).toBeNull();
   });
 
@@ -304,9 +304,9 @@ test.describe('settings', () => {
     await page.locator('#api-key').fill('sk-ant-temp');
     await page.locator('#save-settings').click();
     await expect(page.locator('#toast-text')).toContainText(/saved/i);
-    const local = await page.evaluate(() => localStorage.getItem('vcs.settings'));
+    const local = await page.evaluate(() => localStorage.getItem('css.settings'));
     expect(local).not.toContain('sk-ant-temp');
-    const session = await page.evaluate(() => sessionStorage.getItem('vcs.key'));
+    const session = await page.evaluate(() => sessionStorage.getItem('css.key'));
     expect(session).toContain('sk-ant-temp');
   });
 

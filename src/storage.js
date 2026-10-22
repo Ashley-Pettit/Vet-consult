@@ -31,9 +31,9 @@ function write(store, key, value) {
   }) === true;
 }
 
-const SETTINGS = 'vcs.settings';
-const DRAFT = 'vcs.draft';
-const SESSION_KEY = 'vcs.key';
+const SETTINGS = 'css.settings';
+const DRAFT = 'css.draft';
+const SESSION_KEY = 'css.key';
 
 export const store = {
   loadSettings() {
