@@ -968,3 +968,9 @@ body[data-kb="open"] .site-foot, body[data-kb="open"] .foot { display: none; }
 dialog.more[data-mic="listening"] textarea, dialog.more[data-mic="starting"] textarea { border-color: var(--rec); box-shadow: 0 0 0 3px var(--rec-soft); }
 dialog.more[data-mic="listening"] .more-mic-zone .help { color: var(--rec); font-weight: 650; }
 #more-interim { margin: -4px 0 0; }
+
+.care-sec.ticks .tbl { overflow-x: auto; }
+.ticksheet { min-width: 560px; table-layout: auto; }
+.ticksheet tbody th { min-width: 150px; }
+.ticksheet thead th:first-child { text-align: left; }
+.src-meta > :last-child { flex: 1 1 auto; min-width: 0; }

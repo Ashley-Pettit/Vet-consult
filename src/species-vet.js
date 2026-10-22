@@ -6,7 +6,7 @@ import { region } from './region.js';
 
 // Words in a dictation that point to a group. Order matters only for readability.
 export const GROUP_WORDS = {
-  macropod: ['kangaroo', 'roo', 'wallaby', 'bsw', 'wallaroo', 'pademelon', 'potoroo', 'bettong', 'macropod', 'joey', 'egk', 'rnw', 'swamp wallaby'],
+  macropod: ['kangaroo', 'roo', 'wallaby', 'bsw', 'wallaroo', 'pademelon', 'potoroo', 'bettong', 'macropod', 'kangaroo joey', 'wallaby joey', 'roo joey', 'egk', 'rnw', 'swamp wallaby', 'eastern grey', 'western grey', 'swampy'],
   koala: ['koala'],
   wombat: ['wombat', 'bnw'],
   ringtail: ['ringtail', 'crp', 'rtp'],
