@@ -113,7 +113,7 @@ export class Dictation {
           this.restartTimer = setTimeout(() => {
             this.restartTimer = null;
             if (this.wanted) this._open();
-          }, this.continuous ? 50 : 250);
+          }, this.continuous ? 30 : 60);
           return;
         }
         failed = hardError === 'network' ? 'network' : 'interrupted';

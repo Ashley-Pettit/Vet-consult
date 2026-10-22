@@ -2,7 +2,7 @@
 <html lang="en-AU">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob: https://i.ytimg.com; media-src 'self' blob:; frame-src https://www.youtube-nocookie.com; font-src 'self' data:; connect-src 'self' https:; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="description" content="Dictate a vet consult and get a formal SOAP clinical note ready to paste into the clinical notes in your PMS.">
@@ -77,10 +77,11 @@
     <p class="mode-intro" data-modes="funding">Applying for a grant? Talk through what you need, why, the costs and the numbers. You get a draft submission to polish.</p>
     <p class="mode-intro" data-modes="vet">Talk through the exam and plan. Shorthand is fine. You get notes ready to copy into your system.</p>
 
-    <p class="resume" id="resume" hidden>
-      <span id="resume-text"></span>
-      <button type="button" class="link" id="resume-open">Open</button>
-    </p>
+    <div class="resume" id="resume" hidden>
+      <svg class="resume-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/><path d="M12 7v5l3 2"/></svg>
+      <div class="resume-body"><span class="resume-label">Pick up where you left off</span><span id="resume-text"></span></div>
+      <button type="button" class="btn small ghost" id="resume-open">Open</button>
+    </div>
 
     <div class="mic-zone">
       <button id="mic" class="mic" type="button" aria-pressed="false" aria-describedby="mic-status">
@@ -104,22 +105,22 @@
       </div>
       <p id="example-note" class="example-note" hidden><strong>This is an example.</strong> Normally you’d say this into the mic or type it yourself. Tap Create to see what you’d get, or Start over to use your own words.</p>
       <div class="tx-wrap">
-        <textarea id="transcript" rows="7" spellcheck="true" autocomplete="off" placeholder="Your words appear here as you talk. You can also type or fix anything."></textarea>
+        <textarea id="transcript" rows="5" spellcheck="true" autocomplete="off" placeholder="Your words appear here as you talk. You can also type or fix anything."></textarea>
         <button type="button" class="tx-clear" id="clear-text" hidden><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>Clear</button>
       </div>
       <div class="media-row" id="media-row" aria-label="Add photos (up to 5)">
-        <label class="chip photo-chip" id="add-photo-label" title="Take a photo with the camera">
+        <label class="photo-tile" id="add-photo-label" title="Take a photo with the camera">
           <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><span>Take photo</span>
           <input type="file" id="add-photo" accept="image/*" capture="environment" class="sr-only">
         </label>
-        <label class="chip photo-chip" id="add-gallery-label" title="Choose photos you already have">
-          <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></svg><span>Gallery</span>
+        <label class="photo-tile" id="add-gallery-label" title="Upload photos you already have">
+          <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></svg><span>Upload photo</span>
           <input type="file" id="add-gallery" accept="image/*" multiple class="sr-only">
         </label>
       </div>
       <div class="photo-list" id="photo-list" aria-label="Attached photos"></div>
       <p id="interim" class="interim" aria-hidden="true"></p>
-      <p class="examples" id="examples">See an example:
+      <p class="examples" id="examples"><span class="ex-label">Not sure what to say? Try an example:</span>
         <button type="button" class="chip" data-modes="intake" id="load-intake-example">Wombat, car strike</button>
         <button type="button" class="chip" data-modes="log" id="load-log-example">Roo joey</button>
         <button type="button" class="chip" data-modes="carer" data-roles-text="carer" id="load-joey-example">Ringtail joey</button>
@@ -241,7 +242,6 @@
       </div>
       <div class="note-title-row">
         <h1 id="doc-title" tabindex="-1">Report</h1>
-        <button type="button" class="btn small primary copy-top" id="doc-copy-top"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>Copy</button>
       </div>
       <p class="muted" id="doc-subtitle"></p>
     </div>

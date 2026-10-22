@@ -127,7 +127,7 @@ function toast(text, action) {
   els.toast.hidden = false;
   clearTimeout(toastTimer);
   // Toasts with an Undo stay until the next action, so nobody is rushed (WCAG 2.2.1).
-  if (!action) toastTimer = setTimeout(() => (els.toast.hidden = true), 3500);
+  if (!action) toastTimer = setTimeout(() => (els.toast.hidden = true), 1750);
 }
 
 function banner(text, tone = 'warn') {
@@ -296,11 +296,37 @@ function idleStatus() {
   return els.transcript.value.trim() ? 'Tap the mic to add more' : 'Tap the mic and talk through the consult';
 }
 
+// A short soft tone and buzz the moment the mic is really listening, so people know to start talking.
+function cueListening() {
+  try {
+    if (navigator.vibrate) navigator.vibrate(40);
+  } catch {
+    /* ignore */
+  }
+  if (!audioCtx) return;
+  try {
+    const t = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.frequency.value = 880;
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(0.08, t + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start(t);
+    osc.stop(t + 0.14);
+  } catch {
+    /* ignore */
+  }
+}
+let lastMicState = 'idle';
 dictation.onstate = (state) => {
+  if (state === 'listening' && lastMicState === 'starting') cueListening();
+  lastMicState = state;
   const on = state !== 'idle';
   document.body.dataset.mic = state;
   els.mic.setAttribute('aria-pressed', String(on));
-  els.micStatus.textContent = state === 'starting' ? 'Starting the microphone…' : state === 'listening' ? 'Listening. Tap to stop' : idleStatus();
+  els.micStatus.textContent = state === 'starting' ? 'One moment…' : state === 'listening' ? 'Listening. Talk now, tap to stop' : idleStatus();
   els.transcript.readOnly = on;
   clearInterval(timerId);
   if (on) {
@@ -359,7 +385,18 @@ function endKeyboardVoice() {
 
 // Remember whether voice typing was on before the tap blurs the text box and switches it off.
 let kbWasOn = false;
-els.mic.addEventListener('pointerdown', () => (kbWasOn = document.body.dataset.mic === 'keyboard'));
+// Live mic: start on the press itself, not the release, so the first words aren't missed.
+let startedOnPress = false;
+els.mic.addEventListener('pointerdown', (e) => {
+  kbWasOn = document.body.dataset.mic === 'keyboard';
+  if (keyboardVoice || busy || e.button > 0 || dictation.state !== 'idle') return;
+  startedOnPress = true;
+  banner('');
+  els.toast.hidden = true;
+  if (isExampleText()) setTranscript('');
+  unlockAudio();
+  dictation.start();
+});
 els.mic.addEventListener('keydown', () => (kbWasOn = document.body.dataset.mic === 'keyboard'));
 els.mic.addEventListener('click', () => {
   if (busy) return;
@@ -375,6 +412,10 @@ els.mic.addEventListener('click', () => {
     } else startKeyboardVoice();
     return;
   }
+  if (startedOnPress) {
+    startedOnPress = false; // already started on the press
+    return;
+  }
   if (dictation.state !== 'idle') {
     dictation.stop();
     return;
@@ -382,6 +423,19 @@ els.mic.addEventListener('click', () => {
   unlockAudio();
   dictation.start();
 });
+// Keep "Create" in sight above the on-screen keyboard (iPhones don't shrink the page for the keyboard).
+(() => {
+  const vv = window.visualViewport;
+  if (!vv) return;
+  const update = () => {
+    const offset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+    const open = offset > 80;
+    document.body.dataset.kb = open ? 'open' : '';
+    document.documentElement.style.setProperty('--kb-offset', open ? `${Math.round(offset)}px` : '0px');
+  };
+  vv.addEventListener('resize', update);
+  vv.addEventListener('scroll', update);
+})();
 // Keep the coach mark only while the keyboard is up.
 els.transcript.addEventListener('blur', () => setTimeout(() => document.activeElement !== els.transcript && endKeyboardVoice(), 150));
 
@@ -396,7 +450,18 @@ els.transcript.addEventListener('input', () => {
 });
 
 const confirmClear = $('confirm-clear');
-$('clear-text').addEventListener('click', () => (busy ? null : confirmClear.showModal()));
+$('clear-text').addEventListener('click', () => {
+  if (busy) return;
+  // An example isn't their own words: clear it straight away.
+  if (isExampleText()) {
+    setTranscript('');
+    banner('');
+    updateExampleNote();
+    els.transcript.focus();
+    return;
+  }
+  confirmClear.showModal();
+});
 confirmClear.addEventListener('close', () => {
   const how = confirmClear.returnValue;
   confirmClear.returnValue = '';
@@ -611,7 +676,7 @@ document.querySelectorAll('input[name="region"]').forEach((r) =>
     settings.region = r.value;
     applyRegion();
     store.saveSettings(settings);
-    toast(`Using ${region().name} guidance.`);
+    toast(`Using ${region().adj} guidance.`);
   }),
 );
 
@@ -1144,25 +1209,49 @@ function rehydrationSection(r) {
   ]);
 }
 
+// Print just the tick sheet, large, for the fridge. Where printing isn't possible (inside Claude), the Word printout has it on its own page.
+function printTickSheet() {
+  document.body.dataset.print = 'ticks';
+  const done = () => {
+    delete document.body.dataset.print;
+    window.removeEventListener('afterprint', done);
+  };
+  window.addEventListener('afterprint', done);
+  try {
+    window.print();
+  } catch {
+    /* not allowed here */
+  }
+  setTimeout(() => {
+    if (document.body.dataset.print === 'ticks' && inClaude) {
+      done();
+      toast('Printing isn’t available here. The Word printout has the tick sheet on its own page.');
+    }
+  }, 600);
+}
+
 function renderCare(c) {
   const sec = (title, items, cls) => (items.length ? el('section', { class: 'care-sec ' + (cls || '') }, [el('h2', { text: title }), list(items)]) : null);
   const name = c.animal || currentNote()?.patient.name || '';
   els.careTitle.textContent = c.kind === 'wildlife' ? `Care plan: ${name || 'wildlife in care'}` : `Caring for ${name || 'your animal'} at home`;
   $('care-back-label').textContent = careFrom === 'note' ? 'Back to note' : 'Back';
   $('care-back-2').textContent = careFrom === 'note' ? 'Back' : 'Add more info';
+  // Tick sheet: one row per daily job, one column per day, big boxes. Printable on its own for the fridge.
+  const days = Math.min(c.log_days || 7, 14);
   const log = c.daily_checks.length
-    ? el('section', { class: 'care-sec' }, [
-        el('h2', { text: `Daily tick sheet (${c.log_days} days)` }),
-        // Phones get numbered columns with the checks listed above, so the table fits without sideways scrolling.
-        el('ol', { class: 'tick-key' }, c.daily_checks.map((x) => el('li', { text: x }))),
+    ? el('section', { class: 'care-sec ticks' }, [
+        el('div', { class: 'sec-head' }, [
+          el('h2', { text: `Daily tick sheet (${days} days)` }),
+          el('button', { type: 'button', class: 'btn small ghost', onclick: () => printTickSheet() }, 'Print for the fridge'),
+        ]),
         el('div', { class: 'tbl', tabindex: '0', role: 'region', 'aria-label': 'Daily tick sheet' }, [
           el('table', { class: 'ticksheet' }, [
             el('thead', {}, [el('tr', {}, [
-              el('th', { scope: 'col', text: 'Day' }),
-              ...c.daily_checks.map((x, i) => el('th', { scope: 'col', 'aria-label': x }, [el('span', { class: 'full', text: x }), el('span', { class: 'num', 'aria-hidden': 'true', text: String(i + 1) })])),
+              el('th', { scope: 'col', text: 'Each day' }),
+              ...Array.from({ length: days }, (_, d) => el('th', { scope: 'col', text: `Day ${d + 1}` })),
             ])]),
-            el('tbody', {}, Array.from({ length: c.log_days }, (_, d) =>
-              el('tr', {}, [el('th', { scope: 'row', text: String(d + 1) }), ...c.daily_checks.map(() => el('td', { 'aria-label': 'not ticked' }, el('span', { class: 'box' })))]),
+            el('tbody', {}, c.daily_checks.map((x) =>
+              el('tr', {}, [el('th', { scope: 'row', text: x }), ...Array.from({ length: days }, () => el('td', { 'aria-label': 'not ticked' }, el('span', { class: 'box' })))]),
             )),
           ]),
         ]),
@@ -1217,8 +1306,7 @@ function renderCare(c) {
             el('ol', { class: 'sources' }, refs.map((s) =>
               el('li', {}, [
                 el('a', { href: s.url, target: '_blank', rel: 'noopener', text: s.title }),
-                ` (${s.publisher})`,
-                el('span', { class: 'scope', text: String(s.scope || 'au').toUpperCase() }),
+                el('span', { class: 'src-meta' }, [el('span', { class: 'scope', text: String(s.scope || 'au').toUpperCase() }), s.publisher]),
               ]),
             )),
           ])
@@ -1282,7 +1370,6 @@ els.care.addEventListener('click', openCare);
 $('discharge-btn').addEventListener('click', openCare);
 // Copy sits top right too, so a busy vet never has to scroll for it.
 $('copy-top').addEventListener('click', () => els.copy.click());
-$('doc-copy-top').addEventListener('click', () => $('doc-copy').click());
 $('care-back').addEventListener('click', () => showView(careFrom === 'note' ? 'note' : 'record'));
 // A plan made straight from the carer's words can take more info in place; one made from a vet note goes back to it.
 $('care-back-2').addEventListener('click', () => (careFrom === 'note' ? showView('note') : addMoreInfo()));
@@ -1448,8 +1535,20 @@ const MAKE_NEXT = [
   ['carer', 'Care plan'],
   ['intake', 'Intake record'],
   ['log', 'Care log'],
-  ['tovet', 'For the vet'],
+  ['tovet', 'Summary for the vet'],
 ];
+const MAKE_ICONS = {
+  carer: '<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>',
+  intake: '<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M12 8v8M8 12h8"/>',
+  log: '<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/>',
+  tovet: '<path d="M6 3v6a4 4 0 0 0 8 0V3"/><path d="M10 13v3a4 4 0 0 0 8 0v-2"/><circle cx="18" cy="12" r="2"/>',
+  vet: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/>',
+};
+const svgIcon = (inner) => {
+  const t = document.createElement('template');
+  t.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`;
+  return t.content.firstChild;
+};
 function renderMakeNext(box, current) {
   // A vet flicks between the carer plan and clinical notes from the same words, to copy either into their system.
   const pool = settings.role === 'vet' ? [['carer', 'Carer plan'], ['vet', 'Clinical notes']] : MAKE_NEXT;
@@ -1457,9 +1556,10 @@ function renderMakeNext(box, current) {
   box.hidden = !options.length;
   if (!options.length) return box.replaceChildren();
   box.replaceChildren(
-    el('h2', { text: 'Make from this too' }),
+    el('h2', { text: 'Use the same notes for' }),
+    el('p', { class: 'help', text: 'No need to say it again. One tap writes it from what you already said.' }),
     el('div', { class: 'make-next-row' }, options.map(([m, label]) => {
-      const b = el('button', { type: 'button', class: 'chip', text: label });
+      const b = el('button', { type: 'button', class: 'make-btn' }, [svgIcon(MAKE_ICONS[m] || MAKE_ICONS.vet), el('span', { text: label }), el('span', { class: 'arrow', 'aria-hidden': 'true', text: '→' })]);
       b.addEventListener('click', () => makeNext(m));
       return b;
     })),
@@ -1579,6 +1679,11 @@ $('word-note').addEventListener('click', (e) => currentNote() && saveWord(noteMo
 /* ---------------- how it works ---------------- */
 
 els.about.innerHTML = ABOUT_HTML; // static, trusted content
+// A Back button at the top of How it works.
+els.about.prepend(el('div', { class: 'head-row about-back' }, [el('button', { type: 'button', class: 'link back', onclick: () => closeAbout() }, [
+  (() => { const t = document.createElement('template'); t.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>'; return t.content.firstChild; })(),
+  'Back',
+])]));
 function openAbout() {
   showView('about');
   els.about.querySelector('h1')?.focus();
@@ -1746,7 +1851,7 @@ function renderResume() {
   $('resume').hidden = !fresh;
   if (!fresh) return;
   const label = last.type === 'doc' && DOC_KINDS[last.data.kind] ? DOC_KINDS[last.data.kind].label : LAST_LABEL[last.type];
-  $('resume-text').textContent = `Last made: ${label}${last.title ? ` · ${last.title}` : ''} · ${ago(Date.now() - last.at)}`;
+  $('resume-text').textContent = `${label}${last.title ? ` · ${last.title}` : ''} · ${ago(Date.now() - last.at)}`;
 }
 $('resume-open').addEventListener('click', () => {
   const last = store.loadLast();
@@ -1765,6 +1870,8 @@ applyRegion();
 applyRole();
 applyMode();
 setTranscript(store.loadDraft());
+// An example left in the box from last time isn't their work: start clean on reload.
+if (isExampleText()) setTranscript('');
 renderResume();
 renderPhotos();
 showView(location.hash === '#how-it-works' ? 'about' : 'record');
