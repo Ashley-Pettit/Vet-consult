@@ -45,6 +45,7 @@ export const store = {
       noteType: typeof s.noteType === 'string' ? s.noteType : 'consult',
       mode: ['vet', 'carer', 'intake', 'log', 'tovet', 'funding'].includes(s.mode) ? s.mode : 'carer',
       role: s.role === 'vet' ? 'vet' : 'carer',
+      region: s.region === 'qld' ? 'qld' : 'vic',
       rememberKey: Boolean(s.rememberKey),
       apiKey: (s.rememberKey && typeof s.apiKey === 'string' ? s.apiKey : sessionKey) || '',
     };
@@ -56,6 +57,7 @@ export const store = {
       noteType: s.noteType || 'consult',
       mode: ['vet', 'carer', 'intake', 'log', 'tovet', 'funding'].includes(s.mode) ? s.mode : 'carer',
       role: s.role === 'vet' ? 'vet' : 'carer',
+      region: s.region === 'qld' ? 'qld' : 'vic',
       rememberKey: Boolean(s.rememberKey),
       apiKey: s.rememberKey ? s.apiKey || '' : '',
     });

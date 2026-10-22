@@ -189,12 +189,15 @@ test('plan: given today and to continue are kept apart, each item once, and only
         { drug: 'Mange treatment per protocol', dose: 'Per protocol', when: 'given' },
       ],
       diagnostics: ['Haematology'],
+      hospital_plan: ['Monitor appetite twice daily'],
       home_care: ['Quiet pen with a hide box'],
       follow_up: ['Recheck in 1 week'],
     },
   });
   const t = toPlainText(n);
-  assert.match(t, /P:\nDiagnostics:\n- Haematology\nTreatment given:\n- Abrasion cleaned\n- Meloxicam 0\.1 mg\/kg SC\n- Mange treatment per protocol\nDispensed:\n- Meloxicam 0\.1 mg\/kg PO SID x 4 days\nCarer instructions:\n- Quiet pen with a hide box\nFollow-up:\n- Recheck in 1 week/);
+  assert.match(t, /P:\nDiagnostics:\n- Haematology\nTreatment given:\n- Abrasion cleaned\n- Meloxicam 0\.1 mg\/kg SC\n- Mange treatment per protocol\nDispensed:\n- Meloxicam 0\.1 mg\/kg PO SID x 4 days\nHospitalisation plan:\n- Monitor appetite twice daily\nFollow-up:\n- Recheck in 1 week/);
+  // Discharge instructions for the carer stay out of the clinical notes (they go in the carer plan).
+  assert.doesNotMatch(t, /Quiet pen/);
   assert.equal(pmsSections(n).prescriptions, 'Meloxicam 0.1 mg/kg PO SID x 4 days');
   assert.match(buildPrompt('x'), /never repeat an item in two places/);
   assert.match(buildPrompt('x'), /Conditional plans go here, not in diagnostics/);

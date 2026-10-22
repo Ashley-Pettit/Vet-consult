@@ -6,6 +6,7 @@ import { localChecks } from './clinical.js';
 import { preparePhoto, MAX_PHOTOS } from './photos.js';
 import { ABOUT_HTML } from './about.js';
 import { lookupSource, sourcesForPrompt, SOURCE_IDS } from './sources.js';
+import { region, setRegion } from './region.js';
 import { buildWord, docModel, careModel, noteModel, wordFileName } from './word.js';
 import {
   NOTE_TYPES,
@@ -526,25 +527,44 @@ const MODE_TEXT = {
   tovet: { button: 'Create summary', placeholder: 'The animal, its history in care, what you’ve noticed, current meds and your questions.' },
 };
 
-// Carers see their four tools; a vet the carer works with switches to clinical notes and care plans.
+// Carer or vet, chosen with the switch at the top and remembered. Carers see their four tools; vets see care plan and notes.
 function applyRole() {
   const role = settings.role === 'vet' ? 'vet' : 'carer';
   document.body.dataset.role = role;
+  document.querySelector(`input[name="role"][value="${role}"]`).checked = true;
   document.querySelectorAll('#mode label[data-roles]').forEach((l) => (l.hidden = !l.dataset.roles.split(' ').includes(role)));
   if (!ROLE_MODES[role].includes(mode())) document.querySelector(`input[name="mode"][value="${ROLE_MODES[role][0]}"]`).checked = true;
-  applyRoleLabel();
 }
-function applyRoleLabel() {
-  $('role-switch').textContent = settings.role === 'vet' ? 'Wildlife carer? Switch to carer tools' : 'Are you the vet? Switch to vet tools';
+document.querySelectorAll('input[name="role"]').forEach((r) =>
+  r.addEventListener('change', () => {
+    settings.role = r.value;
+    if (mode() === 'funding') document.querySelector('input[name="mode"][value="carer"]').checked = true;
+    applyRole();
+    applyMode();
+    settings.mode = mode();
+    store.saveSettings(settings);
+  }),
+);
+
+// Which state's guidance: sources, emergency line and case numbers all follow it.
+function applyRegion() {
+  const r = setRegion(settings.region);
+  document.querySelector(`input[name="region"][value="${r.code}"]`).checked = true;
+  document.body.dataset.region = r.code;
+  $('sos-sub').textContent = `${r.hotline} ${r.hotlineHours}`;
+  $('sos-phone').textContent = r.phone;
+  $('sos-phone').href = `tel:${r.tel}`;
+  MODE_TEXT.intake.placeholder = `${r.caseLabel}, the animal, exactly where it was found, its condition and what you did.`;
+  if (mode() === 'intake') els.transcript.placeholder = MODE_TEXT.intake.placeholder;
 }
-$('role-switch').addEventListener('click', () => {
-  if (mode() === 'funding') return chooseMode('carer'); // funding lives in Settings; this is the way back
-  settings.role = settings.role === 'vet' ? 'carer' : 'vet';
-  applyRole();
-  applyMode();
-  settings.mode = mode();
-  store.saveSettings(settings);
-});
+document.querySelectorAll('input[name="region"]').forEach((r) =>
+  r.addEventListener('change', () => {
+    settings.region = r.value;
+    applyRegion();
+    store.saveSettings(settings);
+    toast(`Using ${region().name} guidance.`);
+  }),
+);
 
 function chooseMode(m) {
   document.querySelector(`input[name="mode"][value="${m}"]`).checked = true;
@@ -566,8 +586,6 @@ $('open-funding').addEventListener('click', () => {
 function applyMode() {
   const m = mode();
   document.body.dataset.mode = m;
-  if (m === 'funding') $('role-switch').textContent = 'Back to carer tools';
-  else applyRoleLabel();
   els.create.textContent = MODE_TEXT[m].button;
   els.transcript.placeholder = MODE_TEXT[m].placeholder;
   document.querySelectorAll('[data-modes]').forEach((n) => (n.hidden = !n.dataset.modes.split(' ').includes(m)));
@@ -808,7 +826,7 @@ function noteGaps(n) {
     [!euth && !vt.hydration, 'Hydration'],
     [!n.subjective, 'History or reason for visit'],
     [!n.assessment.problems.length, 'Assessment'],
-    [!(n.plan.procedures.length || n.plan.diagnostics.length || n.plan.treatments.length || n.plan.home_care.length || n.plan.follow_up.length), 'Plan'],
+    [!(n.plan.procedures.length || n.plan.diagnostics.length || n.plan.treatments.length || n.plan.hospital_plan.length || n.plan.home_care.length || n.plan.follow_up.length), 'Plan'],
     [!euth && !n.plan.follow_up.length, 'Follow-up or recheck'],
     [!n.visit.clinician, 'Vet name (set it once in Settings)'],
   ].filter(([missing]) => missing).map(([, label]) => label);
@@ -885,7 +903,7 @@ function renderNote() {
     if (givenMeds.length) plan.push(el('ul', { class: 'meds' }, givenMeds.map(([t, i]) => medItem(t, i, true))));
   }
   if (contMeds.length) plan.push(el('h3', { text: 'Dispensed' }), el('ul', { class: 'meds' }, contMeds.map(([t, i]) => medItem(t, i, false))));
-  if (n.plan.home_care.length) plan.push(el('h3', { text: 'Carer instructions' }), list(n.plan.home_care));
+  if (n.plan.hospital_plan.length) plan.push(el('h3', { text: 'Hospitalisation plan' }), list(n.plan.hospital_plan));
   if (n.plan.follow_up.length) plan.push(el('h3', { text: 'Follow-up' }), list(n.plan.follow_up));
 
   const assess = n.assessment.problems.length ? [list(n.assessment.problems, true)] : [];
@@ -900,6 +918,8 @@ function renderNote() {
     ...(plan.length ? [soap('P', 'Plan', plan)] : []),
     ...(n.welfare_notes ? [soap('W', 'Welfare notes', el('p', { text: n.welfare_notes }))] : []),
   );
+  // Discharge instructions stay out of the clinical record; they become the carer's plain-English plan.
+  $('discharge-note').hidden = !n.plan.home_care.length || els.care.hidden;
 
   const sec = pmsSections(n);
   els.plain.value = sec.clinical;
@@ -1120,7 +1140,7 @@ async function openCare() {
     return;
   }
   try {
-    const reply = await runWorking('Writing the care plan', 'Everything the carer needs, from Victorian guidance.', (signal) =>
+    const reply = await runWorking('Writing the care plan', `Everything the carer needs, from ${region().adj} guidance.`, (signal) =>
       askJson(buildCareSheetPrompt(n, sourcesForPrompt()), signal),
     );
     showCare(normaliseCareSheet(extractJson(reply), SOURCE_IDS()), 'note');
@@ -1139,7 +1159,7 @@ async function createCarePlan(text) {
     return;
   }
   banner('');
-  const reply = await runWorking('Writing the care plan', 'Everything the carer needs, from Victorian guidance.', (signal) =>
+  const reply = await runWorking('Writing the care plan', `Everything the carer needs, from ${region().adj} guidance.`, (signal) =>
     askJson(buildCarerPlanPrompt(text, sourcesForPrompt(), { fromVet: settings.role === 'vet' }), signal, { images: photos }),
   );
   notes = [];
@@ -1147,6 +1167,7 @@ async function createCarePlan(text) {
 }
 
 els.care.addEventListener('click', openCare);
+$('discharge-btn').addEventListener('click', openCare);
 // Copy sits top right too, so a busy vet never has to scroll for it.
 $('copy-top').addEventListener('click', () => els.copy.click());
 $('care-copy-top').addEventListener('click', () => els.careCopy.click());
@@ -1453,6 +1474,7 @@ els.forget.addEventListener('click', () => {
 
 const startMode = MODES.includes(settings.mode) ? settings.mode : 'carer';
 document.querySelector(`input[name="mode"][value="${startMode}"]`).checked = true;
+applyRegion();
 applyRole();
 applyMode();
 setTranscript(store.loadDraft());

@@ -1,5 +1,6 @@
 import { speciesCareForPrompt } from './species-care.js';
 import { CONFIG } from './config.js';
+import { region } from './region.js';
 
 // Pure logic: prompt, parsing, normalising and plain-text formatting of clinical notes.
 // No DOM access here so it can be unit tested in Node.
@@ -66,7 +67,7 @@ export const EMPTY_NOTE = Object.freeze({
   subjective: '',
   objective: { vitals: { temp_c: '', hr_bpm: '', rr_bpm: '', bcs: '', mm_crt: '', hydration: '' }, findings: [] },
   assessment: { problems: [], differentials: [], prognosis: '' },
-  plan: { procedures: [], diagnostics: [], treatments: [], home_care: [], follow_up: [] },
+  plan: { procedures: [], diagnostics: [], treatments: [], hospital_plan: [], home_care: [], follow_up: [] },
   welfare_notes: '',
   check: [],
 });
@@ -107,7 +108,7 @@ const NOTE_SHAPE = (title) => `{"patient":{"name":"","species":"","breed":"","se
 "subjective":"",
 "objective":{"vitals":{"temp_c":"","hr_bpm":"","rr_bpm":"","bcs":"","mm_crt":"","hydration":""},"findings":[],"photo_findings":[]},
 "assessment":{"problems":[],"differentials":[],"prognosis":""},
-"plan":{"procedures":[],"diagnostics":[],"treatments":[{"drug":"","dose":"","route":"","frequency":"","duration":"","when":"given|continue"}],"home_care":[],"follow_up":[]},
+"plan":{"procedures":[],"diagnostics":[],"treatments":[{"drug":"","dose":"","route":"","frequency":"","duration":"","when":"given|continue"}],"hospital_plan":[],"home_care":[],"follow_up":[]},
 "welfare_notes":"",
 "check":[]}`;
 
@@ -124,7 +125,8 @@ const RULES = `Rules:
   - procedures: things physically DONE this visit that are not drugs (for example "Abrasion over left shoulder cleaned", "Sutured under sedation"). Past tense.
   - treatments: every medication, vaccine, parasite treatment or fluid. "when": "given" if it was administered during this visit, "continue" if it is dispensed or is to be given after today. A drug given today AND continued is two entries. Treatments described by protocol are still treatments: the drug is what it treats (for example "Mange treatment") and the dose is the protocol (for example "Per wombat protocol"). A product dosed by label uses "Per label" as the dose. Fluids with no type stated use "Fluids (type not stated)" as the drug.
   - diagnostics: tests ordered, still to be done or awaiting results (for example "Haematology and biochemistry"). A test already done with a result belongs in objective findings (for example "Skin scrape: Sarcoptes mites seen"), not here.
-  - home_care: instructions for the carer or owner (housing, diet, wound care, handling, restrictions), and any options discussed and decisions made with them, only as dictated.
+  - hospital_plan: if the animal stays in hospital or under the vet's care, the in-hospital plan (monitoring, fluids, feeding, handling, how often to check), in clinical language, only as dictated.
+  - home_care: if the animal is discharged to a carer or owner, the instructions for them (housing, diet, wound care, handling, restrictions) and any options discussed, only as dictated. These are kept OUT of the clinical notes and turned into a separate plain-English plan for the carer.
   - follow_up: rechecks and anything to do later or only if something happens (for example "Recheck in 1 week", "Bloods if not eating by Monday"). Conditional plans go here, not in diagnostics.
 - Do not calculate doses. Keep doses as stated (for example mg/kg). The app works out totals for the vet separately.
 - follow_up: write timing as stated (for example "Recheck in 10-14 days: suture removal").
@@ -147,7 +149,7 @@ export function buildPrompt(dictation, opts = {}) {
     ? `${opts.photoCount} photo(s) are attached, numbered in order. In objective.photo_findings, describe only what is clearly visible, objectively, ` +
       `starting each item with "Photo N:". Do not diagnose from photos alone; anything uncertain goes in "check" instead.\n`
     : '';
-  return `You are a veterinary clinical scribe for ${CONFIG.clinicDescription}. Convert the vet's spoken dictation into formal clinical notes for the practice management system (PMS).
+  return `You are a veterinary clinical scribe for ${region().org}. Convert the vet's spoken dictation into formal clinical notes for the practice management system (PMS).
 Work out from the dictation which kind of record this is, follow its rule below, and put its title in visit.type. If unclear, use "${NOTE_TYPES.consult.title}".
 ${typeGuide()}
 ${clinician}${photos}
@@ -192,8 +194,9 @@ function careRules(sourceList, { shape = true } = {}) {
 Write in plain, warm Australian English for someone with no veterinary training. No abbreviations (say "twice a day", not BID; "by mouth", not PO).
 Rules:
 - Only include medications, doses and procedures that appear in the input. NEVER invent doses, tablet sizes, products or diagnoses. If the amount per dose is not stated, say "as dispensed by the clinic".
-- General husbandry (housing, warmth, hygiene, feeding principles, handling, release) must follow the reference sources below. Prefer Victorian (scope vic) sources; use Australian (scope au) sources only where no Victorian source covers it. Do not give advice that goes beyond or conflicts with them.
-- "sources": the ids of the sources you relied on, Victorian first. Only ids from the list; if unsure, leave one out. Never add notes or corrections after the JSON. If a section is not covered by any source, keep it brief and generic.
+- General husbandry (housing, warmth, hygiene, feeding principles, handling, release) must follow the reference sources below, which are listed most important first: ${region().primary}. Use Australian (scope au) sources only where no ${region().adj} source covers it. Do not give advice that goes beyond or conflicts with them.
+- This plan is a written instruction to a carer, so it must comply with the ${region().adj} code of practice and wildlife authorisation or permit conditions in the sources (for example: carers give first aid and only the medications a vet prescribed; required records; release rules). Write it in plain English a non-vet can follow.
+- "sources": the ids of the sources you relied on, most important first. Only ids from the list; if unsure, leave one out. Never add notes or corrections after the JSON. If a section is not covered by any source, keep it brief and generic.
 - kind: "wildlife" for native or wild animals, otherwise "domestic".
 - SAY EACH THING ONCE. Every instruction belongs in exactly one section; no other section restates it, summarises it or refers back to it. Carers read this on a phone, so keep it short: one plain sentence per item, and aim for the whole plan to be readable in about two minutes.
 - summary: at most two short sentences: what happened to the animal, and the goal of care. No instructions.
@@ -201,7 +204,7 @@ Rules:
 - plan: ONLY what changes over time, such as a medication finishing, starting solid food, weaning steps or moving to a bigger enclosure. Name a medication only on the day it stops or starts, with no dosing instructions (those are in medications). Never repeat the daily routine (feeds, toileting, weighing, cleaning) or the release (it has its own section). Two to four periods at most, one or two short tasks each. Leave it empty if nothing changes over time.
 - housing: where and how to keep the animal (space, warmth, quiet, hygiene), at most 4 items. feeding: what, how much if stated, how often, toileting, and water, at most 5 items. activity: handling and enrichment, at most 3 items. care: anything else not covered elsewhere, at most 3 items, often none.
 - daily_checks: 3 to 5 short things the carer ticks off each day (2 to 4 words each). log_days: the longest course or until the next visit, at most 14.
-- release (wildlife only, otherwise leave empty): ready_when lists the signs the animal is fit for release, at most 4; how gives the release steps, at most 4; where states the release location rule in one sentence. Follow the Victorian requirements in the sources exactly. Never encourage keeping wildlife longer than needed.
+- release (wildlife only, otherwise leave empty): ready_when lists the signs the animal is fit for release, at most 4; how gives the release steps, at most 4; where states the release location rule in one sentence. Follow the ${region().adj} requirements in the sources exactly. Never encourage keeping wildlife longer than needed.
 - escalate.vet: problems that need the vet within a day, at most 4. escalate.urgent: emergencies that need a vet straight away (or an after-hours emergency vet), at most 4. These are the only places the vet appears.
 - next_visit: only a visit or recheck that was actually stated; otherwise an empty string.
 - Do not repeat general warnings about drugs that are used normally in this species.
@@ -221,7 +224,8 @@ ${CARE_SHAPE}` : ''}`;
 
 /** Carer plan from a finished vet note. */
 export function buildCareSheetPrompt(note, sourceList = '') {
-  return `You are helping a vet working with ${CONFIG.clinicDescription} write a complete care plan for a wildlife carer, based on the clinical note below.
+  return `You are helping a vet working with ${region().org} write a complete care plan for a wildlife carer, based on the clinical note below.
+The vet's discharge instructions for the carer are in plan.home_care: include every one, rewritten in plain English. Rechecks in plan.follow_up go in next_visit, in plain English. Leave out clinical detail the carer does not need.
 ${careRules(sourceList)}
 
 <note>
@@ -232,10 +236,10 @@ ${JSON.stringify(note)}
 /** Carer plan straight from spoken comments, with no vet note in between. */
 export function buildCarerPlanPrompt(dictation, sourceList = '', { fromVet = false, justIn = false } = {}) {
   const who = fromVet
-    ? `You are helping a vet who works with ${CONFIG.clinicDescription} write a complete care plan for the wildlife carer who will look after this animal, from the vet's spoken comments below. The vet may use quick clinical shorthand; turn it into plain instructions the carer can follow.`
+    ? `You are helping a vet who works with ${region().org} write a complete care plan for the wildlife carer who will look after this animal, from the vet's spoken comments below. The vet may use quick clinical shorthand; turn it into plain instructions the carer can follow.`
     : justIn
-      ? `You are helping a wildlife carer at ${CONFIG.clinicDescription} who has just taken this animal in. From their spoken comments below, write a complete care plan for it, starting now. Begin with what to do right now and over the next few hours (warmth, quiet, handling, fluids or food only as the sources allow), then carry on day by day until the vet visit or the next step mentioned.`
-      : `You are helping a wildlife carer at ${CONFIG.clinicDescription} write a complete care plan for another carer or foster carer, from their spoken comments below.`;
+      ? `You are helping a wildlife carer at ${region().org} who has just taken this animal in. From their spoken comments below, write a complete care plan for it, starting now. Begin with what to do right now and over the next few hours (warmth, quiet, handling, fluids or food only as the sources allow), then carry on day by day until the vet visit or the next step mentioned.`
+      : `You are helping a wildlife carer at ${region().org} write a complete care plan for another carer or foster carer, from their spoken comments below.`;
   return `${who}
 Speech recognition may mishear drug and species names; correct obvious mishearings.
 ${careRules(sourceList)}
@@ -370,6 +374,7 @@ export function normaliseNote(raw) {
       procedures: arr(pl.procedures),
       diagnostics: arr(pl.diagnostics),
       treatments,
+      hospital_plan: arr(pl.hospital_plan),
       home_care: arr(pl.home_care),
       follow_up: arr(pl.follow_up),
     },
@@ -452,12 +457,13 @@ const givenLine = (t) => [t.drug, doseOf(t), t.route].filter(Boolean).join(' ').
 /** The plan as [heading, lines] pairs, in the order vets write P. Empty parts are left out. */
 export function planParts(n) {
   const pl = n.plan;
-  // The order vets write P: diagnostics, treatment, take-home meds, what the carer was told, follow-up.
+  // The order vets write P: diagnostics, treatment, take-home meds, in-hospital plan, recheck.
+  // Discharge instructions for the carer are deliberately not here: they go in the separate plain-English carer plan.
   return [
     ['Diagnostics', pl.diagnostics],
     ['Treatment given', [...pl.procedures, ...pl.treatments.filter((t) => t.when === 'given').map(givenLine)]],
     ['Dispensed', pl.treatments.filter((t) => t.when !== 'given').map(rxLine)],
-    ['Carer instructions', pl.home_care || []],
+    ['Hospitalisation plan', pl.hospital_plan || []],
     ['Follow-up', pl.follow_up],
   ].filter(([, items]) => items.length);
 }
@@ -792,12 +798,12 @@ export const DOC_KINDS = {
     copy: 'Copy record',
     working: 'Rescue details first, so release goes back to the right spot.',
     title: 'Rescue and intake record for the shelter register',
-    rule: `Write the rescue and intake record a Victorian wildlife shelter keeps for every animal admitted, in plain, objective Australian English.
-- First section "Register entry": a list with exactly these items, in this order, each as "Field: value", writing "Not recorded" when it was not said: "Case number", "Common name", "Species code", "Date in", "Sex (M, F or U)", "Age class", "Main injury", "Cause", "Where found", "Status". This matches the Victorian wildlife shelter record sheet, so an auditor can read it at a glance. Only give codes that were actually said.
-- Then these sections, in this order, leaving out any with nothing stated: "Rescue details" (date and time, Wildlife Victoria case number, who found or rescued it and how it came into care), "Where it was found" (the exact location as stated, word for word, because release should be back at that spot), "Animal" (species, sex, age or life stage, name or ID, weight), "Condition on arrival" (only what was observed), "First aid and care given", "Vet" (vet seen or booked, and what they found or said), "Plan".
+    rule: () => `Write the rescue and intake record a ${region().adj} wildlife carer keeps for every animal admitted, in plain, objective Australian English.
+- First section "Register entry": a list with exactly these items, in this order, each as "Field: value", writing "Not recorded" when it was not said: "Case number", "Common name", "Species code", "Date in", "Sex (M, F or U)", "Age class", "Main injury", "Cause", "Where found", "Status". This matches the ${region().adj} wildlife record requirements, so an auditor can read it at a glance. Only give codes that were actually said.
+- Then these sections, in this order, leaving out any with nothing stated: "Rescue details" (date and time, ${region().caseLabel}, who found or rescued it and how it came into care), "Where it was found" (the exact location as stated, word for word, because release should be back at that spot), "Animal" (species, sex, age or life stage, name or ID, weight), "Condition on arrival" (only what was observed), "First aid and care given", "Vet" (vet seen or booked, and what they found or said), "Plan".
 - Record the rescue location exactly as said. Never generalise it. If it is vague (a suburb or road only), add a check asking for the precise spot.
 - "due": vet visits, medications and weigh-ins that are due, with timing exactly as stated.
-- Always add a check if any of these are missing: exact rescue location, rescue date, species, weight, Wildlife Victoria case number.`,
+- Always add a check if any of these are missing: exact rescue location, rescue date, species, weight, ${region().caseLabel}.`,
   },
   log: {
     label: 'Care log',
@@ -846,8 +852,8 @@ export function buildDocPrompt(kind, dictation, opts = {}) {
   const photos = opts.photoCount
     ? `${opts.photoCount} photo(s) are attached, numbered in order. Describe only what is clearly visible, objectively, as "Photo N: ...". Do not diagnose from photos alone.\n`
     : '';
-  return `You are a scribe for a wildlife carer at ${CONFIG.clinicDescription}. Turn the carer's spoken comments into this document: ${k.title}.
-${k.rule}
+  return `You are a scribe for a wildlife carer at ${region().org}. Turn the carer's spoken comments into this document: ${k.title}.
+${typeof k.rule === 'function' ? k.rule() : k.rule}
 ${clinician}${photos}General rules:
 - Australian English and metric units.
 - NEVER invent findings, values, doses, dates, names or numbers. Leave out what was not said.

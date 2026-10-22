@@ -254,7 +254,7 @@ export function noteModel(n) {
       { heading: 'Diagnostics', items: n.plan.diagnostics },
       { heading: 'Treatment given', items: [...n.plan.procedures, ...given] },
       ...(rx.length ? [{ heading: 'Dispensed', table: { head: ['Drug', 'Dose and route', 'Frequency', 'Duration'], rows: rx, widths: [2800, 2600, 2200, PAGE_W - 7600] } }] : []),
-      { heading: 'Carer instructions', items: n.plan.home_care || [] },
+      { heading: 'Hospitalisation plan', items: n.plan.hospital_plan || [] },
       { heading: 'Follow-up', items: n.plan.follow_up },
       { heading: 'Welfare notes', text: n.welfare_notes },
     ],

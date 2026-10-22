@@ -46,7 +46,7 @@ export const ABOUT_HTML = `
       <p><b>Where found</b> Gravel pull-over, south side of the Bass Highway, east of the Kilcunda bridge</p>
       <p><b>Animal</b> Bare-nosed wombat, adult female, 24 kg</p>
       <p><b>Condition</b> Severe mange, flanks and back; graze, left shoulder</p>
-      <p><b>Check</b> Wildlife Victoria case number?</p>
+      <p><b>Check</b> Case number?</p>
     </div>
   </div>
 </div>
@@ -56,7 +56,7 @@ export const ABOUT_HTML = `
   <div class="feats">
     ${feature(I.pin, 'Intake record', 'Just picked one up? Talk through where, when and what you saw. The exact rescue spot is kept word for word, so release goes back to the right place, and anything missing for your register is flagged. A care plan for right now starts at the same time: tap <b>Need advice right now?</b> to open it.')}
     ${feature(I.cal, 'Daily care log', 'Weight, feeds, meds, toileting and behaviour in one tidy entry. If something sounds worrying, like weight loss or going off food, it suggests a vet check.')}
-    ${feature(I.heart, 'Care plan', 'Handing an animal to another carer? Get a complete plan: medications, a day-by-day routine, housing, feeding and release, based on Victorian wildlife guidance, with the species-specific points right where you need them.')}
+    ${feature(I.heart, 'Care plan', 'Handing an animal to another carer? Get a complete plan: medications, a day-by-day routine, housing, feeding and release, based on your state’s wildlife guidance (Victoria or Queensland), with the species-specific points right where you need them.')}
     ${feature(I.steth, 'For the vet', 'Before a vet visit, talk through what’s been happening. You get a one-minute summary with your questions written out, so nothing gets forgotten in the room.')}
   </div>
 </section>
@@ -72,7 +72,7 @@ export const ABOUT_HTML = `
 
 <section class="about-sec">
   <h2>Working with a vet?</h2>
-  <p>Hand them the app. Under the picker, tap <b>Are you the vet? Switch to vet tools</b>. Shorthand is fine. They get a <b>care plan</b> written for you, and <b>clinical notes</b> to copy straight into their own system, both from the same few words. Tap the same link to switch back.</p>
+  <p>Hand them the app and tap <b>Vet</b> at the top. It remembers which one was used last. Shorthand is fine. They get a <b>care plan</b> written for you, and <b>clinical notes</b> to copy straight into their own system, both from the same few words. Tap <b>Carer</b> to switch back.</p>
 </section>
 
 <section class="about-sec">
@@ -99,7 +99,7 @@ export const ABOUT_HTML = `
   <details class="faq"><summary>What if it mishears a species or place?</summary><p>It fixes obvious mishearings and lists them in the check list so you can confirm.</p></details>
   <details class="faq"><summary>Which devices does it work on?</summary><p>Phones, tablets and computers. On a phone it uses your keyboard’s own voice typing, which works well on iPhone and Android.</p></details>
   <details class="faq"><summary>Where do my words go?</summary><p>Your phone or browser’s voice typing turns speech into text, and Claude writes the record. Nothing is stored by Care Scribe.</p></details>
-  <details class="faq"><summary>Emergency?</summary><p>Call Wildlife Victoria 24/7 on <a href="tel:+61384007300">03 8400 7300</a>.</p></details>
+  <details class="faq"><summary>Emergency?</summary><p>In Victoria, call Wildlife Victoria 24/7 on <a href="tel:+61384007300">03 8400 7300</a>. In Queensland, call RSPCA Queensland on <a href="tel:+611300264625">1300 ANIMAL (1300 264 625)</a>, 7am to 7pm.</p></details>
 </section>
 
 <div class="about-cta">

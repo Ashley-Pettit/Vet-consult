@@ -27,7 +27,7 @@ test('carer plan prompt: straight from comments, vet only for escalation, source
   assert.match(p, /<comments>\nCare plan for a common ringtail possum joey/);
   assert.match(p, /ONLY an escalation contact/);
   assert.match(p, /Do NOT tell them to report to, update or check in with the vet/);
-  assert.match(p, /Prefer Victorian \(scope vic\) sources/);
+  assert.match(p, /listed most important first: Victorian Government \(DEECA\) guidance/);
   assert.match(p, /vic-release-requirements \| vic \|/);
   assert.match(p, /"release":\{"ready_when":\[\],"how":\[\],"where":""\}/);
   assert.match(buildCareSheetPrompt(normaliseNote(EXAMPLE_CARE_SHEET), sourcesForPrompt()), /<note>/);
@@ -78,4 +78,25 @@ test('example plan is Victorian: known sources only, species points woven in, no
   assert.ok(n.feeding.some((x) => /Only possum milk: cow’s milk/.test(x)));
   const all = JSON.stringify(EXAMPLE_CARER_PLAN);
   assert.doesNotMatch(all, /qld|Moorooka|Queensland/i);
+});
+
+test('Queensland: RSPCA Queensland sources lead, Queensland rules and contacts apply, Victoria again after', async () => {
+  const { setRegion } = await import('../../src/region.js');
+  setRegion('qld');
+  try {
+    const list = sourcesForPrompt().split('\n');
+    assert.match(list[0], /\(RSPCA Queensland\)/);
+    assert.match(list[1], /\(RSPCA Queensland\)/);
+    assert.ok(!list.some((l) => / \| vic \| /.test(l)), 'no Victorian sources in Queensland');
+    const p = buildCarerPlanPrompt('joey', sourcesForPrompt());
+    assert.match(p, /most important first: RSPCA Queensland guidance/);
+    assert.match(p, /comply with the Queensland code of practice/);
+    assert.match(p, /wildlife care group in Queensland/);
+    assert.ok(SOURCE_IDS().has('rspca-qld-foster'));
+    assert.ok(!SOURCE_IDS().has('vic-release-requirements'));
+    assert.ok(lookupSource('vic-release-requirements'), 'old plans still show their sources');
+  } finally {
+    setRegion('vic');
+  }
+  assert.match(sourcesForPrompt().split('\n')[0], / \| vic \| /);
 });

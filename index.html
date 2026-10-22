@@ -43,6 +43,19 @@
   <section id="view-record" class="view" aria-labelledby="record-title">
     <h1 id="record-title" class="sr-only">Dictate a consult</h1>
 
+    <div class="who">
+      <fieldset class="seg" id="role-seg">
+        <legend class="sr-only">I am a</legend>
+        <label><input type="radio" name="role" value="carer"><span>Carer</span></label>
+        <label><input type="radio" name="role" value="vet"><span>Vet</span></label>
+      </fieldset>
+      <fieldset class="seg" id="region-seg">
+        <legend class="sr-only">Guidance for which state</legend>
+        <label><input type="radio" name="region" value="vic"><span>VIC</span></label>
+        <label><input type="radio" name="region" value="qld"><span>QLD</span></label>
+      </fieldset>
+    </div>
+
     <fieldset class="mode" id="mode">
       <legend class="sr-only">What do you want to create?</legend>
       <label data-roles="carer vet"><input type="radio" name="mode" value="carer" aria-label="Care plan" checked><span><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg><b><span class="sm">Care plan</span><span class="lg">Care plan</span></b></span></label>
@@ -100,7 +113,6 @@
         <button type="button" class="chip" data-modes="funding" id="load-funding-example">Council grant</button>
         <button type="button" class="chip" data-modes="vet" id="load-example">Wombat consult</button>
       </p>
-    <p class="role-switch"><button type="button" class="link" id="role-switch"></button></p>
     </div>
 
 
@@ -147,6 +159,13 @@
       <ul id="gap-list"></ul>
     </details>
     <article id="note" class="note" aria-label="Formatted clinical note"></article>
+    <section class="discharge-note" id="discharge-note" hidden>
+      <div>
+        <h2>Instructions for the carer</h2>
+        <p>Kept out of the clinical notes. They go in a plain-English carer plan that follows the code of practice.</p>
+      </div>
+      <button type="button" class="btn primary" id="discharge-btn">Make carer plan</button>
+    </section>
 
     <section class="plain-sec" aria-labelledby="plain-title">
       <div class="sec-head">
@@ -235,8 +254,8 @@
   <footer class="site-foot">
     <div class="sos">
       <p class="sos-title">Emergency response</p>
-      <p class="sos-sub">Wildlife Victoria 24/7</p>
-      <a class="sos-phone" href="tel:+61384007300">03 8400 7300</a>
+      <p class="sos-sub" id="sos-sub">Wildlife Victoria 24/7</p>
+      <a class="sos-phone" id="sos-phone" href="tel:+61384007300">03 8400 7300</a>
     </div>
     <p class="motto">Forever home is best</p>
     <p class="charity">Bunurong Wildlife Care Inc. Wildlife Shelter 15147751. Registered Charity.</p>
