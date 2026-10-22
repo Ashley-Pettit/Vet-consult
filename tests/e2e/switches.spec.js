@@ -6,14 +6,14 @@ test('carer or vet at the top, remembered; the old link is gone', async ({ page 
   await openApp(page);
   await expect(page.locator('#role-switch')).toHaveCount(0);
   await expect(page.locator('input[name=role][value=carer]')).toBeChecked();
-  await expect(page.locator('#mode label:visible')).toHaveCount(4);
+  await expect(page.locator('#mode label:visible')).toHaveCount(5);
   await page.locator('#role-seg label', { hasText: 'Vet' }).click();
   await expect(page.locator('#mode label:visible')).toHaveCount(2);
   await expect(page.locator('input[name=mode]:checked')).toHaveValue('carer'); // vets start on the care plan
   await page.reload();
   await expect(page.locator('input[name=role][value=vet]')).toBeChecked();
   await page.locator('#role-seg label', { hasText: 'Carer' }).click();
-  await expect(page.locator('#mode label:visible')).toHaveCount(4);
+  await expect(page.locator('#mode label:visible')).toHaveCount(5);
 });
 
 test('QLD uses RSPCA Queensland first, its phone line, and is remembered', async ({ page }) => {
@@ -75,4 +75,22 @@ test('a call interrupts: the dictation and the last care plan survive closing th
   await later.locator('#resume-open').click();
   await expect(later.locator('#view-care')).toBeVisible();
   expect(calls).toHaveLength(0);
+});
+
+test('New asks first; keeping it changes nothing, starting new clears the words and keeps Last made', async ({ page }) => {
+  await mockApi(page, { body: () => textReply(EXAMPLE_CARER_PLAN) });
+  await openApp(page);
+  await expect(page).toHaveTitle(/Animal Welfare Companion/);
+  await page.locator('#transcript').fill('Ringtail joey, cat attack.');
+  await page.locator('#create').click();
+  await expect(page.locator('#view-care')).toBeVisible();
+  await page.locator('#new-care').click();
+  await expect(page.locator('#confirm-new')).toBeVisible();
+  await page.getByRole('button', { name: 'Keep this' }).click();
+  await expect(page.locator('#view-care')).toBeVisible();
+  await page.locator('#new-care').click();
+  await page.getByRole('button', { name: 'Start new' }).click();
+  await expect(page.locator('#view-record')).toBeVisible();
+  await expect(page.locator('#transcript')).toHaveValue('');
+  await expect(page.locator('#resume-text')).toContainText('Care plan');
 });

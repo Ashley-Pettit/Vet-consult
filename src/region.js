@@ -1,4 +1,4 @@
-// Which state's guidance Care Scribe follows. Chosen at the top of the app and remembered on the device.
+// Which state's guidance Animal Welfare Companion follows. Chosen at the top of the app and remembered on the device.
 // Everything state-specific lives here: sources, emergency line, case numbers and how prompts describe the carer.
 import { VIC_SOURCES } from './sources-vic.js';
 import { QLD_SOURCES } from './sources-qld.js';

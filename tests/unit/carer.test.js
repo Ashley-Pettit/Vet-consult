@@ -100,3 +100,32 @@ test('Queensland: RSPCA Queensland sources lead, Queensland rules and contacts a
   }
   assert.match(sourcesForPrompt().split('\n')[0], / \| vic \| /);
 });
+
+test('rehydration amounts come from Fowler’s protocol, worked out on the device', async () => {
+  const { rehydrationTable } = await import('../../src/note.js');
+  const t = rehydrationTable({ needed: true, weight_g: 120, dehydration_pct: null });
+  assert.equal(t.assumed, true);
+  assert.deepEqual(t.days.map((d) => [d.pct, d.total, d.every4h]), [[10, 12, 2], [7.5, 9, 1.5], [7.5, 9, 1.5]]);
+  const assessed = rehydrationTable({ needed: true, weight_g: 2400, dehydration_pct: 6 });
+  assert.equal(assessed.days[0].total, 192); // 5% maintenance + 3% (half of 6%) = 8% of 2400 g
+  assert.equal(rehydrationTable({ needed: true, weight_g: null }), null);
+  assert.equal(rehydrationTable({ needed: false, weight_g: 100 }), null);
+  // Claude never writes amounts; a bad weight is ignored.
+  const c = normaliseCareSheet({ ...EXAMPLE_CARER_PLAN, rehydration: { needed: true, weight_g: 'about 120 g', dehydration_pct: 99, steps: ['Warm her first'] } }, SOURCE_IDS());
+  assert.equal(c.rehydration.weight_g, 120);
+  assert.equal(c.rehydration.dehydration_pct, null);
+  assert.match(careSheetText(c, lookupSource), /Rehydration\nFor 120 g, assuming 10% dehydrated:\n- Day 1: 12 mL in total/);
+});
+
+test('normal ranges are shown from the checked table, state-specific where sources differ', async () => {
+  const { rangesFor, SPECIES_RANGES } = await import('../../src/species-ranges.js');
+  for (const [id, g] of Object.entries(SPECIES_RANGES)) {
+    assert.ok(g.sources.length && g.sources.every((s) => /^https:\/\//.test(s.url) && s.date && s.publisher), id);
+  }
+  assert.equal(rangesFor('koala', 'vic').warmth[0][1], '34°C');
+  assert.equal(rangesFor('koala', 'qld').warmth[0][1], '34-36°C');
+  assert.equal(rangesFor('nope'), null);
+  const c = normaliseCareSheet({ ...EXAMPLE_CARER_PLAN, species_group: 'ringtail' }, SOURCE_IDS());
+  assert.match(careSheetText(c, lookupSource), /Normal ranges: Common ringtail possum\n- Body temperature: about 36\.1°C[\s\S]*- Unfurred: 32°C/);
+  assert.equal(normaliseCareSheet({ ...EXAMPLE_CARER_PLAN, species_group: 'unicorn' }, SOURCE_IDS()).species_group, '');
+});

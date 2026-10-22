@@ -7,6 +7,8 @@ import { preparePhoto, videoFrames, MAX_PHOTOS } from './photos.js';
 import { ABOUT_HTML } from './about.js';
 import { lookupSource, sourcesForPrompt, SOURCE_IDS } from './sources.js';
 import { region, setRegion } from './region.js';
+import { rangesFor } from './species-ranges.js';
+import { videoFor, watchUrl, embedUrl } from './videos.js';
 import { buildWord, docModel, careModel, noteModel, wordFileName } from './word.js';
 import {
   NOTE_TYPES,
@@ -430,6 +432,23 @@ els.clear.addEventListener('click', () => {
   els.mic.focus();
 });
 
+// "New" on any result: asks first, then a clean start. The result stays under "Last made".
+const confirmNew = $('confirm-new');
+['new-note', 'new-care', 'new-doc'].forEach((id) => $(id).addEventListener('click', () => (busy ? null : confirmNew.showModal())));
+confirmNew.addEventListener('close', () => {
+  if (confirmNew.returnValue !== 'new') return;
+  confirmNew.returnValue = '';
+  dictation.cancel();
+  endKeyboardVoice();
+  setTranscript('');
+  photos.forEach((p) => URL.revokeObjectURL(p.url));
+  photos = [];
+  renderPhotos();
+  banner('');
+  showView('record');
+  els.mic.focus();
+});
+
 /* ---------------- photos ---------------- */
 
 function renderPhotos() {
@@ -493,7 +512,7 @@ async function ensureProvider() {
 
 const NO_CLAUDE = inClaude
   ? 'Claude isn’t available right now. Check you are signed in, then try again.'
-  : 'This public demo can’t write notes from your own dictation. Open Care Scribe in the Claude app to use it with your Claude account. The examples work here.';
+  : 'This public demo can’t write notes from your own dictation. Open Animal Welfare Companion in the Claude app to use it with your Claude account. The examples work here.';
 
 function waitForIdle(ms = 2500) {
   return new Promise((resolve) => {
@@ -698,7 +717,7 @@ function showNotes(list, example) {
   els.noteBanner.textContent = example
     ? inClaude
       ? 'This is the example note. Dictate your own consult to see Claude write one.'
-      : 'This is the example note. In the Claude app, Care Scribe writes notes like this from your own dictation.'
+      : 'This is the example note. In the Claude app, Animal Welfare Companion writes notes like this from your own dictation.'
     : '';
   els.noteBanner.hidden = !example;
   showView('note');
@@ -1061,6 +1080,39 @@ $('home').addEventListener('click', () => {
 
 let careFrom = 'note'; // where Back goes: the vet note, or the dictation screen
 
+// A checked video for the species. Loads only when tapped (quick on mobile data); YouTube link as a fallback.
+function videoSection(v) {
+  if (!v) return null;
+  const box = el('div', { class: 'video-box' });
+  const play = el('button', { type: 'button', class: 'btn ghost video-play' }, [el('span', { 'aria-hidden': 'true', text: '▶ ' }), 'Play video here']);
+  play.addEventListener('click', () => {
+    box.replaceChildren(el('iframe', { src: embedUrl(v), title: v.title, allow: 'autoplay; encrypted-media; picture-in-picture', allowfullscreen: '', loading: 'lazy', referrerpolicy: 'strict-origin-when-cross-origin' }));
+  });
+  box.append(play);
+  return el('section', { class: 'care-sec video' }, [
+    el('h2', { text: 'Watch' }),
+    el('p', {}, [el('strong', { text: v.title }), ` (${v.channel}, ${v.date})`]),
+    v.warning ? el('p', { class: 'help', text: v.warning }) : null,
+    box,
+    el('p', { class: 'help' }, [el('a', { href: watchUrl(v), target: '_blank', rel: 'noopener', text: 'Open on YouTube' })]),
+  ]);
+}
+
+// Normal ranges and pouch / enclosure temperatures for the species, shown from the checked table (never from Claude).
+function rangesSection(id) {
+  const g = id ? rangesFor(id, region().code) : null;
+  if (!g) return null;
+  const rows = (pairs) => pairs.map(([k, v]) => el('div', { class: 'kv' }, [el('span', { class: 'k', text: k }), el('span', { class: 'v', text: v })]));
+  return el('section', { class: 'care-sec ranges' }, [
+    el('h2', { text: `Normal ranges: ${g.label}` }),
+    g.vitals.length ? el('div', { class: 'grid' }, rows(g.vitals)) : null,
+    g.warmth.length ? el('h3', { text: g.reptile ? 'Temperatures' : 'Pouch or enclosure temperature' }) : null,
+    g.warmth.length ? el('div', { class: 'grid' }, rows(g.warmth)) : null,
+    g.notes.length ? el('ul', {}, g.notes.map((x) => el('li', { text: x }))) : null,
+    el('p', { class: 'help' }, ['From: ', ...g.sources.flatMap((x, i) => [i ? '; ' : '', el('a', { href: x.url, target: '_blank', rel: 'noopener', text: x.title }), ` (${x.publisher}, ${x.date})`])]),
+  ]);
+}
+
 // Rehydration: steps from Claude, amounts worked out on the device from Anne Fowler's protocol.
 function rehydrationSection(r) {
   if (!r || !r.needed) return null;
@@ -1130,6 +1182,8 @@ function renderCare(c) {
             )),
           ])
         : null,
+      videoSection(videoFor(c.species_group)),
+      rangesSection(c.species_group),
       rehydrationSection(c.rehydration),
       c.plan.length
         ? el('section', { class: 'care-sec' }, [
@@ -1247,6 +1301,7 @@ function renderDoc(d, kind) {
     ...d.sections.filter((s) => !(TEXT_HEADING[kind] && TEXT_HEADING[kind].test(s.heading))).map((s) =>
       el('section', { class: 'doc-sec' }, [el('h2', { text: s.heading }), s.text ? el('p', { text: s.text }) : list(s.items)]),
     ),
+    ...(kind === 'mop' ? [videoSection(videoFor('general'))] : []),
     ...(d.due.length
       ? [
           el('section', { class: 'doc-sec due' }, [
@@ -1479,7 +1534,7 @@ async function refreshConnection() {
     ? `Connected: ${p.label}`
     : inClaude
       ? 'Claude isn’t available right now.'
-      : 'Public demo. The examples work here. Open Care Scribe in the Claude app to write notes with your Claude account.';
+      : 'Public demo. The examples work here. Open Animal Welfare Companion in the Claude app to write notes with your Claude account.';
   return p;
 }
 

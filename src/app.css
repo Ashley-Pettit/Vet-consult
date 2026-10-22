@@ -1,4 +1,4 @@
-/* Care Scribe for Bunurong Wildlife Care. One calm column; the mic is the hero, everything else gets out of its way. */
+/* Animal Welfare Companion for Bunurong Wildlife Care. One calm column; the mic is the hero, everything else gets out of its way. */
 :root {
   --bg: #ffffff;
   --surface: #ffffff;
@@ -550,7 +550,7 @@ body[data-mode="carer"] .mic { background: var(--leaf); box-shadow: 0 0 0 10px c
 .band { border-bottom: 0; }
 .bar { display: grid; grid-template-columns: 44px 1fr 44px; padding-top: 8px; padding-bottom: 8px; }
 .brand { justify-content: center; }
-.logo { width: 64px; height: 64px; border-radius: 50%; background: none; box-shadow: none; }
+.logo { width: 80px; height: 80px; border-radius: 50%; background: none; box-shadow: none; }
 
 /* Koala hero, only on the dictation screen */
 .hero-banner {
@@ -749,3 +749,22 @@ textarea.is-example { border-style: dashed; border-color: var(--warn-line); back
 .rehydrate-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; font-variant-numeric: tabular-nums; }
 .rehydrate-table th, .rehydrate-table td { padding: 6px 8px; border: 1px solid var(--line); text-align: center; }
 .rehydrate-note { margin: 6px 0 0; font-weight: 700; font-size: 0.9rem; }
+
+/* Normal ranges for the species */
+.care-sec.ranges .grid { margin-top: 4px; }
+.care-sec.ranges h3 { margin: 10px 0 0; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.care-sec.ranges .help a { color: inherit; }
+
+/* Result screens: Back on the left, New on the right */
+.head-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.new-start { display: inline-flex; align-items: center; gap: 4px; font-weight: 700; }
+.new-start svg { width: 18px; height: 18px; }
+dialog.confirm { max-width: min(420px, calc(100vw - 32px)); }
+dialog.confirm form { display: flex; flex-direction: column; gap: 12px; padding: 20px; }
+dialog.confirm h2 { margin: 0; font-size: 1.15rem; }
+dialog.confirm p { margin: 0; }
+
+/* Species video: tap to load */
+.video-box { position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: 12px; overflow: hidden; background: var(--bg); box-shadow: inset 0 0 0 1px var(--line); display: grid; place-items: center; }
+.video-box iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.care-sec.video p { margin: 0; }

@@ -97,7 +97,7 @@ test('touch targets are at least 44px', async ({ page }, info) => {
 test('installable: manifest, icons and service worker are served', async ({ page, request }) => {
   await openApp(page);
   const manifest = await (await request.get('manifest.webmanifest')).json();
-  expect(manifest.name).toBe('Care Scribe');
+  expect(manifest.name).toBe('Animal Welfare Companion');
   for (const icon of manifest.icons) expect((await request.get(icon.src)).ok(), icon.src).toBeTruthy();
   const sw = await (await request.get('sw.js')).text();
   expect(sw).not.toContain('__VERSION__');

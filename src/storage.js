@@ -71,7 +71,7 @@ export const store = {
   saveDraft(text) {
     write(local, DRAFT, text ? text : null);
   },
-  /** The last thing Care Scribe made, so it can be reopened after the app is closed. */
+  /** The last thing Animal Welfare Companion made, so it can be reopened after the app is closed. */
   loadLast() {
     const v = read(local, LAST, null);
     return v && typeof v === 'object' && v.type && v.data ? v : null;

@@ -1,4 +1,4 @@
-// "How it works": a short tour of Care Scribe for wildlife carers at Bunurong Wildlife Care, and the vets they work with.
+// "How it works": a short tour of Animal Welfare Companion for wildlife carers at Bunurong Wildlife Care, and the vets they work with.
 // Static, trusted markup only.
 const icon = (d) =>
   `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
@@ -30,7 +30,7 @@ export const ABOUT_HTML = `
 <div class="hero">
   <p class="eyebrow">How it works</p>
   <h1 tabindex="-1">More time with the animals, less time writing it up</h1>
-  <p class="lede">Talk through the rescue, the day’s care or what you want to ask the vet, the way you would to another carer. Care Scribe writes it up properly, ready to copy into your records, a text or an email.</p>
+  <p class="lede">Talk through the rescue, the day’s care or what you want to ask the vet, the way you would to another carer. Animal Welfare Companion writes it up properly, ready to copy into your records, a text or an email.</p>
   <div class="hero-ctas">
     <button type="button" class="btn primary" data-action="start">Start talking</button>
     <button type="button" class="btn ghost" data-action="example">Try the example</button>
@@ -89,7 +89,7 @@ export const ABOUT_HTML = `
   <div class="safe-icon">${I.shield}</div>
   <div>
     <h2>You stay in charge</h2>
-    <p>Care Scribe drafts. You decide. Nothing is saved to a server by the app. Check every record, and always follow your vet’s instructions for medications.</p>
+    <p>Animal Welfare Companion drafts. You decide. Nothing is saved to a server by the app. Check every record, and always follow your vet’s instructions for medications.</p>
   </div>
 </section>
 
@@ -98,7 +98,7 @@ export const ABOUT_HTML = `
   <details class="faq"><summary>Do I need to talk a special way?</summary><p>No. Talk the way you would to another carer. Say “full stop” or “new line” if you like, but you don’t have to.</p></details>
   <details class="faq"><summary>What if it mishears a species or place?</summary><p>It fixes obvious mishearings and lists them in the check list so you can confirm.</p></details>
   <details class="faq"><summary>Which devices does it work on?</summary><p>Phones, tablets and computers. On a phone it uses your keyboard’s own voice typing, which works well on iPhone and Android.</p></details>
-  <details class="faq"><summary>Where do my words go?</summary><p>Your phone or browser’s voice typing turns speech into text, and Claude writes the record. Nothing is stored by Care Scribe.</p></details>
+  <details class="faq"><summary>Where do my words go?</summary><p>Your phone or browser’s voice typing turns speech into text, and Claude writes the record. Nothing is stored by Animal Welfare Companion.</p></details>
   <details class="faq"><summary>Emergency?</summary><p>In Victoria, call Wildlife Victoria 24/7 on <a href="tel:+61384007300">03 8400 7300</a>. In Queensland, call RSPCA Queensland on <a href="tel:+611300264625">1300 ANIMAL (1300 264 625)</a>, 7am to 7pm.</p></details>
 </section>
 

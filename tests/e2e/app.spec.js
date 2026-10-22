@@ -84,12 +84,12 @@ test.describe('dictation', () => {
 });
 
 test.describe('creating a note', () => {
-  test('the website uses the Care Scribe connection: no key needed, and the vet name is added', async ({ page }) => {
+  test('the website uses the Animal Welfare Companion connection: no key needed, and the vet name is added', async ({ page }) => {
     await fakeSpeech(page);
     const calls = await mockApi(page);
     await openApp(page);
     await page.locator('#open-settings').click();
-    await expect(page.locator('#conn-status')).toContainText('Connected: Care Scribe connection');
+    await expect(page.locator('#conn-status')).toContainText('Connected: Animal Welfare Companion connection');
     await expect(page.locator('#key-field')).toBeHidden(); // no personal key needed
     await page.locator('#clinician').fill('Dr Sam Lee');
     await page.locator('#save-settings').click();
@@ -289,7 +289,7 @@ test.describe('settings', () => {
   });
 
 
-  test('saved settings stay on this device under Care Scribe’s own name', async ({ page }) => {
+  test('saved settings stay on this device under Animal Welfare Companion’s own name', async ({ page }) => {
     await openApp(page);
     await page.locator('#open-settings').click();
     await page.locator('#clinician').fill('Dr Temp');

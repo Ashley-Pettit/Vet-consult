@@ -6,6 +6,8 @@ import {
 } from 'docx';
 import { LOGO_PNG_BASE64 } from './brand-logo.js';
 import { dueLabel, formatDate, NOT_RECORDED, rehydrationTable, REHYDRATION_NOTE } from './note.js';
+import { rangesFor } from './species-ranges.js';
+import { region } from './region.js';
 
 const OLIVE = '647C50';
 const TERRA = 'AB6555';
@@ -198,6 +200,17 @@ export function docModel(d, kindLabel, note = '') {
   };
 }
 
+function rangesBlocks(id) {
+  const g = id ? rangesFor(id, region().code) : null;
+  if (!g) return [];
+  return [{
+    heading: `Normal ranges: ${g.label}`,
+    table: { head: ['', ''], rows: [...g.vitals, ...g.warmth] },
+    items: g.notes,
+    note: `From: ${g.sources.map((x) => `${x.title} (${x.publisher}, ${x.date})`).join('; ')}`,
+  }];
+}
+
 function rehydrationBlocks(r) {
   if (!r || !r.needed) return [];
   const t = rehydrationTable(r);
@@ -214,6 +227,7 @@ export function careModel(c, lookup) {
   const blocks = [
     { heading: 'Summary', text: c.summary },
     ...(meds.length ? [{ heading: 'Medications', table: { head: ['Medication', 'How', 'How often', 'How long'], rows: meds, widths: [2600, 2600, 2400, PAGE_W - 7600] }, note: c.medications.map((m) => (m.tip ? `${m.name}: ${m.tip}` : '')).filter(Boolean).join('  ') || undefined }] : []),
+    ...rangesBlocks(c.species_group),
     ...rehydrationBlocks(c.rehydration),
     ...c.plan.map((p) => ({ heading: p.when, items: p.tasks })),
     { heading: 'Housing', items: c.housing },
