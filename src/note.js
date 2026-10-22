@@ -988,6 +988,9 @@ export function dueLabel(when, from = new Date()) {
   return d ? `${when} (due ${ddmmyyyy(d)})` : when;
 }
 
+// Shown on every MOP plan, word for word as Bunurong Wildlife Care asked.
+export const MOP_DISCLAIMER = 'This is an ai tool which can make mistakes. In doubt? Defer to an expert.';
+
 export function docText(d, date = new Date()) {
   const L = [d.title || 'Report'];
   if (d.subtitle) L.push(d.subtitle);

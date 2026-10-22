@@ -793,3 +793,6 @@ dialog.confirm p { margin: 0; }
 .tx-clear svg { width: 14px; height: 14px; }
 .tx-clear:hover { border-color: var(--ink); }
 .tx-wrap { scroll-margin-bottom: 96px; }
+
+/* MOP plan disclaimer */
+.ai-disclaimer { margin: 0 0 12px; padding: 10px 12px; border-left: 4px solid var(--accent, var(--muted)); background: var(--surface, var(--bg)); border-radius: 4px; font-size: 0.92rem; font-weight: 600; }

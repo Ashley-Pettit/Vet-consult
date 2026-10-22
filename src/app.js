@@ -50,6 +50,7 @@ import {
   careSheetText,
   pmsSections,
   toPlainText,
+  MOP_DISCLAIMER,
 } from './note.js';
 
 const $ = (id) => document.getElementById(id);
@@ -1334,6 +1335,7 @@ function renderDoc(d, kind) {
   $('doc-check-count').textContent = d.check.length ? String(d.check.length) : '';
   $('doc-check-list').replaceChildren(...d.check.map((c) => el('li', { text: c })));
   $('doc').replaceChildren(
+    ...(kind === 'mop' ? [el('p', { class: 'ai-disclaimer', text: MOP_DISCLAIMER })] : []),
     ...d.sections.filter((s) => !(TEXT_HEADING[kind] && TEXT_HEADING[kind].test(s.heading))).map((s) =>
       el('section', { class: 'doc-sec' }, [el('h2', { text: s.heading }), s.text ? el('p', { text: s.text }) : list(s.items)]),
     ),
@@ -1393,7 +1395,7 @@ async function createDoc(kind, text) {
 $('doc-back').addEventListener('click', () => showView('record'));
 $('doc-copy').addEventListener('click', () => {
   if (!currentDoc) return;
-  shareOrCopy(docText(currentDoc.d), $('doc-title').textContent, 'Copied. Paste it wherever it needs to go.');
+  shareOrCopy(docText(currentDoc.d) + (currentDoc.kind === 'mop' ? `\n\n${MOP_DISCLAIMER}` : ''), $('doc-title').textContent, 'Copied. Paste it wherever it needs to go.');
 });
 $('doc-new').addEventListener('click', addMoreInfo);
 
@@ -1526,7 +1528,7 @@ async function saveWord(model, btn) {
     btn.lastChild.textContent = label;
   }
 }
-$('word-doc').addEventListener('click', (e) => currentDoc && saveWord(docModel(currentDoc.d, DOC_KINDS[currentDoc.kind].label, ''), e.currentTarget));
+$('word-doc').addEventListener('click', (e) => currentDoc && saveWord(docModel(currentDoc.d, DOC_KINDS[currentDoc.kind].label, currentDoc.kind === 'mop' ? MOP_DISCLAIMER : ''), e.currentTarget));
 $('word-care').addEventListener('click', (e) => careSheet && saveWord(careModel(careSheet, lookupSource), e.currentTarget));
 $('word-note').addEventListener('click', (e) => currentNote() && saveWord(noteModel(currentNote()), e.currentTarget));
 

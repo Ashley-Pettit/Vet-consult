@@ -39,3 +39,25 @@ test('a reply that comes back unreadable is retried once, quietly', async ({ pag
   expect(calls.length).toBe(2);
   expect(calls[1].prompt).toContain('your last reply could not be read');
 });
+
+test('MOP plan shows the disclaimer word for word, and copies it', async ({ page }) => {
+  await page.addInitScript(() => { window.__shared = []; navigator.share = async (d) => { window.__shared.push(d); }; });
+  await withKey(page, { role: 'carer', mode: 'mop' });
+  const plan = {
+    title: 'Care plan for the possum you found', subtitle: '',
+    sections: [
+      { heading: 'Text to send', text: 'Keep the possum in the box, warm, dark and quiet. Rescuer collects it at 8 am.', items: [] },
+      { heading: 'Right now', text: '', items: ['Keep the box in a quiet room.'] },
+    ],
+    due: [], check: [],
+  };
+  await mockApi(page, { body: () => textReply(plan) });
+  await openApp(page);
+  await page.locator('#transcript').fill('MOP call. Possum in a shoe box.');
+  await page.locator('#create').click();
+  await expect(page.locator('#doc .ai-disclaimer')).toHaveText('This is an ai tool which can make mistakes. In doubt? Defer to an expert.');
+  await page.locator('#doc-copy').click();
+  await page.getByRole('button', { name: 'Share…' }).click();
+  await expect.poll(() => page.evaluate(() => window.__shared.length)).toBe(1);
+  expect(await page.evaluate(() => window.__shared[0].text)).toMatch(/This is an ai tool which can make mistakes\. In doubt\? Defer to an expert\.$/);
+});
