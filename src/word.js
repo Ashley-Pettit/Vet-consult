@@ -158,12 +158,13 @@ export async function buildWord(model, { preparedBy = '', date = new Date(), tem
     }),
   ];
   for (const b of model.blocks) {
-    if (!b.heading || (!b.text && !(b.items && b.items.length) && !b.table)) continue;
+    if (!b.heading || (!b.text && !(b.items && b.items.length) && !b.table && !(b.labels && b.labels.length))) continue;
     body.push(heading(b.heading));
     if (b.note && b.noteFirst) body.push(new Paragraph({ spacing: { after: 80 }, children: [run(b.note, { italics: true, color: TERRA, size: 19 })] }));
     if (b.text) String(b.text).split(/\n+/).forEach((t) => body.push(para(t)));
     if (b.items) b.items.forEach((t) => body.push(bullet(t)));
     if (b.table) body.push(table(b.table.head, b.table.rows, b.table.widths), new Paragraph({ spacing: { after: 60 }, children: [] }));
+    if (b.labels) b.labels.forEach((l) => body.push(medLabel(l), new Paragraph({ spacing: { after: 120 }, children: [] })));
     if (b.note && !b.noteFirst) body.push(new Paragraph({ spacing: { before: 60 }, children: [run(b.note, { italics: true, color: MUTED, size: 18 })] }));
   }
   if (model.sources && model.sources.length) {
@@ -232,6 +233,30 @@ function tickSheetSection(t, title) {
       new Paragraph({ spacing: { before: 200 }, children: [new TextRun({ text: 'Tick each box when it is done. Stick it on the fridge or the enclosure.', font: BODY_FONT, size: 20, color: MUTED })] }),
     ],
   };
+}
+
+// A dispensing label, boxed so it can be cut out and stuck on the bottle.
+function medLabel(l) {
+  const border = { style: BorderStyle.SINGLE, size: 12, color: OLIVE };
+  const line = (text, o = {}) => new Paragraph({ spacing: { after: 40 }, children: [run(text, { size: 20, ...o })] });
+  return new Table({
+    width: { size: 6200, type: WidthType.DXA },
+    layout: TableLayoutType.FIXED,
+    columnWidths: [6200],
+    borders: { top: border, bottom: border, left: border, right: border, insideHorizontal: NONE, insideVertical: NONE },
+    rows: [new TableRow({ cantSplit: true, children: [new TableCell({
+      width: { size: 6200, type: WidthType.DXA },
+      margins: { top: 120, bottom: 120, left: 180, right: 180 },
+      children: [
+        line(l.animal, { size: 18, color: MUTED }),
+        line(l.drug, { bold: true, size: 24 }),
+        line(l.directions),
+        ...(l.duration ? [line(l.duration)] : []),
+        line(`${l.vet ? `${l.vet} · ` : ''}${l.date}`, { size: 16, color: MUTED }),
+        line('For animal treatment only. Keep out of reach of children.', { size: 16, color: MUTED, italics: true }),
+      ],
+    })] })],
+  });
 }
 
 /* ---------------- adapters: each screen's content into the printout model ---------------- */
@@ -360,4 +385,35 @@ export function wordFileName(title) {
   const d = new Date();
   const pad = (x) => String(x).padStart(2, '0');
   return `${base} ${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${d.getFullYear()}.docx`;
+}
+
+
+/** Discharge pack for the vet: clinical summary (when the notes are ready), medication labels, the carer plan and the fridge tick sheet. */
+export function dischargeModel(c, note, lookup, vet = '', date = new Date()) {
+  const care = careModel(c, lookup);
+  const animal = c.animal || (note && [note.patient.name, note.patient.species].filter(Boolean).join(', ')) || 'Animal in care';
+  const fromNote = note ? note.plan.treatments.filter((t) => t.when !== 'given') : [];
+  const labels = (fromNote.length
+    ? fromNote.map((t) => ({ drug: t.drug, directions: [t.dose, t.route, t.frequency].filter(Boolean).join(', '), duration: t.duration ? `For ${t.duration}` : '' }))
+    : c.medications.map((m) => ({ drug: m.name, directions: [m.how, m.how_often].filter(Boolean).join(', '), duration: m.how_long })))
+    .filter((l) => l.drug)
+    .map((l) => ({ ...l, animal, vet: vet || (note && note.visit.clinician) || '', date: formatDate(date) }));
+  const clinical = note
+    ? noteModel(note).blocks
+        .filter((b) => ['History', 'Findings', 'Assessment', 'Treatment given', 'Dispensed', 'Follow-up'].includes(b.heading))
+        .map((b) => ({ ...b, heading: b.heading === 'History' ? 'Clinical summary: history' : b.heading }))
+    : [];
+  return {
+    docType: 'Discharge pack',
+    title: `Discharge pack: ${animal}`,
+    meta: [['Vet', vet || (note && note.visit.clinician) || '']],
+    blocks: [
+      ...clinical,
+      ...(labels.length ? [{ heading: 'Medication labels', labels, text: 'Cut out and attach to each medication.' }] : []),
+      { heading: 'Care plan for the carer', text: 'The carer’s plan follows, in plain English.' },
+      ...care.blocks,
+    ],
+    tickSheet: care.tickSheet,
+    sources: care.sources,
+  };
 }

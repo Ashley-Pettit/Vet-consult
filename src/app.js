@@ -10,7 +10,7 @@ import { region, setRegion } from './region.js';
 import { rangesFor } from './species-ranges.js';
 import { videoFor, videoForTags, watchUrl, embedUrl, thumbUrl } from './videos.js';
 import { groupsIn } from './species-vet.js';
-import { buildWord, docModel, careModel, noteModel, wordFileName } from './word.js';
+import { buildWord, docModel, careModel, noteModel, wordFileName, dischargeModel } from './word.js';
 import {
   NOTE_TYPES,
   NOTE_TYPE_ORDER,
@@ -1389,6 +1389,9 @@ function renderCare(c) {
 
 function showCare(sheet, from, info = '') {
   resetFeedback();
+  // Vets get a discharge pack; its clinical summary starts quietly in the background once the plan is on screen.
+  $('discharge-pack').hidden = settings.role !== 'vet';
+  if (settings.role === 'vet') setTimeout(startVetNotes, 400);
   remember('care', { sheet, from }, sheet.animal);
   careSheet = sheet;
   careFrom = from;
@@ -1689,12 +1692,51 @@ $('text-vet-send').addEventListener('click', async () => {
   toast(ok ? (forVet ? 'Copied. Paste it into a text to your vet, and add a photo.' : 'Copied. Paste it into a text to the caller.') : 'Couldn’t copy. Select the text and copy it instead.');
 });
 
+// The vet's clinical notes, written in the background after the care plan appears, for the discharge pack and
+// so "Clinical notes" opens straight away. One quiet call; nothing waits for it.
+let pendingVetNotes = null; // { text, promise }
+function startVetNotes() {
+  const text = els.transcript.value;
+  if (settings.role !== 'vet' || !text.trim() || !provider) return;
+  if (madeFrom.vet && madeFrom.vet.text === text) return;
+  if (pendingVetNotes && pendingVetNotes.text === text) return;
+  const prompt = buildPrompt(text.trim(), { clinician: settings.clinician, photoCount: sendPhotos().length, drugs: settings.drugs });
+  const promise = askJson(prompt, undefined, { images: sendPhotos() })
+    .then((r) => {
+      const list = normaliseResult(r);
+      for (const n of list) if (!n.visit.type) n.visit.type = NOTE_TYPES.consult.title;
+      if (list.length && els.transcript.value === text) madeFrom.vet = { text, notes: list };
+      return list.length ? list : null;
+    })
+    .catch(() => null);
+  pendingVetNotes = { text, promise };
+}
+
+$('discharge-pack').addEventListener('click', async (e) => {
+  if (!careSheet) return;
+  const btn = e.currentTarget;
+  const text = els.transcript.value;
+  let list = madeFrom.vet && madeFrom.vet.text === text ? madeFrom.vet.notes : null;
+  if (!list && pendingVetNotes && pendingVetNotes.text === text) {
+    btn.disabled = true;
+    btn.lastChild.textContent = 'Finishing the clinical summary…';
+    list = await pendingVetNotes.promise;
+    btn.disabled = false;
+    btn.lastChild.textContent = 'Discharge pack';
+  }
+  saveWord(dischargeModel(careSheet, list ? list[0] : null, lookupSource, settings.clinician), btn);
+});
+
 async function makeNext(m) {
   if (busy || !els.transcript.value.trim()) return;
   document.querySelector(`input[name="mode"][value="${m}"]`).checked = true;
   applyMode();
   settings.mode = m;
   store.saveSettings(settings);
+  if (m === 'vet' && !(madeFrom.vet && madeFrom.vet.text === els.transcript.value) && pendingVetNotes && pendingVetNotes.text === els.transcript.value) {
+    const list = await runWorking('Writing the clinical notes', 'Nearly done: it started while you read the care plan.', () => pendingVetNotes.promise);
+    if (list) return showNotes(list, false);
+  }
   const prev = madeFrom[m];
   if (prev && prev.text === els.transcript.value) {
     if (m === 'vet') return showNotes(prev.notes, false);

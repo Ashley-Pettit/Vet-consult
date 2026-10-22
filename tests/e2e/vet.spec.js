@@ -33,3 +33,21 @@ test('vet: plan first, notes second, copy at the top, quick notes look finished'
   await expect(page.locator('#view-care')).toBeVisible();
   expect(calls.length).toBe(2);
 });
+
+test('vet: clinical notes start in the background after the plan; discharge pack and Clinical notes use them', async ({ page }) => {
+  await withKey(page, { role: 'vet', mode: 'carer' });
+  const withMeds = { ...quick, plan: { ...quick.plan, treatments: [{ drug: 'Meloxicam', dose: '0.1 mg/kg', route: 'PO', frequency: 'SID', duration: '5 days', when: 'continue' }] } };
+  const calls = await mockApi(page, { body: (p) => (p.includes('<dictation>') ? textReply({ animals: [withMeds] }) : textReply(EXAMPLE_CARER_PLAN)) });
+  await openApp(page);
+  await page.locator('#transcript').fill('Wombat, mange, meloxicam 0.1 SID 5 days.');
+  await page.locator('#create').click();
+  await expect(page.locator('#view-care')).toBeVisible();
+  await expect(page.locator('#discharge-pack')).toBeVisible();
+  await expect.poll(() => calls.filter((c) => c.prompt.includes('<dictation>')).length).toBe(1); // started quietly
+  const dl = page.waitForEvent('download');
+  await page.locator('#discharge-pack').click();
+  expect((await dl).suggestedFilename()).toMatch(/^Discharge pack/);
+  await page.locator('.make-btn', { hasText: 'Clinical notes' }).click();
+  await expect(page.locator('#view-note')).toBeVisible();
+  expect(calls.filter((c) => c.prompt.includes('<dictation>')).length).toBe(1); // reused, not asked twice
+});
