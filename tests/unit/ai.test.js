@@ -171,3 +171,15 @@ test('an overloaded error inside the stream becomes a friendly message', async (
   const body = new ReadableStream({ start(c) { c.enqueue(new TextEncoder().encode('data: {"type":"error","error":{"type":"overloaded_error"}}\n\n')); c.close(); } });
   await assert.rejects(readStream({ body }), (e) => e.code === 'overloaded');
 });
+
+test('streamed replies report token usage', async () => {
+  const { readStream } = await import('../../src/ai.js');
+  const sse = [
+    'event: message_start\ndata: {"type":"message_start","message":{"usage":{"input_tokens":900,"cache_read_input_tokens":100,"output_tokens":1}}}',
+    'event: content_block_delta\ndata: {"type":"content_block_delta","delta":{"type":"text_delta","text":"Hi"}}',
+    'event: message_delta\ndata: {"type":"message_delta","delta":{"stop_reason":"end_turn"},"usage":{"output_tokens":250}}',
+  ].join('\n\n') + '\n\n';
+  const res = new Response(sse);
+  const body = await readStream(res);
+  assert.deepEqual(body.usage, { input_tokens: 1000, output_tokens: 250 });
+});

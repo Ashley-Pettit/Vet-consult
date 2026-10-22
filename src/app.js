@@ -1,6 +1,6 @@
 import { CONFIG } from './config.js';
 import { Dictation, speechErrorMessage } from './speech.js';
-import { resolveProvider, friendly, AiError } from './ai.js';
+import { resolveProvider, friendly, AiError, onUsage } from './ai.js';
 import { store } from './storage.js';
 import { localChecks } from './clinical.js';
 import { preparePhoto, MAX_PHOTOS } from './photos.js';
@@ -1540,6 +1540,72 @@ els.about.addEventListener('click', (e) => {
 
 for (const m of CONFIG.models) els.model.append(el('option', { value: m.id, text: m.label }));
 
+/* ---------------- AI usage ---------------- */
+
+onUsage((u) => store.addUsage(u));
+
+const fmtInt = (n) => Math.round(n).toLocaleString('en-AU');
+const MODEL_NAMES = { 'tier:quick': 'Fast tier', 'tier:default': 'Standard tier', 'tier:complex': 'Most capable tier' };
+const modelName = (id) => (CONFIG.models.find((m) => m.id === id)?.label.split(',')[0]) || MODEL_NAMES[id] || id;
+function usageCost(id, u) {
+  const m = CONFIG.models.find((x) => x.id === id);
+  return m && m.price ? (u.input * m.price[0] + u.output * m.price[1]) / 1e6 : null;
+}
+
+function renderUsage(p) {
+  const u = store.loadUsage();
+  const body = $('usage-body');
+  body.replaceChildren();
+  const rows = Object.entries(u.models);
+  const viaAccount = p && p.id === 'claude';
+  const monthName = new Date(`${u.month}-01T00:00:00`).toLocaleDateString('en-AU', { month: 'long', year: 'numeric' });
+  if (!rows.length) {
+    body.append(el('p', { class: 'help', text: `No AI requests from this device in ${monthName} yet.` }));
+  } else {
+    const table = el('table', { class: 'usage-table' });
+    const head = el('tr');
+    for (const h of viaAccount ? ['Model', 'Requests'] : ['Model', 'Requests', 'Tokens in', 'Tokens out', 'Cost (USD)']) head.append(el('th', { scope: 'col', text: h }));
+    table.append(el('thead'), el('tbody'));
+    table.tHead.append(head);
+    let total = 0;
+    let costKnown = true;
+    for (const [id, m] of rows) {
+      const tr = el('tr');
+      const cost = usageCost(id, m);
+      if (cost === null) costKnown = false;
+      else total += cost;
+      const cells = viaAccount ? [modelName(id), fmtInt(m.requests)] : [modelName(id), fmtInt(m.requests), fmtInt(m.input), fmtInt(m.output), cost === null ? '' : `$${cost.toFixed(2)}`];
+      for (const c of cells) tr.append(el('td', { text: c }));
+      table.tBodies[0].append(tr);
+    }
+    body.append(el('p', { class: 'help', text: `This device, ${monthName}:` }), table);
+    if (!viaAccount && costKnown) body.append(el('p', { class: 'usage-total', text: `About $${total.toFixed(2)} USD this month (estimate from published prices).` }));
+  }
+  if (u.last) {
+    const lastTotal = Object.entries(u.last.models).reduce((t, [id, m]) => t + (usageCost(id, m) || 0), 0);
+    const lastReq = Object.values(u.last.models).reduce((t, m) => t + m.requests, 0);
+    const lastName = new Date(`${u.last.month}-01T00:00:00`).toLocaleDateString('en-AU', { month: 'long' });
+    body.append(el('p', { class: 'help', text: `${lastName}: ${fmtInt(lastReq)} requests${viaAccount ? '' : `, about $${lastTotal.toFixed(2)} USD`}.` }));
+  }
+  const bal = $('usage-balance');
+  bal.replaceChildren();
+  if (viaAccount) {
+    bal.textContent = 'You’re using your own Claude account, so this counts toward your Claude plan’s usage limits. Claude doesn’t share token counts with apps.';
+  } else {
+    bal.append(
+      'Credit balance isn’t available to apps. The account owner can see it in the ',
+      el('a', { href: 'https://console.anthropic.com/settings/billing', target: '_blank', rel: 'noopener', text: 'Claude Console, Billing' }),
+      '. These figures only count this device.',
+    );
+  }
+}
+
+$('usage-reset').addEventListener('click', () => {
+  store.clearUsage();
+  renderUsage(provider);
+  toast('Usage count reset on this device.');
+});
+
 async function refreshConnection() {
   const p = await resolveProvider(settings);
   const keyless = Boolean(CONFIG.proxyUrl) || (p && p.id === 'claude');
@@ -1559,7 +1625,7 @@ async function openSettings(message) {
   els.model.value = settings.model || CONFIG.defaultModel;
   els.apiKey.value = settings.apiKey;
   els.rememberKey.checked = settings.rememberKey;
-  await refreshConnection();
+  renderUsage(await refreshConnection());
   if (message) {
     els.conn.textContent = message;
     els.conn.dataset.ok = 'false';

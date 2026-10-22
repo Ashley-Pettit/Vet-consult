@@ -125,3 +125,26 @@ test('drugs saved in Settings are kept', async ({ page }) => {
   await page.locator('#open-settings').click();
   await expect(page.locator('#drugs')).toHaveValue('Our mange wash');
 });
+
+test('Opus can be picked (Sonnet by default) and Settings shows AI usage', async ({ page }) => {
+  const calls = await mockApi(page, { body: () => ({ ...textReply(EXAMPLE_CARER_PLAN), usage: { input_tokens: 12000, output_tokens: 3000 } }) });
+  await openApp(page);
+  await page.locator('#open-settings').click();
+  await expect(page.locator('#model')).toHaveValue('claude-sonnet-5-5');
+  await expect(page.locator('#model option')).toHaveCount(3);
+  await expect(page.locator('#usage-body')).toContainText('No AI requests');
+  await page.locator('#model').selectOption('claude-opus-5-5');
+  await page.getByRole('button', { name: /^Save/ }).click();
+  await page.locator('#transcript').fill('Ringtail joey.');
+  await page.locator('#create').click();
+  await expect(page.locator('#view-care')).toBeVisible();
+  expect(calls.at(-1).body.model).toBe('claude-opus-5-5');
+  await page.locator('#open-settings').click();
+  const table = page.locator('#usage-body table');
+  await expect(table).toContainText('Most thorough (Opus 5.5)');
+  await expect(table).toContainText('12,000');
+  await expect(page.locator('#usage-body')).toContainText('About $0.11 USD'); // 12k x $4 + 3k x $20 per million
+  await expect(page.locator('#usage-balance')).toContainText('Claude Console');
+  await page.locator('#usage-reset').click();
+  await expect(page.locator('#usage-body')).toContainText('No AI requests');
+});

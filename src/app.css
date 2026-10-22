@@ -777,3 +777,11 @@ dialog.confirm p { margin: 0; }
 
 .share-actions { display: flex; flex-direction: column; gap: 8px; }
 .share-actions .link { align-self: center; padding: 8px; }
+
+/* AI usage in Settings */
+.usage .usage-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin: 6px 0; }
+.usage .usage-table th, .usage .usage-table td { text-align: right; padding: 4px 6px; border-bottom: 1px solid var(--line, #ddd); white-space: nowrap; }
+.usage .usage-table th:first-child, .usage .usage-table td:first-child { text-align: left; white-space: normal; }
+.usage .usage-total { margin: 4px 0; font-weight: 600; font-size: 0.9rem; }
+.usage h3 { margin: 0 0 4px; font-size: 0.95rem; }
+.usage { overflow-x: auto; }

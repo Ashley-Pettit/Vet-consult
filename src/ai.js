@@ -7,6 +7,19 @@ import { CONFIG } from './config.js';
 
 const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages';
 
+// Usage reporting: the app sets a listener and keeps a running tally on this device.
+let usageListener = null;
+export function onUsage(fn) {
+  usageListener = typeof fn === 'function' ? fn : null;
+}
+function reportUsage(u) {
+  try {
+    if (usageListener) usageListener(u);
+  } catch {
+    /* never let the tally break a note */
+  }
+}
+
 export class AiError extends Error {
   constructor(code, message) {
     super(message);
@@ -91,6 +104,13 @@ export async function readStream(res) {
   let buffer = '';
   let text = '';
   let stopReason = null;
+  const usage = { input_tokens: 0, output_tokens: 0 };
+  const addUsage = (u) => {
+    if (!u) return;
+    if (Number(u.input_tokens) || Number(u.cache_creation_input_tokens) || Number(u.cache_read_input_tokens))
+      usage.input_tokens = (Number(u.input_tokens) || 0) + (Number(u.cache_creation_input_tokens) || 0) + (Number(u.cache_read_input_tokens) || 0);
+    if (Number(u.output_tokens)) usage.output_tokens = Number(u.output_tokens);
+  };
   const handle = (block) => {
     const data = block.split('\n').filter((l) => l.startsWith('data:')).map((l) => l.slice(5).trim()).join('');
     if (!data) return;
@@ -101,7 +121,11 @@ export async function readStream(res) {
       return;
     }
     if (ev.type === 'content_block_delta' && ev.delta && ev.delta.type === 'text_delta') text += ev.delta.text;
-    else if (ev.type === 'message_delta' && ev.delta && ev.delta.stop_reason) stopReason = ev.delta.stop_reason;
+    else if (ev.type === 'message_start' && ev.message) addUsage(ev.message.usage);
+    else if (ev.type === 'message_delta') {
+      if (ev.delta && ev.delta.stop_reason) stopReason = ev.delta.stop_reason;
+      addUsage(ev.usage);
+    }
     else if (ev.type === 'error') {
       const t = ev.error && ev.error.type;
       const code = t === 'overloaded_error' ? 'overloaded' : t === 'rate_limit_error' ? 'rate_limited' : 'server';
@@ -119,7 +143,7 @@ export async function readStream(res) {
     }
   }
   if (buffer.trim()) handle(buffer);
-  return { content: [{ type: 'text', text }], stop_reason: stopReason };
+  return { content: [{ type: 'text', text }], stop_reason: stopReason, usage };
 }
 
 async function callMessages(url, headers, prompt, model, signal, fetchImpl, { viaProxy = false, images = [] } = {}) {
@@ -173,6 +197,13 @@ async function callMessages(url, headers, prompt, model, signal, fetchImpl, { vi
     throw new AiError(code, AI_MESSAGES[code]);
   }
   const text = textFromMessage(body);
+  const u = (body && body.usage) || {};
+  reportUsage({
+    model,
+    requests: 1,
+    input: (Number(u.input_tokens) || 0) + (Number(u.cache_creation_input_tokens) || 0) + (Number(u.cache_read_input_tokens) || 0),
+    output: Number(u.output_tokens) || 0,
+  });
   if (!text.trim()) throw new AiError('empty', AI_MESSAGES.empty);
   return text;
 }
@@ -210,10 +241,12 @@ export async function resolveProvider(settings = {}, env = {}) {
         images: canImages,
         async generate(prompt, signal, { images = [] } = {}) {
           try {
-            const opts = { signal, cache: false };
+            const m = CONFIG.models.find((x) => x.id === model) || CONFIG.models[0];
+            const opts = { signal, cache: false, model: m.id, modelTier: m.tier || 'default' };
             if (images.length) opts.images = images.map((i) => i.blob);
-            const { text } = await sample(prompt, opts);
-            return text;
+            const res = await sample(prompt, opts);
+            reportUsage({ model: res.modelApplied || `tier:${res.modelTierApplied || m.tier}`, requests: 1, input: 0, output: 0, account: true });
+            return res.text;
           } catch (e) {
             const map = { not_granted: 'forbidden', sampling_disabled: 'forbidden', rate_limited: 'rate_limited', cancelled: 'cancelled', refused: 'refused', empty_completion: 'empty', images_unavailable: 'photos', image_rejected: 'photos' };
             const code = map[e && e.code] || 'server';

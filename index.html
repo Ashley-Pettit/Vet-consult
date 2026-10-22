@@ -306,9 +306,17 @@
     </div>
 
     <div class="field">
-      <label for="model">Note writer</label>
+      <label for="model">AI model</label>
       <select id="model"></select>
+      <p class="help">Sonnet is the default. Pick Opus for tricky cases; it takes longer.</p>
     </div>
+
+    <section class="field usage" aria-labelledby="usage-title">
+      <h3 class="field-label" id="usage-title">AI usage</h3>
+      <div id="usage-body"></div>
+      <p class="help" id="usage-balance"></p>
+      <button type="button" class="link" id="usage-reset">Reset this count</button>
+    </section>
 
     <div class="field">
       <span class="field-label">Funding</span>
