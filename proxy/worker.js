@@ -47,7 +47,8 @@ const json = (status, body, headers = {}) =>
 
 export async function handle(request, env, fetchImpl = fetch) {
   const origin = request.headers.get('origin') || '';
-  const allowed = String(env.ALLOWED_ORIGINS || '')
+  // Only the app's own address may call this. Override with an ALLOWED_ORIGINS variable if it moves.
+  const allowed = String(env.ALLOWED_ORIGINS || 'https://ashley-pettit.github.io')
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean);
