@@ -81,6 +81,9 @@ let current = 0;
 let isExample = false;
 let careSheet = null;
 let photos = [];
+let plainAtRender = ''; // the clinical notes as Claude wrote them, to spot hand edits
+// Photos can be switched off in Settings to keep AI costs down.
+const sendPhotos = () => (settings.photosOn === false ? [] : photos);
 let aborter = null;
 let busy = false;
 let wakeLock = null;
@@ -555,7 +558,8 @@ function renderPhotos() {
       ]),
     ),
   );
-  $('media-row').hidden = photos.length >= MAX_PHOTOS;
+  $('media-row').hidden = photos.length >= MAX_PHOTOS || settings.photosOn === false;
+  els.photoList.hidden = settings.photosOn === false;
   updateCreateState();
 }
 
@@ -576,6 +580,23 @@ els.photoInput.addEventListener('change', () => addPhotos(els.photoInput));
 $('add-gallery').addEventListener('change', () => addPhotos($('add-gallery')));
 /* ---------------- talking to Claude ---------------- */
 
+// Run one request on a particular model, whatever is chosen in Settings (Haiku for quick updates, Opus for retries).
+async function withModel(model, job) {
+  const saved = settings;
+  settings = { ...settings, model };
+  provider = null;
+  try {
+    return await job();
+  } finally {
+    settings = saved;
+    provider = null;
+  }
+}
+const QUICK_MODEL = 'claude-haiku-5-5';
+const BEST_MODEL = 'claude-opus-5-5';
+// A short, simple update goes to the fast model; anything long or with drugs and doses keeps the chosen model.
+const isQuickUpdate = (t) => t.length <= 180 && t.split(/\s+/).length <= 32 && !/\b(mg|ml|mL|dose|tablet|inject|antibiotic|meloxicam|metacam|\d+\s*(mg|ml|kg))\b/i.test(t);
+
 async function ensureProvider() {
   provider = await resolveProvider(settings);
   return provider;
@@ -595,8 +616,11 @@ function waitForIdle(ms = 2500) {
 
 /** Show the working screen and run one Claude call, with Stop and an elapsed timer. */
 async function runWorking(title, sub, job) {
-  els.workingTitle.textContent = title;
-  els.workingSub.textContent = sub;
+  // With photos attached, say so first: looking at the photos is the slow part.
+  const looking = sendPhotos().length && !/^Hmm/.test(title);
+  els.workingTitle.textContent = looking ? 'Analysing the image' : title;
+  els.workingSub.textContent = looking ? 'Looking for the species, injuries and anything else that helps the plan.' : sub;
+  const swap = looking ? setTimeout(() => { els.workingTitle.textContent = title; els.workingSub.textContent = sub; }, 7000) : null;
   showView('working');
   els.stop.focus();
   const t0 = Date.now();
@@ -609,6 +633,7 @@ async function runWorking(title, sub, job) {
   try {
     return await job(aborter.signal);
   } finally {
+    clearTimeout(swap);
     clearInterval(tick);
     aborter = null;
   }
@@ -617,7 +642,10 @@ async function runWorking(title, sub, job) {
 // Ask Claude for JSON. If the reply can't be read (cut off, or stray text), ask once more for a tighter reply
 // before showing an error, so a long answer doesn't cost the vet or carer a retry.
 const RETRY_NOTE = '\n\nImportant: your last reply could not be read. Reply with ONLY the JSON object, no other text, and keep every list short so the whole reply fits.';
-async function askJson(prompt, signal, opts = {}) {
+// Extra instruction for a retry after a thumbs down; cleared when the retry ends.
+let promptExtra = '';
+async function askJson(prompt0, signal, opts = {}) {
+  const prompt = promptExtra ? `${prompt0}\n\n${promptExtra}` : prompt0;
   const first = await provider.generate(prompt, signal, opts);
   try {
     return extractJson(first);
@@ -734,16 +762,16 @@ async function createNote() {
       banner(NO_CLAUDE, 'info');
       return;
     }
-    if (photos.length && !provider.images) {
+    if (sendPhotos().length && !provider.images) {
       banner('Photos can’t be sent from this version. Remove them to continue.', 'error');
       return;
     }
     banner('');
-    const prompt = buildPrompt(finalText, { clinician: settings.clinician, photoCount: photos.length, drugs: settings.drugs });
+    const prompt = buildPrompt(finalText, { clinician: settings.clinician, photoCount: sendPhotos().length, drugs: settings.drugs });
     const result = await runWorking(
       'Writing the clinical notes',
       'Claude is turning your words into SOAP notes.',
-      (signal) => askJson(prompt, signal, { images: photos }),
+      (signal) => askJson(prompt, signal, { images: sendPhotos() }),
     );
     const list = normaliseResult(extractJson(result));
     if (!list.length) throw new AiError('empty', '');
@@ -777,6 +805,7 @@ document.addEventListener('keydown', (e) => {
 /* ---------------- note view ---------------- */
 
 function showNotes(list, example) {
+  resetFeedback();
   if (!example) remember('notes', list, list[0] && (list[0].patient.name || list[0].patient.species));
   for (const n of list) if (settings.clinician && !n.visit.clinician) n.visit.clinician = settings.clinician;
   notes = list;
@@ -905,9 +934,10 @@ async function applyAnswer(item, answer) {
   }
   const idx = current;
   try {
-    const reply = await runWorking('Updating the note', 'Adding your answer in the right place.', (signal) =>
+    const run = () => runWorking('Hmm, let me think about that…', 'Adding your answer in the right place.', (signal) =>
       askJson(buildRevisionPrompt(notes[idx], item, answer), signal),
     );
+    const reply = isQuickUpdate(answer) ? await withModel(QUICK_MODEL, async () => (await ensureProvider(), run())) : await run();
     const [updated] = normaliseResult(extractJson(reply));
     if (!updated) throw new AiError('empty', '');
     notes[idx] = updated;
@@ -1038,6 +1068,8 @@ function renderNote() {
 
   const sec = pmsSections(n);
   els.plain.value = sec.clinical;
+  plainAtRender = sec.clinical;
+  $('polish').hidden = true;
   requestAnimationFrame(() => fitPlain());
   renderPms(sec);
   els.copy.lastChild.textContent = 'Copy';
@@ -1133,7 +1165,8 @@ more.addEventListener('close', async () => {
   if (more.returnValue !== 'go' || !extra) return;
   more.returnValue = '';
   setTranscript(appendSegment(els.transcript.value, extra));
-  await createNote();
+  if (isQuickUpdate(extra) && settings.model !== QUICK_MODEL) await withModel(QUICK_MODEL, () => createNote());
+  else await createNote();
 });
 more.addEventListener('click', (e) => e.target === more && more.close()); // tap outside to cancel
 els.back.addEventListener('click', addMoreInfo);
@@ -1316,6 +1349,7 @@ function renderCare(c) {
 }
 
 function showCare(sheet, from, info = '') {
+  resetFeedback();
   remember('care', { sheet, from }, sheet.animal);
   careSheet = sheet;
   careFrom = from;
@@ -1360,7 +1394,7 @@ async function createCarePlan(text) {
   }
   banner('');
   const reply = await runWorking('Writing the care plan', `Everything the carer needs, from ${region().adj} guidance.`, (signal) =>
-    askJson(buildCarerPlanPrompt(text, sourcesForPrompt(), { fromVet: settings.role === 'vet', drugs: settings.drugs }), signal, { images: photos }),
+    askJson(buildCarerPlanPrompt(text, sourcesForPrompt(), { fromVet: settings.role === 'vet', drugs: settings.drugs, photoCount: sendPhotos().length }), signal, { images: sendPhotos() }),
   );
   notes = [];
   showCare(normaliseCareSheet(extractJson(reply), SOURCE_IDS()), 'record');
@@ -1479,6 +1513,7 @@ function renderDoc(d, kind) {
 }
 
 function showDoc(d, kind, info = '') {
+  resetFeedback();
   remember('doc', { d, kind }, d.title);
   currentDoc = { d, kind };
   renderMakeNext($('make-next-doc'), kind);
@@ -1501,17 +1536,17 @@ async function createDoc(kind, text) {
     banner(NO_CLAUDE, 'info');
     return;
   }
-  if (photos.length && !provider.images) {
+  if (sendPhotos().length && !provider.images) {
     banner('Photos can’t be sent from this version. Remove them to continue.', 'error');
     return;
   }
   banner('');
-  const opts = { clinician: settings.clinician, photoCount: photos.length, sourceList: sourcesForPrompt() };
+  const opts = { clinician: settings.clinician, photoCount: sendPhotos().length, sourceList: sourcesForPrompt() };
   // An intake starts its care plan at the same moment, in a second call, so "Need advice right now?" is ready
   // (or nearly) by the time the record is read. Two shorter replies, so neither gets cut off.
   if (kind === 'intake') startIntakeCare();
   const reply = await runWorking(`Writing the ${DOC_KINDS[kind].label.toLowerCase()}`, DOC_KINDS[kind].working, (signal) =>
-    askJson(buildDocPrompt(kind, text, opts), signal, { images: photos }),
+    askJson(buildDocPrompt(kind, text, opts), signal, { images: sendPhotos() }),
   );
   const d = normaliseDoc(reply);
   if (!d.sections.length) throw new AiError('empty', '');
@@ -1572,7 +1607,7 @@ $('advice-btn').addEventListener('click', () => makeNext('carer'));
 let pendingCare = null;
 function startIntakeCare() {
   const text = els.transcript.value;
-  const promise = askJson(buildCarerPlanPrompt(text.trim(), sourcesForPrompt(), { justIn: true, drugs: settings.drugs }), undefined, { images: photos })
+  const promise = askJson(buildCarerPlanPrompt(text.trim(), sourcesForPrompt(), { justIn: true, drugs: settings.drugs, photoCount: sendPhotos().length }), undefined, { images: sendPhotos() })
     .then((r) => {
       const sheet = normaliseCareSheet(r, SOURCE_IDS());
       if (!(sheet.summary || sheet.plan.length || sheet.housing.length)) return null;
@@ -1796,6 +1831,11 @@ async function openSettings(message) {
   els.model.value = settings.model || CONFIG.defaultModel;
   els.apiKey.value = settings.apiKey;
   els.rememberKey.checked = settings.rememberKey;
+  $('photos-on').checked = settings.photosOn !== false;
+  $('template').querySelector('option[value="rspca"]').hidden = !store.rspcaUnlocked();
+  $('template').value = settings.template === 'rspca' && !store.rspcaUnlocked() ? 'bunurong' : settings.template || 'bunurong';
+  $('unlock').value = '';
+  $('unlock-msg').textContent = store.rspcaUnlocked() ? 'RSPCA handouts are unlocked on this device.' : '';
   renderUsage(await refreshConnection());
   if (message) {
     els.conn.textContent = message;
@@ -1813,9 +1853,10 @@ $('close-settings').addEventListener('click', () => els.settings.close('close'))
 els.settings.addEventListener('close', async () => {
   if (els.settings.returnValue !== 'save') return;
   const key = els.apiKey.value.trim();
-  settings = { ...settings, drugs: $('drugs').value.slice(0, 3000), clinician: els.clinician.value.trim().slice(0, 80), model: els.model.value, apiKey: key, rememberKey: els.rememberKey.checked };
+  settings = { ...settings, photosOn: $('photos-on').checked, template: $('template').value, drugs: $('drugs').value.slice(0, 3000), clinician: els.clinician.value.trim().slice(0, 80), model: els.model.value, apiKey: key, rememberKey: els.rememberKey.checked };
   store.saveSettings(settings);
   provider = null;
+  renderPhotos();
   if (key && !/^sk-ant-/.test(key)) toast('Saved, but that doesn’t look like an Anthropic key. Keys start with sk-ant-.');
   else toast('Settings saved.');
 });
@@ -1899,3 +1940,122 @@ window.__scribe = {
   get provider() { return provider && provider.id; },
   get voice() { return keyboardVoice ? 'keyboard' : 'live'; },
 };
+
+
+/* ---------------- access code: RSPCA handouts ---------------- */
+
+// Typing the code unlocks RSPCA-styled handouts on this device. Not a security measure, just a switch.
+$('unlock').addEventListener('input', (e) => {
+  if (e.target.value.trim().toLowerCase() !== 'rspca') return;
+  store.unlockRspca();
+  const opt = $('template').querySelector('option[value="rspca"]');
+  opt.hidden = false;
+  $('template').value = 'rspca';
+  e.target.value = '';
+  $('unlock-msg').textContent = 'RSPCA handouts unlocked on this device. Save to use them.';
+});
+
+/* ---------------- "Add more info" from inside the review lists ---------------- */
+
+document.querySelectorAll('.add-more-inline').forEach((b) => b.addEventListener('click', () => addMoreInfo()));
+
+/* ---------------- feedback: thumbs up or down ---------------- */
+
+function resetFeedback() {
+  document.querySelectorAll('.feedback').forEach((f) => {
+    f.dataset.voted = '';
+    f.querySelectorAll('.fb-btn').forEach((b) => b.setAttribute('aria-pressed', 'false'));
+  });
+}
+document.querySelectorAll('.feedback').forEach((f) =>
+  f.addEventListener('click', (e) => {
+    const b = e.target.closest('.fb-btn');
+    if (!b || busy) return;
+    f.querySelectorAll('.fb-btn').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    f.dataset.voted = b.dataset.vote;
+    store.addFeedback && store.addFeedback(b.dataset.vote, f.dataset.for);
+    if (b.dataset.vote === 'up') toast('Thanks, glad it helped.');
+    else {
+      $('retry-note').value = '';
+      $('retry-dlg').showModal();
+    }
+  }),
+);
+$('retry-dlg').addEventListener('close', async () => {
+  const how = $('retry-dlg').returnValue;
+  $('retry-dlg').returnValue = '';
+  if (how !== 'retry') return;
+  const why = $('retry-note').value.trim();
+  promptExtra = `This is a second attempt. The person was not happy with the first version${why ? `. Their feedback: "${why.slice(0, 600)}"` : ''}. Take extra care: follow every rule, include everything they said, keep it accurate, clear and complete, and fix what they mentioned.`;
+  const view = document.body.dataset.view;
+  const text = els.transcript.value.trim();
+  try {
+    await withModel(BEST_MODEL, async () => {
+      if (view === 'doc' && currentDoc) await createDoc(currentDoc.kind, text);
+      else if (view === 'care') await createCarePlan(madeFrom.carer?.text?.trim() || text);
+      else await createNote();
+    });
+  } catch (e) {
+    showView(view);
+    toast(friendly(e));
+  } finally {
+    promptExtra = '';
+    resetFeedback();
+  }
+});
+
+/* ---------------- AI polish for edited clinical notes ---------------- */
+
+const polishBtn = $('polish');
+els.plain.addEventListener('input', () => (polishBtn.hidden = els.plain.value === plainAtRender));
+polishBtn.addEventListener('click', async () => {
+  const before = els.plain.value;
+  if (!before.trim() || busy) return;
+  polishBtn.disabled = true;
+  polishBtn.lastChild.textContent = 'Polishing…';
+  try {
+    const out = await withModel(QUICK_MODEL, async () => {
+      if (!(await ensureProvider())) throw new AiError('forbidden', NO_CLAUDE);
+      return provider.generate(`Tidy these veterinary clinical notes, which a vet has just edited by hand. Fix spelling, grammar, punctuation and layout so they read as finished notes ready to paste into a practice management system. Keep every fact, number, drug, dose, route and date exactly as written, and keep the existing headings and order. Do not add, remove or guess any clinical content. Australian English. Reply with the notes text only, nothing before or after.
+
+<notes>
+${before.slice(0, 20000)}
+</notes>`);
+    });
+    const text = String(out || '').replace(/^```[a-z]*\n?|```$/g, '').trim();
+    if (!text) throw new AiError('empty', '');
+    els.plain.value = text;
+    plainAtRender = text;
+    fitPlain();
+    polishBtn.hidden = true;
+    toast('Polished.', { label: 'Undo', run: () => { els.plain.value = before; fitPlain(); polishBtn.hidden = false; } });
+  } catch (e) {
+    toast(friendly(e));
+  } finally {
+    polishBtn.disabled = false;
+    polishBtn.lastChild.textContent = 'AI polish';
+  }
+});
+
+/* ---------------- printing: offer the Word printout ---------------- */
+
+document.addEventListener('keydown', (e) => {
+  if (!(e.ctrlKey || e.metaKey) || e.key.toLowerCase() !== 'p') return;
+  const view = document.body.dataset.view;
+  if (!['note', 'care', 'doc'].includes(view)) return;
+  e.preventDefault();
+  $('print-dlg').showModal();
+});
+$('print-dlg').addEventListener('close', () => {
+  const how = $('print-dlg').returnValue;
+  $('print-dlg').returnValue = '';
+  const view = document.body.dataset.view;
+  if (how === 'word') ({ note: $('word-note'), care: $('word-care'), doc: $('word-doc') })[view]?.click();
+  if (how === 'page') {
+    try {
+      window.print();
+    } catch {
+      toast('Printing isn’t available here. Use the Word printout instead.');
+    }
+  }
+});

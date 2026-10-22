@@ -39,6 +39,7 @@ const BIRDS = new Set(['bird', 'passerine', 'magpie', 'pigeon', 'lorikeet', 'par
 function pick(key, context) {
   const k = key in ALIAS ? ALIAS[key] : key;
   if (!k) return null;
+  if (VIDEOS[k] && VIDEOS[k].young && YOUNG.test(context)) return VIDEOS[k];
   if (BIRDS.has(key) && YOUNG.test(context)) return VIDEOS.babybird;
   if (k === 'bird') return null; // the containment video is only a fallback, below
   const v = VIDEOS[k];

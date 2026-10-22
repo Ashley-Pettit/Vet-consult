@@ -923,3 +923,25 @@ body[data-kb="open"] .site-foot, body[data-kb="open"] .foot { display: none; }
   body[data-print="ticks"] .ticksheet td { height: 18mm; }
   body[data-print="ticks"] .ticksheet .box { width: 9mm; height: 9mm; }
 }
+
+/* Was this helpful? */
+.feedback { display: flex; align-items: center; justify-content: flex-end; gap: 6px; font-size: 0.88rem; color: var(--muted); }
+.fb-btn { width: 40px; height: 40px; display: inline-grid; place-items: center; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); color: var(--muted); cursor: pointer; }
+.fb-btn svg { width: 18px; height: 18px; }
+.fb-btn:hover { color: var(--ink); border-color: var(--muted); }
+.fb-btn[aria-pressed="true"][data-vote="up"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.fb-btn[aria-pressed="true"][data-vote="down"] { background: var(--warn-soft); border-color: var(--warn); color: var(--warn); }
+#retry-dlg textarea { min-height: 80px; }
+#retry-dlg .field-label { font-weight: 600; font-size: 0.9rem; }
+
+/* Review lists: Add more info right where the gaps are */
+.add-more-inline { margin: 8px 0 4px; }
+
+/* AI polish */
+.polish-btn { align-self: flex-start; }
+.polish-btn svg { width: 16px; height: 16px; margin-right: 6px; }
+
+/* Settings: switches and access code */
+.switch-row { display: flex; align-items: center; gap: 10px; font-weight: 600; cursor: pointer; }
+.switch-row input { width: 22px; height: 22px; accent-color: var(--accent); }
+.sub-label { margin-top: 8px; font-weight: 600; font-size: 0.85rem; }

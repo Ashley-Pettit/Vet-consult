@@ -60,12 +60,30 @@ export const store = {
     write(local, USAGE, null);
   },
 
+  // RSPCA handouts, unlocked with a code and remembered on this device (not a security measure).
+  rspcaUnlocked() {
+    return read(local, 'css.rspca', false) === true;
+  },
+  unlockRspca() {
+    write(local, 'css.rspca', true);
+  },
+
+  /** Thumbs up and down, counted on this device by kind of document. */
+  addFeedback(vote, kind) {
+    const f = read(local, 'css.feedback', {}) || {};
+    const k = `${kind || 'other'}.${vote === 'up' ? 'up' : 'down'}`;
+    f[k] = (f[k] || 0) + 1;
+    write(local, 'css.feedback', f);
+  },
+
   loadSettings() {
     const s = read(local, SETTINGS, {}) || {};
     const sessionKey = read(session, SESSION_KEY, '');
     return {
       clinician: typeof s.clinician === 'string' ? s.clinician : '',
       drugs: typeof s.drugs === 'string' ? s.drugs : '',
+      photosOn: s.photosOn !== false,
+      template: ['bunurong', 'plain', 'rspca'].includes(s.template) ? s.template : 'bunurong',
       model: typeof s.model === 'string' ? s.model : '',
       noteType: typeof s.noteType === 'string' ? s.noteType : 'consult',
       mode: ['vet', 'carer', 'intake', 'log', 'tovet', 'mop', 'funding'].includes(s.mode) ? s.mode : 'carer',
@@ -79,6 +97,8 @@ export const store = {
     write(local, SETTINGS, {
       clinician: s.clinician || '',
       drugs: String(s.drugs || '').slice(0, 3000),
+      photosOn: s.photosOn !== false,
+      template: s.template || 'bunurong',
       model: s.model || '',
       noteType: s.noteType || 'consult',
       mode: ['vet', 'carer', 'intake', 'log', 'tovet', 'mop', 'funding'].includes(s.mode) ? s.mode : 'carer',
