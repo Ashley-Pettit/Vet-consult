@@ -25,7 +25,7 @@ test('vet shorthand is taught to vet notes and vet care plans', async () => {
   const { buildCarerPlanPrompt: plan } = await import('../../src/note.js');
   const vp = buildPrompt('BAR, MM pink, CRT <2, NAD. Metacam SID PO, R/C 2/52');
   assert.match(vp, /QAR quiet, alert, responsive/);
-  assert.match(vp, /2\/52 = 2 weeks/);
+  assert.match(vp, /2\/52 = in 2 weeks/);
   assert.match(plan('BAR', '', { fromVet: true }), /SID once a day/);
   assert.doesNotMatch(plan('Ringtail joey', '', {}), /Vet shorthand/);
 });
