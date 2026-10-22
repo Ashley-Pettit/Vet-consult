@@ -184,7 +184,7 @@ test('the care plan is easy to forward: Share plan, with the video link in the t
   expect(await page.evaluate(() => window.__shared[0].text)).toMatch(/https:\/\/www\.youtube\.com\/watch\?v=/);
 });
 
-test('Share offers a Word document first, text second, and a link to the app as coming soon', async ({ page }) => {
+test('Share offers a Word document first, then text, then a link to the plan', async ({ page }) => {
   await page.addInitScript(() => {
     window.__shared = [];
     navigator.canShare = (d) => Boolean(d && d.files);
@@ -197,7 +197,7 @@ test('Share offers a Word document first, text second, and a link to the app as 
   await expect(page.locator('#view-care')).toBeVisible();
   await expect(page.locator('#view-care').getByText('Open on YouTube')).toHaveCount(0);
   await page.locator('#care-copy').click();
-  await expect(page.getByRole('button', { name: /Send a link to the app/ })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Share a link' })).toBeEnabled();
   await page.getByRole('button', { name: 'Share as Word document' }).click();
   await expect.poll(() => page.evaluate(() => window.__shared.length)).toBe(1);
   const f = await page.evaluate(() => window.__shared[0].files[0]);

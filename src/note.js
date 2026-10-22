@@ -278,7 +278,7 @@ ${JSON.stringify(note)}
 export function photoLookRule(n, where = 'care') {
   if (!n) return '';
   const own = where === 'doc'
-    ? 'Also add a section headed "What the photo shows" (straight after "Text to send" if there is one, otherwise first) with 2 to 4 short items: what you can see that matters for this animal.'
+    ? 'Also add a section headed "What the photo shows", placed near the end (after the care steps, before "Call back straight away if"), with 2 to 4 short items: what you can see that matters for this animal.'
     : 'Also put what you can see in "photo_findings": 2 to 4 short items (the likely species and age or stage, any injuries or wounds, body condition, and anything else that matters), each one hedged as needed.';
   return `${n} photo(s) are attached. Look at them carefully and use what they show: the likely species and age or stage, visible injuries or wounds, body condition, fur or feathers, posture, and anything else that changes the care. Use it in the plan where it belongs. ${own} Be honest about how sure you are: say "looks like", "probably", "maybe" or "I can't tell from the photo" whenever you are not certain, and never state a guess as fact. What the person said always beats what a photo seems to show; if they conflict, follow their words and add the difference to "check".\n`;
 }
@@ -752,11 +752,6 @@ export function careSheetText(c, lookup = () => null) {
   L.push(c.kind === 'wildlife' ? `Care plan: ${c.animal || 'wildlife in care'}` : `Caring for ${c.animal || 'your animal'} at home`);
   L.push(careAiNote(c), '');
   if (c.summary) L.push(c.summary, '');
-  if (c.photo_findings && c.photo_findings.length) {
-    L.push('What the photo shows');
-    c.photo_findings.forEach((x) => L.push(`- ${x}`));
-    L.push('');
-  }
   if (c.medications.length) {
     L.push('Medications');
     c.medications.forEach((m) => {
@@ -812,6 +807,7 @@ export function careSheetText(c, lookup = () => null) {
   }
   section('Activity and handling', c.activity);
   section('Other care', c.care);
+  section('What the photo shows', c.photo_findings || []);
   if (c.daily_checks.length) {
     L.push(`Daily tick sheet (${c.log_days} days)`);
     for (let d = 1; d <= c.log_days; d++) L.push(`Day ${d}: ${c.daily_checks.map((x) => `[ ] ${x}`).join('  ')}`);

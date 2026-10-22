@@ -1155,3 +1155,6 @@ body[data-kb="open"] .tx-hint { display: none; }
 .care-sec.photo-look { background: var(--accent-soft); border-radius: 12px; padding: 12px 14px; }
 .care-sec.photo-look h2 { display: flex; align-items: center; gap: 8px; }
 .care-sec.photo-look h2 svg { width: 18px; height: 18px; flex: none; }
+
+.photo-look-pics { display: flex; gap: 8px; flex-wrap: wrap; margin: 4px 0 10px; }
+.photo-look-pics img { width: 104px; height: 104px; object-fit: cover; border-radius: 10px; border: 1px solid var(--line); }

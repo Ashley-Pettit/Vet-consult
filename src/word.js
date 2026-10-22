@@ -58,11 +58,30 @@ const TONES = {
   warn: () => ({ fill: 'FFF6E5', bar: 'D99A2B', label: '8A5A00' }),
   urgent: () => ({ fill: 'FBEFEB', bar: TERRA, label: TERRA }),
 };
+// A photo's size in points, kept in proportion, at most `max` on its longest side (reads the JPEG's own size).
+function photoSize(data, max) {
+  let w = 4;
+  let h = 3;
+  for (let i = 2; i < data.length - 9; ) {
+    if (data[i] !== 0xff) break;
+    const marker = data[i + 1];
+    const len = (data[i + 2] << 8) + data[i + 3];
+    if (marker >= 0xc0 && marker <= 0xc3) {
+      h = (data[i + 5] << 8) + data[i + 6];
+      w = (data[i + 7] << 8) + data[i + 8];
+      break;
+    }
+    i += 2 + len;
+  }
+  const scale = max / Math.max(w, h);
+  return { width: Math.round(w * scale), height: Math.round(h * scale) };
+}
 function callout(b) {
   const t = TONES[b.tone]();
   const kids = [
     new Paragraph({ keepNext: true, spacing: { after: 60 }, children: [new TextRun({ text: String(b.heading).toUpperCase(), font: HEAD_FONT, bold: true, size: 19, color: t.label, characterSpacing: 24 })] }),
     ...(b.text ? String(b.text).split(/\n+/).map((x) => new Paragraph({ spacing: { after: 60, line: 300 }, children: [run(x)] })) : []),
+    ...(b.photos && b.photos.length ? [new Paragraph({ spacing: { after: 80 }, children: b.photos.slice(0, 3).map((data) => new ImageRun({ type: 'jpg', data, transformation: photoSize(data, 190) })) })] : []),
     ...(b.items || []).map((x) => bullet(x)),
   ];
   return new Table({
@@ -186,7 +205,7 @@ export async function buildWord(model, { preparedBy = '', date = new Date(), tem
   // The AI note sits quietly under the details, not as a section of its own.
   if (model.aiNote) body.push(new Paragraph({ spacing: { before: 140, after: 40 }, children: [run(`ⓘ  ${model.aiNote}`, { italics: true, color: MUTED, size: 18 })] }));
   for (const b of model.blocks) {
-    if (!b.heading || (!b.text && !(b.items && b.items.length) && !(b.checks && b.checks.length) && !b.table && !(b.labels && b.labels.length))) continue;
+    if (!b.heading || (!b.text && !(b.items && b.items.length) && !(b.checks && b.checks.length) && !b.table && !(b.labels && b.labels.length) && !(b.photos && b.photos.length))) continue;
     if (b.tone && TONES[b.tone]) {
       body.push(new Paragraph({ spacing: { before: 200 }, keepNext: true, children: [] }), callout(b));
       continue;
@@ -368,7 +387,8 @@ export function docModel(d, kindLabel, note = '') {
     subtitle: d.subtitle,
     aiNote: note,
     blocks: [
-      ...d.sections.filter((s) => !/^text to your vet$/i.test(s.heading)).map((s) => {
+      // The ready-to-send text message is for the phone, not the printout.
+      ...d.sections.filter((s) => !/^text to (your vet|send)/i.test(s.heading)).map((s) => {
         // "Field: value" lists (like the register entry) print as a two-column table an auditor can scan.
         const items = s.items || [];
         const pairs = items.map((x) => /^([^:]{1,40}):\s+(.+)$/.exec(x));
@@ -431,11 +451,10 @@ function feedBlocks(f) {
   }];
 }
 
-export function careModel(c, lookup) {
+export function careModel(c, lookup, photos = []) {
   const meds = c.medications.map((m) => [m.name, m.how, m.how_often, m.how_long]);
   const blocks = [
     { heading: 'Summary', text: c.summary, tone: 'summary' },
-    { heading: 'What the photo shows', items: c.photo_findings || [], tone: 'photo' },
     ...(meds.length ? [{ heading: 'Medications', table: { head: ['Medication', 'How', 'How often', 'How long'], rows: meds, widths: [2600, 2600, 2400, PAGE_W - 7600] }, note: c.medications.map((m) => (m.tip ? `${m.name}: ${m.tip}` : '')).filter(Boolean).join('  ') || undefined }] : []),
     ...rangesBlocks(c.species_group),
     ...rehydrationBlocks(c.rehydration),
@@ -445,6 +464,7 @@ export function careModel(c, lookup) {
     ...feedBlocks(c.feed_calc),
     { heading: 'Activity and handling', items: c.activity },
     { heading: 'Other care', items: c.care },
+    { heading: 'What the photo shows', items: c.photo_findings || [], tone: 'photo', photos },
   ];
   const tickDays = Math.min(c.log_days || 7, 14);
   if (c.daily_checks.length) blocks.push({ heading: 'Daily tick sheet', text: `On the last page, sized to print and stick on the fridge (${tickDays} days).` });

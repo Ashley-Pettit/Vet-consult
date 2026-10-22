@@ -753,35 +753,22 @@ function waitForIdle(ms = 2500) {
 // While Claude writes: a line about what it's doing, then checked facts about the animal named.
 function startWorkingFeed(title) {
   const text = els.transcript.value;
-  const animal = namedAnimal(text);
-  const state = region().adj;
-  const steps = [
-    'Reading what you said…',
-    animal ? `Picking out what matters for ${animal}…` : 'Working out what kind of animal this is…',
-    `Checking ${state} wildlife guidance and the code of practice…`,
-    ...(sendPhotos().length ? ['Looking closely at the photos…'] : []),
-    animal ? `Adding species-specific points for ${animal}…` : 'Adding general care points…',
-    /notes/i.test(title) ? 'Laying out the SOAP notes…' : 'Writing it in plain English, one step at a time…',
-    'Checking nothing is repeated or missed…',
-    'Nearly there…',
-  ];
   let facts = factsFor(text);
   if (!facts.length) facts = SPECIES_CARE.map((w) => ({ text: `${w.warning} ${w.why}`, source: w.source_title }));
   facts = facts.sort(() => Math.random() - 0.5).slice(0, 12);
+  // Only the checked facts rotate; no running commentary on what the AI is doing.
   let i = 0;
   const show = () => {
-    $('working-step').textContent = steps[Math.min(i, steps.length - 1)];
-    const f = facts.length && i >= 1 ? facts[(i - 1) % facts.length] : null;
+    const f = facts.length ? facts[i % facts.length] : null;
     $('working-fact').hidden = !f;
     if (f) $('working-fact-text').textContent = f.text;
     i += 1;
   };
   show();
-  const t = setInterval(show, 4500);
+  const t = setInterval(show, 15000); // slow enough to read each one properly
   return () => {
     clearInterval(t);
     $('working-fact').hidden = true;
-    $('working-step').textContent = '';
   };
 }
 
@@ -1560,6 +1547,9 @@ function feedSection(c) {
   ]);
 }
 
+// The photos sent with this plan, for the Word printout (JPEG bytes).
+const wordPhotos = () => sendPhotos().map((p) => Uint8Array.from(atob(p.data), (ch) => ch.charCodeAt(0)));
+
 // A kind word about pigeons, for vets only, as Bunurong Wildlife Care asked.
 const PIGEON_FACT = 'Pigeons are sweet, kind and accepting of each other, and they cope really well in care (if you leave them alone). They often thrive once released, with a good chance of a happy life in the wild.';
 function pigeonFact(text) {
@@ -1641,9 +1631,6 @@ function renderCare(c) {
     ...[
       el('p', { class: 'ai-check top', text: careAiNote(c) }),
       c.summary ? el('p', { class: 'care-summary', text: c.summary }) : null,
-      c.photo_findings && c.photo_findings.length
-        ? el('section', { class: 'care-sec photo-look' }, [el('h2', {}, [svgIcon('<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>'), 'What the photo shows']), list(c.photo_findings)])
-        : null,
       pigeonFact(`${c.animal} ${c.species} ${c.summary}`),
       c.medications.length
         ? el('section', { class: 'care-sec' }, [
@@ -1671,6 +1658,15 @@ function renderCare(c) {
       feedSection(c),
       sec('Activity and handling', c.activity),
       sec('Other care', c.care),
+      // What the photo shows sits well down the plan: the care comes first.
+      (c.photo_findings && c.photo_findings.length) || sendPhotos().length
+        ? el('section', { class: 'care-sec photo-look' }, [
+            el('h2', {}, [svgIcon('<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>'), 'What the photo shows']),
+            // The photos that were sent, so the notes can be read against them.
+            sendPhotos().length ? el('div', { class: 'photo-look-pics' }, sendPhotos().map((p, i) => el('img', { src: p.url, alt: `Photo ${i + 1} that was sent with the notes`, loading: 'lazy' }))) : null,
+            c.photo_findings && c.photo_findings.length ? list(c.photo_findings) : null,
+          ])
+        : null,
       log,
       release,
       sec('Contact the vet within a day if', c.escalate.vet, 'watch'),
@@ -1830,7 +1826,7 @@ $('share-sheet').addEventListener('close', () => {
   finishSend(how);
 });
 els.careCopy.addEventListener('click', () =>
-  shareOrCopy(careSheetText(careSheet, lookupSource), $('care-title').textContent, 'Care plan copied. Paste it into an email, SMS or the discharge sheet.', careModel(careSheet, lookupSource), { type: 'care', sheet: careSheet }),
+  shareOrCopy(careSheetText(careSheet, lookupSource), $('care-title').textContent, 'Care plan copied. Paste it into an email, SMS or the discharge sheet.', careModel(careSheet, lookupSource, wordPhotos()), { type: 'care', sheet: careSheet }),
 );
 
 /* ---------------- intake record / care log / for the vet ---------------- */
@@ -2119,7 +2115,7 @@ async function saveWord(model, btn) {
   }
 }
 $('word-doc').addEventListener('click', (e) => currentDoc && saveWord(docModel(currentDoc.d, DOC_KINDS[currentDoc.kind].label, currentDoc.kind === 'mop' ? aiNoteFor(currentDoc.d.title) : ''), e.currentTarget));
-$('word-care').addEventListener('click', (e) => careSheet && saveWord(careModel(careSheet, lookupSource), e.currentTarget));
+$('word-care').addEventListener('click', (e) => careSheet && saveWord(careModel(careSheet, lookupSource, wordPhotos()), e.currentTarget));
 $('word-note').addEventListener('click', (e) => currentNote() && saveWord(noteModel(currentNote()), e.currentTarget));
 
 /* ---------------- how it works ---------------- */
