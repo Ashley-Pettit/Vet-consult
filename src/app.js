@@ -1611,7 +1611,7 @@ async function createDoc(kind, text) {
   // An intake starts its care plan at the same moment, in a second call, so "Need advice right now?" is ready
   // (or nearly) by the time the record is read. Two shorter replies, so neither gets cut off.
   if (kind === 'intake') startIntakeCare();
-  const reply = await runWorking(`Writing the ${DOC_KINDS[kind].label.toLowerCase()}`, DOC_KINDS[kind].working, (signal) =>
+  const reply = await runWorking(`Writing the ${DOC_KINDS[kind].label.replace(/^[A-Z](?=[a-z])/, (x) => x.toLowerCase())}`, DOC_KINDS[kind].working, (signal) =>
     askJson(buildDocPrompt(kind, text, opts), signal, { images: sendPhotos() }),
   );
   const d = normaliseDoc(reply);
