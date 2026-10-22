@@ -197,3 +197,20 @@ test('checked ranges only appear when the group matches the animal named', async
   assert.equal(checkedGroup('python', 'Mystery animal'), 'python'); // nothing to compare with: keep Claude's pick
   assert.equal(checkedGroup('made-up', 'Koala'), '');
 });
+
+test('feeding: checked rows reach the plan prompt for the animal named, and nothing for an unknown animal', async () => {
+  const { feedingForPrompt } = await import('../../src/feeding.js');
+  const { buildCarerPlanPrompt } = await import('../../src/note.js');
+  assert.match(feedingForPrompt('galah chick, pin feathers'), /parrot \|/);
+  assert.match(feedingForPrompt('magpie nestling'), /magpie \|/);
+  assert.equal(feedingForPrompt('injured animal, not sure what it is'), '');
+  assert.match(buildCarerPlanPrompt('rainbow lorikeet nestling', ''), /Checked feeding guidance/);
+  assert.match(buildCarerPlanPrompt('rainbow lorikeet nestling', ''), /under 8 words/);
+});
+
+test('feed calculator: a figure for an animal with no checked rows is always shown as unsure', async () => {
+  const { normaliseCareSheet, EXAMPLE_CARER_PLAN } = await import('../../src/note.js');
+  const c = normaliseCareSheet({ ...EXAMPLE_CARER_PLAN, animal: 'Mystery animal', feed_calc: { applies: true, what: 'Some milk', percent_body_weight_per_day: 15, feeds_per_day: 4, sure: true } }, null);
+  assert.equal(c.feed_calc.applies, true);
+  assert.equal(c.feed_calc.sure, false);
+});

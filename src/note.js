@@ -6,6 +6,7 @@ import { videoFor, watchUrl } from './videos.js';
 import { drugsForPrompt } from './drugs.js';
 import { shorthandForPrompt } from './shorthand.js';
 import { vetCareForPrompt, groupsIn, namedAnimal } from './species-vet.js';
+import { feedingForPrompt, feedFigureChecked } from './feeding.js';
 
 // Pure logic: prompt, parsing, normalising and plain-text formatting of clinical notes.
 // No DOM access here so it can be unit tested in Node.
@@ -216,7 +217,7 @@ Rules:
 - housing: where and how to keep the animal (space, warmth, quiet, hygiene), at most 4 items. feeding: what, how much if stated, how often, toileting, and water, at most 5 items. activity: handling and enrichment, at most 3 items. care: anything else not covered elsewhere, at most 3 items, often none.
 - daily_checks: 3 to 5 short things the carer ticks off each day (2 to 4 words each). log_days: the longest course or until the next visit, at most 14.
 - release (wildlife only, otherwise leave empty): ready_when lists the signs the animal is fit for release, at most 4; how gives the release steps, at most 4; where states the release location rule in one sentence. Follow the ${region().adj} requirements in the sources exactly. Never encourage keeping wildlife longer than needed.
-- feed_calc: a feeding amount worked out from body weight, for THIS species and stage. Use it when the animal is milk-fed or hand-reared and the standard guidance (for example the Wombaroo feeding guide for that species) gives a daily amount as a percentage of body weight. what: the product and stage (for example "Wombaroo Possum Milk 0.8"). weight_g: the weight in grams only if stated. stage: the age or stage that sets the amount. percent_body_weight_per_day: the daily milk volume as a percentage of body weight for this species and stage (the app works out millilitres from the weight). feeds_per_day: how many feeds a day at this stage. basis: one short line naming where the figure comes from. sure: false if you are not confident the figure is right for this species and stage. For any milk-fed joey, chick or other hand-reared young, ALWAYS fill this in with your best figure for this species, stage and weight, even if the guide's exact table isn't in the sources; set sure false whenever you are not certain, and the app will say so. Set applies false only for animals that aren't fed a measured amount (for example adults eating browse or seed). Never use a one-size figure for every species.
+- feed_calc: a feeding amount worked out from body weight, for THIS species and stage. Use it when the animal is milk-fed or hand-reared and the standard guidance (for example the Wombaroo feeding guide for that species) gives a daily amount as a percentage of body weight. what: the product and stage only, in under 8 words (for example "Wombaroo Possum Milk 0.8"); any reasoning goes in basis. weight_g: the weight in grams only if stated. stage: the age or stage that sets the amount. percent_body_weight_per_day: the daily milk volume as a percentage of body weight for this species and stage (the app works out millilitres from the weight). feeds_per_day: how many feeds a day at this stage. basis: one short line naming where the figure comes from. sure: false if you are not confident the figure is right for this species and stage. For any milk-fed joey, chick or other hand-reared young, ALWAYS fill this in with your best figure for this species, stage and weight, even if the guide's exact table isn't in the sources; set sure false whenever you are not certain, and the app will say so. Set applies false only for animals that aren't fed a measured amount (for example adults eating browse or seed). Never use a one-size figure for every species.
 - release.target_weight: the weight or size this species should reach before release, with "about", for example "About 600 g for a common ringtail possum"; empty if you are not sure.
 - Uncertainty: if you are not sure about anything, say so plainly in that item (for example "I'm not certain of this, check with your vet"), rather than sounding sure.
 - escalate.vet: problems that need the vet within a day, at most 4. escalate.urgent: emergencies that need a vet straight away (or an after-hours emergency vet), at most 4. These are the only places the vet appears.
@@ -242,6 +243,7 @@ ${CARE_SHAPE}` : ''}`;
 export function buildCareSheetPrompt(note, sourceList = '') {
   return `You are helping a vet working with ${region().org} write a complete care plan for a wildlife carer, based on the clinical note below.
 The vet's discharge instructions for the carer are in plan.home_care: include every one, rewritten in plain English. Rechecks in plan.follow_up go in next_visit, in plain English. Leave out clinical detail the carer does not need.
+${feedingForPrompt(JSON.stringify(note.patient || note))}
 ${careRules(sourceList)}
 
 <note>
@@ -269,6 +271,7 @@ ${tone}
 ${photoLookRule(photoCount)}Speech recognition may mishear drug and species names, and typed notes may have typos; work out what was meant and correct obvious mishearings and typos.
 ${fromVet ? `${shorthandForPrompt()}\n` : ''}${drugsForPrompt(drugs)}
 ${vetCareForPrompt(dictation, { audience: fromVet ? undefined : 'carer' })}
+${feedingForPrompt(dictation)}
 ${careRules(sourceList)}
 
 <comments>
@@ -600,7 +603,7 @@ export function feedCalcOf(raw) {
     const n = Number(v);
     return Number.isFinite(n) && n >= lo && n <= hi ? n : null;
   };
-  const pct = num(f.percent_body_weight_per_day, 1, 40);
+  const pct = num(f.percent_body_weight_per_day, 1, 80); // birds fed by crop can take well over 40% a day
   const feeds = num(f.feeds_per_day, 1, 24);
   const ok = Boolean(f.applies) && pct !== null && feeds !== null;
   return {
@@ -613,6 +616,14 @@ export function feedCalcOf(raw) {
     basis: ok ? str(f.basis, 240) : '',
     sure: f.sure !== false,
   };
+}
+
+/** A figure the checked feeding rows don't support is shown as unsure, whatever the plan said. */
+function checkedFeed(fc, animalText) {
+  if (!fc.applies || !fc.sure) return fc;
+  const verdicts = groupsIn(animalText).map((g) => feedFigureChecked(g, fc.pct));
+  if (verdicts.includes(true) || (verdicts.length && verdicts.every((v) => v === null))) return fc;
+  return { ...fc, sure: false };
 }
 
 /** Millilitres a day and per feed for a weight in grams (milk taken as about 1 g per mL). */
@@ -670,7 +681,7 @@ export function normaliseCareSheet(raw, knownSources = null) {
       ? { ready_when: arr(rel.ready_when, 8), target_weight: str(rel.target_weight, 160), how: arr(rel.how, 8), where: str(rel.where, 400) }
       : { ready_when: [], target_weight: '', how: [], where: '' },
     escalate: { vet: arr(esc.vet, 10), urgent: arr(esc.urgent, 10) },
-    feed_calc: feedCalcOf(r.feed_calc),
+    feed_calc: checkedFeed(feedCalcOf(r.feed_calc), [str(r.animal, 80), str(r.species, 80), str(obj(r.feed_calc).what, 120)].join(' ')),
     rehydration: rehydrationOf(r.rehydration),
     species_group: checkedGroup(str(r.species_group, 30), [str(r.animal, 80), str(r.species, 80)].join(' ')),
     next_visit: str(r.next_visit, 300),
