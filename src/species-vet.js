@@ -29,7 +29,7 @@ export const GROUP_WORDS = {
   waterbird: ['duck', 'duckling', 'swan', 'cygnet', 'coot', 'moorhen', 'swamphen', 'heron', 'egret', 'ibis', 'cormorant', 'darter', 'grebe', 'pelican', 'spoonbill', 'waterbird'],
   seabird: ['shearwater', 'mutton bird', 'muttonbird', 'gull', 'gannet', 'albatross', 'petrel', 'prion', 'tern', 'seabird'],
   penguin: ['penguin'],
-  shorebird: ['plover', 'lapwing', 'oystercatcher', 'sandpiper', 'stint', 'godwit', 'curlew', 'shorebird', 'dotterel'],
+  shorebird: ['plover', 'oystercatcher', 'sandpiper', 'stint', 'godwit', 'eastern curlew', 'shorebird', 'dotterel'],
   skink: ['blue tongue', 'btl', 'bluetongue', 'blue-tongue', 'blotchy', 'shingleback', 'skink', 'sleepy lizard'],
   dragon: ['dragon', 'bearded', 'water dragon', 'frill'],
   python: ['python', 'carpet snake', 'ccp', 'carpet python'],

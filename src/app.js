@@ -1763,7 +1763,7 @@ function renderDoc(d, kind) {
     ...d.sections.filter((s) => !(TEXT_HEADING[kind] && TEXT_HEADING[kind].test(s.heading))).map((s) =>
       el('section', { class: 'doc-sec' }, [el('h2', { text: s.heading }), s.text ? el('p', { text: s.text }) : list(s.items)]),
     ),
-    ...(kind === 'mop' ? [videoSection(mopVideo(d))] : []),
+    ...(kind === 'mop' && mopVideo(d) ? [videoSection(mopVideo(d))] : []), // no video: nothing, not the word "null"
     ...(d.due.length
       ? [
           el('section', { class: 'doc-sec due' }, [

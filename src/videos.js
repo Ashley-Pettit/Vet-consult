@@ -8,7 +8,7 @@ export const VIDEOS = {
   'goanna': {"id": "Fe2Ey0iveKk", "title": "Learn about the lace monitor", "channel": "Cooberrie Park Wildlife Sanctuary", "date": "2024"},
   'dragon': {"id": "POE6PMLML8A", "title": "Dragon returns to its den: treatment and release", "channel": "RSPCA Queensland", "date": "2022"},
   'platypus': {"id": "z8-WuGeG85g", "title": "How you can help keep the platypus healthy and safe", "channel": "Nillumbik Shire Council", "date": "2026"},
-  'brushtail': {"id": "8wc59T3zYMg", "title": "Common brushtail possum pouch rescue", "channel": "Save Our Wildlife Foundation", "date": "2024", "warning": "Shows a mother possum that has died. Removing a joey from the teat is for trained, licensed carers only."},
+  'brushtail': {"id": "8wc59T3zYMg", "title": "Common brushtail possum pouch rescue", "channel": "Save Our Wildlife Foundation", "date": "2024", "warning": "Shows a mother possum that has died. Removing a joey from the teat is for trained, licensed carers only.", "young": true},
   'koala': {"id": "K-fjzFdSw7U", "title": "Getting help for sick koalas", "channel": "Queensland Government", "date": "2024"},
   'macropod': {"id": "O4cc4_gQW28", "title": "Wallaby joey rescue: how to check a marsupial's pouch", "channel": "Wannon Creek Wildlife", "date": "2023", "warning": "Shows a mother wallaby that has died."},
   'wombat': {"id": "NuebDLqwhaY", "title": "Please stop and check the pouch", "channel": "Badgerys Creek Wildlife Sanctuary", "date": "2022", "warning": "Shows a mother wombat that has died."},
@@ -44,11 +44,11 @@ export const VIDEOS = {
 
 const YOUNG = /\b(chick|chicks|nestling|nestlings|fledgling|fledglings|hatchling|branchling|baby|babies|duckling|ducklings|cygnet|juvenile|orphan|orphaned|joey|joeys|pinky|pinkie|puggle|pup)\b/i;
 // Species groups used elsewhere in the app (species-ranges.js and species-vet.js) to video keys.
-const ALIAS = { bluetongue: 'skink', turtle: 'freshwater-turtle', passerine: 'bird', kookaburra: 'bird', lapwing: 'bird', cuckoo: 'bird', ibis: 'bird', 'brush-turkey': null };
+const ALIAS = { bluetongue: 'skink', turtle: 'freshwater-turtle', passerine: 'bird', kookaburra: 'bird', lapwing: 'shorebird', cuckoo: 'bird', ibis: 'bird', 'brush-turkey': null };
 // The containment video is about birds and small animals, so it only stands in for those.
 const SMALL = new Set(['bird', 'ringtail', 'brushtail', 'glider', 'bandicoot', 'dasyurid', 'general', 'passerine', 'magpie', 'pigeon', 'lorikeet', 'parrot', 'frogmouth-owl', 'kookaburra', 'shorebird', 'black-cockatoo', 'lapwing', 'curlew', 'cuckoo']);
 
-const BIRDS = new Set(['bird', 'passerine', 'magpie', 'pigeon', 'lorikeet', 'parrot', 'frogmouth-owl', 'kookaburra', 'black-cockatoo', 'lapwing', 'cuckoo', 'ibis']);
+const BIRDS = new Set(['bird', 'passerine', 'magpie', 'pigeon', 'lorikeet', 'parrot', 'frogmouth-owl', 'kookaburra', 'black-cockatoo', 'cuckoo', 'ibis']);
 
 function pick(key, context) {
   const k = key in ALIAS ? ALIAS[key] : key;

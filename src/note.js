@@ -200,9 +200,30 @@ const CARE_SHAPE = `{"animal":"","species":"","kind":"domestic|wildlife","summar
 "species_group":"",
 "next_visit":"","sources":[]}`;
 
+/**
+ * Safety rules that apply to every plan, from a review of real plans by a wildlife vet against
+ * NSW, Victorian and Queensland guidance and the Wombaroo guides (October 2026).
+ */
+export function wildlifeSafetyRules() {
+  const vic = region().code === 'vic';
+  return `Safety rules (these override anything else, including general warmth and feeding advice):
+- Does it need rescuing at all? Decide this first for young birds and chicks. A healthy feathered fledgling, chicks with their parents nearby (lapwings, plovers, bush stone-curlews, ducklings with the mother), and a nestling whose parents are nearby should be left, reunited or put back in the nest or a makeshift nest (a basket or container with drainage holes, in the same tree), then watched from a distance for a few hours up to a day. Brush-turkey and scrubfowl chicks get no care from their parents at all: a bright, uninjured one is left where it is (or moved to nearby dense cover) with pets kept inside. Only take a young bird into care if it is injured, sick, cold, caught by a cat or dog, or the parents don't come back.
+- Nothing by mouth (no food, water or fluids) for any animal that can't hold its head up, can't swallow, is cold, collapsed or in shock. A heat-stressed flying-fox gets no oral fluids: it needs a vet for fluids. These are vet emergencies.
+- Birds with a head injury (window strike, hit by a car, concussion): keep them dark and quiet at about 21 to 23°C, with no added heat unless they are cold to touch.
+- Warmth must match the checked figures the app shows for the species group; never write a temperature or "keep it cool / keep it warm" instruction that conflicts with them. A dependent flying-fox pup, once stable, is wrapped on a rolled "mumma roll" and kept at about 28°C (29 to 31°C if weak). An echidna puggle dug from a burrow is kept cool and dark, at about 15 to 21°C, with no heat pad.
+- Cat or dog attack: a vet sees the animal the same day, or at the latest within 24 hours, even if no wound can be seen; a cat-caught animal needs vet-prescribed antibiotics. Put this first, in the summary and the first day of the plan, not as a "call if" item.
+- A joey pulled from its mother's pouch, or one still attached to the teat, needs a vet check within 24 hours for mouth injuries.
+- Echidna puggles are fed only every 36 hours to 2 days: set feed_calc "applies" false for them and describe the feeding in words from the sources.
+- Social species (ringtail possums, sugar and squirrel gliders, kangaroos and wallabies, flying-foxes) are raised with others of their own kind through an experienced carer and released together; say so in the plan.
+- Season: ${vic ? 'in Victoria, reptiles are released only when the forecast is 20°C or more for three days running; one that comes in during autumn or winter usually stays in care until spring, kept at its preferred temperature (a sick or injured reptile is never put into brumation).' : 'reptiles are released only in warm weather; one that comes in during the cool months usually stays in care, kept at its preferred temperature, until it warms up.'} An adult female echidna in the breeding season may be feeding a puggle in a burrow: check for a pouch or milk, tell the vet, keep her time in care as short as possible and release her exactly where she was found.
+- A lethargic frog with skin changes may have chytrid fungus: a vet within a day, keep it apart from other frogs and keep its equipment separate.${vic ? `
+- Threatened species: if the animal could be a threatened species (for example an eastern barred bandicoot, which has a barred rump and lives on Phillip Island and in western Victoria), say so and remind the carer that their authorisation requires them to tell the Conservation Regulator within 48 hours.` : ''}`;
+}
+
 /** Rules shared by every carer plan, whether it starts from a vet note or straight from a dictation. */
 function careRules(sourceList, { shape = true } = {}) {
-  return `The carer must be able to look after the animal on their own from this plan. Do NOT tell them to report to, update or check in with the vet or shelter. The vet is ONLY an escalation contact, listed in "escalate".
+  return `${wildlifeSafetyRules()}
+The carer must be able to look after the animal on their own from this plan. Do NOT tell them to report to, update or check in with the vet or shelter. The vet is ONLY an escalation contact, listed in "escalate".
 Write in plain, warm Australian English for someone with no veterinary training. No abbreviations (say "twice a day", not BID; "by mouth", not PO).
 Rules:
 - Only include medications, doses and procedures that appear in the input. NEVER invent doses, tablet sizes, products or diagnoses. If the amount per dose is not stated, say "as dispensed by the clinic".
@@ -1046,8 +1067,12 @@ export const DOC_KINDS = {
   - "Where it was found": the exact location word for word, because release goes back there.
 - The operator's own instructions come first. If they told the person to do something specific (for example "feed it softened seed every 2 hours" or "give a shallow dish of water"), include it exactly as they said, in the right section, and never contradict it with a "do not".
 - Base every other step on the reference sources below (${region().adj} first). Say what TO do; only say what not to do when it is specific to this animal or species.
-- Every "do not" in this plan ends with who can say otherwise. For food, water, handling, housing or anything that is not a medication: "unless a vet, wildlife carer or ${region().hotline} advises otherwise", for example "Do not give food or water unless a vet, wildlife carer or ${region().hotline} advises otherwise." For medications only: "unless a vet advises otherwise". Safety rules about touching bats or flying-foxes are the only exception: never soften those.
-- Make clear this is short-term only and the animal needs a vet, shelter or authorised carer for longer-term care, as ${region().adj} rules require.
+- Every "do not" in this plan ends with who can say otherwise. For food, water, handling, housing or anything that is not a medication: "unless a vet, wildlife carer or ${region().hotline} advises otherwise", for example "Do not give food or water unless a vet, wildlife carer or ${region().hotline} advises otherwise." For medications only: "unless a vet advises otherwise". Never-touch animals are the exception: never soften those rules and never write "unless advised otherwise" for them.
+- Never-touch animals: venomous snakes (and any snake the person can't identify), all bats and flying-foxes, seals and other marine mammals, sea turtles, crocodiles, cassowaries and platypus. For these the person must not touch, move, contain, cover, feed or water the animal at all: keep people, children and pets well back, watch from a safe distance so its location is known, and report it. Leave out "Right now" containment, first aid and the short-term-care line for them.
+- Snakes: always include snakebite first aid under "Keep yourself safe": if anyone is bitten, call 000, keep them still and lying down, do not wash the bite, and put a broad pressure bandage over the bite and then up the whole limb, with a splint. If a dog or cat went near or touched the snake, take it to a vet straight away, even if it looks fine.
+${region().code === 'vic' ? `- Seals in Victoria: by law people stay at least 30 m and dogs at least 50 m away (dogs on a lead). Seals often rest on beaches for days, and that alone is not distress: never push it back into the water or pour water on it. Report it to the Zoos Victoria Marine Response Unit on 1300 245 678 (or DEECA on 136 186). Whales and dolphins: Whale and Dolphin Emergency Hotline 1300 136 017.` : `- Marine animals in Queensland (sea turtles, dolphins, dugongs, whales, seals) and crocodiles: report to the Queensland Government on 1300 130 372 (option 1) and wait for instructions; use this number for them, not ${region().hotline}.`}
+${wildlifeSafetyRules()}
+- When the animal does need care, make clear it is short-term only and the animal should reach a vet, shelter or authorised carer the same day if at all possible${region().code === 'qld' ? ' (the 72-hour limit in Queensland is a legal maximum, never a target: never present it as the plan)' : ''}. Leave this out for never-touch animals and for animals that should be left where they are.
 - NEVER suggest any medication, dose, procedure, force-feeding or euthanasia.
 - Contact (only under "Call back straight away if"): ${region().hotline} on ${region().phone} (${region().hotlineHours}), unless the operator gave a different number.
 - "check": at most 3 short questions for the operator, only about missing details that would change the advice (for example "Is it a bat or flying-fox?").`,
