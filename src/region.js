@@ -2,6 +2,7 @@
 // Everything state-specific lives here: sources, emergency line, case numbers and how prompts describe the carer.
 import { VIC_SOURCES } from './sources-vic.js';
 import { QLD_SOURCES } from './sources-qld.js';
+import { AU_SOURCES } from './sources-au.js';
 
 export const REGIONS = {
   vic: {
@@ -15,7 +16,7 @@ export const REGIONS = {
     tel: '+61384007300',
     caseLabel: 'Wildlife Victoria case number',
     primary: 'Victorian Government (DEECA) guidance and the Victorian code of practice',
-    sources: VIC_SOURCES,
+    sources: [...VIC_SOURCES, ...AU_SOURCES],
   },
   qld: {
     code: 'qld',
@@ -28,7 +29,7 @@ export const REGIONS = {
     tel: '+611300264625',
     caseLabel: 'RSPCA Queensland case or job number',
     primary: 'RSPCA Queensland guidance, then the Queensland code of practice and Queensland Government guidance',
-    sources: QLD_SOURCES,
+    sources: [...QLD_SOURCES, ...AU_SOURCES],
   },
 };
 

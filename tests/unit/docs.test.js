@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { DOC_KINDS, buildDocPrompt, buildCarerPlanPrompt, normaliseDoc, docText, dueLabel } from '../../src/note.js';
 
 test('carer document kinds, in picker order', () => {
-  assert.deepEqual(Object.keys(DOC_KINDS), ['intake', 'log', 'tovet', 'funding']);
+  assert.deepEqual(Object.keys(DOC_KINDS), ['intake', 'log', 'mop', 'tovet', 'funding']);
   for (const k of Object.values(DOC_KINDS)) assert.ok(k.label && k.copy && k.working && k.rule);
 });
 
@@ -80,4 +80,20 @@ test('the care plan started alongside an intake begins with right now', () => {
 
 test('for the vet starts with a ready-to-send text', () => {
   assert.match(buildDocPrompt('tovet', 'x'), /"Text to your vet": one plain message of at most 450 characters/);
+});
+
+test('MOP plan: plain steps for a member of the public, a text to send, grounded in the chosen state', async () => {
+  const { setRegion } = await import('../../src/region.js');
+  const p = buildDocPrompt('mop', 'possum in a shoe box', { sourceList: 'vic-x | vic | T | point' });
+  assert.match(p, /member of the public \(MOP\)/);
+  assert.match(p, /"Text to send": one SMS-length message of at most 600 characters/);
+  assert.match(p, /Reference sources \(id \| scope \| title \| key points\), most important first:\nvic-x/);
+  assert.match(p, /NEVER suggest any medication, dose, procedure or euthanasia/);
+  assert.match(p, /Wildlife Victoria on 03 8400 7300/);
+  setRegion('qld');
+  try {
+    assert.match(buildDocPrompt('mop', 'x'), /RSPCA Queensland wildlife on 1300 ANIMAL/);
+  } finally {
+    setRegion('vic');
+  }
 });

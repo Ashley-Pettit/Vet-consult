@@ -5,7 +5,7 @@ import {
   Paragraph, ShadingType, Table, TableCell, TableLayoutType, TableRow, TextRun, VerticalAlign, WidthType,
 } from 'docx';
 import { LOGO_PNG_BASE64 } from './brand-logo.js';
-import { dueLabel, formatDate, NOT_RECORDED } from './note.js';
+import { dueLabel, formatDate, NOT_RECORDED, rehydrationTable, REHYDRATION_NOTE } from './note.js';
 
 const OLIVE = '647C50';
 const TERRA = 'AB6555';
@@ -198,11 +198,23 @@ export function docModel(d, kindLabel, note = '') {
   };
 }
 
+function rehydrationBlocks(r) {
+  if (!r || !r.needed) return [];
+  const t = rehydrationTable(r);
+  return [{
+    heading: 'Rehydration',
+    ...(t ? { table: { head: ['Day', 'Total', 'Every 4 hours', 'Every 6 hours'], rows: t.days.map((d) => [String(d.day), `${d.total} mL`, `${d.every4h} mL`, `${d.every6h} mL`]) } } : {}),
+    items: r.steps,
+    note: `${t ? `For ${r.weight_g} g, ${t.assumed ? `assuming ${t.deficit}% dehydrated` : `${t.deficit}% dehydrated`}. ` : ''}${REHYDRATION_NOTE}`,
+  }];
+}
+
 export function careModel(c, lookup) {
   const meds = c.medications.map((m) => [m.name, m.how, m.how_often, m.how_long]);
   const blocks = [
     { heading: 'Summary', text: c.summary },
     ...(meds.length ? [{ heading: 'Medications', table: { head: ['Medication', 'How', 'How often', 'How long'], rows: meds, widths: [2600, 2600, 2400, PAGE_W - 7600] }, note: c.medications.map((m) => (m.tip ? `${m.name}: ${m.tip}` : '')).filter(Boolean).join('  ') || undefined }] : []),
+    ...rehydrationBlocks(c.rehydration),
     ...c.plan.map((p) => ({ heading: p.when, items: p.tasks })),
     { heading: 'Housing', items: c.housing },
     { heading: 'Feeding', items: c.feeding },

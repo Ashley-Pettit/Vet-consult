@@ -30,6 +30,7 @@ import {
   EXAMPLE_INTAKE_DICTATION,
   EXAMPLE_LOG_DICTATION,
   EXAMPLE_TOVET_DICTATION,
+  EXAMPLE_MOP_DICTATION,
   EXAMPLE_JOEY_CARER_DICTATION,
   EXAMPLE_WOMBAT_VET_DICTATION,
   EXAMPLE_VET_PLAN_DICTATION,
@@ -42,6 +43,8 @@ import {
   normaliseNote,
   normaliseResult,
   normaliseCareSheet,
+  rehydrationTable,
+  REHYDRATION_NOTE,
   careSheetText,
   pmsSections,
   toPlainText,
@@ -277,7 +280,7 @@ function alertStopped() {
 }
 
 function idleStatus() {
-  if (['intake', 'log', 'tovet', 'funding'].includes(document.body.dataset.mode)) return els.transcript.value.trim() ? 'Tap the mic to add more' : 'Tap the mic and talk it through';
+  if (['intake', 'log', 'tovet', 'mop', 'funding'].includes(document.body.dataset.mode)) return els.transcript.value.trim() ? 'Tap the mic to add more' : 'Tap the mic and talk it through';
   if (document.body.dataset.mode === 'carer') return els.transcript.value.trim() ? 'Tap the mic to add more' : 'Tap the mic and describe the animal’s care';
   if (keyboardVoice) return els.transcript.value.trim() ? 'Tap the mic to add more by voice' : 'Tap the mic, then talk through the consult';
   return els.transcript.value.trim() ? 'Tap the mic to add more' : 'Tap the mic and talk through the consult';
@@ -384,7 +387,7 @@ els.transcript.addEventListener('input', () => {
 // Example words are shown as an example, not as the user's own: a note above the box and a tinted box,
 // until they edit or replace them.
 function isExampleText() {
-  return [EXAMPLE_DICTATION, EXAMPLE_BATCH_DICTATION, EXAMPLE_CARER_DICTATION, EXAMPLE_FOSTER_DICTATION, EXAMPLE_INTAKE_DICTATION, EXAMPLE_LOG_DICTATION, EXAMPLE_TOVET_DICTATION, EXAMPLE_JOEY_CARER_DICTATION, EXAMPLE_WOMBAT_VET_DICTATION, EXAMPLE_VET_PLAN_DICTATION, EXAMPLE_FUNDING_DICTATION].some((x) => x.trim() === els.transcript.value.trim());
+  return [EXAMPLE_DICTATION, EXAMPLE_BATCH_DICTATION, EXAMPLE_CARER_DICTATION, EXAMPLE_FOSTER_DICTATION, EXAMPLE_INTAKE_DICTATION, EXAMPLE_LOG_DICTATION, EXAMPLE_TOVET_DICTATION, EXAMPLE_MOP_DICTATION, EXAMPLE_JOEY_CARER_DICTATION, EXAMPLE_WOMBAT_VET_DICTATION, EXAMPLE_VET_PLAN_DICTATION, EXAMPLE_FUNDING_DICTATION].some((x) => x.trim() === els.transcript.value.trim());
 }
 function updateExampleNote() {
   const on = isExampleText();
@@ -404,6 +407,7 @@ $('load-log-example').addEventListener('click', () => loadExample(EXAMPLE_LOG_DI
 $('load-joey-example').addEventListener('click', () => loadExample(EXAMPLE_JOEY_CARER_DICTATION));
 $('load-vet-plan-example').addEventListener('click', () => loadExample(EXAMPLE_VET_PLAN_DICTATION));
 $('load-tovet-example').addEventListener('click', () => loadExample(EXAMPLE_TOVET_DICTATION));
+$('load-mop-example').addEventListener('click', () => loadExample(EXAMPLE_MOP_DICTATION));
 $('load-funding-example').addEventListener('click', () => loadExample(EXAMPLE_FUNDING_DICTATION));
 
 els.clear.addEventListener('click', () => {
@@ -534,8 +538,8 @@ async function askJson(prompt, signal, opts = {}) {
 }
 
 const mode = () => document.querySelector('input[name="mode"]:checked')?.value || 'vet';
-const MODES = ['intake', 'log', 'carer', 'tovet', 'funding', 'vet'];
-const ROLE_MODES = { carer: ['carer', 'intake', 'log', 'tovet', 'funding'], vet: ['carer', 'vet'] };
+const MODES = ['intake', 'log', 'carer', 'tovet', 'mop', 'funding', 'vet'];
+const ROLE_MODES = { carer: ['carer', 'intake', 'log', 'tovet', 'mop', 'funding'], vet: ['carer', 'vet'] };
 
 const MODE_TEXT = {
   vet: { button: 'Create notes', placeholder: 'Your words appear here as you talk. You can also type or fix anything.' },
@@ -543,6 +547,7 @@ const MODE_TEXT = {
   intake: { button: 'Create record', placeholder: 'Wildlife Victoria case number, the animal, exactly where it was found, its condition and what you did.' },
   log: { button: 'Create log', placeholder: 'The animal, weight, feeds, medications given, toileting, behaviour and anything you’re watching.' },
   funding: { button: 'Create draft', placeholder: 'The funder, what you need and why, costs, numbers of animals and volunteers, timeline and how you’ll measure success.' },
+  mop: { button: 'Create MOP plan', placeholder: 'The caller, the animal and its condition, exactly where it was found, what they have at home, and when a rescuer or vet can take it.' },
   tovet: { button: 'Create summary', placeholder: 'The animal, its history in care, what you’ve noticed, current meds and your questions.' },
 };
 
@@ -1056,6 +1061,26 @@ $('home').addEventListener('click', () => {
 
 let careFrom = 'note'; // where Back goes: the vet note, or the dictation screen
 
+// Rehydration: steps from Claude, amounts worked out on the device from Anne Fowler's protocol.
+function rehydrationSection(r) {
+  if (!r || !r.needed) return null;
+  const t = rehydrationTable(r);
+  return el('section', { class: 'care-sec rehydrate' }, [
+    el('h2', { text: 'Rehydration' }),
+    t
+      ? el('div', { class: 'tbl', role: 'region', tabindex: '0', 'aria-label': 'Rehydration amounts' }, [
+          el('p', { class: 'help', text: `For ${r.weight_g} g, ${t.assumed ? `assuming ${t.deficit}% dehydrated (the protocol’s starting point)` : `${t.deficit}% dehydrated`}.` }),
+          el('table', { class: 'rehydrate-table' }, [
+            el('thead', {}, [el('tr', {}, ['Day', 'Total', 'Every 4 hours', 'Every 6 hours'].map((h) => el('th', { scope: 'col', text: h })))]),
+            el('tbody', {}, t.days.map((d) => el('tr', {}, [el('th', { scope: 'row', text: String(d.day) }), el('td', { text: `${d.total} mL` }), el('td', { text: `${d.every4h} mL` }), el('td', { text: `${d.every6h} mL` })]))),
+          ]),
+        ])
+      : el('p', { class: 'help', text: 'Add the animal’s weight to work out the amounts.' }),
+    r.steps.length ? el('ul', {}, r.steps.map((x) => el('li', { text: x }))) : null,
+    el('p', { class: 'rehydrate-note', text: REHYDRATION_NOTE }),
+  ]);
+}
+
 function renderCare(c) {
   const sec = (title, items, cls) => (items.length ? el('section', { class: 'care-sec ' + (cls || '') }, [el('h2', { text: title }), list(items)]) : null);
   const name = c.animal || currentNote()?.patient.name || '';
@@ -1105,6 +1130,7 @@ function renderCare(c) {
             )),
           ])
         : null,
+      rehydrationSection(c.rehydration),
       c.plan.length
         ? el('section', { class: 'care-sec' }, [
             el('h2', { text: 'Day-by-day plan' }),
@@ -1205,6 +1231,9 @@ els.careCopy.addEventListener('click', async () => {
 
 let currentDoc = null;
 
+// Documents that open with a ready-to-send text message, and the heading Claude gives it.
+const TEXT_HEADING = { tovet: /^text to your vet$/i, mop: /^text to send$/i };
+
 function renderDoc(d, kind) {
   $('doc-title').textContent = d.title || DOC_KINDS[kind].label;
   $('doc-subtitle').textContent = d.subtitle;
@@ -1215,7 +1244,7 @@ function renderDoc(d, kind) {
   $('doc-check-count').textContent = d.check.length ? String(d.check.length) : '';
   $('doc-check-list').replaceChildren(...d.check.map((c) => el('li', { text: c })));
   $('doc').replaceChildren(
-    ...d.sections.filter((s) => !(kind === 'tovet' && /^text to your vet$/i.test(s.heading))).map((s) =>
+    ...d.sections.filter((s) => !(TEXT_HEADING[kind] && TEXT_HEADING[kind].test(s.heading))).map((s) =>
       el('section', { class: 'doc-sec' }, [el('h2', { text: s.heading }), s.text ? el('p', { text: s.text }) : list(s.items)]),
     ),
     ...(d.due.length
@@ -1234,9 +1263,10 @@ function showDoc(d, kind, info = '') {
   remember('doc', { d, kind }, d.title);
   currentDoc = { d, kind };
   renderMakeNext($('make-next-doc'), kind);
-  // "For the vet" leads with a ready-to-send text message.
-  const textSec = kind === 'tovet' ? d.sections.find((x) => /^text to your vet$/i.test(x.heading)) : null;
+  // "For the vet" and the MOP plan lead with a ready-to-send text message.
+  const textSec = TEXT_HEADING[kind] ? d.sections.find((x) => TEXT_HEADING[kind].test(x.heading)) : null;
   $('text-vet').hidden = !textSec;
+  $('text-vet-title').textContent = kind === 'mop' ? 'Text to send the caller' : 'Text to your vet';
   $('text-vet-body').textContent = textSec ? textSec.text || textSec.items.join(' ') : '';
   $('advice-cta').hidden = kind !== 'intake';
   madeFrom[kind] = { text: els.transcript.value, d, info };
@@ -1349,7 +1379,8 @@ $('text-vet-send').addEventListener('click', async () => {
     if (e && e.name === 'AbortError') return;
   }
   const ok = await copyText(text);
-  toast(ok ? 'Copied. Paste it into a text to your vet, and add a photo.' : 'Couldn’t copy. Select the text and copy it instead.');
+  const forVet = !currentDoc || currentDoc.kind === 'tovet';
+  toast(ok ? (forVet ? 'Copied. Paste it into a text to your vet, and add a photo.' : 'Copied. Paste it into a text to the caller.') : 'Couldn’t copy. Select the text and copy it instead.');
 });
 
 async function makeNext(m) {

@@ -2,6 +2,7 @@
 // The app's AI can't browse, so plans are grounded in these checked sources and cite them by id.
 import { VIC_SOURCES } from './sources-vic.js';
 import { QLD_SOURCES } from './sources-qld.js';
+import { AU_SOURCES } from './sources-au.js';
 import { region, sourceRank } from './region.js';
 
 /** Sources for the state currently chosen. */
@@ -10,7 +11,7 @@ export const currentSources = () => region().sources;
 export const SOURCES = VIC_SOURCES;
 
 // Look-ups work across both states, so a plan made under one still shows its sources after switching.
-const byId = new Map([...VIC_SOURCES, ...QLD_SOURCES].map((s) => [s.id, s]));
+const byId = new Map([...VIC_SOURCES, ...QLD_SOURCES, ...AU_SOURCES].map((s) => [s.id, s]));
 export const lookupSource = (id) => byId.get(id) || null;
 /** Ids a plan may cite: only the chosen state's library. */
 export const SOURCE_IDS = () => new Set(currentSources().map((s) => s.id));
