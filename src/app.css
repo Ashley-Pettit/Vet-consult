@@ -963,3 +963,8 @@ body[data-kb="open"] .site-foot, body[data-kb="open"] .foot { display: none; }
 .checklist li { display: flex; align-items: flex-start; gap: 10px; }
 .checklist input { width: 22px; height: 22px; margin-top: 1px; flex: none; accent-color: var(--accent); }
 .target-weight { margin: 0 0 6px; }
+
+/* Add more info: a clear listening state, words shown as they're heard */
+dialog.more[data-mic="listening"] textarea, dialog.more[data-mic="starting"] textarea { border-color: var(--rec); box-shadow: 0 0 0 3px var(--rec-soft); }
+dialog.more[data-mic="listening"] .more-mic-zone .help { color: var(--rec); font-weight: 650; }
+#more-interim { margin: -4px 0 0; }

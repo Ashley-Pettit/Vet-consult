@@ -1141,11 +1141,19 @@ function startMoreVoice() {
   moreVoice = new Dictation({ lang: CONFIG.speechLang });
   moreVoice.onfinal = (t) => {
     moreText.value = appendSegment(moreText.value, t);
+    $('more-interim').textContent = '';
     $('more-go').disabled = !moreText.value.trim();
+  };
+  // Show the words as they're heard, so it's clear the mic is picking them up.
+  moreVoice.oninterim = (t) => {
+    $('more-interim').textContent = t;
+    if (t) $('more-go').disabled = false;
   };
   moreVoice.onstate = (st) => {
     moreMic.setAttribute('aria-pressed', String(st !== 'idle'));
     more.dataset.mic = st;
+    moreHelp.textContent = st === 'starting' ? 'One moment…' : st === 'listening' ? 'Listening. Talk now, then tap Update.' : `Tap the mic to add more, or type. ${MORE_HELP}`;
+    if (st === 'listening') cueListening();
   };
   moreVoice.onerror = (c) => (moreHelp.textContent = speechErrorMessage(c));
   unlockAudio();
@@ -1159,7 +1167,21 @@ moreMic.addEventListener('click', () => {
   }
   startMoreVoice();
 });
-more.addEventListener('close', () => moreVoice && moreVoice.cancel());
+more.addEventListener('close', () => {
+  if (moreVoice) moreVoice.cancel();
+  $('more-interim').textContent = '';
+});
+// Update while still listening: stop, wait for the last words to land, then update. Nothing said is lost.
+$('more-go').addEventListener('click', async (e) => {
+  if (!moreVoice || moreVoice.state === 'idle') return;
+  e.preventDefault();
+  const pending = $('more-interim').textContent.trim();
+  moreVoice.stop();
+  const t0 = Date.now();
+  while (moreVoice.state !== 'idle' && Date.now() - t0 < 1800) await new Promise((res) => setTimeout(res, 60));
+  if (pending && !moreText.value.includes(pending)) moreText.value = appendSegment(moreText.value, pending);
+  if (moreText.value.trim()) more.close('go');
+});
 $('more-cancel').addEventListener('click', () => more.close());
 moreText.addEventListener('input', () => ($('more-go').disabled = !moreText.value.trim()));
 more.addEventListener('close', async () => {
