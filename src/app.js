@@ -720,13 +720,41 @@ async function withModel(model, job) {
   const saved = settings;
   settings = { ...settings, model };
   provider = null;
+  overriding += 1;
   try {
     return await job();
   } finally {
-    settings = saved;
+    overriding -= 1;
+    // Keep a default chosen on the loading screen while this ran.
+    settings = modelChoice ? { ...saved, model: modelChoice } : saved;
+    modelChoice = null;
     provider = null;
   }
 }
+
+// On the loading screen: pick the default model for next time. The plan being written isn't touched.
+let modelChoice = null;
+function applyModelChoice() {
+  if (!modelChoice || overriding) return;
+  settings = { ...settings, model: modelChoice };
+  modelChoice = null;
+  provider = null;
+}
+let overriding = 0; // a one-off model (Fast for a quick update, Opus for a retry) is in use
+function syncSpeedPick() {
+  document.querySelectorAll('input[name="speed"]').forEach((r) => (r.checked = r.value === (modelChoice || store.loadSettings().model || CONFIG.defaultModel)));
+}
+document.querySelectorAll('input[name="speed"]').forEach((r) =>
+  r.addEventListener('change', () => {
+    if (!r.checked) return;
+    modelChoice = r.value;
+    const saved = { ...store.loadSettings(), model: r.value };
+    store.saveSettings(saved);
+    // The plan being written keeps its model: the new default is applied once it's finished.
+    if (!aborter && !overriding) applyModelChoice();
+    $('speed-help').textContent = `Saved. Your next plan uses ${r.value === QUICK_MODEL ? 'Fast (Haiku)' : 'Detailed (Sonnet)'}; this one carries on as it is.`;
+  }),
+);
 const QUICK_MODEL = 'claude-haiku-5-5';
 const BEST_MODEL = 'claude-opus-5-5';
 // A short, simple update goes to the fast model; anything long or with drugs and doses keeps the chosen model.
@@ -779,6 +807,8 @@ async function runWorking(title, sub, job) {
   els.workingSub.textContent = looking ? 'Looking for the species, injuries and anything else that helps the plan.' : sub;
   const swap = looking ? setTimeout(() => { els.workingTitle.textContent = title; els.workingSub.textContent = sub; }, 7000) : null;
   showView('working');
+  syncSpeedPick();
+  $('speed-help').textContent = 'This one carries on as it is.';
   els.stop.focus();
   const t0 = Date.now();
   const tick = setInterval(() => {
@@ -795,6 +825,7 @@ async function runWorking(title, sub, job) {
     clearTimeout(swap);
     clearInterval(tick);
     aborter = null;
+    applyModelChoice();
   }
 }
 

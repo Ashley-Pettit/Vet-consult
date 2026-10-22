@@ -176,6 +176,14 @@
       <p class="working-fact" id="working-fact" hidden><span class="fact-label">Did you know?</span> <span id="working-fact-text"></span></p>
     </div>
     <button type="button" class="btn ghost" id="stop">Stop</button>
+    <fieldset class="speed-pick">
+      <legend>Next time, use</legend>
+      <div class="seg">
+        <label><input type="radio" name="speed" value="claude-haiku-5-5"><span>Fast (Haiku)</span></label>
+        <label><input type="radio" name="speed" value="claude-sonnet-5-5"><span>Detailed (Sonnet)</span></label>
+      </div>
+      <p class="help" id="speed-help">This one carries on as it is.</p>
+    </fieldset>
   </section>
 
   <!-- 3. Note -->
@@ -378,7 +386,7 @@
     <div class="field">
       <label for="model">AI model</label>
       <select id="model"></select>
-      <p class="help">Sonnet is the default. Pick Opus for tricky cases; it takes longer.</p>
+      <p class="help">Detailed (Sonnet) is the default. Fast (Haiku) is quicker for simple cases; Opus is for tricky ones and takes longer. You can also switch while a plan is being written.</p>
     </div>
 
     <section class="field usage" aria-labelledby="usage-title">
