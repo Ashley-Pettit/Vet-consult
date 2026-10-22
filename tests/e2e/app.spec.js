@@ -84,34 +84,24 @@ test.describe('dictation', () => {
 });
 
 test.describe('creating a note', () => {
-  test('public demo never asks for a key; an optional key still works', async ({ page }) => {
+  test('the website uses the Care Scribe connection: no key needed, and the vet name is added', async ({ page }) => {
     await fakeSpeech(page);
     const calls = await mockApi(page);
     await openApp(page);
-    await page.locator('#transcript').fill(DICTATION);
-    await page.locator('#create').click();
-    await expect(page.locator('#banner')).toContainText('public demo');
-    await expect(page.locator('#settings')).toBeHidden();
-    expect(calls).toHaveLength(0);
     await page.locator('#open-settings').click();
-    const dlg = page.locator('#settings');
-    await expect(dlg).toBeVisible();
-    await expect(page.locator('#conn-status')).toContainText('Public demo');
-    await expect(page.locator('#api-key')).toBeHidden(); // tucked away under Advanced
-    await page.locator('#key-field summary').click();
-    await page.locator('#api-key').fill('sk-ant-abc');
+    await expect(page.locator('#conn-status')).toContainText('Connected: Care Scribe connection');
+    await expect(page.locator('#key-field')).toBeHidden(); // no personal key needed
     await page.locator('#clinician').fill('Dr Sam Lee');
-    await page.locator('#remember-key').check();
     await page.locator('#save-settings').click();
-    await expect(dlg).toBeHidden();
+    await page.locator('#transcript').fill(DICTATION);
     await page.locator('#create').click();
     await expect(page.locator('#view-note')).toBeVisible();
     expect(calls).toHaveLength(1);
-    expect(calls[0].headers['x-api-key']).toBe('sk-ant-abc');
+    expect(calls[0].headers['x-api-key']).toBeUndefined(); // the key lives on Cloudflare, never in the browser
     expect(calls[0].body.messages[0].content).toContain('Dr Sam Lee');
-    // Clinician from settings fills the gap the model left.
     await expect(page.locator('#note')).toContainText('Dr Sam Lee');
   });
+
 
   test('full flow renders the note, checks and copy text', async ({ page, context, browserName }) => {
     const errors = watchErrors(page);
@@ -174,15 +164,16 @@ test.describe('creating a note', () => {
     await expect(page.locator('#toast-text')).toContainText('Stopped');
   });
 
-  test('rejected key shows a clear error and opens settings', async ({ page }) => {
-    await withKey(page);
-    await mockApi(page, { status: 401, body: { type: 'error', error: { type: 'authentication_error' } } });
+  test('a refused connection shows a clear error and never asks for a key', async ({ page }) => {
+    await mockApi(page, { status: 403, body: { error: { type: 'forbidden_origin' } } });
     await openApp(page);
     await page.locator('#transcript').fill(DICTATION);
     await page.locator('#create').click();
-    await expect(page.locator('#banner')).toContainText('API key was rejected');
-    await expect(page.locator('#settings')).toBeVisible();
+    await expect(page.locator('#banner')).toContainText('isn’t allowed to use Claude');
+    await expect(page.locator('#settings')).toBeHidden();
+    await expect(page.locator('#transcript')).toHaveValue(DICTATION);
   });
+
 
   test('overloaded API shows a retry message', async ({ page }) => {
     await withKey(page);
@@ -226,15 +217,16 @@ test.describe('creating a note', () => {
     expect(calls).toHaveLength(1);
   });
 
-  test('the wombat example fills the dictation; with no connection it explains instead of failing', async ({ page }) => {
+  test('the wombat example fills the dictation and goes through the connection', async ({ page }) => {
     const calls = await mockApi(page);
     await openApp(page);
     await page.locator('#load-example').click();
     await expect(page.locator('#transcript')).toHaveValue(/wombat/i);
     await page.locator('#create').click();
-    await expect(page.locator('#banner')).toBeVisible();
-    expect(calls).toHaveLength(0);
+    await expect(page.locator('#view-note')).toBeVisible();
+    expect(calls).toHaveLength(1);
   });
+
 
   test('create note while still listening keeps the last words', async ({ page }) => {
     await fakeSpeech(page);
@@ -285,30 +277,29 @@ test.describe('creating a note', () => {
 });
 
 test.describe('settings', () => {
-  test('clear saved data removes the key', async ({ page }) => {
+  test('clear saved data removes settings and keeps the connection', async ({ page }) => {
     await withKey(page, { clinician: 'Dr A' });
     await openApp(page);
     await page.locator('#open-settings').click();
-    await expect(page.locator('#conn-status')).toContainText('Connected');
     await expect(page.locator('#clinician')).toHaveValue('Dr A');
     await page.locator('#forget').click();
-    await expect(page.locator('#conn-status')).toContainText('Public demo');
+    await expect(page.locator('#conn-status')).toContainText('Connected');
     const stored = await page.evaluate(() => localStorage.getItem('css.settings'));
     expect(stored).toBeNull();
   });
 
-  test('a key not marked remember is kept only for the session', async ({ page }) => {
+
+  test('saved settings stay on this device under Care Scribe’s own name', async ({ page }) => {
     await openApp(page);
     await page.locator('#open-settings').click();
-    await page.locator('#key-field summary').click();
-    await page.locator('#api-key').fill('sk-ant-temp');
+    await page.locator('#clinician').fill('Dr Temp');
     await page.locator('#save-settings').click();
     await expect(page.locator('#toast-text')).toContainText(/saved/i);
     const local = await page.evaluate(() => localStorage.getItem('css.settings'));
-    expect(local).not.toContain('sk-ant-temp');
-    const session = await page.evaluate(() => sessionStorage.getItem('css.key'));
-    expect(session).toContain('sk-ant-temp');
+    expect(local).toContain('Dr Temp');
+    expect(await page.evaluate(() => localStorage.getItem('vcs.settings'))).toBeNull(); // Consult Scribe's are separate
   });
+
 
   test('pressing Enter in a settings field saves', async ({ page }) => {
     await openApp(page);

@@ -183,7 +183,7 @@ export async function resolveProvider(settings = {}, env = {}) {
   if (CONFIG.proxyUrl) {
     return {
       id: 'proxy',
-      label: 'Organisation connection',
+      label: 'Care Scribe connection',
       images: true,
       generate: (prompt, signal, { images = [] } = {}) => callMessages(CONFIG.proxyUrl, {}, prompt, model, signal, fetchImpl, { viaProxy: true, images }),
     };

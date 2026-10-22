@@ -47,7 +47,8 @@ export async function mockApi(page, { status = 200, body = apiReply(), delayMs =
     await route.fulfill({
       status,
       contentType: 'application/json',
-      headers: { 'access-control-allow-origin': '*' },
+      // Same CORS answer as the real connection: the calling site by name, cookies allowed.
+      headers: { 'access-control-allow-origin': route.request().headers().origin || '*', 'access-control-allow-credentials': 'true' },
       body: JSON.stringify(reply),
     }).catch(() => {});
   });

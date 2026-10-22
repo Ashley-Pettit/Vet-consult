@@ -2,6 +2,11 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { resolveProvider, textFromMessage, friendly, AI_MESSAGES } from '../../src/ai.js';
 import { apiReply } from '../fixtures.js';
+import { CONFIG } from '../../src/config.js';
+
+// These cover the provider order itself; the deployed connection address is tested separately below.
+const PROXY = CONFIG.proxyUrl;
+CONFIG.proxyUrl = '';
 
 const jsonResponse = (status, body) => ({ ok: status >= 200 && status < 300, status, json: async () => body });
 
@@ -128,4 +133,22 @@ test('Claude runtime passes photo blobs and reports image support', async () => 
   assert.deepEqual(opts.images, ['BLOB']);
   const plain = Object.assign(async () => ({ text: 'ok' }), { limits: async () => ({}) });
   assert.equal((await resolveProvider({}, { claude: { use: async () => plain } })).images, false);
+});
+
+test('the deployed connection is used ahead of a personal key, with sign-in cookies', async () => {
+  CONFIG.proxyUrl = PROXY;
+  try {
+    let seen;
+    const fetch = async (url, init) => {
+      seen = { url, init };
+      return jsonResponse(200, apiReply());
+    };
+    const p = await resolveProvider({ apiKey: 'sk-ant-test' }, { claude: null, fetch });
+    assert.equal(p.id, 'proxy');
+    await p.generate('hello');
+    assert.equal(seen.url, PROXY);
+    assert.equal(seen.init.headers['x-api-key'], undefined);
+  } finally {
+    CONFIG.proxyUrl = '';
+  }
 });
