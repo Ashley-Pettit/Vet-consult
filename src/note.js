@@ -5,6 +5,7 @@ import { speciesGroupsForPrompt, SPECIES_GROUP_IDS, rangesFor } from './species-
 import { videoFor, watchUrl } from './videos.js';
 import { drugsForPrompt } from './drugs.js';
 import { shorthandForPrompt } from './shorthand.js';
+import { vetCareForPrompt } from './species-vet.js';
 
 // Pure logic: prompt, parsing, normalising and plain-text formatting of clinical notes.
 // No DOM access here so it can be unit tested in Node.
@@ -160,6 +161,7 @@ ${clinician}${photos}
 ${RULES}
 ${drugsForPrompt(opts.drugs)}
 ${shorthandForPrompt()}
+${vetCareForPrompt(dictation)}
 - The dictation may cover one animal or SEVERAL (for example a litter or a seizure). Write one note per animal, in the order dictated, putting shared case details (location, case number, circumstances) in each animal's subjective.
 - Reply with ONLY {"animals":[NOTE, ...]} (one NOTE per animal, no markdown) where NOTE is:
 ${NOTE_SHAPE('')}
@@ -253,6 +255,7 @@ export function buildCarerPlanPrompt(dictation, sourceList = '', { fromVet = fal
   return `${who}
 Speech recognition may mishear drug and species names; correct obvious mishearings.
 ${fromVet ? `${shorthandForPrompt()}\n` : ''}${drugsForPrompt(drugs)}
+${vetCareForPrompt(dictation, { audience: fromVet ? undefined : 'carer' })}
 ${careRules(sourceList)}
 
 <comments>
