@@ -570,7 +570,7 @@ const MODE_TEXT = {
   intake: { button: 'Create record', placeholder: 'Wildlife Victoria case number, the animal, exactly where it was found, its condition and what you did.' },
   log: { button: 'Create log', placeholder: 'The animal, weight, feeds, medications given, toileting, behaviour and anything you’re watching.' },
   funding: { button: 'Create draft', placeholder: 'The funder, what you need and why, costs, numbers of animals and volunteers, timeline and how you’ll measure success.' },
-  mop: { button: 'Create MOP plan', placeholder: 'The caller, the animal and its condition, exactly where it was found, what they have at home, and when a rescuer or vet can take it.' },
+  mop: { button: 'Create MOP plan', placeholder: 'The caller, the animal and its condition, any injuries, exactly where it was found, what they have at home, and which vet or shelter it is going to and when.' },
   tovet: { button: 'Create summary', placeholder: 'The animal, its history in care, what you’ve noticed, current meds and your questions.' },
 };
 

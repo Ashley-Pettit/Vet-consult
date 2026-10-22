@@ -888,16 +888,23 @@ export const DOC_KINDS = {
   mop: {
     label: 'MOP care plan',
     copy: 'Copy plan',
-    working: 'Short, calm steps the caller can follow until help arrives.',
-    title: 'Care plan for a member of the public (MOP) holding wildlife until a rescuer arrives or they can get it to a vet',
+    working: 'A short first-aid plan the person can follow until a vet or shelter takes over.',
+    title: 'Short-term care plan for a member of the public (MOP) caring for wildlife until it reaches a vet or shelter',
     sources: true,
-    rule: () => `A hotline operator${region().code === 'vic' ? ' (for example at Wildlife Victoria)' : ' (for example at RSPCA Queensland)'} is talking to a member of the public (MOP) who has found an animal and has to hold it for a while: overnight, until a rescuer arrives, or until they can get it to a vet. From the operator's notes about the call, write the care plan the operator sends to that person.
-- The reader has no wildlife experience and may be anxious. Very short, plain, calm sentences. Most important first. Say each thing once: no section repeats another.
-- First section "Text to send": one SMS-length message of at most 600 characters with the key steps and when to call back. No headings or lists in it.
-- Then these sections, in this order, leaving out any that do not apply: "Right now" (containment in a box or carrier with air holes, warmth, dark, quiet, minimal handling, keeping pets and children away), "Until help arrives" (checking on it without handling, warmth, and food or water ONLY as the reference sources allow for this kind of animal), "Keep yourself safe" (only when relevant to this species, for example never touch bats or flying-foxes), "Call back straight away if" (signs that need urgent help), "What happens next" (the rescuer, vet or drop-off exactly as the operator said, with times if given), "Where it was found" (the exact location word for word, because release goes back there).
-- Base every care step on the reference sources below (${region().adj} first). Say what TO do; only say what not to do when it is specific to this animal or species.
-- Make clear the member of the public is only holding the animal until it reaches a vet, rescuer or authorised carer, as ${region().adj} rules require.
-- NEVER suggest any medication, dose, procedure or euthanasia.
+    rule: () => `A hotline operator${region().code === 'vic' ? ' (for example at Wildlife Victoria)' : ' (for example at RSPCA Queensland)'} is talking to a member of the public (MOP) who has found an animal and will look after it for a short time, until they can get it to a vet or shelter, or a rescuer collects it, for longer-term care. From the operator's notes about the call, write the short plan the operator sends that person: directions for temporary care and basic first aid only.
+- The reader has no wildlife experience and may be anxious. Keep the whole plan SHORT: about 200 words outside the text message. Very short, plain, calm sentences. Most important first. Say each thing once.
+- First section "Text to send": one SMS-length message of at most 600 characters with the key steps, where the animal needs to go and when, and when to call back. No headings or lists in it.
+- Then these sections, in this order, leaving out any that do not apply, each with no more than 4 short bullet points:
+  - "Right now": contain it in a box or carrier with air holes, lined with a towel; keep it warm, dark and quiet; handle it as little as possible; keep pets and children away.
+  - "Basic first aid": only simple steps a member of the public can safely do and that the reference sources support for this animal, for example gentle warmth with a wrapped hot water bottle, covering the box, gentle pressure with a clean cloth on light bleeding, keeping a wet or cold animal dry and warm. Leave out anything that needs training. Food or water ONLY if the reference sources allow it for this kind of animal.
+  - "Getting it to a vet or shelter": where it is going and when, exactly as the operator said, and how to transport it (closed box, quiet car, no music, not too hot or cold, never on a lap).
+  - "Keep yourself safe": only when relevant to this species, for example never touch bats or flying-foxes, or use a thick towel and gloves for animals that bite or scratch.
+  - "Call back straight away if": signs that need urgent help.
+  - "Where it was found": the exact location word for word, because release goes back there.
+- Base every step on the reference sources below (${region().adj} first). Say what TO do; only say what not to do when it is specific to this animal or species.
+- Every "do not" in this plan ends with "unless the vet or ${region().hotline} advises otherwise", for example "Do not give food or water unless the vet or ${region().hotline} advises otherwise." Safety rules about touching bats or flying-foxes are the only exception: never soften those.
+- Make clear this is short-term only and the animal needs a vet, shelter or authorised carer for longer-term care, as ${region().adj} rules require.
+- NEVER suggest any medication, dose, procedure, force-feeding or euthanasia.
 - Contact: ${region().hotline} on ${region().phone} (${region().hotlineHours}), unless the operator gave a different number.
 - "check": at most 3 short questions for the operator, only about missing details that would change the advice (for example "Is it a bat or flying-fox?").`,
   },

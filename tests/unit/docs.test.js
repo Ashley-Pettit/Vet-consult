@@ -88,7 +88,10 @@ test('MOP plan: plain steps for a member of the public, a text to send, grounded
   assert.match(p, /member of the public \(MOP\)/);
   assert.match(p, /"Text to send": one SMS-length message of at most 600 characters/);
   assert.match(p, /Reference sources \(id \| scope \| title \| key points\), most important first:\nvic-x/);
-  assert.match(p, /NEVER suggest any medication, dose, procedure or euthanasia/);
+  assert.match(p, /NEVER suggest any medication, dose, procedure, force-feeding or euthanasia/);
+  assert.match(p, /"Basic first aid"/);
+  assert.match(p, /"Getting it to a vet or shelter"/);
+  assert.match(p, /Every "do not" in this plan ends with "unless the vet or Wildlife Victoria advises otherwise"/);
   assert.match(p, /Wildlife Victoria on 03 8400 7300/);
   setRegion('qld');
   try {
