@@ -1087,6 +1087,9 @@ $('home').addEventListener('click', () => {
 let careFrom = 'note'; // where Back goes: the vet note, or the dictation screen
 
 // A checked video for the species. Loads only when tapped (quick on mobile data); YouTube link as a fallback.
+// One line that reads well in a text message: what the video is, who made it, and the link.
+const videoLine = (v) => `Video: ${v.title} (${v.channel}) ${watchUrl(v)}`;
+
 function videoSection(v) {
   if (!v) return null;
   const box = el('div', { class: 'video-box' });
@@ -1103,7 +1106,10 @@ function videoSection(v) {
     el('p', {}, [el('strong', { text: v.title }), ` (${v.channel}, ${v.date})`]),
     v.warning ? el('p', { class: 'help', text: v.warning }) : null,
     box,
-    el('p', { class: 'help' }, [el('a', { href: watchUrl(v), target: '_blank', rel: 'noopener', text: 'Open on YouTube' })]),
+    el('div', { class: 'video-actions' }, [
+      el('button', { type: 'button', class: 'btn ghost video-send', onclick: () => shareOrCopy(videoLine(v), v.title, 'Video link copied. Paste it into a text or email.') }, 'Send this video'),
+      el('a', { href: watchUrl(v), target: '_blank', rel: 'noopener', text: 'Open on YouTube' }),
+    ]),
   ]);
 }
 
@@ -1402,7 +1408,7 @@ async function createDoc(kind, text) {
 $('doc-back').addEventListener('click', () => showView('record'));
 $('doc-copy').addEventListener('click', () => {
   if (!currentDoc) return;
-  shareOrCopy(docText(currentDoc.d) + (currentDoc.kind === 'mop' ? `\n\n${MOP_DISCLAIMER}` : ''), $('doc-title').textContent, 'Copied. Paste it wherever it needs to go.');
+  shareOrCopy(docText(currentDoc.d) + (currentDoc.kind === 'mop' ? `${mopVideo(currentDoc.d) ? `\n\n${videoLine(mopVideo(currentDoc.d))}` : ''}\n\n${MOP_DISCLAIMER}` : ''), $('doc-title').textContent, 'Copied. Paste it wherever it needs to go.');
 });
 $('doc-new').addEventListener('click', addMoreInfo);
 
@@ -1467,8 +1473,9 @@ async function waitForIntakeCare() {
   }
 }
 $('text-vet-send').addEventListener('click', async () => {
-  const text = $('text-vet-body').textContent;
-  if (!text) return;
+  const mopVid = currentDoc && currentDoc.kind === 'mop' ? mopVideo(currentDoc.d) : null;
+  const text = $('text-vet-body').textContent + (mopVid ? `\n\n${videoLine(mopVid)}` : '');
+  if (!$('text-vet-body').textContent) return;
   try {
     if (navigator.share) {
       await navigator.share({ text });
