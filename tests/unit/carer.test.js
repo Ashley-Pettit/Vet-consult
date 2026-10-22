@@ -129,3 +129,12 @@ test('normal ranges are shown from the checked table, state-specific where sourc
   assert.match(careSheetText(c, lookupSource), /Normal ranges: Common ringtail possum\n- Body temperature: about 36\.1°C[\s\S]*- Unfurred: 32°C/);
   assert.equal(normaliseCareSheet({ ...EXAMPLE_CARER_PLAN, species_group: 'unicorn' }, SOURCE_IDS()).species_group, '');
 });
+
+test('carer plans leave out drugs only given at the clinic, and baby-bird videos only show for young birds', async () => {
+  const { buildCarerPlanPrompt } = await import('../../src/note.js');
+  const { videoFor } = await import('../../src/videos.js');
+  assert.match(buildCarerPlanPrompt('RBL, meloxicam given', '', { fromVet: true }), /A drug the vet says was "given", "administered" or "had" at the clinic/);
+  assert.equal(videoFor('bird', 'Care plan: rainbow lorikeet (adult)').title, 'How to contain an injured bird or small animal');
+  assert.equal(videoFor('bird', 'Magpie nestling fell from nest').title, 'How to help a baby bird');
+  assert.equal(videoFor('koala', '').title, 'Getting help for sick koalas');
+});

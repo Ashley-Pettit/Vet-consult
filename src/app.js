@@ -1184,13 +1184,13 @@ function renderCare(c) {
             el('ul', { class: 'meds' }, c.medications.map((m) =>
               el('li', {}, [
                 el('strong', { text: m.name }),
-                el('span', { class: 'care-how', text: [m.how, m.how_often, m.how_long].filter(Boolean).join(' · ') }),
+                el('span', { class: 'care-how', text: [...new Set([m.how, m.how_often, m.how_long].filter(Boolean))].join(' · ') }),
                 m.tip ? el('span', { class: 'care-tip', text: `Tip: ${m.tip}` }) : null,
               ]),
             )),
           ])
         : null,
-      videoSection(videoFor(c.species_group)),
+      videoSection(videoFor(c.species_group, [c.title, c.summary, c.animal].filter(Boolean).join(' '))),
       rangesSection(c.species_group),
       rehydrationSection(c.rehydration),
       c.plan.length

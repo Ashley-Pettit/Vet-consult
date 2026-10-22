@@ -9,16 +9,23 @@ export const VIDEOS = {
   koala: { id: 'K-fjzFdSw7U', title: 'Getting help for sick koalas', channel: 'Queensland Government (Environment)', date: '2024' },
   echidna: { id: 'tD9h_26QWGA', title: 'Hand-raising a rescued baby echidna', channel: 'Taronga Wildlife Hospital', date: '2020' },
   flyingfox: { id: 'ilC1lI7Q4Jk', title: 'Rescue unit saves a bat', channel: 'Australia Zoo Wildlife Hospital', date: '2021' },
-  bird: { id: 'K9FETK07HvQ', title: 'How to help a baby bird', channel: 'Wildlife Victoria', date: '2019' },
+  bird: { id: 'K9FETK07HvQ', title: 'How to help a baby bird', channel: 'Wildlife Victoria', date: '2019', young: true },
   raptor: { id: 'DQThwNr91SU', title: 'Birds of prey: vet talk', channel: 'Currumbin Wildlife Hospital', date: '2020' },
-  waterbird: { id: 'Hh_P-EeiYM8', title: 'How to help ducklings', channel: 'Wildlife Victoria', date: '2019' },
+  waterbird: { id: 'Hh_P-EeiYM8', title: 'How to help ducklings', channel: 'Wildlife Victoria', date: '2019', young: true },
   dragon: { id: 'POE6PMLML8A', title: 'Dragon returns to its den: treatment and release', channel: 'RSPCA Queensland', date: '2022' },
   python: { id: 'i67vEgT8f7Y', title: 'Carpet python at Taronga Wildlife Hospital', channel: 'Taronga Wildlife Hospital', date: '2021' },
   turtle: { id: 'eT1Ne4vCzXQ', title: 'Broad-shelled turtle shell repair and release', channel: 'RSPCA Queensland', date: '2023' },
   general: { id: 'PVqgAgfDFyk', title: 'How to contain an injured bird or small animal', channel: 'Wildlife Victoria', date: '2019' },
 };
 
-export const videoFor = (group) => VIDEOS[group] || null;
+// Videos about young animals (baby birds, ducklings) only show when the plan is about a young animal;
+// otherwise the general containment video is closer to what the carer needs.
+const YOUNG = /\b(chick|chicks|nestling|fledgling|hatchling|branchling|baby|babies|duckling|ducklings|cygnet|juvenile|orphan|orphaned|joey|pinky|pinkie)\b/i;
+export const videoFor = (group, context = '') => {
+  const v = VIDEOS[group] || null;
+  if (v && v.young && !YOUNG.test(context)) return VIDEOS.general;
+  return v;
+};
 export const watchUrl = (v) => `https://www.youtube.com/watch?v=${v.id}`;
 export const embedUrl = (v) => `https://www.youtube-nocookie.com/embed/${v.id}?rel=0&modestbranding=1&autoplay=1`;
 export const thumbUrl = (v) => `https://i.ytimg.com/vi/${v.id}/hqdefault.jpg`;
