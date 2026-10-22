@@ -21,7 +21,7 @@ export const GROUP_WORDS = {
   magpie: ['magpie', 'currawong', 'butcherbird', 'raven', 'crow', 'mudlark', 'magpie-lark', 'peewee'],
   parrot: ['parrot', 'cockatoo', 'corella', 'galah', 'rosella', 'cockatiel', 'budgie', 'budgerigar', 'king parrot', 'scc', 'black cockatoo'],
   lorikeet: ['lorikeet', 'lorrikeet'],
-  pigeon: ['pigeon', 'dove'],
+  pigeon: ['pigeon', 'dove', 'bronzewing', 'squab', 'fruit-dove', 'fruit dove', 'rock dove'],
   'frogmouth-owl': ['frogmouth', 'owl', 'boobook', 'nightjar', 'tf'],
   raptor: ['hawk', 'eagle', 'falcon', 'kite', 'kestrel', 'goshawk', 'harrier', 'osprey', 'raptor', 'hobby'],
   kookaburra: ['kookaburra', 'kingfisher'],
