@@ -149,6 +149,7 @@ function updateCreateState() {
   els.create.disabled = !has || busy; // allowed while listening: it stops the mic first
   els.clear.disabled = !has && photos.length === 0;
   els.examples.hidden = has;
+  updateBarFloat();
   if (dictation.state === 'idle' && document.body.dataset.mic !== 'keyboard') els.micStatus.textContent = idleStatus();
 }
 
@@ -442,6 +443,47 @@ els.mic.addEventListener('click', () => {
   vv.addEventListener('resize', update);
   vv.addEventListener('scroll', update);
 })();
+// Tapping the dictation box: once the keyboard is up, show the whole box (label to last line) above the Create bar,
+// instead of leaving the line being typed hidden under the bar.
+function dictationIntoView() {
+  if (document.activeElement !== els.transcript || document.body.dataset.mic === 'keyboard') return;
+  const vv = window.visualViewport;
+  const viewTop = vv ? vv.offsetTop : 0;
+  const bar = document.body.dataset.kb === 'open' ? (document.querySelector('#view-record .actions')?.offsetHeight || 0) : 0;
+  const viewH = (vv ? vv.height : window.innerHeight) - bar;
+  const field = els.transcript.closest('.field').getBoundingClientRect();
+  const box = els.transcript.getBoundingClientRect();
+  const top = field.top - viewTop;
+  const bottom = box.bottom - viewTop;
+  // A long note is left to the caret, so the line they tapped stays put.
+  if (box.height > viewH - 40) return;
+  if (top < 0 || bottom > viewH) window.scrollTo({ top: window.scrollY + Math.min(top - 8, bottom - viewH + 8), behavior: 'instant' });
+}
+els.transcript.addEventListener('focus', () => {
+  const vv = window.visualViewport;
+  let done = false;
+  const go = () => { if (!done) { done = true; dictationIntoView(); } };
+  if (vv) vv.addEventListener('resize', () => setTimeout(go, 60), { once: true });
+  setTimeout(go, 450);
+});
+// Create floats at the bottom of the screen (or above the keyboard) only while the whole dictation box is in view.
+function updateBarFloat() {
+  const bar = document.querySelector('#view-record .actions');
+  if (!bar || !els.transcript) return;
+  const vv = window.visualViewport;
+  const top = vv ? vv.offsetTop : 0;
+  const height = vv ? vv.height : window.innerHeight;
+  const box = els.transcript.getBoundingClientRect();
+  const fits = box.height > 0 && box.top - top >= 0 && box.bottom - top <= height - bar.offsetHeight;
+  const next = fits ? 'yes' : '';
+  if (document.body.dataset.barFloat !== next) document.body.dataset.barFloat = next;
+}
+let barRaf = 0;
+const queueBarFloat = () => { if (!barRaf) barRaf = requestAnimationFrame(() => { barRaf = 0; updateBarFloat(); }); };
+window.addEventListener('scroll', queueBarFloat, { passive: true });
+window.addEventListener('resize', queueBarFloat);
+if (window.visualViewport) { window.visualViewport.addEventListener('resize', queueBarFloat); window.visualViewport.addEventListener('scroll', queueBarFloat); }
+new ResizeObserver(queueBarFloat).observe(els.transcript);
 // Keep the coach mark only while the keyboard is up.
 els.transcript.addEventListener('blur', () => setTimeout(() => document.activeElement !== els.transcript && endKeyboardVoice(), 150));
 
@@ -455,6 +497,8 @@ els.transcript.addEventListener('input', () => {
   updateClearButton();
 });
 
+// After Clear: the box with a mouse and keyboard, the mic on a phone (so the keyboard doesn't pop up uninvited).
+const focusAfterClear = () => (window.matchMedia('(pointer: fine)').matches ? els.transcript : els.mic).focus({ preventScroll: true });
 const confirmClear = $('confirm-clear');
 $('clear-text').addEventListener('click', () => {
   if (busy) return;
@@ -463,7 +507,7 @@ $('clear-text').addEventListener('click', () => {
     setTranscript('');
     banner('');
     updateExampleNote();
-    els.transcript.focus();
+    focusAfterClear();
     return;
   }
   confirmClear.showModal();
@@ -476,7 +520,7 @@ confirmClear.addEventListener('close', () => {
   endKeyboardVoice();
   setTranscript('');
   banner('');
-  els.transcript.focus();
+  focusAfterClear();
 });
 
 // Example words are shown as an example, not as the user's own: a note above the box and a tinted box,
@@ -570,11 +614,21 @@ function renderPhotos() {
 async function addPhotos(input) {
   const files = [...input.files].slice(0, MAX_PHOTOS - photos.length);
   input.value = '';
-  for (const f of files) {
+  for (const [i, f] of files.entries()) {
+    // Big phone photos can take a few seconds to shrink: show that something is happening.
+    const busyTile = el('div', { class: 'photo-busy', role: 'status' }, [el('span', { class: 'photo-spin', 'aria-hidden': 'true' }), files.length > 1 ? `Processing photo ${i + 1} of ${files.length}…` : 'Processing photo…']);
+    els.photoList.hidden = false;
+    els.photoList.append(busyTile);
+    let ready = null;
     try {
-      photos.push(await cropPhoto(await preparePhoto(f)));
-    } catch {
-      toast('That file couldn’t be read as a photo.');
+      ready = await Promise.race([preparePhoto(f), new Promise((_, no) => setTimeout(() => no(new Error('slow')), 30000))]);
+    } catch (e) {
+      toast(e && e.message === 'slow' ? 'That photo took too long to load. Try a smaller one, or take a screenshot of it.' : 'That file couldn’t be read as a photo. Try a JPEG or a screenshot of it.');
+    }
+    busyTile.remove();
+    if (ready) {
+      photos.push(await cropPhoto(ready));
+      renderPhotos();
     }
   }
   renderPhotos();
@@ -1432,8 +1486,8 @@ function feedSection(c) {
     el('div', { class: 'feed-in' }, [el('label', { for: id, text: 'Weight today (g)' }), input]),
     out,
     el('p', { class: 'help', text: `${f.pct}% of body weight a day, in ${f.feeds} feeds. Weigh daily and re-work it as the weight changes.${f.basis ? ` Based on: ${f.basis}.` : ''}` }),
-    !f.sure ? el('p', { class: 'unsure', text: 'Claude isn’t certain of this figure for this species and stage. Check it with your vet or the feeding guide before using it.' }) : null,
-    el('p', { class: 'ai-check', text: careAiNote(c) }),
+    // One note only: the plan's AI note is already at the top.
+    !f.sure ? el('p', { class: 'unsure', text: 'Not sure of this figure for this species and age. Check it with your vet or the feeding guide first.' }) : null,
   ]);
 }
 
@@ -2075,7 +2129,9 @@ async function openSettings(message) {
   }
   els.settings.returnValue = '';
   if (!els.settings.open) els.settings.showModal();
-  els.clinician.focus();
+  // On a phone, focusing a box pops the keyboard over Settings: only jump to the first box with a mouse and keyboard.
+  if (window.matchMedia('(pointer: fine)').matches) els.clinician.focus();
+  else $('close-settings').focus({ preventScroll: true });
 }
 
 els.openSettings.addEventListener('click', () => openSettings());

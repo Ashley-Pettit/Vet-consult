@@ -216,3 +216,52 @@ test('take photo opens the camera; gallery picks several; there is no video butt
   await expect(page.locator('#add-video')).toHaveCount(0);
 });
 
+
+test('tapping the dictation box with the keyboard up shows the whole box above the Create bar', async ({ page, isMobile }) => {
+  test.skip(!isMobile, 'phones only');
+  await page.addInitScript(() => {
+    const t = new EventTarget(); t.height = innerHeight; t.width = innerWidth; t.offsetTop = 0; t.offsetLeft = 0; t.scale = 1;
+    Object.defineProperty(window, 'visualViewport', { get: () => t });
+    window.__kb = (h) => { t.height = innerHeight - h; t.dispatchEvent(new Event('resize')); };
+  });
+  await openApp(page);
+  await page.locator('#transcript').tap();
+  await page.evaluate(() => window.__kb(300));
+  await expect(page.locator('body')).toHaveAttribute('data-kb', 'open');
+  await expect.poll(async () => page.evaluate(() => {
+    const bar = document.querySelector('#view-record .actions').getBoundingClientRect();
+    const f = document.querySelector('#transcript').closest('.field').getBoundingClientRect();
+    const t = document.querySelector('#transcript').getBoundingClientRect();
+    return f.top >= 0 && t.bottom <= bar.top;
+  })).toBe(true);
+  // The whole box is in view, so Create floats above the keyboard.
+  await expect(page.locator('body')).toHaveAttribute('data-bar-float', 'yes');
+});
+
+test('Create never covers the dictation box: it floats only while the whole box is in view', async ({ page }) => {
+  await openApp(page);
+  await page.locator('#transcript').fill('Ringtail joey, cat attack. '.repeat(40));
+  const covered = () => page.evaluate(() => {
+    const bar = document.querySelector('#view-record .actions').getBoundingClientRect();
+    const t = document.querySelector('#transcript').getBoundingClientRect();
+    return bar.top < t.bottom - 1 && bar.bottom > t.top + 1;
+  });
+  for (const y of [0, 150, 300, 600]) {
+    await page.evaluate((v) => window.scrollTo(0, v), y);
+    await page.waitForTimeout(120);
+    expect(await covered()).toBe(false);
+  }
+});
+
+test('a photo shows Processing while it is shrunk on the phone', async ({ page }) => {
+  await openApp(page);
+  await page.evaluate(() => {
+    const orig = HTMLCanvasElement.prototype.toBlob;
+    HTMLCanvasElement.prototype.toBlob = function (cb, ...a) { setTimeout(() => orig.call(this, cb, ...a), 800); };
+  });
+  const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
+  await page.locator('#add-gallery').setInputFiles({ name: 'big.png', mimeType: 'image/png', buffer: PNG });
+  await expect(page.locator('.photo-busy')).toContainText('Processing photo');
+  await expect(page.locator('#crop-dlg')).toBeVisible();
+  await expect(page.locator('.photo-busy')).toHaveCount(0);
+});

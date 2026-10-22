@@ -306,7 +306,7 @@ function rehydrationBlocks(r) {
   }];
 }
 
-function feedBlocks(f, note) {
+function feedBlocks(f) {
   if (!f || !f.applies) return [];
   const a = feedAmounts(f, f.weight_g);
   const rows = [
@@ -318,7 +318,7 @@ function feedBlocks(f, note) {
   return [{
     heading: 'Feed calculator',
     table: { head: ['', 'Amount'], rows, widths: [2600, PAGE_W - 2600] },
-    note: `${f.sure ? '' : 'Claude isn’t certain of this figure for this species and stage; check it with your vet or the feeding guide. '}Weigh daily and re-work the amounts: weight in grams × ${f.pct} ÷ 100 = mL a day. ${note}`,
+    note: `${f.sure ? '' : 'Not sure of this figure for this species and age. Check it with your vet or the feeding guide first. '}Weigh daily and re-work the amounts: weight in grams × ${f.pct} ÷ 100 = mL a day.`,
   }];
 }
 
@@ -332,7 +332,7 @@ export function careModel(c, lookup) {
     ...c.plan.map((p) => ({ heading: p.when, items: p.tasks })),
     { heading: 'Housing', items: c.housing },
     { heading: 'Feeding', items: c.feeding },
-    ...feedBlocks(c.feed_calc, careAiNote(c)),
+    ...feedBlocks(c.feed_calc),
     { heading: 'Activity and handling', items: c.activity },
     { heading: 'Other care', items: c.care },
   ];

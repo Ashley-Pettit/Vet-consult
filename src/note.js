@@ -737,7 +737,7 @@ export function careSheetText(c, lookup = () => null) {
     if (fa) L.push(`- For ${f.weight_g} g${f.stage ? ` (${f.stage})` : ''}: about ${fa.perDay} mL a day, as ${fa.feeds} feeds of about ${fa.perFeed} mL`);
     L.push(`- ${f.pct}% of body weight a day, in ${f.feeds} feeds. Re-work it as the weight changes.`);
     if (f.basis) L.push(`- Based on: ${f.basis}`);
-    if (!f.sure) L.push('- Claude isn’t certain of this figure for this species and stage. Check it with your vet or the feeding guide.');
+    if (!f.sure) L.push('- Not sure of this figure for this species and age. Check it with your vet or the feeding guide first.');
     L.push('');
   }
   section('Activity and handling', c.activity);

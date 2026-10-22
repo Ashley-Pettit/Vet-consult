@@ -814,11 +814,13 @@ main { padding-top: 14px; }
 .mic-zone { padding-top: 0; }
 
 /* Create stays in view: sticky on every width, and lifted above the keyboard on phones */
-#view-record .actions { position: sticky; bottom: 0; }
+#view-record .actions { position: static; }
+/* Create floats only while the whole dictation box is in view, so it never covers the words */
+body[data-bar-float="yes"] #view-record .actions { position: sticky; bottom: 0; }
 @media (min-width: 720px) {
   #view-record .actions { margin: 0; padding: 12px 0; background: linear-gradient(to top, var(--bg) 75%, transparent); }
 }
-body[data-kb="open"] #view-record .actions {
+body[data-kb="open"][data-bar-float="yes"] #view-record .actions {
   position: fixed; left: 0; right: 0; bottom: var(--kb-offset, 0px); z-index: 40; margin: 0;
   padding: 8px var(--gutter-r) 8px var(--gutter-l); background: var(--bg); box-shadow: 0 -1px 0 var(--line), 0 -6px 16px rgba(0,0,0,.06);
 }
@@ -1037,3 +1039,23 @@ dialog.crop-dlg h2 { margin: 0; font: 700 1.2rem/1.2 var(--display); text-transf
 .recent-item:hover, .recent-item:focus-visible { border-color: var(--accent); background: var(--accent-soft); }
 .recent-title { font-weight: 700; overflow-wrap: anywhere; }
 .recent-meta { font-size: 0.82rem; color: var(--muted); }
+
+/* With the keyboard up, focus scrolling stops short of the Create bar */
+html:has(body[data-kb="open"]) { scroll-padding-bottom: calc(var(--kb-offset, 0px) + 96px); scroll-padding-top: 8px; }
+/* Room to scroll the dictation box up to the top while the keyboard covers the bottom of the page */
+body[data-kb="open"] #view-record { padding-bottom: calc(var(--kb-offset, 0px) + 96px); }
+body[data-kb="open"] .tx-hint { display: none; }
+
+/* A photo being shrunk on the phone */
+.photo-busy { display: inline-flex; align-items: center; gap: 10px; padding: 10px 14px; border: 1px dashed var(--line); border-radius: 10px; color: var(--muted); font-size: 0.9rem; font-weight: 600; }
+.photo-spin { width: 18px; height: 18px; border-radius: 50%; border: 2.5px solid var(--accent-soft); border-top-color: var(--accent); animation: photo-spin 0.8s linear infinite; }
+@keyframes photo-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .photo-spin { animation-duration: 2.4s; } }
+
+/* Phones: keep the dictation box above the fold */
+@media (max-width: 719px) and (max-height: 760px) {
+  .hero-banner { min-height: 84px; }
+  .hero-inner { padding-top: 6px; padding-bottom: 8px; }
+  .hero-title { font-size: 1.7rem; }
+  .mode-intro { font-size: 0.86rem; line-height: 1.4; }
+}
