@@ -974,3 +974,9 @@ dialog.more[data-mic="listening"] .more-mic-zone .help { color: var(--rec); font
 .ticksheet tbody th { min-width: 150px; }
 .ticksheet thead th:first-child { text-align: left; }
 .src-meta > :last-child { flex: 1 1 auto; min-width: 0; }
+
+/* Loading: what it's doing, and checked facts about the animal */
+.working-feed { max-width: 30rem; display: grid; gap: 10px; margin-top: 6px; }
+.working-step { margin: 0; font-weight: 650; color: var(--ink); min-height: 1.4em; }
+.working-fact { margin: 0; padding: 12px 14px; border-radius: 10px; background: var(--accent-soft); text-align: left; font-size: 0.92rem; line-height: 1.45; }
+.fact-label { display: block; font: 700 0.78rem/1.2 var(--display); text-transform: uppercase; letter-spacing: 0.08em; color: var(--chip-ink, var(--accent)); margin-bottom: 4px; }

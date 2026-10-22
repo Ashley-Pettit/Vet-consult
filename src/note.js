@@ -562,7 +562,25 @@ export const REHYDRATION_NOTE = 'Worked out from Anne Fowler’s fluid therapy p
 
 /** Coerce a care plan reply into a safe shape. */
 // Shown on every care plan and feed calculator, as Bunurong Wildlife Care asked.
-export const AI_CHECK_NOTE = 'Check this AI guidance. It may make mistakes. Trust an expert over this tool.';
+// AI disclaimers, mixed up so they keep being read. Each one puts people ahead of the tool.
+// A plan always shows the same one (picked from its own text), on screen, in shared text and in Word.
+export const AI_NOTES = [
+  'Check this AI guidance. It may make mistakes. Trust an expert over this tool.',
+  'This is an ai tool which can make mistakes. In doubt? Defer to an expert.',
+  'A vet or experienced wildlife carer knows this animal better than any app. If anything here seems off, trust them.',
+  'AI can get things wrong. A vet, a wildlife carer or your hotline always has the final say.',
+  'Use this as a starting point, not the final word. When in doubt, ask a person who knows wildlife.',
+  'This was written by AI. Your vet and experienced carers come first, every time.',
+  'Not sure about something here? A quick call to a vet or wildlife carer beats any AI.',
+];
+export const AI_CHECK_NOTE = AI_NOTES[0];
+export function aiNoteFor(seed = '') {
+  let h = 0;
+  for (const ch of String(seed)) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  return AI_NOTES[h % AI_NOTES.length];
+}
+const careSeed = (c) => `${c.animal}|${c.summary}`;
+export const careAiNote = (c) => aiNoteFor(careSeed(c));
 
 /** The feed calculator's inputs, checked so nonsense figures never reach the screen. */
 export function feedCalcOf(raw) {
@@ -660,7 +678,7 @@ export function careSheetText(c, lookup = () => null) {
     L.push('');
   };
   L.push(c.kind === 'wildlife' ? `Care plan: ${c.animal || 'wildlife in care'}` : `Caring for ${c.animal || 'your animal'} at home`);
-  L.push(AI_CHECK_NOTE, '');
+  L.push(careAiNote(c), '');
   if (c.summary) L.push(c.summary, '');
   if (c.medications.length) {
     L.push('Medications');

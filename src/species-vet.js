@@ -82,6 +82,18 @@ export function groupsIn(text = '') {
 
 const line = (p) => `${p.species} | ${p.topic}${p.scope && p.scope !== 'au' ? ` | ${p.scope.toUpperCase()}` : ''} | ${p.point}${p.why ? ` (${p.why})` : ''} [${p.source_title}]`;
 
+/** Short, checked carer facts for the animals named, for the loading screen. */
+export function factsFor(text = '') {
+  const groups = groupsIn(text);
+  const pool = VET_POINTS.filter((p) => groups.includes(p.species) && p.audience === 'carer' && p.point.length <= 170 && (!p.scope || p.scope === 'au' || p.scope === region().code));
+  return pool.map((p) => ({ text: p.point, source: p.source_title }));
+}
+export const namedAnimal = (text = '') => {
+  const g = groupsIn(text).find((x) => !['bird', 'reptile'].includes(x));
+  const NAMES = { macropod: 'kangaroos and wallabies', ringtail: 'ringtail possums', brushtail: 'brushtail possums', flyingfox: 'flying-foxes', 'frogmouth-owl': 'frogmouths and owls', 'venomous-snake': 'snakes', 'freshwater-turtle': 'freshwater turtles', 'sea-turtle': 'sea turtles', 'brush-turkey': 'brush-turkeys', 'black-cockatoo': 'black cockatoos' };
+  return g ? NAMES[g] || `${g.replace(/-/g, ' ')}s` : '';
+};
+
 /** Points for the prompt: every point for the groups mentioned; otherwise the drug and anaesthesia cautions for all. */
 export function vetCareForPrompt(text = '', { audience } = {}) {
   if (!VET_POINTS.length) return '';

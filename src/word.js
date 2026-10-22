@@ -5,7 +5,7 @@ import {
   Paragraph, ShadingType, Table, TableCell, TableLayoutType, TableRow, TextRun, VerticalAlign, WidthType,
 } from 'docx';
 import { LOGO_PNG_BASE64 } from './brand-logo.js';
-import { dueLabel, formatDate, NOT_RECORDED, rehydrationTable, REHYDRATION_NOTE, AI_CHECK_NOTE, feedAmounts } from './note.js';
+import { dueLabel, formatDate, NOT_RECORDED, rehydrationTable, REHYDRATION_NOTE, careAiNote, feedAmounts } from './note.js';
 import { rangesFor } from './species-ranges.js';
 import { region } from './region.js';
 
@@ -302,7 +302,7 @@ function rehydrationBlocks(r) {
   }];
 }
 
-function feedBlocks(f) {
+function feedBlocks(f, note) {
   if (!f || !f.applies) return [];
   const a = feedAmounts(f, f.weight_g);
   const rows = [
@@ -314,14 +314,14 @@ function feedBlocks(f) {
   return [{
     heading: 'Feed calculator',
     table: { head: ['', 'Amount'], rows, widths: [2600, PAGE_W - 2600] },
-    note: `${f.sure ? '' : 'Claude isn’t certain of this figure for this species and stage; check it with your vet or the feeding guide. '}Weigh daily and re-work the amounts: weight in grams × ${f.pct} ÷ 100 = mL a day. ${AI_CHECK_NOTE}`,
+    note: `${f.sure ? '' : 'Claude isn’t certain of this figure for this species and stage; check it with your vet or the feeding guide. '}Weigh daily and re-work the amounts: weight in grams × ${f.pct} ÷ 100 = mL a day. ${note}`,
   }];
 }
 
 export function careModel(c, lookup) {
   const meds = c.medications.map((m) => [m.name, m.how, m.how_often, m.how_long]);
   const blocks = [
-    { heading: 'Please note', text: AI_CHECK_NOTE },
+    { heading: 'Please note', text: careAiNote(c) },
     { heading: 'Summary', text: c.summary },
     ...(meds.length ? [{ heading: 'Medications', table: { head: ['Medication', 'How', 'How often', 'How long'], rows: meds, widths: [2600, 2600, 2400, PAGE_W - 7600] }, note: c.medications.map((m) => (m.tip ? `${m.name}: ${m.tip}` : '')).filter(Boolean).join('  ') || undefined }] : []),
     ...rangesBlocks(c.species_group),
@@ -329,7 +329,7 @@ export function careModel(c, lookup) {
     ...c.plan.map((p) => ({ heading: p.when, items: p.tasks })),
     { heading: 'Housing', items: c.housing },
     { heading: 'Feeding', items: c.feeding },
-    ...feedBlocks(c.feed_calc),
+    ...feedBlocks(c.feed_calc, careAiNote(c)),
     { heading: 'Activity and handling', items: c.activity },
     { heading: 'Other care', items: c.care },
   ];

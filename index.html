@@ -164,6 +164,10 @@
     <h1 id="working-title">Writing the clinical note</h1>
     <p class="muted" id="working-sub">Claude is turning your words into a SOAP note.</p>
     <p class="muted" id="working-elapsed" aria-live="off">Usually 10 to 40 seconds</p>
+    <div class="working-feed" aria-live="polite">
+      <p class="working-step" id="working-step"></p>
+      <p class="working-fact" id="working-fact" hidden><span class="fact-label">Did you know?</span> <span id="working-fact-text"></span></p>
+    </div>
     <button type="button" class="btn ghost" id="stop">Stop</button>
   </section>
 

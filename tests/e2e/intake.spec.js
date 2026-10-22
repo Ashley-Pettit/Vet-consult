@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { withKey, mockApi, openApp, textReply } from './helpers.js';
-import { EXAMPLE_CARER_PLAN } from '../../src/note.js';
+import { EXAMPLE_CARER_PLAN, aiNoteFor } from '../../src/note.js';
 
 test('intake starts the care plan alongside the record, and "Need advice right now?" opens it instantly', async ({ page }) => {
   await withKey(page, { role: 'carer', mode: 'intake' });
@@ -55,9 +55,9 @@ test('MOP plan shows the disclaimer word for word, and copies it', async ({ page
   await openApp(page);
   await page.locator('#transcript').fill('MOP call. Possum in a shoe box.');
   await page.locator('#create').click();
-  await expect(page.locator('#doc .ai-disclaimer')).toHaveText('This is an ai tool which can make mistakes. In doubt? Defer to an expert.');
+  await expect(page.locator('#doc .ai-disclaimer')).toHaveText(aiNoteFor('Care plan for the possum you found'));
   await page.locator('#doc-copy').click();
   await page.getByRole('button', { name: 'Share as text' }).click();
   await expect.poll(() => page.evaluate(() => window.__shared.length)).toBe(1);
-  expect(await page.evaluate(() => window.__shared[0].text)).toMatch(/This is an ai tool which can make mistakes\. In doubt\? Defer to an expert\.$/);
+  expect(await page.evaluate(() => window.__shared[0].text)).toContain(aiNoteFor('Care plan for the possum you found'));
 });

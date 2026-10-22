@@ -9,7 +9,8 @@ import { lookupSource, sourcesForPrompt, SOURCE_IDS } from './sources.js';
 import { region, setRegion } from './region.js';
 import { rangesFor } from './species-ranges.js';
 import { videoFor, videoForTags, watchUrl, embedUrl, thumbUrl } from './videos.js';
-import { groupsIn } from './species-vet.js';
+import { groupsIn, factsFor, namedAnimal } from './species-vet.js';
+import { SPECIES_CARE } from './species-care.js';
 import { buildWord, docModel, careModel, noteModel, wordFileName, dischargeModel } from './word.js';
 import {
   NOTE_TYPES,
@@ -51,8 +52,8 @@ import {
   careSheetText,
   pmsSections,
   toPlainText,
-  MOP_DISCLAIMER,
-  AI_CHECK_NOTE,
+  careAiNote,
+  aiNoteFor,
   feedAmounts,
 } from './note.js';
 
@@ -617,6 +618,41 @@ function waitForIdle(ms = 2500) {
 }
 
 /** Show the working screen and run one Claude call, with Stop and an elapsed timer. */
+// While Claude writes: a line about what it's doing, then checked facts about the animal named.
+function startWorkingFeed(title) {
+  const text = els.transcript.value;
+  const animal = namedAnimal(text);
+  const state = region().adj;
+  const steps = [
+    'Reading what you said…',
+    animal ? `Picking out what matters for ${animal}…` : 'Working out what kind of animal this is…',
+    `Checking ${state} wildlife guidance and the code of practice…`,
+    ...(sendPhotos().length ? ['Looking closely at the photos…'] : []),
+    animal ? `Adding species-specific points for ${animal}…` : 'Adding general care points…',
+    /notes/i.test(title) ? 'Laying out the SOAP notes…' : 'Writing it in plain English, one step at a time…',
+    'Checking nothing is repeated or missed…',
+    'Nearly there…',
+  ];
+  let facts = factsFor(text);
+  if (!facts.length) facts = SPECIES_CARE.map((w) => ({ text: `${w.warning} ${w.why}`, source: w.source_title }));
+  facts = facts.sort(() => Math.random() - 0.5).slice(0, 12);
+  let i = 0;
+  const show = () => {
+    $('working-step').textContent = steps[Math.min(i, steps.length - 1)];
+    const f = facts.length && i >= 1 ? facts[(i - 1) % facts.length] : null;
+    $('working-fact').hidden = !f;
+    if (f) $('working-fact-text').textContent = f.text;
+    i += 1;
+  };
+  show();
+  const t = setInterval(show, 4500);
+  return () => {
+    clearInterval(t);
+    $('working-fact').hidden = true;
+    $('working-step').textContent = '';
+  };
+}
+
 async function runWorking(title, sub, job) {
   // With photos attached, say so first: looking at the photos is the slow part.
   const looking = sendPhotos().length && !/^Hmm/.test(title);
@@ -631,10 +667,12 @@ async function runWorking(title, sub, job) {
     els.elapsed.textContent = s < 8 ? 'Usually 10 to 40 seconds' : `${s} seconds…`;
   }, 1000);
   els.elapsed.textContent = 'Usually 10 to 40 seconds';
+  const feed = startWorkingFeed(title);
   aborter = new AbortController();
   try {
     return await job(aborter.signal);
   } finally {
+    feed();
     clearTimeout(swap);
     clearInterval(tick);
     aborter = null;
@@ -1315,7 +1353,7 @@ function feedSection(c) {
     out,
     el('p', { class: 'help', text: `${f.pct}% of body weight a day, in ${f.feeds} feeds. Weigh daily and re-work it as the weight changes.${f.basis ? ` Based on: ${f.basis}.` : ''}` }),
     !f.sure ? el('p', { class: 'unsure', text: 'Claude isn’t certain of this figure for this species and stage. Check it with your vet or the feeding guide before using it.' }) : null,
-    el('p', { class: 'ai-check', text: AI_CHECK_NOTE }),
+    el('p', { class: 'ai-check', text: careAiNote(c) }),
   ]);
 }
 
@@ -1361,7 +1399,7 @@ function renderCare(c) {
   const refs = c.sources.map(lookupSource).filter(Boolean);
   els.careSheet.replaceChildren(
     ...[
-      el('p', { class: 'ai-check top', text: AI_CHECK_NOTE }),
+      el('p', { class: 'ai-check top', text: careAiNote(c) }),
       c.summary ? el('p', { class: 'care-summary', text: c.summary }) : null,
       c.medications.length
         ? el('section', { class: 'care-sec' }, [
@@ -1561,7 +1599,7 @@ function renderDoc(d, kind) {
   $('doc-check-count').textContent = d.check.length ? String(d.check.length) : '';
   $('doc-check-list').replaceChildren(...d.check.map((c) => el('li', { text: c })));
   $('doc').replaceChildren(
-    ...(kind === 'mop' ? [el('p', { class: 'ai-disclaimer', text: MOP_DISCLAIMER })] : []),
+    ...(kind === 'mop' ? [el('p', { class: 'ai-disclaimer', text: aiNoteFor(d.title) })] : []),
     ...d.sections.filter((s) => !(TEXT_HEADING[kind] && TEXT_HEADING[kind].test(s.heading))).map((s) =>
       el('section', { class: 'doc-sec' }, [el('h2', { text: s.heading }), s.text ? el('p', { text: s.text }) : list(s.items)]),
     ),
@@ -1622,7 +1660,7 @@ async function createDoc(kind, text) {
 $('doc-back').addEventListener('click', () => showView('record'));
 $('doc-copy').addEventListener('click', () => {
   if (!currentDoc) return;
-  shareOrCopy(docText(currentDoc.d) + (currentDoc.kind === 'mop' ? `${mopVideo(currentDoc.d) ? `\n\n${videoLine(mopVideo(currentDoc.d))}` : ''}\n\n${MOP_DISCLAIMER}` : ''), $('doc-title').textContent, 'Copied. Paste it wherever it needs to go.', docModel(currentDoc.d, DOC_KINDS[currentDoc.kind].label, currentDoc.kind === 'mop' ? MOP_DISCLAIMER : ''));
+  shareOrCopy(docText(currentDoc.d) + (currentDoc.kind === 'mop' ? `${mopVideo(currentDoc.d) ? `\n\n${videoLine(mopVideo(currentDoc.d))}` : ''}\n\n${aiNoteFor(currentDoc.d.title)}` : ''), $('doc-title').textContent, 'Copied. Paste it wherever it needs to go.', docModel(currentDoc.d, DOC_KINDS[currentDoc.kind].label, currentDoc.kind === 'mop' ? aiNoteFor(currentDoc.d.title) : ''));
 });
 $('doc-new').addEventListener('click', addMoreInfo);
 
@@ -1812,7 +1850,7 @@ async function saveWord(model, btn) {
     btn.lastChild.textContent = label;
   }
 }
-$('word-doc').addEventListener('click', (e) => currentDoc && saveWord(docModel(currentDoc.d, DOC_KINDS[currentDoc.kind].label, currentDoc.kind === 'mop' ? MOP_DISCLAIMER : ''), e.currentTarget));
+$('word-doc').addEventListener('click', (e) => currentDoc && saveWord(docModel(currentDoc.d, DOC_KINDS[currentDoc.kind].label, currentDoc.kind === 'mop' ? aiNoteFor(currentDoc.d.title) : ''), e.currentTarget));
 $('word-care').addEventListener('click', (e) => careSheet && saveWord(careModel(careSheet, lookupSource), e.currentTarget));
 $('word-note').addEventListener('click', (e) => currentNote() && saveWord(noteModel(currentNote()), e.currentTarget));
 
