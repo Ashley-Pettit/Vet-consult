@@ -1762,7 +1762,8 @@ const TEXT_HEADING = { tovet: /^text to your vet$/i, mop: /^text to send$/i };
 
 // A care plan's video: the species group Claude picked, refined by the animal named (a lorikeet, not just a bird).
 function carePlanVideo(c) {
-  const context = [c.title, c.summary, c.animal].filter(Boolean).join(' ');
+  // What was said counts too, so a condition the summary leaves out (mange, netting) still finds its video.
+  const context = [c.title, c.summary, c.animal, els.transcript.value].filter(Boolean).join(' ');
   // The species group Claude picked comes first; the animal's name only refines a general group like "bird".
   const tags = groupsIn(context);
   return ['bird', 'waterbird', ''].includes(c.species_group) ? videoFor(c.species_group, context, tags) : videoFor(c.species_group, context) || videoFor('', context, tags);

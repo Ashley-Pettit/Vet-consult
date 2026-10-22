@@ -42,6 +42,486 @@ export const VIDEOS = {
   'general': {"id": "PVqgAgfDFyk", "title": "How to contain an injured bird or small animal", "channel": "Wildlife Victoria", "date": "2019"},
 };
 
+// Videos about the animal's particular condition (mange, chlamydia, netting, a window strike...), checked October 2026.
+// When the plan mentions the condition for one of these animals, this video beats the general species one.
+const CONDITION_VIDEOS = [
+ {
+  "groups": [
+   "wombat"
+  ],
+  "words": [
+   "mange",
+   "sarcoptic",
+   "scabs",
+   "crusting",
+   "crusty",
+   "hair loss",
+   "fur loss"
+  ],
+  "video": {
+   "id": "_k6mRUXrmCg",
+   "title": "WIRES Community Mange Treatment Program for wombats",
+   "channel": "WIRES",
+   "date": "2022",
+   "condition": "Sarcoptic mange",
+   "warning": "NSW program; Victorian and Queensland viewers need their local mange group or wildlife service for treatment kits and permits."
+  }
+ },
+ {
+  "groups": [
+   "wombat"
+  ],
+  "words": [
+   "pouch",
+   "dead mother",
+   "mother was hit",
+   "mum was hit",
+   "mum hit",
+   "mother hit",
+   "pulled from the pouch",
+   "from the pouch"
+  ],
+  "video": {
+   "id": "LUcWXCp-N5E",
+   "title": "Wombat master class: how to check a pouch",
+   "channel": "Wombat Rescue",
+   "date": "2022",
+   "condition": "Car strike / pouch check",
+   "warning": "Distressing footage of a dead wombat and cutting the pouch. Only cut a pouch when the mother is certainly dead; never pull a joey off the teat."
+  }
+ },
+ {
+  "groups": [
+   "koala"
+  ],
+  "words": [
+   "chlamydia",
+   "conjunctivitis",
+   "sore eyes",
+   "crusty eyes",
+   "wet bottom",
+   "dirty bottom",
+   "wet bum",
+   "cystitis"
+  ],
+  "video": {
+   "id": "zjJJ3rpohU4",
+   "title": "How to recognise if a koala is sick and needs to be rescued",
+   "channel": "Friends of the Koala",
+   "date": "2023",
+   "condition": "Chlamydia (eye or wet bottom)",
+   "warning": "Northern Rivers NSW group; the phone number shown is theirs. In Qld call 1300 ANIMAL, in Victoria call Wildlife Victoria."
+  }
+ },
+ {
+  "groups": [
+   "koala"
+  ],
+  "words": [
+   "dehydrat",
+   "heatwave",
+   "heat wave",
+   "heat stress",
+   "drinking",
+   "drought"
+  ],
+  "video": {
+   "id": "siWnhV4Ybp4",
+   "title": "Koala Hospital Wildlife Drinking Stations Project",
+   "channel": "Koala Hospital Port Macquarie",
+   "date": "2020",
+   "condition": "Dehydration / heatwave drinking water",
+   "warning": "Do not squirt water from a bottle into a koala's mouth (it can inhale it); offer a bowl and call a rescuer. Just over 5 years old."
+  }
+ },
+ {
+  "groups": [
+   "macropod"
+  ],
+  "words": [
+   "pouch",
+   "dead mother",
+   "mother was hit",
+   "mum was hit",
+   "mum hit",
+   "mother hit",
+   "from the pouch",
+   "pouch young"
+  ],
+  "video": {
+   "id": "O4cc4_gQW28",
+   "title": "Wallaby joey rescue: how to check a marsupial's pouch",
+   "channel": "Wannon Creek Wildlife",
+   "date": "2023",
+   "condition": "Pouch young after mother hit by car",
+   "warning": "Footage of a dead wallaby. Keep the joey warm, dark and quiet; do not feed it, and never pull a joey off the teat."
+  }
+ },
+ {
+  "groups": [
+   "brushtail"
+  ],
+  "words": [
+   "dead mother",
+   "mother was hit",
+   "mum was hit",
+   "mum hit",
+   "mother hit",
+   "from the pouch",
+   "pouch young",
+   "in the pouch"
+  ],
+  "video": {
+   "id": "jwyh9L0ILZw",
+   "title": "Removing a possum joey from a pouch",
+   "channel": "WildlifeVictoria",
+   "date": "2019",
+   "condition": "Orphaned joey (mother dead)",
+   "warning": "Warning: dead possum and pouch being cut."
+  }
+ },
+ {
+  "groups": [
+   "brushtail",
+   "ringtail"
+  ],
+  "words": [
+   "in the roof",
+   "roof cavity",
+   "in the ceiling",
+   "ceiling"
+  ],
+  "video": {
+   "id": "QmKd6RVfiuY",
+   "title": "Living with possums: Possums in your roof",
+   "channel": "Green Adelaide",
+   "date": "2023",
+   "condition": "Possum in the roof",
+   "warning": "South Australian rules; in Vic and Qld check local rules on trapping before using a cage trap."
+  }
+ },
+ {
+  "groups": [
+   "flyingfox"
+  ],
+  "words": [
+   "netting",
+   "net ",
+   "tangled in net",
+   "caught in net",
+   "fruit tree net"
+  ],
+  "video": {
+   "id": "y4KtaMn0wag",
+   "title": "Rescuing a flying-fox stuck under fruit netting",
+   "channel": "Megabattie",
+   "date": "2022",
+   "condition": "Caught in fruit-tree netting",
+   "warning": "Never touch a bat yourself (Australian bat lyssavirus); only vaccinated, trained rescuers should handle them."
+  }
+ },
+ {
+  "groups": [
+   "flyingfox"
+  ],
+  "words": [
+   "orphan",
+   "pup",
+   "creche",
+   "crèche"
+  ],
+  "video": {
+   "id": "LzT5ZWZuX8w",
+   "title": "Baby flying-foxes goes to creche: Dilly, Wally, Sequoia and Azure",
+   "channel": "Megabattie",
+   "date": "2021",
+   "condition": "Orphaned pups (creche)",
+   "warning": "Carer-level content. The public must not handle bats (lyssavirus risk)."
+  }
+ },
+ {
+  "groups": [
+   "microbat"
+  ],
+  "words": [
+   "on the ground",
+   "during the day",
+   "in the day",
+   "daytime",
+   "middle of the day",
+   "carport"
+  ],
+  "video": {
+   "id": "ePA0v8YK-v8",
+   "title": "Rescuing Flinda: microbat found on the ground",
+   "channel": "Megabattie",
+   "date": "2025",
+   "condition": "Found on the ground in the day",
+   "warning": "Do not touch bats bare-handed (lyssavirus). Cover with a box or cloth and call a rescuer."
+  }
+ },
+ {
+  "groups": [
+   "bird",
+   "passerine",
+   "magpie",
+   "parrot",
+   "black-cockatoo",
+   "lorikeet",
+   "pigeon",
+   "frogmouth-owl",
+   "raptor",
+   "kookaburra",
+   "waterbird",
+   "seabird",
+   "penguin",
+   "shorebird",
+   "lapwing",
+   "curlew",
+   "ibis",
+   "pelican",
+   "cuckoo"
+  ],
+  "words": [
+   "window",
+   "concuss",
+   "stunned",
+   "dazed",
+   "head injury",
+   "head trauma"
+  ],
+  "video": {
+   "id": "PVqgAgfDFyk",
+   "title": "How to contain an injured bird or small animal",
+   "channel": "WildlifeVictoria",
+   "date": "2019",
+   "condition": "Window strike / concussion",
+   "warning": "Do not give food or water."
+  }
+ },
+ {
+  "groups": [
+   "bird",
+   "passerine",
+   "magpie",
+   "parrot",
+   "black-cockatoo",
+   "lorikeet",
+   "pigeon",
+   "frogmouth-owl",
+   "raptor",
+   "kookaburra",
+   "waterbird",
+   "seabird",
+   "penguin",
+   "shorebird",
+   "lapwing",
+   "curlew",
+   "ibis",
+   "cuckoo"
+  ],
+  "words": [
+   "fishing line",
+   "fish hook",
+   "fishing hook",
+   "hooked",
+   "hook in",
+   "tangled in line",
+   "entangled in line"
+  ],
+  "video": {
+   "id": "u6GnjATo7j8",
+   "title": "What to do if you hook a bird while fishing",
+   "channel": "Recfishwest",
+   "date": "2025",
+   "condition": "Fishing line and hook entanglement",
+   "warning": "Western Australian: the Wildcare Helpline number is for WA. Use 1300 ANIMAL (Qld) or Wildlife Victoria. If the hook is swallowed, cut the line and leave it for a vet."
+  }
+ },
+ {
+  "groups": [
+   "bird",
+   "passerine",
+   "magpie",
+   "pigeon",
+   "lorikeet",
+   "parrot",
+   "frogmouth-owl",
+   "kookaburra",
+   "cuckoo"
+  ],
+  "words": [
+   "fell out of the nest",
+   "fell from the nest",
+   "fallen from the nest",
+   "fallen nestling",
+   "fell out of its nest",
+   "nest blown",
+   "renest",
+   "makeshift nest",
+   "nestling"
+  ],
+  "video": {
+   "id": "1LhekQU1zOU",
+   "title": "DIY baby bird makeshift nest",
+   "channel": "Western Australian Seabird Rescue",
+   "date": "2023",
+   "condition": "Fallen nestling vs fledgling (renesting)",
+   "warning": "WA group, so the phone number is for WA. Fledgling advice is brief; a feathered, hopping fledgling on the ground is usually fine and should be left with its parents."
+  }
+ },
+ {
+  "groups": [
+   "parrot",
+   "black-cockatoo",
+   "bird"
+  ],
+  "words": [
+   "beak and feather",
+   "pbfd",
+   "circovirus",
+   "psittacine beak"
+  ],
+  "video": {
+   "id": "E1fYUCYJ8cs",
+   "title": "Treating beak and feather disease",
+   "channel": "Bird Vet Melbourne",
+   "date": "2023",
+   "condition": "Psittacine beak and feather disease",
+   "warning": "Keep infected birds away from other parrots."
+  }
+ },
+ {
+  "groups": [
+   "waterbird"
+  ],
+  "words": [
+   "pool",
+   "swimming pool"
+  ],
+  "video": {
+   "id": "DHUzEaY8_kU",
+   "title": "Ducks in your pool? Here's what to do",
+   "channel": "Ducks Unlimited Canada",
+   "date": "",
+   "condition": "Duck or ducklings on a pool",
+   "warning": "A Canadian video. In Australia, give ducklings a ramp or float to climb out and call a rescuer if the mother has gone."
+  }
+ },
+ {
+  "groups": [
+   "freshwater-turtle"
+  ],
+  "words": [
+   "crossing the road",
+   "crossing a road",
+   "on the road",
+   "nesting",
+   "laying eggs",
+   "gravid"
+  ],
+  "video": {
+   "id": "8e07wMZh-xY",
+   "title": "1 Million Turtles - How to safely pick up a turtle off the road",
+   "channel": "Ricky Spencer",
+   "date": "2022",
+   "condition": "Crossing roads in nesting season",
+   "warning": "Move it in the direction it was heading and only when safe to stop."
+  }
+ },
+ {
+  "groups": [
+   "venomous-snake",
+   "python"
+  ],
+  "words": [
+   "in the house",
+   "inside the house",
+   "in the yard",
+   "backyard",
+   "back yard",
+   "in the garden",
+   "under the house",
+   "laundry",
+   "garage"
+  ],
+  "video": {
+   "id": "4uDnkuv2YB8",
+   "title": "Spotted a snake in your garden?",
+   "channel": "WIRES",
+   "date": "2025",
+   "condition": "Snake in the house or backyard",
+   "warning": "NSW phone number; in Qld call a licensed snake catcher or 1300 ANIMAL, in Victoria a licensed snake catcher or Wildlife Victoria."
+  }
+ },
+ {
+  "groups": [
+   "frog"
+  ],
+  "words": [
+   "chytrid",
+   "skin patches",
+   "dark skin",
+   "skin shedding",
+   "sloughing",
+   "lethargic"
+  ],
+  "video": {
+   "id": "ogQyEsP8xkA",
+   "title": "New tool saving native frogs (chytrid)",
+   "channel": "Gardening Australia",
+   "date": "2025",
+   "condition": "Chytrid fungus",
+   "warning": "Use gloves and wash hands between frogs; never move frogs between ponds."
+  }
+ },
+ {
+  "groups": [
+   "seal"
+  ],
+  "words": [
+   "beach",
+   "sand",
+   "resting",
+   "hauled out"
+  ],
+  "video": {
+   "id": "U2p31Sj40qk",
+   "title": "What to do if you see a seal on the beach",
+   "channel": "ifaw (IFAW)",
+   "date": "2025",
+   "condition": "Seal resting on a beach",
+   "warning": "An American video. In Victoria the rule is 30 metres (50 metres with a dog); report a sick seal to Wildlife Victoria or the DEECA Whale and Dolphin Emergency Hotline."
+  }
+ },
+ {
+  "groups": [
+   "seabird"
+  ],
+  "words": [
+   "shearwater",
+   "muttonbird",
+   "mutton bird",
+   "grounded"
+  ],
+  "video": {
+   "id": "mIp3jUGQolc",
+   "title": "Short-tailed shearwaters rescue efforts on Phillip Island",
+   "channel": "Phillip Island Nature Parks",
+   "date": "2022",
+   "condition": "Grounded shearwaters (Phillip Island)"
+  }
+ }
+];
+
+const hasWord = (text, w) => new RegExp(`(^|[^a-z])${w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'i').test(text);
+/** The condition video for these animals and words, or null. */
+export function conditionVideo(keys, context = '') {
+  const t = String(context).toLowerCase();
+  const hit = CONDITION_VIDEOS.find((c) => c.groups.some((g) => keys.includes(g)) && c.words.some((w) => hasWord(t, w)));
+  return hit ? hit.video : null;
+}
+
 const YOUNG = /\b(chick|chicks|nestling|nestlings|fledgling|fledglings|hatchling|branchling|baby|babies|duckling|ducklings|cygnet|juvenile|orphan|orphaned|joey|joeys|pinky|pinkie|puggle|pup)\b/i;
 // Species groups used elsewhere in the app (species-ranges.js and species-vet.js) to video keys.
 const ALIAS = { bluetongue: 'skink', turtle: 'freshwater-turtle', passerine: 'bird', kookaburra: 'bird', lapwing: 'shorebird', cuckoo: 'bird', ibis: 'bird', 'brush-turkey': null };
@@ -68,6 +548,8 @@ export const videoFor = (group, context = '', tags = []) => {
   let keys = [...tags, group].filter(Boolean);
   // A named species beats its class: a brush-turkey chick never gets the general baby-bird (renesting) video.
   if (keys.some((k) => k !== 'bird' && k !== 'reptile')) keys = keys.filter((k) => k !== 'bird' && k !== 'reptile');
+  const byCondition = conditionVideo(keys, context);
+  if (byCondition) return byCondition;
   for (const key of keys) {
     const v = pick(key, context);
     if (v) return v;

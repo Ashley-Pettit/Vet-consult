@@ -139,7 +139,7 @@ test('carer plans leave out drugs only given at the clinic, and baby-bird videos
   assert.match(buildCarerPlanPrompt('RBL, meloxicam given', '', { fromVet: true }), /A drug the vet says was "given", "administered" or "had" at the clinic/);
   assert.equal(videoFor('bird', 'Care plan: rainbow lorikeet (adult)').title, 'How to rescue an orphaned or injured bird'); // without tags
   assert.equal(videoFor('bird', 'rainbow lorikeet adult', ['lorikeet', 'bird']).channel, 'RSPCA QLD');
-  assert.equal(videoFor('bird', 'magpie nestling', ['magpie', 'bird']).title, 'DIY baby bird makeshift nest');
+  assert.match(videoFor('bird', 'magpie nestling', ['magpie', 'bird']).title, /makeshift nest/i);
   assert.match(videoFor('macropod', 'adult kangaroo').title, /pouch/);
   assert.equal(videoFor('bird', 'Magpie nestling fell from nest').title, 'DIY baby bird makeshift nest');
   assert.match(videoFor('pigeon', 'baby pigeon squab').title, /squeaker/);
@@ -237,4 +237,17 @@ test('new animals are recognised and get their own checked points: seals, native
   assert.ok(groupsIn('saltwater crocodile in a creek').includes('crocodile'));
   assert.ok(groupsIn('eastern pygmy possum').includes('pygmy-possum'));
   assert.match(vetCareForPrompt('fur seal pup on the beach'), /seal \|/);
+});
+
+test("videos about the animal's own condition beat the general species video", async () => {
+  const { videoFor } = await import('../../src/videos.js');
+  const { groupsIn } = await import('../../src/species-vet.js');
+  const v = (t) => videoFor('', t, groupsIn(t));
+  assert.match(v('Adult wombat with mange, crusty scabs on both flanks').title, /Mange Treatment/);
+  assert.match(v('Koala with conjunctivitis and a wet bottom').title, /sick/i);
+  assert.match(v('Grey-headed flying-fox caught in fruit tree netting').title, /netting/);
+  assert.match(v('Tawny frogmouth after a window strike, stunned').title, /contain an injured bird/i);
+  assert.match(v('Green tree frog with chytrid signs').title, /frogs/);
+  // No condition named: the species video as before.
+  assert.match(v('Adult bare-nosed wombat, bright, eating well').title, /pouch/);
 });
