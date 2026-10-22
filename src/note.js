@@ -887,7 +887,7 @@ export const DOC_KINDS = {
   },
   mop: {
     label: 'MOP care plan',
-    copy: 'Copy plan',
+    copy: 'Share plan',
     working: 'A short first-aid plan the person can follow until a vet or shelter takes over.',
     title: 'Short-term care plan for a member of the public (MOP) caring for wildlife until it reaches a vet or shelter',
     sources: true,

@@ -796,7 +796,3 @@ dialog.confirm p { margin: 0; }
 
 /* MOP plan disclaimer */
 .ai-disclaimer { margin: 0 0 12px; padding: 10px 12px; border-left: 4px solid var(--accent, var(--muted)); background: var(--surface, var(--bg)); border-radius: 4px; font-size: 0.92rem; font-weight: 600; }
-
-/* Send a care video on */
-.video-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 10px; }
-.video-actions .btn { min-height: 40px; }

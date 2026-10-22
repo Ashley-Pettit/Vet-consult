@@ -1106,10 +1106,7 @@ function videoSection(v) {
     el('p', {}, [el('strong', { text: v.title }), ` (${v.channel}, ${v.date})`]),
     v.warning ? el('p', { class: 'help', text: v.warning }) : null,
     box,
-    el('div', { class: 'video-actions' }, [
-      el('button', { type: 'button', class: 'btn ghost video-send', onclick: () => shareOrCopy(videoLine(v), v.title, 'Video link copied. Paste it into a text or email.') }, 'Send this video'),
-      el('a', { href: watchUrl(v), target: '_blank', rel: 'noopener', text: 'Open on YouTube' }),
-    ]),
+    el('p', { class: 'help' }, [el('a', { href: watchUrl(v), target: '_blank', rel: 'noopener', text: 'Open on YouTube' })]),
   ]);
 }
 
@@ -1197,7 +1194,7 @@ function renderCare(c) {
             )),
           ])
         : null,
-      videoSection(videoFor(c.species_group, [c.title, c.summary, c.animal].filter(Boolean).join(' '))),
+      videoSection(carePlanVideo(c)),
       rangesSection(c.species_group),
       rehydrationSection(c.rehydration),
       c.plan.length
@@ -1331,6 +1328,12 @@ let currentDoc = null;
 
 // Documents that open with a ready-to-send text message, and the heading Claude gives it.
 const TEXT_HEADING = { tovet: /^text to your vet$/i, mop: /^text to send$/i };
+
+// A care plan's video: the species group Claude picked, refined by the animal named (a lorikeet, not just a bird).
+function carePlanVideo(c) {
+  const context = [c.title, c.summary, c.animal].filter(Boolean).join(' ');
+  return videoFor(c.species_group, context, groupsIn(context));
+}
 
 // The MOP plan's video is for the animal named in the plan; nothing if no animal with a good video is named.
 function mopVideo(d) {

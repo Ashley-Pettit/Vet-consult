@@ -168,15 +168,16 @@ test('Clear sits in the dictation box and asks first', async ({ page }) => {
   expect(btn.y + btn.height).toBeGreaterThan(box.y + box.height - 30);
 });
 
-test('a care video can be sent on with one tap', async ({ page }) => {
+test('the care plan is easy to forward: Share plan, with the video link in the text', async ({ page }) => {
   await page.addInitScript(() => { window.__shared = []; navigator.share = async (d) => { window.__shared.push(d); }; });
   await mockApi(page, { body: () => textReply({ ...EXAMPLE_CARER_PLAN, species_group: 'koala' }) });
   await openApp(page);
   await page.locator('#transcript').fill('Koala, sore eye.');
   await page.locator('#create').click();
-  await expect(page.locator('#view-care .video-send')).toBeVisible();
-  await page.locator('#view-care .video-send').click();
+  await expect(page.locator('#care-copy')).toHaveText('Share plan');
+  await expect(page.locator('#view-care .video-send')).toHaveCount(0);
+  await page.locator('#care-copy').click();
   await page.getByRole('button', { name: 'Share…' }).click();
   await expect.poll(() => page.evaluate(() => window.__shared.length)).toBe(1);
-  expect(await page.evaluate(() => window.__shared[0].text)).toMatch(/^Video: .+ https:\/\/www\.youtube\.com\/watch\?v=/);
+  expect(await page.evaluate(() => window.__shared[0].text)).toMatch(/https:\/\/www\.youtube\.com\/watch\?v=/);
 });

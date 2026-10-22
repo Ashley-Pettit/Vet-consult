@@ -134,9 +134,12 @@ test('carer plans leave out drugs only given at the clinic, and baby-bird videos
   const { buildCarerPlanPrompt } = await import('../../src/note.js');
   const { videoFor } = await import('../../src/videos.js');
   assert.match(buildCarerPlanPrompt('RBL, meloxicam given', '', { fromVet: true }), /A drug the vet says was "given", "administered" or "had" at the clinic/);
-  assert.equal(videoFor('bird', 'Care plan: rainbow lorikeet (adult)').title, 'How to contain an injured bird or small animal');
+  assert.equal(videoFor('bird', 'Care plan: rainbow lorikeet (adult)').title, 'How to contain an injured bird or small animal'); // without tags
+  assert.equal(videoFor('bird', 'rainbow lorikeet adult', ['lorikeet', 'bird']).channel, 'RSPCA QLD');
+  assert.equal(videoFor('bird', 'magpie nestling', ['magpie', 'bird']).title, 'How to help a baby bird');
+  assert.equal(videoFor('macropod', 'adult kangaroo'), null);
   assert.equal(videoFor('bird', 'Magpie nestling fell from nest').title, 'How to help a baby bird');
-  assert.equal(videoFor('koala', '').title, 'Getting help for sick koalas');
+  assert.equal(videoFor('koala', '').channel, 'RSPCA QLD');
 });
 
 test('MOP and plan videos match the animal: never a bird video for a koala', async () => {
