@@ -106,7 +106,7 @@ test('Copy offers Share or Copy as text; no extra copy button at the top of the 
   await expect(page.locator('#care-copy-top')).toHaveCount(0);
   await page.locator('#care-copy').click();
   await expect(page.locator('#share-sheet')).toBeVisible();
-  await page.getByRole('button', { name: 'Share…' }).click();
+  await page.getByRole('button', { name: 'Share as text' }).click();
   await expect.poll(() => page.evaluate(() => window.__shared.length)).toBe(1);
   expect(await page.evaluate(() => window.__shared[0].text)).toMatch(/^Care plan: /);
   await page.locator('#care-copy').click();
@@ -177,7 +177,28 @@ test('the care plan is easy to forward: Share plan, with the video link in the t
   await expect(page.locator('#care-copy')).toHaveText('Share plan');
   await expect(page.locator('#view-care .video-send')).toHaveCount(0);
   await page.locator('#care-copy').click();
-  await page.getByRole('button', { name: 'Share…' }).click();
+  await page.getByRole('button', { name: 'Share as text' }).click();
   await expect.poll(() => page.evaluate(() => window.__shared.length)).toBe(1);
   expect(await page.evaluate(() => window.__shared[0].text)).toMatch(/https:\/\/www\.youtube\.com\/watch\?v=/);
+});
+
+test('Share offers a Word document first, text second, and a link to the app as coming soon', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.__shared = [];
+    navigator.canShare = (d) => Boolean(d && d.files);
+    navigator.share = async (d) => { window.__shared.push({ text: d.text, files: (d.files || []).map((f) => ({ name: f.name, type: f.type, size: f.size })) }); };
+  });
+  await mockApi(page, { body: () => textReply({ ...EXAMPLE_CARER_PLAN, species_group: 'koala' }) });
+  await openApp(page);
+  await page.locator('#transcript').fill('Koala, sore eye.');
+  await page.locator('#create').click();
+  await expect(page.locator('#view-care')).toBeVisible();
+  await expect(page.locator('#view-care').getByText('Open on YouTube')).toHaveCount(0);
+  await page.locator('#care-copy').click();
+  await expect(page.getByRole('button', { name: /Send a link to the app/ })).toBeDisabled();
+  await page.getByRole('button', { name: 'Share as Word document' }).click();
+  await expect.poll(() => page.evaluate(() => window.__shared.length)).toBe(1);
+  const f = await page.evaluate(() => window.__shared[0].files[0]);
+  expect(f.name).toMatch(/\.docx$/);
+  expect(f.size).toBeGreaterThan(3000);
 });

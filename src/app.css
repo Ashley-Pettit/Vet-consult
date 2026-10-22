@@ -796,3 +796,8 @@ dialog.confirm p { margin: 0; }
 
 /* MOP plan disclaimer */
 .ai-disclaimer { margin: 0 0 12px; padding: 10px 12px; border-left: 4px solid var(--accent, var(--muted)); background: var(--surface, var(--bg)); border-radius: 4px; font-size: 0.92rem; font-weight: 600; }
+
+/* Share sheet: Word first, link to the app coming soon */
+.share-actions { display: flex; flex-direction: column; gap: 10px; }
+.share-soon { opacity: 0.6; cursor: not-allowed; display: inline-flex; justify-content: center; align-items: center; gap: 8px; }
+.share-soon .soon { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; border: 1px solid currentColor; border-radius: 999px; padding: 1px 8px; }

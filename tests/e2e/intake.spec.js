@@ -57,7 +57,7 @@ test('MOP plan shows the disclaimer word for word, and copies it', async ({ page
   await page.locator('#create').click();
   await expect(page.locator('#doc .ai-disclaimer')).toHaveText('This is an ai tool which can make mistakes. In doubt? Defer to an expert.');
   await page.locator('#doc-copy').click();
-  await page.getByRole('button', { name: 'Share…' }).click();
+  await page.getByRole('button', { name: 'Share as text' }).click();
   await expect.poll(() => page.evaluate(() => window.__shared.length)).toBe(1);
   expect(await page.evaluate(() => window.__shared[0].text)).toMatch(/This is an ai tool which can make mistakes\. In doubt\? Defer to an expert\.$/);
 });

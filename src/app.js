@@ -1106,7 +1106,6 @@ function videoSection(v) {
     el('p', {}, [el('strong', { text: v.title }), ` (${v.channel}, ${v.date})`]),
     v.warning ? el('p', { class: 'help', text: v.warning }) : null,
     box,
-    el('p', { class: 'help' }, [el('a', { href: watchUrl(v), target: '_blank', rel: 'noopener', text: 'Open on YouTube' })]),
   ]);
 }
 
@@ -1290,15 +1289,39 @@ $('care-back-2').addEventListener('click', () => (careFrom === 'note' ? showView
 // Copy offers Share (the phone's share sheet) or Copy as text. Without sharing (some computers), it just copies.
 const canShare = () => typeof navigator.share === 'function';
 let pendingSend = null;
-function shareOrCopy(text, title, copiedMsg) {
-  pendingSend = { text, title, copiedMsg };
-  if (!canShare()) return finishSend('copy');
+// wordModel (optional): the same content as a Word document, offered first so it can be forwarded as a file.
+function shareOrCopy(text, title, copiedMsg, wordModel = null) {
+  pendingSend = { text, title, copiedMsg, wordModel };
+  if (!canShare() && !wordModel) return finishSend('copy');
+  $('share-word').hidden = !wordModel;
+  $('share-go').hidden = !canShare();
   $('share-sheet').showModal();
+}
+
+// Share a Word file through the phone's share sheet; where files can't be shared (most computers, inside Claude), save it instead.
+async function shareWord(model, title) {
+  try {
+    const blob = await buildWord(model, { preparedBy: settings.clinician });
+    const filename = wordFileName(model.title);
+    const file = typeof File === 'function' ? new File([blob], filename, { type: blob.type || 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' }) : null;
+    if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], title });
+        return;
+      } catch (e) {
+        if (e && e.name === 'AbortError') return;
+      }
+    }
+    await deliverWord(blob, filename);
+  } catch {
+    toast('Couldn’t make the Word document. Try again.');
+  }
 }
 async function finishSend(how) {
   const job = pendingSend;
   pendingSend = null;
   if (!job) return;
+  if (how === 'word' && job.wordModel) return shareWord(job.wordModel, job.title);
   if (how === 'share') {
     try {
       await navigator.share({ title: job.title, text: job.text });
@@ -1319,7 +1342,7 @@ $('share-sheet').addEventListener('close', () => {
   finishSend(how);
 });
 els.careCopy.addEventListener('click', () =>
-  shareOrCopy(careSheetText(careSheet, lookupSource), $('care-title').textContent, 'Care plan copied. Paste it into an email, SMS or the discharge sheet.'),
+  shareOrCopy(careSheetText(careSheet, lookupSource), $('care-title').textContent, 'Care plan copied. Paste it into an email, SMS or the discharge sheet.', careModel(careSheet, lookupSource)),
 );
 
 /* ---------------- intake record / care log / for the vet ---------------- */
@@ -1411,7 +1434,7 @@ async function createDoc(kind, text) {
 $('doc-back').addEventListener('click', () => showView('record'));
 $('doc-copy').addEventListener('click', () => {
   if (!currentDoc) return;
-  shareOrCopy(docText(currentDoc.d) + (currentDoc.kind === 'mop' ? `${mopVideo(currentDoc.d) ? `\n\n${videoLine(mopVideo(currentDoc.d))}` : ''}\n\n${MOP_DISCLAIMER}` : ''), $('doc-title').textContent, 'Copied. Paste it wherever it needs to go.');
+  shareOrCopy(docText(currentDoc.d) + (currentDoc.kind === 'mop' ? `${mopVideo(currentDoc.d) ? `\n\n${videoLine(mopVideo(currentDoc.d))}` : ''}\n\n${MOP_DISCLAIMER}` : ''), $('doc-title').textContent, 'Copied. Paste it wherever it needs to go.', docModel(currentDoc.d, DOC_KINDS[currentDoc.kind].label, currentDoc.kind === 'mop' ? MOP_DISCLAIMER : ''));
 });
 $('doc-new').addEventListener('click', addMoreInfo);
 
@@ -1513,6 +1536,27 @@ async function makeNext(m) {
 
 /* ---------------- Word printouts ---------------- */
 
+// Save a Word file: through Claude's downloads inside Claude, otherwise a normal download.
+async function deliverWord(blob, filename) {
+  const downloads = inClaude && globalThis.claude.use ? await globalThis.claude.use('downloads') : null;
+  if (downloads) {
+    try {
+      await downloads.save({ filename, data: blob });
+      toast('Saved. Open it in Word to print, email or forward.');
+    } catch (e) {
+      if (e && e.code !== 'declined') toast('Couldn’t save the document here. Try again in a moment.');
+    }
+    return;
+  }
+  const url = URL.createObjectURL(blob);
+  const a = Object.assign(document.createElement('a'), { href: url, download: filename });
+  document.body.append(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+  toast('Downloaded. Open it in Word to print, email or forward.');
+}
+
 async function saveWord(model, btn) {
   if (!model) return;
   const label = btn.lastChild.textContent;
@@ -1520,24 +1564,7 @@ async function saveWord(model, btn) {
   btn.lastChild.textContent = 'Making printout…';
   try {
     const blob = await buildWord(model, { preparedBy: settings.clinician });
-    const filename = wordFileName(model.title);
-    const downloads = inClaude && globalThis.claude.use ? await globalThis.claude.use('downloads') : null;
-    if (downloads) {
-      try {
-        await downloads.save({ filename, data: blob });
-        toast('Saved. Open it in Word to print or email.');
-      } catch (e) {
-        if (e && e.code !== 'declined') toast('Couldn’t save the printout here. Try again in a moment.');
-      }
-      return;
-    }
-    const url = URL.createObjectURL(blob);
-    const a = Object.assign(document.createElement('a'), { href: url, download: filename });
-    document.body.append(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 10000);
-    toast('Downloaded. Open it in Word to print or email.');
+    await deliverWord(blob, wordFileName(model.title));
   } catch {
     toast('Couldn’t make the printout. Try again.');
   } finally {

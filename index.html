@@ -345,11 +345,13 @@
 
 <dialog id="share-sheet" class="confirm" aria-labelledby="share-title">
   <form method="dialog">
-    <h2 id="share-title">Send it</h2>
-    <p id="share-sub" class="help">Share opens your phone’s options (text, email, WhatsApp). Copy puts the plain text on your clipboard.</p>
+    <h2 id="share-title">Share</h2>
+    <p id="share-sub" class="help">Send it by text, email or WhatsApp, as a Word document or as plain text.</p>
     <div class="share-actions">
-      <button type="submit" class="btn primary" value="share" id="share-go">Share…</button>
+      <button type="submit" class="btn primary" value="word" id="share-word">Share as Word document</button>
+      <button type="submit" class="btn ghost" value="share" id="share-go">Share as text</button>
       <button type="submit" class="btn ghost" value="copy">Copy as text</button>
+      <button type="button" class="btn ghost share-soon" disabled aria-disabled="true">Send a link to the app <span class="soon">Coming soon</span></button>
       <button type="submit" class="link" value="cancel">Cancel</button>
     </div>
   </form>

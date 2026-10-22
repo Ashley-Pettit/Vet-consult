@@ -110,6 +110,7 @@ test('care sheet for foster carers, copied as plain text', async ({ page, contex
   await expect(page.locator('.care-sec.watch li')).toHaveCount(4);
   expect(calls[1].prompt).toContain('NEVER invent doses');
   await page.locator('#care-copy').click();
+  await page.getByRole('button', { name: 'Copy as text' }).click();
   expect(await page.evaluate(() => navigator.clipboard.readText())).toMatch(/^Caring for Rusty at home/);
   // Opening it again reuses the sheet rather than asking Claude twice.
   await page.locator('#care-back').click();
@@ -199,6 +200,7 @@ test('carer plan for a carer: Victorian sources, vet only for escalation, specie
   expect(calls[0].prompt).toContain('work it into the section it belongs to');
   await expect(page.locator('.care-sec.watch li')).toHaveCount(4);
   await page.locator('#care-copy').click();
+  await page.getByRole('button', { name: 'Copy as text' }).click();
   expect(await page.evaluate(() => navigator.clipboard.readText())).toMatch(/^Caring for Rusty at home/);
   expect(errors).toEqual([]);
 });
