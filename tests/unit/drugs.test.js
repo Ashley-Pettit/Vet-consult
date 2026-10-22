@@ -43,3 +43,13 @@ test('species points: only the animal named, carers get carer points, nothing fo
   assert.equal(vetCareForPrompt('sick animal, not eating'), '');
   assert.match(buildPrompt('EGK joey HBC, BAR'), /macropod \| /);
 });
+
+test('bird and reptile points, and the vet\'s species codes', async () => {
+  const { vetCareForPrompt, groupsIn } = await import('../../src/species-vet.js');
+  assert.deepEqual(groupsIn('RBL window strike'), ['lorikeet', 'bird']);
+  assert.deepEqual(groupsIn('GTS in the kitchen'), ['reptile']);
+  const pigeon = vetCareForPrompt('Crested pigeon, twisted neck, ?PPMV');
+  assert.match(pigeon, /^pigeon \|/m);
+  assert.doesNotMatch(pigeon, /^bird \| diagnostics/m); // class-wide extras trimmed when a species is named
+  assert.match(vetCareForPrompt('sick bird'), /^bird \| diagnostics/m);
+});

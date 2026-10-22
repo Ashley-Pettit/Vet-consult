@@ -17,10 +17,10 @@ export const GROUP_WORDS = {
   platypus: ['platypus'],
   bandicoot: ['bandicoot', 'bilby'],
   dasyurid: ['antechinus', 'quoll', 'dunnart', 'phascogale', 'dasyurid', 'devil'],
-  passerine: ['wren', 'robin', 'thornbill', 'pardalote', 'honeyeater', 'wattlebird', 'silvereye', 'fantail', 'willie wagtail', 'swallow', 'finch', 'myna', 'sparrow', 'starling', 'passerine', 'miner', 'noisy miner', 'friarbird'],
+  passerine: ['wren', 'nm', 'robin', 'thornbill', 'pardalote', 'honeyeater', 'wattlebird', 'silvereye', 'fantail', 'willie wagtail', 'swallow', 'finch', 'myna', 'sparrow', 'starling', 'passerine', 'miner', 'noisy miner', 'friarbird'],
   magpie: ['magpie', 'currawong', 'butcherbird', 'raven', 'crow', 'mudlark', 'magpie-lark', 'peewee'],
   parrot: ['parrot', 'cockatoo', 'corella', 'galah', 'rosella', 'cockatiel', 'budgie', 'budgerigar', 'king parrot', 'scc', 'black cockatoo'],
-  lorikeet: ['lorikeet', 'lorrikeet'],
+  lorikeet: ['lorikeet', 'lorrikeet', 'rbl', 'sbl', 'scaly-breasted', 'scaly breasted'],
   pigeon: ['pigeon', 'dove', 'bronzewing', 'squab', 'fruit-dove', 'fruit dove', 'rock dove'],
   'frogmouth-owl': ['frogmouth', 'owl', 'boobook', 'nightjar', 'tf'],
   raptor: ['hawk', 'eagle', 'falcon', 'kite', 'kestrel', 'goshawk', 'harrier', 'osprey', 'raptor', 'hobby'],
@@ -29,9 +29,9 @@ export const GROUP_WORDS = {
   seabird: ['shearwater', 'mutton bird', 'muttonbird', 'gull', 'gannet', 'albatross', 'petrel', 'prion', 'tern', 'seabird'],
   penguin: ['penguin'],
   shorebird: ['plover', 'lapwing', 'oystercatcher', 'sandpiper', 'stint', 'godwit', 'curlew', 'shorebird', 'dotterel'],
-  skink: ['blue tongue', 'bluetongue', 'blue-tongue', 'blotchy', 'shingleback', 'skink', 'sleepy lizard'],
+  skink: ['blue tongue', 'btl', 'bluetongue', 'blue-tongue', 'blotchy', 'shingleback', 'skink', 'sleepy lizard'],
   dragon: ['dragon', 'bearded', 'water dragon', 'frill'],
-  python: ['python', 'carpet snake'],
+  python: ['python', 'carpet snake', 'ccp', 'carpet python'],
   'venomous-snake': ['tiger snake', 'brown snake', 'copperhead', 'red-bellied', 'red bellied', 'taipan', 'death adder', 'venomous', 'snake'],
   'freshwater-turtle': ['long-necked turtle', 'long necked turtle', 'short-necked', 'freshwater turtle', 'tortoise', 'saw-shelled', 'murray river turtle'],
   'sea-turtle': ['sea turtle', 'green turtle', 'loggerhead', 'hawksbill', 'flatback', 'leatherback', 'olive ridley'],
@@ -59,7 +59,11 @@ export function groupsIn(text = '') {
   // A general word with no specific species: take every group it could be.
   if (/[^a-z]possums?[^a-z]/.test(t) && !groups.some((g) => ['ringtail', 'brushtail', 'glider'].includes(g))) groups = [...groups, 'ringtail', 'brushtail'];
   if (/[^a-z]bats?[^a-z]/.test(t) && !groups.some((g) => ['flyingfox', 'microbat'].includes(g))) groups = [...groups, 'flyingfox', 'microbat'];
+  // Tree snakes (GTS, CTS) are non-venomous colubrids: reptile points only.
+  const treeSnake = /[^a-z](gts|cts|tree snakes?)[^a-z]/.test(t);
+  if (treeSnake) groups = groups.filter((g) => g !== 'venomous-snake');
   const classes = new Set(groups.map((g) => CLASS_OF[g]).filter(Boolean));
+  if (treeSnake) classes.add('reptile');
   if (/[^a-z](bird|chick|nestling|fledgling)s?[^a-z]/.test(t)) classes.add('bird');
   if (/[^a-z](reptile|lizard)s?[^a-z]/.test(t)) classes.add('reptile');
   return [...groups, ...classes];
@@ -73,7 +77,12 @@ export function vetCareForPrompt(text = '', { audience } = {}) {
   const groups = groupsIn(text);
   // No animal recognised: send nothing, so an unrelated request costs nothing extra.
   if (!groups.length) return '';
-  const pick = VET_POINTS.filter((p) => (!audience || p.audience === audience)).filter((p) => groups.includes(p.species));
+  // Class-wide points (bird, reptile) are many: when a specific group is named, send only their core topics.
+  const specific = groups.some((g) => !['bird', 'reptile'].includes(g));
+  const CORE = ['drugs', 'anaesthesia', 'fluids-nutrition', 'safety'];
+  const pick = VET_POINTS.filter((p) => (!audience || p.audience === audience))
+    .filter((p) => groups.includes(p.species))
+    .filter((p) => !(specific && ['bird', 'reptile'].includes(p.species) && !CORE.includes(p.topic)));
   if (!pick.length) return '';
   const head = `Species-specific points for Australian wildlife (${groups.join(', ')}), from checked wildlife veterinary guidelines.`;
   return `${head}
