@@ -877,18 +877,20 @@ function renderNote() {
   const meds = (given) => n.plan.treatments.map((t, i) => [t, i]).filter(([t]) => (t.when === 'given') === given);
   const givenMeds = meds(true);
   const contMeds = meds(false);
+  // The order vets write P: diagnostics, treatment, take-home meds, carer instructions, follow-up.
+  if (n.plan.diagnostics.length) plan.push(el('h3', { text: 'Diagnostics' }), list(n.plan.diagnostics));
   if (n.plan.procedures.length || givenMeds.length) {
-    plan.push(el('h3', { text: 'Given today' }));
+    plan.push(el('h3', { text: 'Treatment given' }));
     if (n.plan.procedures.length) plan.push(list(n.plan.procedures));
     if (givenMeds.length) plan.push(el('ul', { class: 'meds' }, givenMeds.map(([t, i]) => medItem(t, i, true))));
   }
-  if (contMeds.length) plan.push(el('h3', { text: 'Medications to continue' }), el('ul', { class: 'meds' }, contMeds.map(([t, i]) => medItem(t, i, false))));
-  if (n.plan.diagnostics.length) plan.push(el('h3', { text: 'Diagnostics planned' }), list(n.plan.diagnostics));
-  if (n.plan.home_care.length) plan.push(el('h3', { text: 'Home care' }), list(n.plan.home_care));
+  if (contMeds.length) plan.push(el('h3', { text: 'Dispensed' }), el('ul', { class: 'meds' }, contMeds.map(([t, i]) => medItem(t, i, false))));
+  if (n.plan.home_care.length) plan.push(el('h3', { text: 'Carer instructions' }), list(n.plan.home_care));
   if (n.plan.follow_up.length) plan.push(el('h3', { text: 'Follow-up' }), list(n.plan.follow_up));
 
   const assess = n.assessment.problems.length ? [list(n.assessment.problems, true)] : [];
   if (n.assessment.differentials.length) assess.push(el('h3', { text: 'Differentials' }), list(n.assessment.differentials));
+  if (n.assessment.prognosis) assess.push(el('h3', { text: 'Prognosis' }), el('p', { text: n.assessment.prognosis }));
 
   els.note.replaceChildren(
     patient,

@@ -104,8 +104,8 @@ test('plain text has every SOAP section said, and no gaps for what was not', () 
   assert.match(t, /\nS: Stray presented/);
   assert.match(t, /\nO: T 39\.4 °C \| HR 120 bpm/);
   assert.match(t, /\n1\. Laceration, left forelimb/);
-  assert.match(t, /P:\nGiven today:\n- Sedation[^\n]*\n/);
-  assert.match(t, /Medications to continue:\n- Cephalexin 22 mg\/kg PO BID x 7 days/);
+  assert.match(t, /P:\nTreatment given:\n- Sedation[^\n]*\n/);
+  assert.match(t, /Dispensed:\n- Cephalexin 22 mg\/kg PO BID x 7 days/);
   assert.match(t, /- Fluralaner \(Bravecto\) Per label PO Once/);
   assert.doesNotMatch(t, /Rx:|Dx:/);
   const empty = toPlainText(normaliseNote({}));
@@ -194,8 +194,16 @@ test('plan: given today and to continue are kept apart, each item once, and only
     },
   });
   const t = toPlainText(n);
-  assert.match(t, /P:\nGiven today:\n- Abrasion cleaned\n- Meloxicam 0\.1 mg\/kg SC\n- Mange treatment per protocol\nMedications to continue:\n- Meloxicam 0\.1 mg\/kg PO SID x 4 days\nDiagnostics planned:\n- Haematology\nHome care:\n- Quiet pen with a hide box\nFollow-up:\n- Recheck in 1 week/);
+  assert.match(t, /P:\nDiagnostics:\n- Haematology\nTreatment given:\n- Abrasion cleaned\n- Meloxicam 0\.1 mg\/kg SC\n- Mange treatment per protocol\nDispensed:\n- Meloxicam 0\.1 mg\/kg PO SID x 4 days\nCarer instructions:\n- Quiet pen with a hide box\nFollow-up:\n- Recheck in 1 week/);
   assert.equal(pmsSections(n).prescriptions, 'Meloxicam 0.1 mg/kg PO SID x 4 days');
   assert.match(buildPrompt('x'), /never repeat an item in two places/);
   assert.match(buildPrompt('x'), /Conditional plans go here, not in diagnostics/);
+});
+
+test('assessment: no guessed problems; prognosis kept when said; extra corrected answers are read', () => {
+  assert.match(buildPrompt('x'), /Never add a problem the vet did not assess/);
+  const n = normaliseNote({ assessment: { problems: ['1. Sarcoptic mange, severe'], prognosis: 'Fair' } });
+  assert.match(toPlainText(n), /A:\n1\. Sarcoptic mange, severe\nPrognosis: Fair/);
+  const twice = '{"animals":[{"patient":{"name":"A"}}]}\n\nCorrection: use this one\n{"animals":[{"patient":{"name":"B"}}]}';
+  assert.equal(extractJson(twice).animals[0].patient.name, 'B');
 });
