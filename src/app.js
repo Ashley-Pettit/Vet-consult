@@ -52,6 +52,8 @@ import {
   pmsSections,
   toPlainText,
   MOP_DISCLAIMER,
+  AI_CHECK_NOTE,
+  feedAmounts,
 } from './note.js';
 
 const $ = (id) => document.getElementById(id);
@@ -1263,6 +1265,38 @@ function printTickSheet() {
   }, 600);
 }
 
+// Feed calculator: Claude gives the species' daily % of body weight and feeds a day; the sums are done here, and
+// redone as the carer types today's weight.
+function feedSection(c) {
+  const f = c.feed_calc;
+  if (!f || !f.applies) return null;
+  const id = 'feed-weight';
+  const out = el('div', { class: 'feed-out', 'aria-live': 'polite' });
+  const input = el('input', { id, type: 'number', inputmode: 'decimal', min: '1', step: '1', placeholder: 'grams', value: f.weight_g ? String(f.weight_g) : '' });
+  const draw = () => {
+    const a = feedAmounts(f, input.value);
+    out.replaceChildren(
+      ...(a
+        ? [
+            el('div', { class: 'kv' }, [el('span', { class: 'k', text: 'Each day' }), el('span', { class: 'v', text: `about ${a.perDay} mL` })]),
+            el('div', { class: 'kv' }, [el('span', { class: 'k', text: 'Each feed' }), el('span', { class: 'v', text: `about ${a.perFeed} mL, ${a.feeds} times a day` })]),
+          ]
+        : [el('p', { class: 'help', text: 'Enter today’s weight to work out the amounts.' })]),
+    );
+  };
+  input.addEventListener('input', draw);
+  draw();
+  return el('section', { class: 'care-sec feedcalc' }, [
+    el('h2', { text: 'Feed calculator' }),
+    el('p', {}, [el('strong', { text: f.what || 'Milk' }), f.stage ? ` · ${f.stage}` : '']),
+    el('div', { class: 'feed-in' }, [el('label', { for: id, text: 'Weight today (g)' }), input]),
+    out,
+    el('p', { class: 'help', text: `${f.pct}% of body weight a day, in ${f.feeds} feeds. Weigh daily and re-work it as the weight changes.${f.basis ? ` Based on: ${f.basis}.` : ''}` }),
+    !f.sure ? el('p', { class: 'unsure', text: 'Claude isn’t certain of this figure for this species and stage. Check it with your vet or the feeding guide before using it.' }) : null,
+    el('p', { class: 'ai-check', text: AI_CHECK_NOTE }),
+  ]);
+}
+
 function renderCare(c) {
   const sec = (title, items, cls) => (items.length ? el('section', { class: 'care-sec ' + (cls || '') }, [el('h2', { text: title }), list(items)]) : null);
   const name = c.animal || currentNote()?.patient.name || '';
@@ -1294,7 +1328,10 @@ function renderCare(c) {
   const release = r.ready_when.length || r.how.length || r.where
     ? el('section', { class: 'care-sec release' }, [
         el('h2', { text: 'Release' }),
-        r.ready_when.length ? el('div', {}, [el('h3', { text: 'Ready when' }), list(r.ready_when)]) : null,
+        r.target_weight ? el('p', { class: 'target-weight' }, [el('strong', { text: 'Target weight: ' }), r.target_weight]) : null,
+        r.ready_when.length
+          ? el('div', {}, [el('h3', { text: 'Release checklist' }), el('ul', { class: 'checklist' }, r.ready_when.map((x, i) => el('li', {}, [el('input', { type: 'checkbox', id: `rel-${i}` }), el('label', { for: `rel-${i}`, text: x })])))])
+          : null,
         r.how.length ? el('div', {}, [el('h3', { text: 'How to release' }), list(r.how)]) : null,
         r.where ? el('div', {}, [el('h3', { text: 'Where' }), el('p', { text: r.where })]) : null,
       ])
@@ -1302,6 +1339,7 @@ function renderCare(c) {
   const refs = c.sources.map(lookupSource).filter(Boolean);
   els.careSheet.replaceChildren(
     ...[
+      el('p', { class: 'ai-check top', text: AI_CHECK_NOTE }),
       c.summary ? el('p', { class: 'care-summary', text: c.summary }) : null,
       c.medications.length
         ? el('section', { class: 'care-sec' }, [
@@ -1326,6 +1364,7 @@ function renderCare(c) {
         : null,
       sec('Housing', c.housing),
       sec('Feeding', c.feeding),
+      feedSection(c),
       sec('Activity and handling', c.activity),
       sec('Other care', c.care),
       log,

@@ -29,7 +29,8 @@ test('carer plan prompt: straight from comments, vet only for escalation, source
   assert.match(p, /Do NOT tell them to report to, update or check in with the vet/);
   assert.match(p, /listed most important first: Victorian Government \(DEECA\) guidance/);
   assert.match(p, /vic-release-requirements \| vic \|/);
-  assert.match(p, /"release":\{"ready_when":\[\],"how":\[\],"where":""\}/);
+  assert.match(p, /"release":\{"ready_when":\[\],"target_weight":"","how":\[\],"where":""\}/);
+  assert.match(p, /"feed_calc":\{"applies":false/);
   assert.match(buildCareSheetPrompt(normaliseNote(EXAMPLE_CARE_SHEET), sourcesForPrompt()), /<note>/);
 });
 
@@ -41,13 +42,14 @@ test('normalise drops invented source ids and keeps release for wildlife only', 
   assert.ok(n.release.ready_when.length > 0);
   const dom = normaliseCareSheet({ ...EXAMPLE_FOSTER_PLAN, release: { ready_when: ['x'], how: ['y'], where: 'z' } }, ids);
   assert.equal(dom.kind, 'domestic');
-  assert.deepEqual(dom.release, { ready_when: [], how: [], where: '' });
+  assert.deepEqual(dom.release, { ready_when: [], target_weight: '', how: [], where: '' });
 });
 
 test('plain text plan: release, escalation and Based on, no reporting to the vet', () => {
   const t = careSheetText(normaliseCareSheet({ ...EXAMPLE_CARER_PLAN, sources: ['vic-shelter-foster-carer-authorisation'] }, SOURCE_IDS()), lookupSource);
   assert.match(t, /^Care plan: Ringtail possum joey \(female\)/);
-  assert.match(t, /Release\nReady when: /);
+  assert.match(t, /Release\nRelease checklist:\n\[ \] /);
+  assert.match(t, /^Check this AI guidance/m);
   assert.match(t, /Where: Back near where she was found in Wonthaggi/);
   assert.match(t, /Based on\n- Wildlife shelters and foster carers/);
   assert.match(t, /https:\/\/vic\.gov\.au\//);
@@ -166,4 +168,16 @@ test('plans: photos are identified with honest hedging, tone is positive, vet pl
   const mop = buildDocPrompt('mop', 'feed it softened seed every 2 hours', { photoCount: 2 });
   assert.match(mop, /The operator's own instructions come first/);
   assert.match(mop, /2 photo\(s\) are attached/);
+});
+
+
+test('feed calculator: checked inputs, amounts worked out on the device', async () => {
+  const { feedCalcOf, feedAmounts } = await import('../../src/note.js');
+  const f = feedCalcOf({ applies: true, what: 'Wombaroo Possum Milk 0.8', weight_g: 120, stage: 'furred', percent_body_weight_per_day: 20, feeds_per_day: 4, basis: 'Wombaroo guide', sure: false });
+  assert.equal(f.applies, true);
+  assert.equal(f.sure, false);
+  assert.deepEqual(feedAmounts(f, 120), { perDay: 24, perFeed: 6, feeds: 4 });
+  assert.deepEqual(feedAmounts(f, 45), { perDay: 9, perFeed: 2.3, feeds: 4 });
+  assert.equal(feedCalcOf({ applies: true, percent_body_weight_per_day: 90, feeds_per_day: 4 }).applies, false); // nonsense refused
+  assert.equal(feedAmounts(f, ''), null);
 });

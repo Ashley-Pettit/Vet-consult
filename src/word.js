@@ -5,7 +5,7 @@ import {
   Paragraph, ShadingType, Table, TableCell, TableLayoutType, TableRow, TextRun, VerticalAlign, WidthType,
 } from 'docx';
 import { LOGO_PNG_BASE64 } from './brand-logo.js';
-import { dueLabel, formatDate, NOT_RECORDED, rehydrationTable, REHYDRATION_NOTE } from './note.js';
+import { dueLabel, formatDate, NOT_RECORDED, rehydrationTable, REHYDRATION_NOTE, AI_CHECK_NOTE, feedAmounts } from './note.js';
 import { rangesFor } from './species-ranges.js';
 import { region } from './region.js';
 
@@ -277,9 +277,26 @@ function rehydrationBlocks(r) {
   }];
 }
 
+function feedBlocks(f) {
+  if (!f || !f.applies) return [];
+  const a = feedAmounts(f, f.weight_g);
+  const rows = [
+    ['Feed', [f.what, f.stage].filter(Boolean).join(', ') || 'Milk'],
+    ['Daily amount', `${f.pct}% of body weight a day, in ${f.feeds} feeds`],
+    ...(a ? [[`For ${f.weight_g} g`, `about ${a.perDay} mL a day, as ${a.feeds} feeds of about ${a.perFeed} mL`]] : []),
+    ...(f.basis ? [['Based on', f.basis]] : []),
+  ];
+  return [{
+    heading: 'Feed calculator',
+    table: { head: ['', 'Amount'], rows, widths: [2600, PAGE_W - 2600] },
+    note: `${f.sure ? '' : 'Claude isn’t certain of this figure for this species and stage; check it with your vet or the feeding guide. '}Weigh daily and re-work the amounts: weight in grams × ${f.pct} ÷ 100 = mL a day. ${AI_CHECK_NOTE}`,
+  }];
+}
+
 export function careModel(c, lookup) {
   const meds = c.medications.map((m) => [m.name, m.how, m.how_often, m.how_long]);
   const blocks = [
+    { heading: 'Please note', text: AI_CHECK_NOTE },
     { heading: 'Summary', text: c.summary },
     ...(meds.length ? [{ heading: 'Medications', table: { head: ['Medication', 'How', 'How often', 'How long'], rows: meds, widths: [2600, 2600, 2400, PAGE_W - 7600] }, note: c.medications.map((m) => (m.tip ? `${m.name}: ${m.tip}` : '')).filter(Boolean).join('  ') || undefined }] : []),
     ...rangesBlocks(c.species_group),
@@ -287,13 +304,15 @@ export function careModel(c, lookup) {
     ...c.plan.map((p) => ({ heading: p.when, items: p.tasks })),
     { heading: 'Housing', items: c.housing },
     { heading: 'Feeding', items: c.feeding },
+    ...feedBlocks(c.feed_calc),
     { heading: 'Activity and handling', items: c.activity },
     { heading: 'Other care', items: c.care },
   ];
   const tickDays = Math.min(c.log_days || 7, 14);
   if (c.daily_checks.length) blocks.push({ heading: 'Daily tick sheet', text: `On the last page, sized to print and stick on the fridge (${tickDays} days).` });
   if (c.release.ready_when.length || c.release.how.length || c.release.where) {
-    blocks.push({ heading: 'Ready for release when', items: c.release.ready_when });
+    if (c.release.target_weight) blocks.push({ heading: 'Target release weight', text: c.release.target_weight });
+    blocks.push({ heading: 'Release checklist', items: c.release.ready_when.map((x) => `☐  ${x}`) });
     blocks.push({ heading: 'How to release', items: c.release.how });
     blocks.push({ heading: 'Where to release', text: c.release.where });
   }

@@ -192,7 +192,8 @@ const CARE_SHAPE = `{"animal":"","species":"","kind":"domestic|wildlife","summar
 "plan":[{"when":"","tasks":[]}],
 "housing":[],"feeding":[],"activity":[],"care":[],
 "daily_checks":[],"log_days":7,
-"release":{"ready_when":[],"how":[],"where":""},
+"feed_calc":{"applies":false,"what":"","weight_g":null,"stage":"","percent_body_weight_per_day":null,"feeds_per_day":null,"basis":"","sure":true},
+"release":{"ready_when":[],"target_weight":"","how":[],"where":""},
 "escalate":{"vet":[],"urgent":[]},
 "rehydration":{"needed":false,"weight_g":null,"dehydration_pct":null,"steps":[]},
 "species_group":"",
@@ -215,6 +216,9 @@ Rules:
 - housing: where and how to keep the animal (space, warmth, quiet, hygiene), at most 4 items. feeding: what, how much if stated, how often, toileting, and water, at most 5 items. activity: handling and enrichment, at most 3 items. care: anything else not covered elsewhere, at most 3 items, often none.
 - daily_checks: 3 to 5 short things the carer ticks off each day (2 to 4 words each). log_days: the longest course or until the next visit, at most 14.
 - release (wildlife only, otherwise leave empty): ready_when lists the signs the animal is fit for release, at most 4; how gives the release steps, at most 4; where states the release location rule in one sentence. Follow the ${region().adj} requirements in the sources exactly. Never encourage keeping wildlife longer than needed.
+- feed_calc: a feeding amount worked out from body weight, for THIS species and stage. Use it when the animal is milk-fed or hand-reared and the standard guidance (for example the Wombaroo feeding guide for that species) gives a daily amount as a percentage of body weight. what: the product and stage (for example "Wombaroo Possum Milk 0.8"). weight_g: the weight in grams only if stated. stage: the age or stage that sets the amount. percent_body_weight_per_day: the daily milk volume as a percentage of body weight for this species and stage (the app works out millilitres from the weight). feeds_per_day: how many feeds a day at this stage. basis: one short line naming where the figure comes from. sure: false if you are not confident the figure is right for this species and stage. If no sound figure exists for this animal, set applies false and leave the rest empty. Never use a one-size figure for every species.
+- release.target_weight: the weight or size this species should reach before release, with "about", for example "About 600 g for a common ringtail possum"; empty if you are not sure.
+- Uncertainty: if you are not sure about anything, say so plainly in that item (for example "I'm not certain of this, check with your vet"), rather than sounding sure.
 - escalate.vet: problems that need the vet within a day, at most 4. escalate.urgent: emergencies that need a vet straight away (or an after-hours emergency vet), at most 4. These are the only places the vet appears.
 - next_visit: only a visit or recheck that was actually stated; otherwise an empty string.
 - species_group: the one id from this list that matches the animal, or "" if none fits: ${speciesGroupsForPrompt()}. The app shows checked normal ranges and pouch or enclosure temperatures for that group, so do not write your own figures for body temperature, heart rate, breathing rate or pouch temperature anywhere else in the plan.
@@ -557,6 +561,40 @@ export function rehydrationTable(r) {
 export const REHYDRATION_NOTE = 'Worked out from Anne Fowler’s fluid therapy protocol (2007). Check the amounts with your vet before giving them, and ask how milk feeds fit in.';
 
 /** Coerce a care plan reply into a safe shape. */
+// Shown on every care plan and feed calculator, as Bunurong Wildlife Care asked.
+export const AI_CHECK_NOTE = 'Check this AI guidance. It may make mistakes. Trust an expert over this tool.';
+
+/** The feed calculator's inputs, checked so nonsense figures never reach the screen. */
+export function feedCalcOf(raw) {
+  const f = obj(raw);
+  const num = (v, lo, hi) => {
+    const n = Number(v);
+    return Number.isFinite(n) && n >= lo && n <= hi ? n : null;
+  };
+  const pct = num(f.percent_body_weight_per_day, 1, 40);
+  const feeds = num(f.feeds_per_day, 1, 24);
+  const ok = Boolean(f.applies) && pct !== null && feeds !== null;
+  return {
+    applies: ok,
+    what: ok ? str(f.what, 120) : '',
+    weight_g: ok ? num(f.weight_g, 1, 100000) : null,
+    stage: ok ? str(f.stage, 120) : '',
+    pct: ok ? pct : null,
+    feeds: ok ? Math.round(feeds) : null,
+    basis: ok ? str(f.basis, 240) : '',
+    sure: f.sure !== false,
+  };
+}
+
+/** Millilitres a day and per feed for a weight in grams (milk taken as about 1 g per mL). */
+export function feedAmounts(fc, weightG) {
+  const w = Number(weightG);
+  if (!fc || !fc.applies || !Number.isFinite(w) || w <= 0) return null;
+  const perDay = (w * fc.pct) / 100;
+  const round = (x) => (x < 10 ? Math.round(x * 10) / 10 : Math.round(x));
+  return { perDay: round(perDay), perFeed: round(perDay / fc.feeds), feeds: fc.feeds };
+}
+
 export function normaliseCareSheet(raw, knownSources = null) {
   const r = obj(raw);
   const rel = obj(r.release);
@@ -588,9 +626,10 @@ export function normaliseCareSheet(raw, knownSources = null) {
     daily_checks: arr(r.daily_checks, 6),
     log_days: Number.isFinite(days) ? Math.min(14, Math.max(1, days)) : 7,
     release: kind === 'wildlife'
-      ? { ready_when: arr(rel.ready_when, 8), how: arr(rel.how, 8), where: str(rel.where, 400) }
-      : { ready_when: [], how: [], where: '' },
+      ? { ready_when: arr(rel.ready_when, 8), target_weight: str(rel.target_weight, 160), how: arr(rel.how, 8), where: str(rel.where, 400) }
+      : { ready_when: [], target_weight: '', how: [], where: '' },
     escalate: { vet: arr(esc.vet, 10), urgent: arr(esc.urgent, 10) },
+    feed_calc: feedCalcOf(r.feed_calc),
     rehydration: rehydrationOf(r.rehydration),
     species_group: SPECIES_GROUP_IDS.includes(str(r.species_group, 30)) ? str(r.species_group, 30) : '',
     next_visit: str(r.next_visit, 300),
@@ -601,6 +640,7 @@ export function normaliseCareSheet(raw, knownSources = null) {
 
 export function careSheetText(c, lookup = () => null) {
   const L = [];
+  const fa = c.feed_calc && c.feed_calc.applies ? feedAmounts(c.feed_calc, c.feed_calc.weight_g) : null;
   const section = (title, items) => {
     if (!items.length) return;
     L.push(title);
@@ -608,7 +648,7 @@ export function careSheetText(c, lookup = () => null) {
     L.push('');
   };
   L.push(c.kind === 'wildlife' ? `Care plan: ${c.animal || 'wildlife in care'}` : `Caring for ${c.animal || 'your animal'} at home`);
-  L.push('');
+  L.push(AI_CHECK_NOTE, '');
   if (c.summary) L.push(c.summary, '');
   if (c.medications.length) {
     L.push('Medications');
@@ -650,6 +690,15 @@ export function careSheetText(c, lookup = () => null) {
   }
   section('Housing', c.housing);
   section('Feeding', c.feeding);
+  if (c.feed_calc && c.feed_calc.applies) {
+    const f = c.feed_calc;
+    L.push(`Feed calculator${f.what ? `: ${f.what}` : ''}`);
+    if (fa) L.push(`- For ${f.weight_g} g${f.stage ? ` (${f.stage})` : ''}: about ${fa.perDay} mL a day, as ${fa.feeds} feeds of about ${fa.perFeed} mL`);
+    L.push(`- ${f.pct}% of body weight a day, in ${f.feeds} feeds. Re-work it as the weight changes.`);
+    if (f.basis) L.push(`- Based on: ${f.basis}`);
+    if (!f.sure) L.push('- Claude isn’t certain of this figure for this species and stage. Check it with your vet or the feeding guide.');
+    L.push('');
+  }
   section('Activity and handling', c.activity);
   section('Other care', c.care);
   if (c.daily_checks.length) {
@@ -659,7 +708,11 @@ export function careSheetText(c, lookup = () => null) {
   }
   if (c.release.ready_when.length || c.release.how.length || c.release.where) {
     L.push('Release');
-    if (c.release.ready_when.length) L.push(`Ready when: ${c.release.ready_when.join('; ')}`);
+    if (c.release.target_weight) L.push(`Target weight: ${c.release.target_weight}`);
+    if (c.release.ready_when.length) {
+      L.push('Release checklist:');
+      c.release.ready_when.forEach((x) => L.push(`[ ] ${x}`));
+    }
     c.release.how.forEach((x) => L.push(`- ${x}`));
     if (c.release.where) L.push(`Where: ${c.release.where}`);
     L.push('');
