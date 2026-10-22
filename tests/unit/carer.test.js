@@ -191,8 +191,9 @@ test('feed calculator: checked inputs, amounts worked out on the device', async 
 test('checked ranges only appear when the group matches the animal named', async () => {
   const { checkedGroup } = await import('../../src/note.js');
   assert.equal(checkedGroup('koala', 'Koala, adult female'), 'koala');
-  assert.equal(checkedGroup('bird', 'Koala, adult female'), '');
-  assert.equal(checkedGroup('bird', 'Crested pigeon'), 'bird');
+  assert.equal(checkedGroup('bird', 'Koala, adult female'), 'koala'); // a wrong pick is replaced by the animal's own group
+  assert.equal(checkedGroup('bird', 'Crested pigeon'), 'pigeon'); // its own group's figures win
+  assert.equal(checkedGroup('magpie', 'Rainbow lorikeet'), 'lorikeet');
   assert.equal(checkedGroup('ringtail', 'Common ringtail possum joey'), 'ringtail');
   assert.equal(checkedGroup('python', 'Mystery animal'), 'python'); // nothing to compare with: keep Claude's pick
   assert.equal(checkedGroup('made-up', 'Koala'), '');
@@ -227,4 +228,13 @@ test('feed calculator: a joey with a Wombaroo growth chart gets the chart amount
   // Possum milk without a chart match and no checked percentage: unsure.
   const g = normaliseCareSheet({ ...EXAMPLE_CARER_PLAN, animal: 'Galah chick', species: '', feed_calc: { applies: true, what: 'Rearing mix', percent_body_weight_per_day: 40, feeds_per_day: 6, sure: true } }, null);
   assert.equal(g.feed_calc.sure, false);
+});
+
+test('new animals are recognised and get their own checked points: seals, native rats, crocodiles, pygmy possums', async () => {
+  const { groupsIn, vetCareForPrompt } = await import('../../src/species-vet.js');
+  assert.ok(groupsIn('young fur seal on the beach').includes('seal'));
+  assert.ok(groupsIn('rakali in a yabby trap').includes('rodent'));
+  assert.ok(groupsIn('saltwater crocodile in a creek').includes('crocodile'));
+  assert.ok(groupsIn('eastern pygmy possum').includes('pygmy-possum'));
+  assert.match(vetCareForPrompt('fur seal pup on the beach'), /seal \|/);
 });

@@ -1,3 +1,4 @@
+import { EXTRA_RANGES } from './species-ranges-extra.js';
 // Normal ranges and pouch / humidicrib temperatures by species group, checked October 2026.
 // Only figures read from the cited source are here; anything that could not be verified is left out.
 // Claude only picks the group; the app shows these figures word for word, so the numbers are always the sources'.
@@ -132,6 +133,8 @@ export const SPECIES_RANGES = {
     sources: [{ title: 'Victorian Wildlife Rehabilitation Guidelines, Part B Reptiles and Amphibians, Ch 3 Turtles', publisher: 'DEECA (Victoria)', date: 'no date printed', authors: 'none named', url: 'https://www.wildlife.vic.gov.au/__data/assets/pdf_file/0025/671254/Part-B-Reptiles-Amphibians-Chapter-3.pdf' }, NSW_REPTILES],
   },
 };
+
+Object.assign(SPECIES_RANGES, EXTRA_RANGES);
 
 export const SPECIES_GROUP_IDS = Object.keys(SPECIES_RANGES);
 

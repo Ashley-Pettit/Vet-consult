@@ -38,6 +38,13 @@ export const GROUP_WORDS = {
   'sea-turtle': ['sea turtle', 'green turtle', 'loggerhead', 'hawksbill', 'flatback', 'leatherback', 'olive ridley'],
   goanna: ['goanna', 'lace monitor', 'monitor lizard', 'varanus'],
   frog: ['frog', 'toad', 'tadpole'],
+  // Added October 2026: animals that come into care with no data before.
+  seal: ['seal', 'fur seal', 'sea lion', 'elephant seal', 'leopard seal', 'seal pup'],
+  'dugong-whale': ['dugong', 'whale', 'dolphin', 'porpoise', 'stranded whale', 'beached whale'],
+  rodent: ['rakali', 'water rat', 'water-rat', 'bush rat', 'swamp rat', 'native rat', 'hopping mouse', 'hopping-mouse', 'native mouse', 'melomys', 'mosaic-tailed rat'],
+  'tree-kangaroo': ['tree-kangaroo', 'tree kangaroo', 'lumholtz'],
+  'pygmy-possum': ['pygmy possum', 'pygmy-possum', 'feathertail', 'feathertail glider'],
+  crocodile: ['crocodile', 'croc', 'saltie', 'freshie', 'estuarine crocodile', 'saltwater crocodile', 'freshwater crocodile'],
   // Queensland bird groups (from the QLD bird research).
   'curlew': ["bush stone-curlew", "bush stone curlew", "stone-curlew", "stone curlew", "curlew", "beach stone-curlew", "bush thick-knee"],
   'lapwing': ["masked lapwing", "lapwing", "plover", "spur-winged plover", "banded lapwing"],
@@ -54,7 +61,7 @@ const CLASS_OF = {
   passerine: 'bird', magpie: 'bird', parrot: 'bird', lorikeet: 'bird', pigeon: 'bird', 'frogmouth-owl': 'bird', raptor: 'bird',
   kookaburra: 'bird', waterbird: 'bird', seabird: 'bird', penguin: 'bird', shorebird: 'bird',
   curlew: 'bird', lapwing: 'bird', 'brush-turkey': 'bird', ibis: 'bird', pelican: 'bird', cuckoo: 'bird', cassowary: 'bird', 'black-cockatoo': 'bird',
-  skink: 'reptile', dragon: 'reptile', python: 'reptile', 'venomous-snake': 'reptile', 'freshwater-turtle': 'reptile', 'sea-turtle': 'reptile', goanna: 'reptile',
+  crocodile: 'reptile', skink: 'reptile', dragon: 'reptile', python: 'reptile', 'venomous-snake': 'reptile', 'freshwater-turtle': 'reptile', 'sea-turtle': 'reptile', goanna: 'reptile',
 };
 
 const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -90,7 +97,7 @@ export function factsFor(text = '') {
 }
 export const namedAnimal = (text = '') => {
   const g = groupsIn(text).find((x) => !['bird', 'reptile'].includes(x));
-  const NAMES = { macropod: 'kangaroos and wallabies', ringtail: 'ringtail possums', brushtail: 'brushtail possums', flyingfox: 'flying-foxes', 'frogmouth-owl': 'frogmouths and owls', 'venomous-snake': 'snakes', 'freshwater-turtle': 'freshwater turtles', 'sea-turtle': 'sea turtles', 'brush-turkey': 'brush-turkeys', 'black-cockatoo': 'black cockatoos', platypus: 'platypuses', dasyurid: 'quolls and antechinus', passerine: 'small birds', skink: 'blue-tongue lizards', parrot: 'parrots and cockatoos', penguin: 'little penguins', curlew: 'bush stone-curlews', ibis: 'ibis', cuckoo: 'koels and cuckoos', cassowary: 'cassowaries', raptor: 'birds of prey', microbat: 'microbats' };
+  const NAMES = { macropod: 'kangaroos and wallabies', ringtail: 'ringtail possums', brushtail: 'brushtail possums', flyingfox: 'flying-foxes', 'frogmouth-owl': 'frogmouths and owls', 'venomous-snake': 'snakes', 'freshwater-turtle': 'freshwater turtles', 'sea-turtle': 'sea turtles', 'brush-turkey': 'brush-turkeys', 'black-cockatoo': 'black cockatoos', platypus: 'platypuses', dasyurid: 'quolls and antechinus', passerine: 'small birds', skink: 'blue-tongue lizards', parrot: 'parrots and cockatoos', penguin: 'little penguins', curlew: 'bush stone-curlews', ibis: 'ibis', cuckoo: 'koels and cuckoos', cassowary: 'cassowaries', raptor: 'birds of prey', microbat: 'microbats', seal: 'seals', 'dugong-whale': 'whales, dolphins and dugongs', rodent: 'native rats and mice', 'tree-kangaroo': 'tree-kangaroos', 'pygmy-possum': 'pygmy possums', crocodile: 'crocodiles' };
   return g ? NAMES[g] || `${g.replace(/-/g, ' ')}s` : '';
 };
 

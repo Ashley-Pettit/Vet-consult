@@ -658,12 +658,16 @@ export function feedAmounts(fc, weightG) {
 
 // The species group decides which checked ranges and video appear, so it must match the animal named.
 // If Claude's group is for a different kind of animal (a bird group for a koala, say), show none rather than wrong figures.
-const GROUP_CLASS = { macropod: 'mammal', ringtail: 'mammal', brushtail: 'mammal', glider: 'mammal', wombat: 'mammal', koala: 'mammal', echidna: 'mammal', flyingfox: 'mammal', bird: 'bird', raptor: 'bird', waterbird: 'bird', bluetongue: 'reptile', dragon: 'reptile', python: 'reptile', turtle: 'reptile' };
+const GROUP_CLASS = { macropod: 'mammal', ringtail: 'mammal', brushtail: 'mammal', glider: 'mammal', wombat: 'mammal', koala: 'mammal', echidna: 'mammal', flyingfox: 'mammal', bird: 'bird', raptor: 'bird', waterbird: 'bird', bluetongue: 'reptile', dragon: 'reptile', python: 'reptile', turtle: 'reptile', microbat: 'mammal', platypus: 'mammal', bandicoot: 'mammal', dasyurid: 'mammal', magpie: 'bird', lorikeet: 'bird', pigeon: 'bird', 'frogmouth-owl': 'bird', kookaburra: 'bird', seabird: 'bird', penguin: 'bird', 'sea-turtle': 'reptile', frog: 'frog', goanna: 'reptile', 'venomous-snake': 'reptile' };
 const TAG_CLASS = (t) => (['bird', 'reptile'].includes(t) ? t : ['frog'].includes(t) ? 'frog' : t && ['passerine', 'magpie', 'parrot', 'lorikeet', 'pigeon', 'frogmouth-owl', 'raptor', 'kookaburra', 'waterbird', 'seabird', 'penguin', 'shorebird', 'curlew', 'lapwing', 'brush-turkey', 'ibis', 'pelican', 'cuckoo', 'cassowary', 'black-cockatoo'].includes(t) ? 'bird' : ['skink', 'dragon', 'python', 'venomous-snake', 'freshwater-turtle', 'sea-turtle', 'goanna'].includes(t) ? 'reptile' : 'mammal');
 export function checkedGroup(group, animalText) {
   if (!SPECIES_GROUP_IDS.includes(group)) return '';
   const tags = groupsIn(animalText);
   if (!tags.length) return group;
+  // The animal's own group wins when it has ranges (a lorikeet gets lorikeet figures, even if another bird group was picked).
+  const RANGE_KEY = { skink: 'bluetongue', 'freshwater-turtle': 'turtle' };
+  const own = tags.map((t) => RANGE_KEY[t] || t).find((t) => SPECIES_GROUP_IDS.includes(t) && !['bird', 'reptile'].includes(t));
+  if (own) return own;
   const classes = new Set(tags.map(TAG_CLASS));
   return classes.has(GROUP_CLASS[group]) ? group : '';
 }
