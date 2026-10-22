@@ -87,6 +87,7 @@ test('MOP plan: plain steps for a member of the public, a text to send, grounded
   const p = buildDocPrompt('mop', 'possum in a shoe box', { sourceList: 'vic-x | vic | T | point' });
   assert.match(p, /member of the public \(MOP\)/);
   assert.match(p, /"Text to send": one SMS-length message of at most 600 characters/);
+  assert.match(p, /Do NOT put Wildlife Victoria's name or phone number in the text/);
   assert.match(p, /Reference sources \(id \| scope \| title \| key points\), most important first:\nvic-x/);
   assert.match(p, /NEVER suggest any medication, dose, procedure, force-feeding or euthanasia/);
   assert.match(p, /"Basic first aid"/);
