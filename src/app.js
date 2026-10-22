@@ -150,13 +150,17 @@ function updateCreateState() {
   els.create.disabled = !has || busy; // allowed while listening: it stops the mic first
   els.clear.disabled = !has && photos.length === 0;
   els.examples.hidden = has;
-  updateBarFloat();
   if (dictation.state === 'idle' && document.body.dataset.mic !== 'keyboard') els.micStatus.textContent = idleStatus();
 }
 
 function autoGrow(ta) {
+  // Never taller than what fits on screen with the Create bar under it (above the keyboard when it's up), so the box
+  // and Create are always seen together; longer notes scroll inside the box.
+  const vv = window.visualViewport;
+  const kb = document.body.dataset.kb === 'open';
+  const room = kb && vv ? vv.height - 150 : window.innerHeight * 0.45;
   ta.style.height = 'auto';
-  ta.style.height = Math.min(ta.scrollHeight + 2, window.innerHeight * 0.6) + 'px';
+  ta.style.height = Math.max(120, Math.min(ta.scrollHeight + 2, room)) + 'px';
 }
 
 function setTranscript(text) {
@@ -440,6 +444,7 @@ els.mic.addEventListener('click', () => {
     const open = offset > 80;
     document.body.dataset.kb = open ? 'open' : '';
     document.documentElement.style.setProperty('--kb-offset', open ? `${Math.round(offset)}px` : '0px');
+    autoGrow(els.transcript); // the box shrinks to fit above the keyboard, and grows back after
   };
   vv.addEventListener('resize', update);
   vv.addEventListener('scroll', update);
@@ -447,18 +452,13 @@ els.mic.addEventListener('click', () => {
 // Tapping the dictation box: once the keyboard is up, show the whole box (label to last line) above the Create bar,
 // instead of leaving the line being typed hidden under the bar.
 function dictationIntoView() {
-  if (document.activeElement !== els.transcript || document.body.dataset.mic === 'keyboard') return;
+  // Only when the keyboard is up and the box is hidden behind the Create bar: lift it just enough, smoothly.
+  if (document.activeElement !== els.transcript || document.body.dataset.kb !== 'open' || document.body.dataset.mic === 'keyboard') return;
   const vv = window.visualViewport;
-  const viewTop = vv ? vv.offsetTop : 0;
-  const bar = document.body.dataset.kb === 'open' ? (document.querySelector('#view-record .actions')?.offsetHeight || 0) : 0;
-  const viewH = (vv ? vv.height : window.innerHeight) - bar;
-  const field = els.transcript.closest('.field').getBoundingClientRect();
+  const bar = document.querySelector('#view-record .actions');
+  const limit = (vv ? vv.offsetTop + vv.height : window.innerHeight) - (bar ? bar.offsetHeight : 0) - 8;
   const box = els.transcript.getBoundingClientRect();
-  const top = field.top - viewTop;
-  const bottom = box.bottom - viewTop;
-  // A long note is left to the caret, so the line they tapped stays put.
-  if (box.height > viewH - 40) return;
-  if (top < 0 || bottom > viewH) window.scrollTo({ top: window.scrollY + Math.min(top - 8, bottom - viewH + 8), behavior: 'instant' });
+  if (box.bottom > limit) window.scrollBy({ top: box.bottom - limit, behavior: 'smooth' });
 }
 els.transcript.addEventListener('focus', () => {
   const vv = window.visualViewport;
@@ -467,24 +467,6 @@ els.transcript.addEventListener('focus', () => {
   if (vv) vv.addEventListener('resize', () => setTimeout(go, 60), { once: true });
   setTimeout(go, 450);
 });
-// Create floats at the bottom of the screen (or above the keyboard) only while the whole dictation box is in view.
-function updateBarFloat() {
-  const bar = document.querySelector('#view-record .actions');
-  if (!bar || !els.transcript) return;
-  const vv = window.visualViewport;
-  const top = vv ? vv.offsetTop : 0;
-  const height = vv ? vv.height : window.innerHeight;
-  const box = els.transcript.getBoundingClientRect();
-  const fits = box.height > 0 && box.top - top >= 0 && box.bottom - top <= height - bar.offsetHeight;
-  const next = fits ? 'yes' : '';
-  if (document.body.dataset.barFloat !== next) document.body.dataset.barFloat = next;
-}
-let barRaf = 0;
-const queueBarFloat = () => { if (!barRaf) barRaf = requestAnimationFrame(() => { barRaf = 0; updateBarFloat(); }); };
-window.addEventListener('scroll', queueBarFloat, { passive: true });
-window.addEventListener('resize', queueBarFloat);
-if (window.visualViewport) { window.visualViewport.addEventListener('resize', queueBarFloat); window.visualViewport.addEventListener('scroll', queueBarFloat); }
-new ResizeObserver(queueBarFloat).observe(els.transcript);
 // Keep the coach mark only while the keyboard is up.
 els.transcript.addEventListener('blur', () => setTimeout(() => document.activeElement !== els.transcript && endKeyboardVoice(), 150));
 
@@ -764,22 +746,16 @@ function startWorkingFeed(title) {
   let facts = factsFor(text);
   if (!facts.length) facts = SPECIES_CARE.map((w) => ({ text: `${w.warning} ${w.why}`, source: w.source_title }));
   facts = facts.sort(() => Math.random() - 0.5).slice(0, 12);
-  // Calm: the step changes every 6 seconds and the fact every 12, each with a soft fade, in boxes of fixed height.
   let i = 0;
-  const fade = (node, text) => {
-    if (node.textContent === text) return;
-    node.classList.add('fading');
-    setTimeout(() => { node.textContent = text; node.classList.remove('fading'); }, 250);
-  };
-  $('working-fact').hidden = !facts.length;
-  if (facts.length) $('working-fact-text').textContent = facts[0].text;
-  $('working-step').textContent = steps[0];
   const show = () => {
+    $('working-step').textContent = steps[Math.min(i, steps.length - 1)];
+    const f = facts.length && i >= 1 ? facts[(i - 1) % facts.length] : null;
+    $('working-fact').hidden = !f;
+    if (f) $('working-fact-text').textContent = f.text;
     i += 1;
-    fade($('working-step'), steps[Math.min(i, steps.length - 1)]);
-    if (facts.length && i % 2 === 0) fade($('working-fact-text'), facts[(i / 2) % facts.length].text);
   };
-  const t = setInterval(show, 6000);
+  show();
+  const t = setInterval(show, 4500);
   return () => {
     clearInterval(t);
     $('working-fact').hidden = true;
@@ -2219,6 +2195,30 @@ $('recent-clear').addEventListener('click', () => {
   renderResume();
   toast('Recent cleared.');
 });
+
+/* ---------------- light and dark ---------------- */
+
+// Dark unless they pick light; the choice is kept on this device.
+function applyTheme(t) {
+  document.documentElement.dataset.theme = t;
+  const toLight = t === 'dark';
+  const btn = $('theme-toggle');
+  btn.setAttribute('aria-label', toLight ? 'Switch to light mode' : 'Switch to dark mode');
+  btn.title = btn.getAttribute('aria-label');
+  btn.setAttribute('aria-pressed', String(t === 'light'));
+  const meta = document.getElementById('theme-color'); // not in the Claude version
+  if (meta) meta.setAttribute('content', t === 'dark' ? '#2B3138' : '#647C50');
+}
+$('theme-toggle').addEventListener('click', () => {
+  const next = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+  try {
+    localStorage.setItem('css.theme', next);
+  } catch {
+    /* still switches for this visit */
+  }
+  applyTheme(next);
+});
+applyTheme(document.documentElement.dataset.theme === 'light' ? 'light' : 'dark');
 
 /* ---------------- start up ---------------- */
 

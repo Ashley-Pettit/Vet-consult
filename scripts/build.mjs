@@ -21,7 +21,10 @@ const css = readFileSync(out + 'app.css', 'utf8');
 const version = createHash('sha256').update(js + css).digest('hex').slice(0, 10);
 const { CONFIG } = await import(root + 'src/config.js');
 const connect = ['https://api.anthropic.com', CONFIG.proxyUrl ? new URL(CONFIG.proxyUrl).origin : ''].filter(Boolean).join(' ');
-const html = readFileSync(root + 'index.html', 'utf8').replace("connect-src 'self' https:", `connect-src 'self' ${connect}`);
+let html = readFileSync(root + 'index.html', 'utf8').replace("connect-src 'self' https:", `connect-src 'self' ${connect}`);
+// The tiny theme script in <head> runs before the page draws (no flash of the wrong theme); allow exactly it by hash.
+const headScript = (html.match(/<head>[\s\S]*?<script>([\s\S]*?)<\/script>/) || [])[1];
+if (headScript) html = html.replace("script-src 'self'", `script-src 'self' 'sha256-${createHash('sha256').update(headScript).digest('base64')}'`);
 writeFileSync(out + 'index.html', html.replace('app.js"', `app.js?v=${version}"`).replace('app.css"', `app.css?v=${version}"`));
 writeFileSync(out + 'sw.js', readFileSync(out + 'sw.js', 'utf8').replace('__VERSION__', version));
 writeFileSync(out + '.nojekyll', '');

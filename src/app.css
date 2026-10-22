@@ -816,11 +816,11 @@ main { padding-top: 14px; }
 /* Create stays in view: sticky on every width, and lifted above the keyboard on phones */
 #view-record .actions { position: static; }
 /* Create floats only while the whole dictation box is in view, so it never covers the words */
-body[data-bar-float="yes"] #view-record .actions { position: sticky; bottom: 0; }
+
 @media (min-width: 720px) {
   #view-record .actions { margin: 0; padding: 12px 0; background: linear-gradient(to top, var(--bg) 75%, transparent); }
 }
-body[data-kb="open"][data-bar-float="yes"] #view-record .actions {
+body[data-kb="open"] #view-record .actions {
   position: fixed; left: 0; right: 0; bottom: var(--kb-offset, 0px); z-index: 40; margin: 0;
   padding: 8px var(--gutter-r) 8px var(--gutter-l); background: var(--bg); box-shadow: 0 -1px 0 var(--line), 0 -6px 16px rgba(0,0,0,.06);
 }
@@ -1066,9 +1066,19 @@ body[data-kb="open"] .tx-hint { display: none; }
 .bar > #open-about { justify-self: start; }
 .recent-item:first-child { border-color: var(--accent); }
 
-/* Loading: fixed-height lines and a soft fade, so nothing jumps */
-.working-step { min-height: 2.8em; display: flex; align-items: center; justify-content: center; transition: opacity 0.25s ease; }
-.working-fact { min-height: 7.6em; transition: none; }
-#working-fact-text { transition: opacity 0.25s ease; }
-.working-step.fading, #working-fact-text.fading { opacity: 0; }
-@media (prefers-reduced-motion: reduce) { .working-step, #working-fact-text { transition: none; } }
+
+/* Light / dark switch at the top: dark by default */
+.bar-left { display: flex; justify-content: flex-start; gap: 4px; }
+.bar > .bar-left { justify-self: start; }
+:root[data-theme="dark"] #theme-toggle .i-moon, :root[data-theme="light"] #theme-toggle .i-sun { display: none; }
+
+/* Clear: a quiet link under the bottom-right corner of the box, never on top of the words */
+.tx-wrap { display: flex; flex-direction: column; }
+.tx-wrap #transcript { padding-bottom: 12px; }
+.tx-clear {
+  position: static; align-self: flex-end; margin-top: 6px; min-height: 32px; padding: 4px 6px;
+  background: none; border: 0; box-shadow: none; border-radius: 6px;
+  color: var(--muted); font-size: 0.85rem; font-weight: 600; text-decoration: none;
+}
+.tx-clear:hover, .tx-clear:focus-visible { color: var(--ink); background: var(--accent-soft); }
+.tx-clear svg { width: 12px; height: 12px; }

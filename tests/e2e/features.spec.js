@@ -234,11 +234,11 @@ test('tapping the dictation box with the keyboard up shows the whole box above t
     const t = document.querySelector('#transcript').getBoundingClientRect();
     return f.top >= 0 && t.bottom <= bar.top;
   })).toBe(true);
-  // The whole box is in view, so Create floats above the keyboard.
-  await expect(page.locator('body')).toHaveAttribute('data-bar-float', 'yes');
+  // Create sits on top of the keyboard.
+  expect(await page.evaluate(() => getComputedStyle(document.querySelector('#view-record .actions')).position)).toBe('fixed');
 });
 
-test('Create never covers the dictation box: it floats only while the whole box is in view', async ({ page }) => {
+test('Create never covers the dictation box, and a long note scrolls inside the box with Create right under it', async ({ page }) => {
   await openApp(page);
   await page.locator('#transcript').fill('Ringtail joey, cat attack. '.repeat(40));
   const covered = () => page.evaluate(() => {
