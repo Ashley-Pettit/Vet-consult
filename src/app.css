@@ -980,3 +980,46 @@ dialog.more[data-mic="listening"] .more-mic-zone .help { color: var(--rec); font
 .working-step { margin: 0; font-weight: 650; color: var(--ink); min-height: 1.4em; }
 .working-fact { margin: 0; padding: 12px 14px; border-radius: 10px; background: var(--accent-soft); text-align: left; font-size: 0.92rem; line-height: 1.45; }
 .fact-label { display: block; font: 700 0.78rem/1.2 var(--display); text-transform: uppercase; letter-spacing: 0.08em; color: var(--chip-ink, var(--accent)); margin-bottom: 4px; }
+
+.pigeon-fact { margin: 0; }
+#note-fact:empty { display: none; }
+
+/* Home screen hint: small and easy to dismiss */
+.home-tip { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; background: var(--surface); font-size: 0.9rem; display: grid; gap: 8px; }
+.home-tip p { margin: 0; }
+.home-tip-actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.home-tip .link { font-size: 0.88rem; }
+
+/* Photo crop */
+dialog.crop-dlg { width: min(560px, calc(100vw - 24px)); max-width: calc(100vw - 24px); padding: 0; border-radius: 12px; }
+dialog.crop-dlg form { display: flex; flex-direction: column; gap: 10px; padding: 16px; }
+dialog.crop-dlg h2 { margin: 0; font: 700 1.2rem/1.2 var(--display); text-transform: uppercase; letter-spacing: 1px; }
+.crop-stage { position: relative; align-self: center; line-height: 0; touch-action: none; user-select: none; }
+.crop-stage img { display: block; max-width: 100%; max-height: 60vh; }
+.crop-box { position: absolute; border: 2px solid #fff; box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5); cursor: move; touch-action: none; }
+.crop-h { position: absolute; width: 22px; height: 22px; background: #fff; border: 2px solid var(--accent); border-radius: 50%; }
+.crop-h[data-h="nw"] { left: -12px; top: -12px; cursor: nwse-resize; }
+.crop-h[data-h="ne"] { right: -12px; top: -12px; cursor: nesw-resize; }
+.crop-h[data-h="sw"] { left: -12px; bottom: -12px; cursor: nesw-resize; }
+.crop-h[data-h="se"] { right: -12px; bottom: -12px; cursor: nwse-resize; }
+.crop-stage { overflow: hidden; }
+
+/* AI notes: gentle, not alarming */
+.ai-check, .ai-disclaimer {
+  margin: 0; padding: 0 0 0 22px; border: 0; background: none; border-radius: 0; position: relative;
+  font-size: 0.85rem; font-weight: 500; font-style: italic; color: var(--muted); line-height: 1.45;
+}
+.ai-check::before, .ai-disclaimer::before {
+  content: "i"; position: absolute; left: 0; top: 0.1em; width: 15px; height: 15px; border-radius: 50%;
+  border: 1.5px solid currentColor; font: 700 10px/12px var(--font); font-style: normal; text-align: center;
+}
+.ai-check.top { margin-bottom: 2px; }
+
+/* Reassurance under the dictation box */
+.tx-hint { display: flex; align-items: center; gap: 6px; margin: 6px 2px 0; font-size: 0.8rem; color: var(--muted, #5b6b62); line-height: 1.35; }
+.tx-hint svg { width: 14px; height: 14px; flex: none; opacity: 0.8; }
+
+/* Resume card: the animal is the headline and wraps instead of being cut off */
+.resume-kicker { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--accent); }
+.resume .resume-label { font-size: 0.98rem; font-weight: 700; color: var(--ink); white-space: normal; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+#resume-text { white-space: normal; }

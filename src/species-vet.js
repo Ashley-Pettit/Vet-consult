@@ -90,7 +90,7 @@ export function factsFor(text = '') {
 }
 export const namedAnimal = (text = '') => {
   const g = groupsIn(text).find((x) => !['bird', 'reptile'].includes(x));
-  const NAMES = { macropod: 'kangaroos and wallabies', ringtail: 'ringtail possums', brushtail: 'brushtail possums', flyingfox: 'flying-foxes', 'frogmouth-owl': 'frogmouths and owls', 'venomous-snake': 'snakes', 'freshwater-turtle': 'freshwater turtles', 'sea-turtle': 'sea turtles', 'brush-turkey': 'brush-turkeys', 'black-cockatoo': 'black cockatoos' };
+  const NAMES = { macropod: 'kangaroos and wallabies', ringtail: 'ringtail possums', brushtail: 'brushtail possums', flyingfox: 'flying-foxes', 'frogmouth-owl': 'frogmouths and owls', 'venomous-snake': 'snakes', 'freshwater-turtle': 'freshwater turtles', 'sea-turtle': 'sea turtles', 'brush-turkey': 'brush-turkeys', 'black-cockatoo': 'black cockatoos', platypus: 'platypuses', dasyurid: 'quolls and antechinus', passerine: 'small birds', skink: 'blue-tongue lizards', parrot: 'parrots and cockatoos', penguin: 'little penguins', curlew: 'bush stone-curlews', ibis: 'ibis', cuckoo: 'koels and cuckoos', cassowary: 'cassowaries', raptor: 'birds of prey', microbat: 'microbats' };
   return g ? NAMES[g] || `${g.replace(/-/g, ' ')}s` : '';
 };
 

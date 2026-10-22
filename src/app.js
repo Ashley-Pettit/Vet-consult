@@ -572,12 +572,85 @@ async function addPhotos(input) {
   input.value = '';
   for (const f of files) {
     try {
-      photos.push(await preparePhoto(f));
+      photos.push(await cropPhoto(await preparePhoto(f)));
     } catch {
       toast('That file couldn’t be read as a photo.');
     }
   }
   renderPhotos();
+}
+
+// Crop step after each photo: drag the box or its corners. "Use whole photo" keeps it as it is.
+function cropPhoto(photo) {
+  return new Promise((resolve) => {
+    const dlg = $('crop-dlg');
+    const img = $('crop-img');
+    const box = $('crop-box');
+    const stage = $('crop-stage');
+    let r = { x: 0, y: 0, w: 0, h: 0 };
+    const place = () => Object.assign(box.style, { left: `${r.x}px`, top: `${r.y}px`, width: `${r.w}px`, height: `${r.h}px` });
+    img.onload = () => {
+      const W = img.clientWidth;
+      const H = img.clientHeight;
+      r = { x: W * 0.05, y: H * 0.05, w: W * 0.9, h: H * 0.9 };
+      place();
+    };
+    img.src = photo.url;
+    let drag = null;
+    const down = (e) => {
+      const h = e.target.dataset.h || 'move';
+      drag = { h, sx: e.clientX, sy: e.clientY, r0: { ...r } };
+      box.setPointerCapture(e.pointerId);
+      e.preventDefault();
+    };
+    const move = (e) => {
+      if (!drag) return;
+      const W = img.clientWidth;
+      const H = img.clientHeight;
+      const dx = e.clientX - drag.sx;
+      const dy = e.clientY - drag.sy;
+      const o = drag.r0;
+      const MIN = 40;
+      let { x, y, w, h } = o;
+      if (drag.h === 'move') {
+        x = Math.min(Math.max(0, o.x + dx), W - o.w);
+        y = Math.min(Math.max(0, o.y + dy), H - o.h);
+      } else {
+        if (drag.h.includes('w')) { x = Math.min(Math.max(0, o.x + dx), o.x + o.w - MIN); w = o.w + (o.x - x); }
+        if (drag.h.includes('e')) w = Math.min(Math.max(MIN, o.w + dx), W - o.x);
+        if (drag.h.includes('n')) { y = Math.min(Math.max(0, o.y + dy), o.y + o.h - MIN); h = o.h + (o.y - y); }
+        if (drag.h.includes('s')) h = Math.min(Math.max(MIN, o.h + dy), H - o.y);
+      }
+      r = { x, y, w, h };
+      place();
+    };
+    const up = () => (drag = null);
+    box.onpointerdown = down;
+    box.onpointermove = move;
+    box.onpointerup = up;
+    box.onpointercancel = up;
+    stage.ontouchmove = (e) => drag && e.preventDefault();
+    dlg.onclose = async () => {
+      const how = dlg.returnValue;
+      dlg.returnValue = '';
+      if (how !== 'crop' || !img.clientWidth) return resolve(photo);
+      try {
+        const sx = img.naturalWidth / img.clientWidth;
+        const sy = img.naturalHeight / img.clientHeight;
+        const c = document.createElement('canvas');
+        c.width = Math.max(1, Math.round(r.w * sx));
+        c.height = Math.max(1, Math.round(r.h * sy));
+        c.getContext('2d').drawImage(img, r.x * sx, r.y * sy, r.w * sx, r.h * sy, 0, 0, c.width, c.height);
+        const blob = await new Promise((res) => c.toBlob(res, 'image/jpeg', 0.85));
+        if (!blob) return resolve(photo);
+        URL.revokeObjectURL(photo.url);
+        resolve(await preparePhoto(new File([blob], photo.name || 'Photo.jpg', { type: 'image/jpeg' })));
+      } catch {
+        resolve(photo);
+      }
+    };
+    dlg.showModal();
+  });
 }
 els.photoInput.addEventListener('change', () => addPhotos(els.photoInput));
 $('add-gallery').addEventListener('change', () => addPhotos($('add-gallery')));
@@ -1033,6 +1106,13 @@ function renderNote() {
   renderAnimals();
   renderChecks(n, local);
   renderGaps(n);
+  // Pigeons get a kind word for the vet (shown on screen only, never in the clinical record).
+  let factBox = $('note-fact');
+  if (!factBox) {
+    factBox = el('div', { id: 'note-fact' });
+    $('note').after(factBox);
+  }
+  factBox.replaceChildren(...[pigeonFact(`${p.species} ${p.name} ${n.subjective}`)].filter(Boolean));
   els.noteTitle.textContent = n.visit.type || 'Clinical note';
   els.care.hidden = /euthanasia/i.test(n.visit.type);
 
@@ -1357,6 +1437,13 @@ function feedSection(c) {
   ]);
 }
 
+// A kind word about pigeons, for vets only, as Bunurong Wildlife Care asked.
+const PIGEON_FACT = 'Pigeons are sweet, kind and accepting of each other, and they cope really well in care (if you leave them alone). They often thrive once released, with a good chance of a happy life in the wild.';
+function pigeonFact(text) {
+  if (settings.role !== 'vet' || !groupsIn(String(text)).includes('pigeon')) return null;
+  return el('p', { class: 'working-fact pigeon-fact' }, [el('span', { class: 'fact-label', text: 'Did you know?' }), PIGEON_FACT]);
+}
+
 function renderCare(c) {
   const sec = (title, items, cls) => (items.length ? el('section', { class: 'care-sec ' + (cls || '') }, [el('h2', { text: title }), list(items)]) : null);
   const name = c.animal || currentNote()?.patient.name || '';
@@ -1401,6 +1488,7 @@ function renderCare(c) {
     ...[
       el('p', { class: 'ai-check top', text: careAiNote(c) }),
       c.summary ? el('p', { class: 'care-summary', text: c.summary }) : null,
+      pigeonFact(`${c.animal} ${c.species} ${c.summary}`),
       c.medications.length
         ? el('section', { class: 'care-sec' }, [
             el('h2', { text: 'Medications' }),
@@ -2035,7 +2123,12 @@ function renderResume() {
   $('resume').hidden = !fresh;
   if (!fresh) return;
   const label = last.type === 'doc' && DOC_KINDS[last.data.kind] ? DOC_KINDS[last.data.kind].label : LAST_LABEL[last.type];
-  $('resume-text').textContent = `${label}${last.title ? ` · ${last.title}` : ''} · ${ago(Date.now() - last.at)}`;
+  // The animal leads, so it's easy to tell which one this was.
+  const title = String(last.title || '').trim();
+  const name = title ? title[0].toUpperCase() + title.slice(1) : label;
+  $('resume-title').textContent = name;
+  $('resume-text').textContent = `${title ? `${label} · ` : ''}${ago(Date.now() - last.at)}`;
+  $('resume-open').setAttribute('aria-label', `Open ${name}`);
 }
 $('resume-open').addEventListener('click', () => {
   const last = store.loadLast();
@@ -2202,3 +2295,65 @@ $('print-dlg').addEventListener('close', () => {
     }
   }
 });
+
+
+/* ---------------- home screen hint (website only, rarely) ---------------- */
+
+// Once someone has made a few things, now and then suggest adding the app to their home screen.
+// Never inside Claude, never once it's installed, at most every three weeks, and never again after "Don't show again".
+let installEvent = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  installEvent = e;
+});
+function homeScreenTip() {
+  const ua = navigator.userAgent;
+  if (/iPhone|iPad|iPod/i.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) return 'Tap the Share button (the square with an arrow), then Add to Home Screen.';
+  if (/Android/i.test(ua)) return installEvent ? 'Tap Add below, or open the ⋮ menu and choose Add to Home screen.' : 'Open the ⋮ menu (top right), then choose Add to Home screen or Install app.';
+  if (/Edg\//.test(ua)) return 'Open the … menu, then Apps, then Install this site as an app.';
+  if (/Chrome\//.test(ua)) return 'Click the install icon at the right of the address bar, or open the ⋮ menu and choose Install.';
+  return '';
+}
+function maybeShowHomeTip() {
+  const installed = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  if (inClaude || installed) return;
+  let st = {};
+  try {
+    st = JSON.parse(localStorage.getItem('css.hometip') || '{}');
+  } catch {
+    st = {};
+  }
+  const made = Number(localStorage.getItem('css.made') || 0);
+  if (st.never || made < 3 || (st.last && Date.now() - st.last < 21 * 864e5)) return;
+  const tip = homeScreenTip();
+  if (!tip) return;
+  const save = (x) => {
+    try {
+      localStorage.setItem('css.hometip', JSON.stringify({ ...st, ...x }));
+    } catch {
+      /* ignore */
+    }
+  };
+  save({ last: Date.now() });
+  const box = el('div', { class: 'home-tip', role: 'note' }, [
+    el('p', {}, [el('strong', { text: 'Keep it handy. ' }), `Add Animal Welfare Companion to your home screen. ${tip}`]),
+    el('div', { class: 'home-tip-actions' }, [
+      installEvent && /Android|Chrome|Edg/.test(navigator.userAgent)
+        ? el('button', { type: 'button', class: 'btn small primary', onclick: async () => { box.remove(); installEvent.prompt(); installEvent = null; } }, 'Add')
+        : null,
+      el('button', { type: 'button', class: 'link', onclick: () => box.remove() }, 'Not now'),
+      el('button', { type: 'button', class: 'link', onclick: () => { save({ never: true }); box.remove(); } }, 'Don’t show again'),
+    ]),
+  ]);
+  $('view-record').append(box);
+}
+// Count things made, then check on the home screen.
+const countMade = () => {
+  try {
+    localStorage.setItem('css.made', String(Number(localStorage.getItem('css.made') || 0) + 1));
+  } catch {
+    /* ignore */
+  }
+};
+['view-care', 'view-doc', 'view-note'].forEach((id) => new MutationObserver(() => { if (!$(id).hidden) countMade(); }).observe($(id), { attributes: true, attributeFilter: ['hidden'] }));
+setTimeout(maybeShowHomeTip, 2500);

@@ -143,6 +143,10 @@ test('photos are shrunk, numbered, sent first and shown with the findings', asyn
   });
   await openApp(page);
   await page.locator('#add-gallery').setInputFiles([{ name: 'wound.png', mimeType: 'image/png', buffer: PNG }, { name: 'bcs.png', mimeType: 'image/png', buffer: PNG }]);
+  // Each photo offers a crop first: crop the first, keep the second whole.
+  await expect(page.locator('#crop-dlg')).toBeVisible();
+  await page.locator('#crop-dlg').getByRole('button', { name: 'Crop' }).click();
+  await page.locator('#crop-dlg').getByRole('button', { name: 'Use whole photo' }).click();
   await expect(page.locator('#photo-list .thumb')).toHaveCount(2);
   await page.getByRole('button', { name: 'Remove photo 2' }).click();
   await expect(page.locator('#photo-list .thumb')).toHaveCount(1);

@@ -51,3 +51,12 @@ test('vet: clinical notes start in the background after the plan; discharge pack
   await expect(page.locator('#view-note')).toBeVisible();
   expect(calls.filter((c) => c.prompt.includes('<dictation>')).length).toBe(1); // reused, not asked twice
 });
+
+test('vets see a kind word about pigeons, only for pigeons and only for vets', async ({ page }) => {
+  await withKey(page, { role: 'vet', mode: 'carer' });
+  await mockApi(page, { body: (p) => textReply({ ...EXAMPLE_CARER_PLAN, animal: 'Crested pigeon', species: 'Crested pigeon', summary: 'A crested pigeon with a sore wing.' }) });
+  await openApp(page);
+  await page.locator('#transcript').fill('Crested pigeon, wing droop.');
+  await page.locator('#create').click();
+  await expect(page.locator('#view-care .pigeon-fact')).toContainText('Pigeons are sweet, kind and accepting');
+});

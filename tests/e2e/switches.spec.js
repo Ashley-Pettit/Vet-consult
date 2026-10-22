@@ -71,7 +71,7 @@ test('a call interrupts: the dictation and the last care plan survive closing th
   const calls = await mockApi(later, { body: () => textReply(EXAMPLE_CARER_PLAN) });
   await later.goto('./');
   await expect(later.locator('#resume')).toBeVisible();
-  await expect(later.locator('#resume-text')).toContainText('Care plan');
+  await expect(later.locator('#resume')).toContainText('Care plan');
   await later.locator('#resume-open').click();
   await expect(later.locator('#view-care')).toBeVisible();
   expect(calls).toHaveLength(0);
@@ -92,7 +92,7 @@ test('New asks first; keeping it changes nothing, starting new clears the words 
   await page.getByRole('button', { name: 'Start new' }).click();
   await expect(page.locator('#view-record')).toBeVisible();
   await expect(page.locator('#transcript')).toHaveValue('');
-  await expect(page.locator('#resume-text')).toContainText('Care plan');
+  await expect(page.locator('#resume')).toContainText('Care plan');
 });
 
 test('Copy offers Share or Copy as text; no extra copy button at the top of the care plan', async ({ page, context }) => {

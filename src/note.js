@@ -5,7 +5,7 @@ import { speciesGroupsForPrompt, SPECIES_GROUP_IDS, rangesFor } from './species-
 import { videoFor, watchUrl } from './videos.js';
 import { drugsForPrompt } from './drugs.js';
 import { shorthandForPrompt } from './shorthand.js';
-import { vetCareForPrompt, groupsIn } from './species-vet.js';
+import { vetCareForPrompt, groupsIn, namedAnimal } from './species-vet.js';
 
 // Pure logic: prompt, parsing, normalising and plain-text formatting of clinical notes.
 // No DOM access here so it can be unit tested in Node.
@@ -120,7 +120,7 @@ const NOTE_SHAPE = (title) => `{"patient":{"name":"","species":"","breed":"","se
 const RULES = `Rules:
 - Australian English, metric units, standard veterinary abbreviations (PO, SC, IV, IM, SID, BID, TID, q8h, BCS x/9, CRT, MM).
 - Formal, concise, third-person clinical language. No first person. Remove filler words and self-corrections, keeping the corrected value.
-- Speech recognition may mishear drug names and numbers. Correct obvious mishearings of veterinary terms and add each correction to "check".
+- Speech recognition may mishear drug names and numbers, and typed notes may have typos. Work out what was meant, correct obvious mishearings and typos of veterinary terms, and add each correction that matters for safety to "check".
 - NEVER invent findings, values, doses, drugs or names. If something was not said, use an empty string or empty array.
 - If you must assume something to make the record readable, mark it "(assumed)" and add it to "check".
 - Record explicit negatives as findings (for example microchip "Scanned, none detected") rather than leaving the field empty.
@@ -266,7 +266,7 @@ export function buildCarerPlanPrompt(dictation, sourceList = '', { fromVet = fal
   const tone = `Tone: positive, warm and confident. Describe what is known and what the plan covers; never point out what wasn't said (no "no details were given" or "nothing was mentioned"). If little was said, give sound general care for this animal.${fromVet ? ' Begin the summary with a short thank-you to the carer, for example "Thank you for caring for this ringtail joey."' : ''}`;
   return `${who}
 ${tone}
-${photoLookRule(photoCount)}Speech recognition may mishear drug and species names; correct obvious mishearings.
+${photoLookRule(photoCount)}Speech recognition may mishear drug and species names, and typed notes may have typos; work out what was meant and correct obvious mishearings and typos.
 ${fromVet ? `${shorthandForPrompt()}\n` : ''}${drugsForPrompt(drugs)}
 ${vetCareForPrompt(dictation, { audience: fromVet ? undefined : 'carer' })}
 ${careRules(sourceList)}
@@ -565,7 +565,7 @@ export const REHYDRATION_NOTE = 'Worked out from Anne Fowler’s fluid therapy p
 // AI disclaimers, mixed up so they keep being read. Each one puts people ahead of the tool.
 // A plan always shows the same one (picked from its own text), on screen, in shared text and in Word.
 export const AI_NOTES = [
-  'Check this AI guidance. It may make mistakes. Trust an expert over this tool.',
+  'Written with help from AI, so it can get things wrong. Your vet or an experienced carer knows best.',
   'This is an ai tool which can make mistakes. In doubt? Defer to an expert.',
   'A vet or experienced wildlife carer knows this animal better than any app. If anything here seems off, trust them.',
   'AI can get things wrong. A vet, a wildlife carer or your hotline always has the final say.',
@@ -574,12 +574,23 @@ export const AI_NOTES = [
   'Not sure about something here? A quick call to a vet or wildlife carer beats any AI.',
 ];
 export const AI_CHECK_NOTE = AI_NOTES[0];
+// Now and then the note speaks to the animal itself.
+const ANIMAL_NOTES = [
+  (a) => `${a} need real love. AI tools like this one can really help, but trust human experts over this tool.`,
+  (a) => `${a} are all a little different. This AI plan is a helper; a vet or experienced carer knows best.`,
+  (a) => `${a} deserve the best care. Use this AI plan as a guide, and trust the people who know them over this tool.`,
+];
 export function aiNoteFor(seed = '') {
   let h = 0;
   for (const ch of String(seed)) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  const animal = namedAnimal(String(seed));
+  if (animal && h % 3 === 0) {
+    const name = animal.charAt(0).toUpperCase() + animal.slice(1);
+    return ANIMAL_NOTES[(h >>> 2) % ANIMAL_NOTES.length](name);
+  }
   return AI_NOTES[h % AI_NOTES.length];
 }
-const careSeed = (c) => `${c.animal}|${c.summary}`;
+const careSeed = (c) => `${c.animal} ${c.species}|${c.summary}`;
 export const careAiNote = (c) => aiNoteFor(careSeed(c));
 
 /** The feed calculator's inputs, checked so nonsense figures never reach the screen. */
@@ -1039,7 +1050,7 @@ ${typeof k.rule === 'function' ? k.rule() : k.rule}${k.sources && opts.sourceLis
 ${clinician}${photos}General rules:
 - Australian English and metric units. Positive, plain wording: describe what is known; never point out what wasn't said.
 - NEVER invent findings, values, doses, dates, names or numbers. Leave out what was not said.
-- Speech recognition may mishear drug, species and place names; correct obvious mishearings and add each to "check".
+- Speech recognition may mishear drug, species and place names, and typed notes may have typos; work out what was meant, correct obvious mishearings and typos, and add each one that matters to "check".
 - "title": the document title including the animal's name or description. "subtitle": one line with the date or case number if stated.
 - Each section has a "heading" and either "text" (a paragraph) or "items" (a list), not both.
 - "check": at most 5 short questions for the carer about anything missing or unclear (each under 10 words).
