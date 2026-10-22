@@ -1,0 +1,18 @@
+// UK-style clinical shorthand, as used by Australian vets (VIC and QLD), so quick dictation is read correctly.
+export const SHORTHAND = {
+  'Exam': 'BAR bright, alert, responsive; QAR quiet, alert, responsive; QBAR; dull; obtunded; O/E on examination; CE clinical exam; TPR temperature, pulse, respiration; T temp; HR heart rate; RR resp rate; MM mucous membranes (pink, pale, tacky); CRT capillary refill time; HS heart sounds; LS lung sounds; H+L or H&L heart and lungs; ausc auscultation; abdo palp abdominal palpation; LNs lymph nodes; PLR pupillary light reflex; CP conscious proprioception; BCS body condition score (x/5 or x/9); BW or wt body weight; NAD no abnormality detected; NSF no significant findings; WNL within normal limits; NWB non-weight-bearing; WB; lame x/10; ROM range of motion; dehydr x% dehydrated; skin tent',
+  'History and problems': 'Hx history; c/o presented for; Sx symptoms or surgery (by context); Dx diagnosis; DDx differentials; Px prognosis; V+ vomiting; D+ diarrhoea; V-/D- none; E+D eating and drinking; PU/PD drinking and urinating more; inappetent; ADR "ain\'t doing right" or adverse drug reaction (by context); HBC hit by car; MVA or RTA vehicle strike; CA cat attack; DA dog attack; FB foreign body; # fracture; FAD flea allergy; QOL quality of life; KIV keep in view; DOA dead on arrival; PTS put to sleep (euthanased); euth',
+  'Tests': 'PE physical exam; FBC or CBC full blood count; biochem; PCV/TS packed cell volume and total solids; BG blood glucose; UA urinalysis; USG urine specific gravity; rads or XR radiographs; US ultrasound; FNA fine needle aspirate; Bx biopsy; Cx culture; C&S culture and sensitivity; cyto cytology; skin scrape; FEC faecal egg count',
+  'Treatment': 'Tx treatment; Rx prescribed or treatment; GA general anaesthetic; sed sedation; IVFT IV fluids; SC or SQ under the skin; IM into muscle; IV into vein; PO by mouth; top topical; inj injection; tab tablet; susp suspension; stat immediately; SID once a day; BID or BD twice a day; TID or TDS three times a day; QID or QDS four times a day; q8h every 8 hours; EOD every other day; PRN as needed; NBM or NPO nil by mouth; mg/kg; mL; OD right eye; OS left eye; OU both eyes; AD right ear; AS left ear; AU both ears; LF RF LH RH limbs; FL HL fore and hind limb; L R left right',
+  'Plan': 'hosp hospitalise; obs observations (obs q4h); d/c discharged; R/C or rechk recheck; f/u follow-up; adv advised; o/n overnight; tmrw tomorrow; 1/7 one day; 2/52 two weeks; 3/12 three months; ↑ increased; ↓ decreased; Δ change; ~ about',
+  'Wildlife': 'PY pouch young; pinky; unfurred; furred; AF age factor; HL head length; joey; fledgling; nestling; branchling; humidicrib; release site; soft release',
+};
+
+export function shorthandForPrompt() {
+  const lines = Object.entries(SHORTHAND).map(([g, list]) => `${g}: ${list}`).join('\n');
+  return `Vet shorthand (UK style, used by Australian vets). Read the dictation with these meanings. Where one could mean two things (Sx, ADR, AU), use the context.
+- Clinical notes: write in full, but standard dose and route abbreviations may stay (mg/kg, mL, SC, IM, IV, PO, SID, BID, TID, q8h). Keep NAD, WNL and BCS as written in the objective section.
+- Carer instructions: always plain English ("twice a day", "under the skin", "recheck in 2 weeks"), never shorthand.
+- Time shorthand: 1/7 = 1 day, 2/52 = 2 weeks, 3/12 = 3 months.
+${lines}`;
+}

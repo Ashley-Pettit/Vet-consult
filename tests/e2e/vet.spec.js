@@ -14,7 +14,7 @@ test('vet: plan first, notes second, copy at the top, quick notes look finished'
   await page.locator('#transcript').fill('wombat F 24kg mange sev T36.1 recheck 1/52');
   await page.locator('#create').click();
   await expect(page.locator('#view-care')).toBeVisible();
-  await expect(page.locator('#care-copy-top')).toBeVisible();
+  await expect(page.locator('#care-copy')).toBeVisible();
   expect(calls[0].prompt).toMatch(/helping a vet .* write a complete care plan for the wildlife carer/);
 
   // Switch to clinical notes from the same words.

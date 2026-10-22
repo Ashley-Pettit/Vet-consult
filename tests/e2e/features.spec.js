@@ -198,7 +198,7 @@ test('carer plan for a carer: Victorian sources, vet only for escalation, specie
   expect(calls[0].prompt).toContain('vic-release-requirements | vic |');
   expect(calls[0].prompt).toContain('work it into the section it belongs to');
   await expect(page.locator('.care-sec.watch li')).toHaveCount(4);
-  await page.locator('#care-copy-top').click();
+  await page.locator('#care-copy').click();
   expect(await page.evaluate(() => navigator.clipboard.readText())).toMatch(/^Caring for Rusty at home/);
   expect(errors).toEqual([]);
 });

@@ -774,3 +774,6 @@ dialog.confirm p { margin: 0; }
 .video-play:hover { background: rgba(0, 0, 0, 0.8); }
 .video-play:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
 .video-play-icon { width: 0; height: 0; margin-left: 6px; border-style: solid; border-width: 14px 0 14px 24px; border-color: transparent transparent transparent #fff; }
+
+.share-actions { display: flex; flex-direction: column; gap: 8px; }
+.share-actions .link { align-self: center; padding: 8px; }

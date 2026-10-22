@@ -213,7 +213,6 @@
       </div>
       <div class="note-title-row">
         <h1 id="care-title" tabindex="-1">Care at home</h1>
-        <button type="button" class="btn small primary copy-top" id="care-copy-top"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>Copy</button>
       </div>
       <p class="muted">Everything the carer needs to look after the animal on their own. Check it, then copy it into an email, SMS or the discharge sheet.</p>
     </div>
@@ -301,6 +300,12 @@
     </div>
 
     <div class="field">
+      <label for="drugs">Drugs and products you use</label>
+      <textarea id="drugs" rows="4" spellcheck="false" placeholder="One per line, e.g.&#10;Metacam 1.5 mg/mL oral&#10;Cydectin pour-on&#10;Our in-house mange wash"></textarea>
+      <p class="help">So misheard names are corrected to your spelling. Common vet and wildlife drugs are already known.</p>
+    </div>
+
+    <div class="field">
       <label for="model">Note writer</label>
       <select id="model"></select>
     </div>
@@ -323,6 +328,18 @@
     <div class="dlg-actions">
       <button type="button" class="btn ghost danger" id="forget">Clear saved data</button>
       <button type="submit" class="btn primary" value="save" id="save-settings">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="share-sheet" class="confirm" aria-labelledby="share-title">
+  <form method="dialog">
+    <h2 id="share-title">Send it</h2>
+    <p id="share-sub" class="help">Share opens your phone’s options (text, email, WhatsApp). Copy puts the plain text on your clipboard.</p>
+    <div class="share-actions">
+      <button type="submit" class="btn primary" value="share" id="share-go">Share…</button>
+      <button type="submit" class="btn ghost" value="copy">Copy as text</button>
+      <button type="submit" class="link" value="cancel">Cancel</button>
     </div>
   </form>
 </dialog>

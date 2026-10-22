@@ -3,6 +3,8 @@ import { CONFIG } from './config.js';
 import { region } from './region.js';
 import { speciesGroupsForPrompt, SPECIES_GROUP_IDS, rangesFor } from './species-ranges.js';
 import { videoFor, watchUrl } from './videos.js';
+import { drugsForPrompt } from './drugs.js';
+import { shorthandForPrompt } from './shorthand.js';
 
 // Pure logic: prompt, parsing, normalising and plain-text formatting of clinical notes.
 // No DOM access here so it can be unit tested in Node.
@@ -156,6 +158,8 @@ Work out from the dictation which kind of record this is, follow its rule below,
 ${typeGuide()}
 ${clinician}${photos}
 ${RULES}
+${drugsForPrompt(opts.drugs)}
+${shorthandForPrompt()}
 - The dictation may cover one animal or SEVERAL (for example a litter or a seizure). Write one note per animal, in the order dictated, putting shared case details (location, case number, circumstances) in each animal's subjective.
 - Reply with ONLY {"animals":[NOTE, ...]} (one NOTE per animal, no markdown) where NOTE is:
 ${NOTE_SHAPE('')}
@@ -240,7 +244,7 @@ ${JSON.stringify(note)}
 }
 
 /** Carer plan straight from spoken comments, with no vet note in between. */
-export function buildCarerPlanPrompt(dictation, sourceList = '', { fromVet = false, justIn = false } = {}) {
+export function buildCarerPlanPrompt(dictation, sourceList = '', { fromVet = false, justIn = false, drugs = '' } = {}) {
   const who = fromVet
     ? `You are helping a vet who works with ${region().org} write a complete care plan for the wildlife carer who will look after this animal, from the vet's spoken comments below. The vet may use quick clinical shorthand; turn it into plain instructions the carer can follow.`
     : justIn
@@ -248,6 +252,7 @@ export function buildCarerPlanPrompt(dictation, sourceList = '', { fromVet = fal
       : `You are helping a wildlife carer at ${region().org} write a complete care plan for another carer or foster carer, from their spoken comments below.`;
   return `${who}
 Speech recognition may mishear drug and species names; correct obvious mishearings.
+${fromVet ? `${shorthandForPrompt()}\n` : ''}${drugsForPrompt(drugs)}
 ${careRules(sourceList)}
 
 <comments>

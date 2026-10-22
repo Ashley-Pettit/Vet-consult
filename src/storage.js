@@ -42,6 +42,7 @@ export const store = {
     const sessionKey = read(session, SESSION_KEY, '');
     return {
       clinician: typeof s.clinician === 'string' ? s.clinician : '',
+      drugs: typeof s.drugs === 'string' ? s.drugs : '',
       model: typeof s.model === 'string' ? s.model : '',
       noteType: typeof s.noteType === 'string' ? s.noteType : 'consult',
       mode: ['vet', 'carer', 'intake', 'log', 'tovet', 'mop', 'funding'].includes(s.mode) ? s.mode : 'carer',
@@ -54,6 +55,7 @@ export const store = {
   saveSettings(s) {
     write(local, SETTINGS, {
       clinician: s.clinician || '',
+      drugs: String(s.drugs || '').slice(0, 3000),
       model: s.model || '',
       noteType: s.noteType || 'consult',
       mode: ['vet', 'carer', 'intake', 'log', 'tovet', 'mop', 'funding'].includes(s.mode) ? s.mode : 'carer',

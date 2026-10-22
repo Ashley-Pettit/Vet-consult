@@ -652,7 +652,7 @@ async function createNote() {
       return;
     }
     banner('');
-    const prompt = buildPrompt(finalText, { clinician: settings.clinician, photoCount: photos.length });
+    const prompt = buildPrompt(finalText, { clinician: settings.clinician, photoCount: photos.length, drugs: settings.drugs });
     const result = await runWorking(
       'Writing the clinical notes',
       'Claude is turning your words into SOAP notes.',
@@ -1248,7 +1248,7 @@ async function createCarePlan(text) {
   }
   banner('');
   const reply = await runWorking('Writing the care plan', `Everything the carer needs, from ${region().adj} guidance.`, (signal) =>
-    askJson(buildCarerPlanPrompt(text, sourcesForPrompt(), { fromVet: settings.role === 'vet' }), signal, { images: photos }),
+    askJson(buildCarerPlanPrompt(text, sourcesForPrompt(), { fromVet: settings.role === 'vet', drugs: settings.drugs }), signal, { images: photos }),
   );
   notes = [];
   showCare(normaliseCareSheet(extractJson(reply), SOURCE_IDS()), 'record');
@@ -1258,15 +1258,44 @@ els.care.addEventListener('click', openCare);
 $('discharge-btn').addEventListener('click', openCare);
 // Copy sits top right too, so a busy vet never has to scroll for it.
 $('copy-top').addEventListener('click', () => els.copy.click());
-$('care-copy-top').addEventListener('click', () => els.careCopy.click());
 $('doc-copy-top').addEventListener('click', () => $('doc-copy').click());
 $('care-back').addEventListener('click', () => showView(careFrom === 'note' ? 'note' : 'record'));
 // A plan made straight from the carer's words can take more info in place; one made from a vet note goes back to it.
 $('care-back-2').addEventListener('click', () => (careFrom === 'note' ? showView('note') : addMoreInfo()));
-els.careCopy.addEventListener('click', async () => {
-  const ok = await copyText(careSheetText(careSheet, lookupSource));
-  toast(ok ? 'Care plan copied. Paste it into an email, SMS or the discharge sheet.' : 'Couldn’t copy. Select the text and copy it instead.');
+// Copy offers Share (the phone's share sheet) or Copy as text. Without sharing (some computers), it just copies.
+const canShare = () => typeof navigator.share === 'function';
+let pendingSend = null;
+function shareOrCopy(text, title, copiedMsg) {
+  pendingSend = { text, title, copiedMsg };
+  if (!canShare()) return finishSend('copy');
+  $('share-sheet').showModal();
+}
+async function finishSend(how) {
+  const job = pendingSend;
+  pendingSend = null;
+  if (!job) return;
+  if (how === 'share') {
+    try {
+      await navigator.share({ title: job.title, text: job.text });
+      return;
+    } catch (e) {
+      if (e && e.name === 'AbortError') return; // they closed the share sheet
+      // Sharing not allowed here (for example inside some apps): copy instead.
+    }
+  }
+  if (how === 'share' || how === 'copy') {
+    const ok = await copyText(job.text);
+    toast(ok ? job.copiedMsg : 'Couldn’t copy. Select the text and copy it instead.');
+  }
+}
+$('share-sheet').addEventListener('close', () => {
+  const how = $('share-sheet').returnValue;
+  $('share-sheet').returnValue = '';
+  finishSend(how);
 });
+els.careCopy.addEventListener('click', () =>
+  shareOrCopy(careSheetText(careSheet, lookupSource), $('care-title').textContent, 'Care plan copied. Paste it into an email, SMS or the discharge sheet.'),
+);
 
 /* ---------------- intake record / care log / for the vet ---------------- */
 
@@ -1342,10 +1371,9 @@ async function createDoc(kind, text) {
 }
 
 $('doc-back').addEventListener('click', () => showView('record'));
-$('doc-copy').addEventListener('click', async () => {
+$('doc-copy').addEventListener('click', () => {
   if (!currentDoc) return;
-  const ok = await copyText(docText(currentDoc.d));
-  toast(ok ? 'Copied. Paste it wherever it needs to go.' : 'Couldn’t copy. Select the text and copy it instead.');
+  shareOrCopy(docText(currentDoc.d), $('doc-title').textContent, 'Copied. Paste it wherever it needs to go.');
 });
 $('doc-new').addEventListener('click', addMoreInfo);
 
@@ -1383,7 +1411,7 @@ $('advice-btn').addEventListener('click', () => makeNext('carer'));
 let pendingCare = null;
 function startIntakeCare() {
   const text = els.transcript.value;
-  const promise = askJson(buildCarerPlanPrompt(text.trim(), sourcesForPrompt(), { justIn: true }), undefined, { images: photos })
+  const promise = askJson(buildCarerPlanPrompt(text.trim(), sourcesForPrompt(), { justIn: true, drugs: settings.drugs }), undefined, { images: photos })
     .then((r) => {
       const sheet = normaliseCareSheet(r, SOURCE_IDS());
       if (!(sheet.summary || sheet.plan.length || sheet.housing.length)) return null;
@@ -1527,6 +1555,7 @@ async function refreshConnection() {
 
 async function openSettings(message) {
   els.clinician.value = settings.clinician;
+  $('drugs').value = settings.drugs || '';
   els.model.value = settings.model || CONFIG.defaultModel;
   els.apiKey.value = settings.apiKey;
   els.rememberKey.checked = settings.rememberKey;
@@ -1547,7 +1576,7 @@ $('close-settings').addEventListener('click', () => els.settings.close('close'))
 els.settings.addEventListener('close', async () => {
   if (els.settings.returnValue !== 'save') return;
   const key = els.apiKey.value.trim();
-  settings = { ...settings, clinician: els.clinician.value.trim().slice(0, 80), model: els.model.value, apiKey: key, rememberKey: els.rememberKey.checked };
+  settings = { ...settings, drugs: $('drugs').value.slice(0, 3000), clinician: els.clinician.value.trim().slice(0, 80), model: els.model.value, apiKey: key, rememberKey: els.rememberKey.checked };
   store.saveSettings(settings);
   provider = null;
   if (key && !/^sk-ant-/.test(key)) toast('Saved, but that doesn’t look like an Anthropic key. Keys start with sk-ant-.');

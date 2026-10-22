@@ -94,3 +94,34 @@ test('New asks first; keeping it changes nothing, starting new clears the words 
   await expect(page.locator('#transcript')).toHaveValue('');
   await expect(page.locator('#resume-text')).toContainText('Care plan');
 });
+
+test('Copy offers Share or Copy as text; no extra copy button at the top of the care plan', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await page.addInitScript(() => { window.__shared = []; navigator.share = async (d) => { window.__shared.push(d); }; });
+  await mockApi(page, { body: () => textReply(EXAMPLE_CARER_PLAN) });
+  await openApp(page);
+  await page.locator('#transcript').fill('Ringtail joey.');
+  await page.locator('#create').click();
+  await expect(page.locator('#view-care')).toBeVisible();
+  await expect(page.locator('#care-copy-top')).toHaveCount(0);
+  await page.locator('#care-copy').click();
+  await expect(page.locator('#share-sheet')).toBeVisible();
+  await page.getByRole('button', { name: 'Share…' }).click();
+  await expect.poll(() => page.evaluate(() => window.__shared.length)).toBe(1);
+  expect(await page.evaluate(() => window.__shared[0].text)).toMatch(/^Care plan: /);
+  await page.locator('#care-copy').click();
+  await page.getByRole('button', { name: 'Copy as text' }).click();
+  await expect(page.locator('#toast-text')).toContainText('Care plan copied');
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toMatch(/^Care plan: /);
+});
+
+test('drugs saved in Settings are kept', async ({ page }) => {
+  await page.goto('./');
+  await page.evaluate(() => {
+    const s = JSON.parse(localStorage.getItem('css.settings') || '{}');
+    localStorage.setItem('css.settings', JSON.stringify({ ...s, role: 'vet', drugs: 'Our mange wash' }));
+  });
+  await page.reload();
+  await page.locator('#open-settings').click();
+  await expect(page.locator('#drugs')).toHaveValue('Our mange wash');
+});
