@@ -1,5 +1,5 @@
 // Feeding guidance for the prompt and a check on the feed calculator, from the checked rows in feeding-data.js.
-import { FEEDING } from './feeding-data.js';
+import { FEEDING, FEED_CHARTS } from './feeding-data.js';
 import { groupsIn } from './species-vet.js';
 
 const BIRD_CLASS = new Set(['bird', 'passerine', 'magpie', 'parrot', 'black-cockatoo', 'lorikeet', 'pigeon', 'frogmouth-owl', 'raptor', 'kookaburra', 'waterbird', 'seabird', 'penguin', 'shorebird', 'lapwing', 'curlew', 'brush-turkey', 'ibis', 'pelican', 'cuckoo', 'cassowary']);
@@ -36,14 +36,46 @@ ${rows.map(fmt).join('\n')}`;
 const nums = (v) => (Array.isArray(v) ? v.map(Number) : v == null ? [] : [Number(v), Number(v)]).filter((n) => Number.isFinite(n));
 
 /**
- * Is the plan's daily percentage one the checked rows support for this group? true / false,
- * or null when the rows give no percentage for this group (nothing to check against).
+ * Is the plan's daily percentage one the checked rows support for this group? true or false.
  */
 export function feedFigureChecked(group, pct) {
   if (!group || !Number.isFinite(Number(pct))) return null;
   const rows = rowsFor([group]).filter((r) => r.group !== 'general');
   const ranges = rows.map((r) => nums(r.pct)).filter((n) => n.length === 2);
-  if (!ranges.length) return rows.length ? null : false;
+  if (!ranges.length) return false; // no checked percentage for this group: the plan's figure can't be backed
   const p = Number(pct);
   return ranges.some(([lo, hi]) => p >= lo * 0.9 && p <= hi * 1.1);
+}
+
+const has = (t, w) => new RegExp(`(^|[^a-z])${w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}s?([^a-z]|$)`).test(t);
+
+/** The Wombaroo growth chart for the animal named (the most specific match wins), or null. */
+export function chartFor(text = '', regionCode = 'vic') {
+  const t = String(text).toLowerCase();
+  let best = null;
+  for (const c of FEED_CHARTS) {
+    if (c.region && c.region !== regionCode) continue;
+    const w = c.words.filter((x) => has(t, x)).sort((a, b) => b.length - a.length)[0];
+    if (w && (!best || w.length > best.len)) best = { chart: c, len: w.length };
+  }
+  return best ? best.chart : null;
+}
+export const chartByKey = (key) => FEED_CHARTS.find((c) => c.key === key) || null;
+
+/** Millilitres a day from the chart at this weight, read between the two nearest points; null outside the chart. */
+export function chartAmount(chart, weightG) {
+  const w = Number(weightG);
+  if (!chart || !Number.isFinite(w) || w <= 0) return null;
+  const pts = chart.points;
+  if (w < pts[0][0] || w > pts[pts.length - 1][0]) return null;
+  for (let i = 1; i < pts.length; i++) {
+    const [w0, m0, p0] = pts[i - 1];
+    const [w1, m1, p1] = pts[i];
+    if (w <= w1) {
+      const ml = w1 === w0 ? m1 : m0 + ((w - w0) / (w1 - w0)) * (m1 - m0);
+      // The milk stage at this weight: the stage of the segment it falls in (the heavier point's stage on a change-over plateau).
+      return { perDay: ml, product: w === w1 ? p1 : m0 === m1 && p0 !== p1 ? p1 : p0 };
+    }
+  }
+  return null;
 }

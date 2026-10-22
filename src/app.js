@@ -56,6 +56,7 @@ import {
   aiNoteFor,
   feedAmounts,
 } from './note.js';
+import { chartByKey } from './feeding.js';
 
 const $ = (id) => document.getElementById(id);
 const els = {
@@ -1472,30 +1473,39 @@ function printTickSheet() {
 function feedSection(c) {
   const f = c.feed_calc;
   if (!f || !f.applies) return null;
+  const chart = f.chart ? chartByKey(f.chart) : null;
   const id = 'feed-weight';
   const out = el('div', { class: 'feed-out', 'aria-live': 'polite' });
+  const milk = el('strong', { text: f.what || 'Milk' });
+  const unsure = el('p', { class: 'unsure', text: 'Not sure of this figure for this species and age. Check it with your vet or the feeding guide first.' });
   const input = el('input', { id, type: 'number', inputmode: 'decimal', min: '1', step: '1', placeholder: 'grams', value: f.weight_g ? String(f.weight_g) : '' });
   const draw = () => {
     const a = feedAmounts(f, input.value);
+    if (a && a.product) milk.textContent = a.product;
     out.replaceChildren(
-      ...(a
+      ...(a && a.perDay
         ? [
             el('div', { class: 'kv' }, [el('span', { class: 'k', text: 'Each day' }), el('span', { class: 'v', text: `about ${a.perDay} mL` })]),
             el('div', { class: 'kv' }, [el('span', { class: 'k', text: 'Each feed' }), el('span', { class: 'v', text: `about ${a.perFeed} mL, ${a.feeds} times a day` })]),
           ]
-        : [el('p', { class: 'help', text: 'Enter today’s weight to work out the amounts.' })]),
+        : a && a.outside
+          ? [el('p', { class: 'help', text: `That weight is outside the ${a.chart} chart (${a.range[0]} g to ${a.range[1]} g). Ask your vet or an experienced carer for the amount.` })]
+          : [el('p', { class: 'help', text: 'Enter today’s weight to work out the amounts.' })]),
     );
+    // Chart figures are checked; a percentage from the plan may not be.
+    unsure.hidden = chart ? Boolean(a && a.outside) === false : f.sure;
   };
   input.addEventListener('input', draw);
   draw();
   return el('section', { class: 'care-sec feedcalc' }, [
     el('h2', { text: 'Feed calculator' }),
-    el('p', {}, [el('strong', { text: f.what || 'Milk' }), f.stage ? ` · ${f.stage}` : '']),
+    el('p', {}, [milk, !chart && f.stage ? ` · ${f.stage}` : '']),
     el('div', { class: 'feed-in' }, [el('label', { for: id, text: 'Weight today (g)' }), input]),
     out,
-    el('p', { class: 'help', text: `${f.pct}% of body weight a day, in ${f.feeds} feeds. Weigh daily and re-work it as the weight changes.${f.basis ? ` Based on: ${f.basis}.` : ''}` }),
-    // One note only: the plan's AI note is already at the top.
-    !f.sure ? el('p', { class: 'unsure', text: 'Not sure of this figure for this species and age. Check it with your vet or the feeding guide first.' }) : null,
+    el('p', { class: 'help', text: chart
+      ? `From the Wombaroo growth chart for the ${chart.label}, in ${f.feeds} feeds a day. Weigh daily: the amount and the milk change as the weight goes up.`
+      : `${f.pct}% of body weight a day, in ${f.feeds} feeds. Weigh daily and re-work it as the weight changes.${f.basis ? ` Based on: ${f.basis}.` : ''}` }),
+    unsure,
   ]);
 }
 

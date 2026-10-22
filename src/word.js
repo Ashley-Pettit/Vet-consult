@@ -6,6 +6,7 @@ import {
 } from 'docx';
 import { LOGO_PNG_BASE64 } from './brand-logo.js';
 import { dueLabel, formatDate, NOT_RECORDED, rehydrationTable, REHYDRATION_NOTE, careAiNote, feedAmounts } from './note.js';
+import { chartByKey } from './feeding.js';
 import { rangesFor } from './species-ranges.js';
 import { region } from './region.js';
 
@@ -309,10 +310,21 @@ function rehydrationBlocks(r) {
 function feedBlocks(f) {
   if (!f || !f.applies) return [];
   const a = feedAmounts(f, f.weight_g);
+  const chart = f.chart ? chartByKey(f.chart) : null;
+  if (chart) {
+    // The chart itself, so the carer can read the next amount off the printout as the joey grows.
+    const rows = chart.points.map(([g, ml, product]) => [g >= 1000 ? `${(g / 1000).toFixed(g % 1000 ? 2 : 0)} kg` : `${g} g`, `${ml} mL a day`, product.replace(/^Wombaroo /, '')]);
+    return [{
+      heading: 'Feed calculator',
+      text: `${a && a.perDay ? `For ${f.weight_g} g: about ${a.perDay} mL a day of ${a.product}, as ${a.feeds} feeds of about ${a.perFeed} mL. ` : ''}Feed ${f.feeds} times a day. Weigh daily and read the amount for the new weight from the chart below (in between two weights, use an amount in between).`,
+      table: { head: ['Weight', 'Milk a day', 'Milk'], rows, widths: [2200, 2400, PAGE_W - 4600] },
+      note: `From the Wombaroo growth chart for the ${chart.label} (${chart.source.title}${chart.source.section ? `, ${chart.source.section}` : ''}).`,
+    }];
+  }
   const rows = [
     ['Feed', [f.what, f.stage].filter(Boolean).join(', ') || 'Milk'],
     ['Daily amount', `${f.pct}% of body weight a day, in ${f.feeds} feeds`],
-    ...(a ? [[`For ${f.weight_g} g`, `about ${a.perDay} mL a day, as ${a.feeds} feeds of about ${a.perFeed} mL`]] : []),
+    ...(a && a.perDay ? [[`For ${f.weight_g} g`, `about ${a.perDay} mL a day, as ${a.feeds} feeds of about ${a.perFeed} mL`]] : []),
     ...(f.basis ? [['Based on', f.basis]] : []),
   ];
   return [{

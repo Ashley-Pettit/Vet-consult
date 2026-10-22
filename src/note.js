@@ -6,7 +6,7 @@ import { videoFor, watchUrl } from './videos.js';
 import { drugsForPrompt } from './drugs.js';
 import { shorthandForPrompt } from './shorthand.js';
 import { vetCareForPrompt, groupsIn, namedAnimal } from './species-vet.js';
-import { feedingForPrompt, feedFigureChecked } from './feeding.js';
+import { feedingForPrompt, feedFigureChecked, chartFor, chartByKey, chartAmount } from './feeding.js';
 
 // Pure logic: prompt, parsing, normalising and plain-text formatting of clinical notes.
 // No DOM access here so it can be unit tested in Node.
@@ -605,7 +605,8 @@ export function feedCalcOf(raw) {
   };
   const pct = num(f.percent_body_weight_per_day, 1, 80); // birds fed by crop can take well over 40% a day
   const feeds = num(f.feeds_per_day, 1, 24);
-  const ok = Boolean(f.applies) && pct !== null && feeds !== null;
+  // A growth chart for the species (added by checkedFeed) can stand in for a missing percentage.
+  const ok = Boolean(f.applies) && feeds !== null && (pct !== null || Boolean(f.chart));
   return {
     applies: ok,
     what: ok ? str(f.what, 120) : '',
@@ -615,12 +616,23 @@ export function feedCalcOf(raw) {
     feeds: ok ? Math.round(feeds) : null,
     basis: ok ? str(f.basis, 240) : '',
     sure: f.sure !== false,
+    chart: ok && f.chart ? String(f.chart) : '',
   };
+}
+
+/** The plan's feed figures, using the species' Wombaroo growth chart when there is one (a chart beats a guessed percentage). */
+function feedWithChart(r) {
+  const raw = obj(r.feed_calc);
+  const text = [str(r.animal, 80), str(r.species, 80), str(raw.what, 120)].join(' ');
+  const chart = raw.applies ? chartFor(text, region().code) : null;
+  const fc = feedCalcOf(chart ? { ...raw, chart: chart.key } : raw);
+  return fc.chart ? fc : checkedFeed(fc, text);
 }
 
 /** A figure the checked feeding rows don't support is shown as unsure, whatever the plan said. */
 function checkedFeed(fc, animalText) {
   if (!fc.applies || !fc.sure) return fc;
+  if (fc.chart) return fc;
   const verdicts = groupsIn(animalText).map((g) => feedFigureChecked(g, fc.pct));
   if (verdicts.includes(true) || (verdicts.length && verdicts.every((v) => v === null))) return fc;
   return { ...fc, sure: false };
@@ -630,9 +642,18 @@ function checkedFeed(fc, animalText) {
 export function feedAmounts(fc, weightG) {
   const w = Number(weightG);
   if (!fc || !fc.applies || !Number.isFinite(w) || w <= 0) return null;
-  const perDay = (w * fc.pct) / 100;
   const round = (x) => (x < 10 ? Math.round(x * 10) / 10 : Math.round(x));
-  return { perDay: round(perDay), perFeed: round(perDay / fc.feeds), feeds: fc.feeds };
+  // The species' growth chart first: millilitres a day read off the chart at this weight.
+  const chart = fc.chart ? chartByKey(fc.chart) : null;
+  const fromChart = chart ? chartAmount(chart, w) : null;
+  if (fromChart) {
+    return { perDay: round(fromChart.perDay), perFeed: round(fromChart.perDay / fc.feeds), feeds: fc.feeds, product: fromChart.product, chart: chart.label, source: chart.source, sure: true };
+  }
+  // Off the chart (too light or too heavy for it): no figure, rather than a guess.
+  if (chart) return { outside: true, chart: chart.label, range: [chart.points[0][0], chart.points[chart.points.length - 1][0]] };
+  if (fc.pct == null) return null;
+  const perDay = (w * fc.pct) / 100;
+  return { perDay: round(perDay), perFeed: round(perDay / fc.feeds), feeds: fc.feeds, sure: fc.sure && !chart };
 }
 
 // The species group decides which checked ranges and video appear, so it must match the animal named.
@@ -681,7 +702,7 @@ export function normaliseCareSheet(raw, knownSources = null) {
       ? { ready_when: arr(rel.ready_when, 8), target_weight: str(rel.target_weight, 160), how: arr(rel.how, 8), where: str(rel.where, 400) }
       : { ready_when: [], target_weight: '', how: [], where: '' },
     escalate: { vet: arr(esc.vet, 10), urgent: arr(esc.urgent, 10) },
-    feed_calc: checkedFeed(feedCalcOf(r.feed_calc), [str(r.animal, 80), str(r.species, 80), str(obj(r.feed_calc).what, 120)].join(' ')),
+    feed_calc: feedWithChart(r),
     rehydration: rehydrationOf(r.rehydration),
     species_group: checkedGroup(str(r.species_group, 30), [str(r.animal, 80), str(r.species, 80)].join(' ')),
     next_visit: str(r.next_visit, 300),
@@ -744,11 +765,15 @@ export function careSheetText(c, lookup = () => null) {
   section('Feeding', c.feeding);
   if (c.feed_calc && c.feed_calc.applies) {
     const f = c.feed_calc;
-    L.push(`Feed calculator${f.what ? `: ${f.what}` : ''}`);
-    if (fa) L.push(`- For ${f.weight_g} g${f.stage ? ` (${f.stage})` : ''}: about ${fa.perDay} mL a day, as ${fa.feeds} feeds of about ${fa.perFeed} mL`);
-    L.push(`- ${f.pct}% of body weight a day, in ${f.feeds} feeds. Re-work it as the weight changes.`);
-    if (f.basis) L.push(`- Based on: ${f.basis}`);
-    if (!f.sure) L.push('- Not sure of this figure for this species and age. Check it with your vet or the feeding guide first.');
+    const chart = f.chart ? chartByKey(f.chart) : null;
+    L.push(`Feed calculator${fa && fa.product ? `: ${fa.product}` : f.what ? `: ${f.what}` : ''}`);
+    if (fa && fa.perDay) L.push(`- For ${f.weight_g} g${f.stage ? ` (${f.stage})` : ''}: about ${fa.perDay} mL a day, as ${fa.feeds} feeds of about ${fa.perFeed} mL`);
+    if (chart) L.push(`- From the Wombaroo growth chart for the ${chart.label}: the daily amount goes up with weight, in ${f.feeds} feeds. Weigh daily and re-check it.`);
+    else {
+      L.push(`- ${f.pct}% of body weight a day, in ${f.feeds} feeds. Re-work it as the weight changes.`);
+      if (f.basis) L.push(`- Based on: ${f.basis}`);
+    }
+    if (chart ? Boolean(fa && fa.outside) : !f.sure) L.push('- Not sure of this figure for this species and age. Check it with your vet or the feeding guide first.');
     L.push('');
   }
   section('Activity and handling', c.activity);

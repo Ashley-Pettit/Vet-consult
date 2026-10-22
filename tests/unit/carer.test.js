@@ -182,8 +182,8 @@ test('feed calculator: checked inputs, amounts worked out on the device', async 
   const f = feedCalcOf({ applies: true, what: 'Wombaroo Possum Milk 0.8', weight_g: 120, stage: 'furred', percent_body_weight_per_day: 20, feeds_per_day: 4, basis: 'Wombaroo guide', sure: false });
   assert.equal(f.applies, true);
   assert.equal(f.sure, false);
-  assert.deepEqual(feedAmounts(f, 120), { perDay: 24, perFeed: 6, feeds: 4 });
-  assert.deepEqual(feedAmounts(f, 45), { perDay: 9, perFeed: 2.3, feeds: 4 });
+  assert.deepEqual(feedAmounts(f, 120), { perDay: 24, perFeed: 6, feeds: 4, sure: false });
+  assert.deepEqual(feedAmounts(f, 45), { perDay: 9, perFeed: 2.3, feeds: 4, sure: false });
   assert.equal(feedCalcOf({ applies: true, percent_body_weight_per_day: 90, feeds_per_day: 4 }).applies, false); // nonsense refused
   assert.equal(feedAmounts(f, ''), null);
 });
@@ -210,7 +210,21 @@ test('feeding: checked rows reach the plan prompt for the animal named, and noth
 
 test('feed calculator: a figure for an animal with no checked rows is always shown as unsure', async () => {
   const { normaliseCareSheet, EXAMPLE_CARER_PLAN } = await import('../../src/note.js');
-  const c = normaliseCareSheet({ ...EXAMPLE_CARER_PLAN, animal: 'Mystery animal', feed_calc: { applies: true, what: 'Some milk', percent_body_weight_per_day: 15, feeds_per_day: 4, sure: true } }, null);
+  const c = normaliseCareSheet({ ...EXAMPLE_CARER_PLAN, animal: 'Mystery animal', species: '', feed_calc: { applies: true, what: 'Some milk', percent_body_weight_per_day: 15, feeds_per_day: 4, sure: true } }, null);
   assert.equal(c.feed_calc.applies, true);
   assert.equal(c.feed_calc.sure, false);
+});
+
+test('feed calculator: a joey with a Wombaroo growth chart gets the chart amount for its weight, not a guessed percentage', async () => {
+  const { normaliseCareSheet, feedAmounts, EXAMPLE_CARER_PLAN } = await import('../../src/note.js');
+  const c = normaliseCareSheet({ ...EXAMPLE_CARER_PLAN, animal: 'Eastern grey kangaroo joey', species: '', feed_calc: { applies: true, what: 'Kangaroo milk', weight_g: 1200, percent_body_weight_per_day: 14, feeds_per_day: 4, sure: false } }, null);
+  assert.equal(c.feed_calc.chart, 'egk');
+  const a = feedAmounts(c.feed_calc, 1200);
+  assert.equal(a.perDay, 103); // read between 950 g (100 mL) and 1150 g (100 mL) / 1550 g (120 mL) on the chart
+  assert.match(a.product, /Kangaroo Milk Replacer 0\.6/);
+  assert.equal(a.sure, true);
+  assert.equal(feedAmounts(c.feed_calc, 9000).outside, true); // past the chart: no figure
+  // Possum milk without a chart match and no checked percentage: unsure.
+  const g = normaliseCareSheet({ ...EXAMPLE_CARER_PLAN, animal: 'Galah chick', species: '', feed_calc: { applies: true, what: 'Rearing mix', percent_body_weight_per_day: 40, feeds_per_day: 6, sure: true } }, null);
+  assert.equal(g.feed_calc.sure, false);
 });
