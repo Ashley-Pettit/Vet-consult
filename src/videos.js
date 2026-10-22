@@ -34,11 +34,11 @@ export const VIDEOS = {
 
 const YOUNG = /\b(chick|chicks|nestling|nestlings|fledgling|fledglings|hatchling|branchling|baby|babies|duckling|ducklings|cygnet|juvenile|orphan|orphaned|joey|joeys|pinky|pinkie|puggle|pup)\b/i;
 // Species groups used elsewhere in the app (species-ranges.js and species-vet.js) to video keys.
-const ALIAS = { bluetongue: 'skink', turtle: 'freshwater-turtle', penguin: 'seabird', shorebird: 'bird', passerine: 'bird', kookaburra: 'bird', goanna: null, dragon: null };
+const ALIAS = { bluetongue: 'skink', turtle: 'freshwater-turtle', penguin: 'seabird', shorebird: 'bird', passerine: 'bird', kookaburra: 'bird', goanna: null, dragon: null, 'black-cockatoo': 'parrot', lapwing: 'bird', curlew: 'bird', cuckoo: 'bird', pelican: null, ibis: null, 'brush-turkey': null, cassowary: null };
 // The containment video is about birds and small animals, so it only stands in for those.
-const SMALL = new Set(['bird', 'ringtail', 'brushtail', 'glider', 'bandicoot', 'dasyurid', 'general', 'passerine', 'magpie', 'pigeon', 'lorikeet', 'parrot', 'frogmouth-owl', 'kookaburra', 'shorebird']);
+const SMALL = new Set(['bird', 'ringtail', 'brushtail', 'glider', 'bandicoot', 'dasyurid', 'general', 'passerine', 'magpie', 'pigeon', 'lorikeet', 'parrot', 'frogmouth-owl', 'kookaburra', 'shorebird', 'black-cockatoo', 'lapwing', 'curlew', 'cuckoo']);
 
-const BIRDS = new Set(['bird', 'passerine', 'magpie', 'pigeon', 'lorikeet', 'parrot', 'frogmouth-owl', 'kookaburra', 'shorebird']);
+const BIRDS = new Set(['bird', 'passerine', 'magpie', 'pigeon', 'lorikeet', 'parrot', 'frogmouth-owl', 'kookaburra', 'shorebird', 'black-cockatoo', 'lapwing', 'curlew', 'cuckoo']);
 
 function pick(key, context) {
   const k = key in ALIAS ? ALIAS[key] : key;

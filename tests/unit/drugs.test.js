@@ -53,3 +53,18 @@ test('bird and reptile points, and the vet\'s species codes', async () => {
   assert.doesNotMatch(pigeon, /^bird \| diagnostics/m); // class-wide extras trimmed when a species is named
   assert.match(vetCareForPrompt('sick bird'), /^bird \| diagnostics/m);
 });
+
+test('QLD bird points only reach QLD plans; species codes are recognised', async () => {
+  const { vetCareForPrompt, groupsIn } = await import('../../src/species-vet.js');
+  const { setRegion } = await import('../../src/region.js');
+  assert.deepEqual(groupsIn('RTP CBC'), ['ringtail']);
+  assert.deepEqual(groupsIn('koel chick fallen'), ['cuckoo', 'bird']);
+  try {
+    setRegion('qld');
+    assert.match(vetCareForPrompt('rainbow lorikeet paralysed'), /\| QLD \|/);
+    setRegion('vic');
+    assert.doesNotMatch(vetCareForPrompt('rainbow lorikeet paralysed'), /\| QLD \|/);
+  } finally {
+    setRegion('vic');
+  }
+});

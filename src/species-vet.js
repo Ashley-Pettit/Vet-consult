@@ -2,16 +2,17 @@
 // Each point is from a checked source (see species-vet-data.js). Only the groups the dictation mentions are sent,
 // so the prompt stays small; if no animal is recognised, nothing is sent.
 import { VET_POINTS } from './species-vet-data.js';
+import { region } from './region.js';
 
 // Words in a dictation that point to a group. Order matters only for readability.
 export const GROUP_WORDS = {
-  macropod: ['kangaroo', 'roo', 'wallaby', 'wallaroo', 'pademelon', 'potoroo', 'bettong', 'macropod', 'joey', 'egk', 'rnw', 'swamp wallaby'],
+  macropod: ['kangaroo', 'roo', 'wallaby', 'bsw', 'wallaroo', 'pademelon', 'potoroo', 'bettong', 'macropod', 'joey', 'egk', 'rnw', 'swamp wallaby'],
   koala: ['koala'],
-  wombat: ['wombat'],
-  ringtail: ['ringtail', 'crp'],
-  brushtail: ['brushtail', 'cbp', 'bushtail'],
+  wombat: ['wombat', 'bnw'],
+  ringtail: ['ringtail', 'crp', 'rtp'],
+  brushtail: ['brushtail', 'cbp', 'btp', 'bushtail'],
   glider: ['glider'],
-  flyingfox: ['flying fox', 'flying-fox', 'fruit bat', 'ghff', 'bff', 'megabat'],
+  flyingfox: ['flying fox', 'flying-fox', 'fruit bat', 'ghff', 'bff', 'lrff', 'sff', 'megabat'],
   microbat: ['microbat', 'micro bat', 'bent-wing', 'bentwing', 'long-eared bat', 'wattled bat', 'free-tailed bat', 'microchiropteran'],
   echidna: ['echidna'],
   platypus: ['platypus'],
@@ -37,12 +38,22 @@ export const GROUP_WORDS = {
   'sea-turtle': ['sea turtle', 'green turtle', 'loggerhead', 'hawksbill', 'flatback', 'leatherback', 'olive ridley'],
   goanna: ['goanna', 'lace monitor', 'monitor lizard', 'varanus'],
   frog: ['frog', 'toad', 'tadpole'],
+  // Queensland bird groups (from the QLD bird research).
+  'curlew': ["bush stone-curlew", "bush stone curlew", "stone-curlew", "stone curlew", "curlew", "beach stone-curlew", "bush thick-knee"],
+  'lapwing': ["masked lapwing", "lapwing", "plover", "spur-winged plover", "banded lapwing"],
+  'brush-turkey': ["australian brush-turkey", "brush-turkey", "brush turkey", "scrub turkey", "bush turkey", "megapode", "orange-footed scrubfowl", "scrubfowl", "malleefowl"],
+  'ibis': ["australian white ibis", "white ibis", "ibis", "bin chicken", "straw-necked ibis", "glossy ibis"],
+  'pelican': ["australian pelican", "pelican"],
+  'cuckoo': ["pacific koel", "eastern koel", "koel", "channel-billed cuckoo", "storm bird", "stormbird", "cuckoo", "fan-tailed cuckoo", "pheasant coucal", "coucal"],
+  'cassowary': ["southern cassowary", "cassowary", "cassowaries"],
+  'black-cockatoo': ["red-tailed black-cockatoo", "red-tailed black cockatoo", "yellow-tailed black-cockatoo", "yellow-tailed black cockatoo", "glossy black-cockatoo", "glossy black cockatoo", "glossy black", "black cockatoo", "black-cockatoo"],
 };
 
 // Groups that also take the class-wide points.
 const CLASS_OF = {
   passerine: 'bird', magpie: 'bird', parrot: 'bird', lorikeet: 'bird', pigeon: 'bird', 'frogmouth-owl': 'bird', raptor: 'bird',
   kookaburra: 'bird', waterbird: 'bird', seabird: 'bird', penguin: 'bird', shorebird: 'bird',
+  curlew: 'bird', lapwing: 'bird', 'brush-turkey': 'bird', ibis: 'bird', pelican: 'bird', cuckoo: 'bird', cassowary: 'bird', 'black-cockatoo': 'bird',
   skink: 'reptile', dragon: 'reptile', python: 'reptile', 'venomous-snake': 'reptile', 'freshwater-turtle': 'reptile', 'sea-turtle': 'reptile', goanna: 'reptile',
 };
 
@@ -80,7 +91,10 @@ export function vetCareForPrompt(text = '', { audience } = {}) {
   // Class-wide points (bird, reptile) are many: when a specific group is named, send only their core topics.
   const specific = groups.some((g) => !['bird', 'reptile'].includes(g));
   const CORE = ['drugs', 'anaesthesia', 'fluids-nutrition', 'safety'];
-  const pick = VET_POINTS.filter((p) => (!audience || p.audience === audience))
+  // Points for the other state are left out: QLD rules and phone numbers never reach a Victorian plan, and the reverse.
+  const state = region().code;
+  const pick = VET_POINTS.filter((p) => !p.scope || p.scope === 'au' || p.scope === state)
+    .filter((p) => (!audience || p.audience === audience))
     .filter((p) => groups.includes(p.species))
     .filter((p) => !(specific && ['bird', 'reptile'].includes(p.species) && !CORE.includes(p.topic)));
   if (!pick.length) return '';
