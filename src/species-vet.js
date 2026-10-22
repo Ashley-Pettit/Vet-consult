@@ -1,6 +1,6 @@
 // Species-specific vet points for Australian wildlife (drugs, anaesthesia, handling, disease, release).
 // Each point is from a checked source (see species-vet-data.js). Only the groups the dictation mentions are sent,
-// so the prompt stays small; if no animal is recognised, the drug and anaesthesia cautions for every group are sent.
+// so the prompt stays small; if no animal is recognised, nothing is sent.
 import { VET_POINTS } from './species-vet-data.js';
 
 // Words in a dictation that point to a group. Order matters only for readability.
@@ -55,27 +55,31 @@ export function groupsIn(text = '') {
     .filter(([, words]) => words.some((w) => new RegExp(`[^a-z]${escapeRe(w)}(s|es)?[^a-z]`).test(t)))
     .map(([g]) => g);
   // "snake" alone matches venomous-snake; drop it when a python is named.
-  const groups = found.includes('python') ? found.filter((g) => g !== 'venomous-snake') : found;
+  let groups = found.includes('python') ? found.filter((g) => g !== 'venomous-snake') : found;
+  // A general word with no specific species: take every group it could be.
+  if (/[^a-z]possums?[^a-z]/.test(t) && !groups.some((g) => ['ringtail', 'brushtail', 'glider'].includes(g))) groups = [...groups, 'ringtail', 'brushtail'];
+  if (/[^a-z]bats?[^a-z]/.test(t) && !groups.some((g) => ['flyingfox', 'microbat'].includes(g))) groups = [...groups, 'flyingfox', 'microbat'];
   const classes = new Set(groups.map((g) => CLASS_OF[g]).filter(Boolean));
   if (/[^a-z](bird|chick|nestling|fledgling)s?[^a-z]/.test(t)) classes.add('bird');
   if (/[^a-z](reptile|lizard)s?[^a-z]/.test(t)) classes.add('reptile');
   return [...groups, ...classes];
 }
 
-const line = (p) => `${p.species} | ${p.topic} | ${p.point}${p.why ? ` (${p.why})` : ''} [${p.source_title}]`;
+const line = (p) => `${p.species} | ${p.topic}${p.scope && p.scope !== 'au' ? ` | ${p.scope.toUpperCase()}` : ''} | ${p.point}${p.why ? ` (${p.why})` : ''} [${p.source_title}]`;
 
 /** Points for the prompt: every point for the groups mentioned; otherwise the drug and anaesthesia cautions for all. */
 export function vetCareForPrompt(text = '', { audience } = {}) {
   if (!VET_POINTS.length) return '';
   const groups = groupsIn(text);
-  const pick = VET_POINTS.filter((p) => (!audience || p.audience === audience || p.audience === 'carer'))
-    .filter((p) => (groups.length ? groups.includes(p.species) : ['drugs', 'anaesthesia'].includes(p.topic)));
+  // No animal recognised: send nothing, so an unrelated request costs nothing extra.
+  if (!groups.length) return '';
+  const pick = VET_POINTS.filter((p) => (!audience || p.audience === audience)).filter((p) => groups.includes(p.species));
   if (!pick.length) return '';
-  const head = groups.length
-    ? `Species-specific points for Australian wildlife (${groups.join(', ')}), from checked wildlife veterinary guidelines.`
-    : 'No species recognised in the dictation, so here are the drug and anaesthesia cautions for every Australian wildlife group, from checked wildlife veterinary guidelines.';
+  const head = `Species-specific points for Australian wildlife (${groups.join(', ')}), from checked wildlife veterinary guidelines.`;
   return `${head}
-- Use them where they change the plan: drug choice, anaesthesia, handling, housing, diet, monitoring, release. Never contradict what the vet said; if the vet's plan conflicts with a point, keep the vet's plan and add the conflict to "check".
-- Do not list them separately or repeat them for the sake of it.
+- Use them where they change the plan: drug choice, anaesthesia, handling, housing, diet, monitoring, release.
+- Never contradict what the vet said. If the vet's plan conflicts with a point (for example a drug the source says to avoid in this species), keep the vet's plan and add the conflict to "check", naming the source.
+- Never add a drug or a dose the vet did not say. Doses in these points are for checking only.
+- Do not list them separately or repeat them for the sake of it. Points marked VIC or QLD apply in that state.
 ${pick.map(line).join('\n')}`;
 }

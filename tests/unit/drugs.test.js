@@ -29,3 +29,17 @@ test('vet shorthand is taught to vet notes and vet care plans', async () => {
   assert.match(plan('BAR', '', { fromVet: true }), /SID once a day/);
   assert.doesNotMatch(plan('Ringtail joey', '', {}), /Vet shorthand/);
 });
+
+test('species points: only the animal named, carers get carer points, nothing for unknown animals', async () => {
+  const { vetCareForPrompt, groupsIn } = await import('../../src/species-vet.js');
+  assert.deepEqual(groupsIn('Possum CBC'), ['ringtail', 'brushtail']);
+  const koala = vetCareForPrompt('Koala with wet bottom');
+  assert.match(koala, /^koala \| drugs/m);
+  assert.doesNotMatch(koala, /^wombat \|/m);
+  assert.match(koala, /Never add a drug or a dose the vet did not say/);
+  const carer = vetCareForPrompt('wombat with mange', { audience: 'carer' });
+  assert.ok(carer.length > 0);
+  assert.doesNotMatch(carer, /\| anaesthesia \|/);
+  assert.equal(vetCareForPrompt('sick animal, not eating'), '');
+  assert.match(buildPrompt('EGK joey HBC, BAR'), /macropod \| /);
+});
