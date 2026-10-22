@@ -38,19 +38,44 @@ const PAGE_W = 9638; // A4 minus 2 cm margins, in twentieths of a point
 
 const logoBytes = () => Uint8Array.from(atob(LOGO_PNG_BASE64), (c) => c.charCodeAt(0));
 
+const NONE = { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' };
 const run = (text, o = {}) => new TextRun({ text: String(text ?? ''), font: BODY_FONT, size: 21, color: INK, ...o });
 
 function heading(text) {
   return new Paragraph({
     keepNext: true,
-    spacing: { before: 260, after: 80 },
-    border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: LINE, space: 2 } },
-    children: [new TextRun({ text: String(text).toUpperCase(), font: HEAD_FONT, bold: true, size: 24, color: OLIVE, characterSpacing: 20 })],
+    spacing: { before: 300, after: 100 },
+    indent: { left: 140 },
+    border: { left: { style: BorderStyle.SINGLE, size: 24, color: TERRA, space: 8 } },
+    children: [new TextRun({ text: String(text).toUpperCase(), font: HEAD_FONT, bold: true, size: 23, color: OLIVE, characterSpacing: 24 })],
   });
 }
-const para = (text) => new Paragraph({ spacing: { after: 100, line: 300 }, children: [run(text)] });
+
+// Callouts: a tinted box with a coloured bar down the left, for the parts people must not miss.
+const TONES = {
+  summary: () => ({ fill: TINT, bar: OLIVE, label: OLIVE }),
+  photo: () => ({ fill: TINT, bar: OLIVE, label: OLIVE }),
+  warn: () => ({ fill: 'FFF6E5', bar: 'D99A2B', label: '8A5A00' }),
+  urgent: () => ({ fill: 'FBEFEB', bar: TERRA, label: TERRA }),
+};
+function callout(b) {
+  const t = TONES[b.tone]();
+  const kids = [
+    new Paragraph({ keepNext: true, spacing: { after: 60 }, children: [new TextRun({ text: String(b.heading).toUpperCase(), font: HEAD_FONT, bold: true, size: 19, color: t.label, characterSpacing: 24 })] }),
+    ...(b.text ? String(b.text).split(/\n+/).map((x) => new Paragraph({ spacing: { after: 60, line: 300 }, children: [run(x)] })) : []),
+    ...(b.items || []).map((x) => bullet(x)),
+  ];
+  return new Table({
+    width: { size: PAGE_W, type: WidthType.DXA },
+    layout: TableLayoutType.FIXED,
+    columnWidths: [PAGE_W],
+    borders: { top: NONE, bottom: NONE, right: NONE, insideHorizontal: NONE, insideVertical: NONE, left: { style: BorderStyle.SINGLE, size: 36, color: t.bar } },
+    rows: [new TableRow({ cantSplit: true, children: [new TableCell({ width: { size: PAGE_W, type: WidthType.DXA }, shading: { type: ShadingType.CLEAR, color: 'auto', fill: t.fill }, margins: { top: 140, bottom: 120, left: 220, right: 200 }, children: kids })] })],
+  });
+}
+const para = (text) => new Paragraph({ spacing: { after: 120, line: 312 }, children: [run(text)] });
 const check = (text) => new Paragraph({ spacing: { after: 80, line: 288 }, indent: { left: 120 }, children: [new TextRun({ text: '☐  ', font: 'Segoe UI Symbol', size: 26, color: '7A847A' }), run(text)] });
-const bullet = (text) => new Paragraph({ numbering: { reference: 'dots', level: 0 }, spacing: { after: 60, line: 288 }, children: [run(text)] });
+const bullet = (text) => new Paragraph({ numbering: { reference: 'dots', level: 0 }, spacing: { after: 70, line: 300 }, children: [run(text)] });
 
 function cell(text, { head = false, width, shade } = {}) {
   return new TableCell({
@@ -81,7 +106,6 @@ function table(head, rows, widths) {
   });
 }
 
-const NONE = { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' };
 // Header like the website: a coloured band with the logo (or wordmark) in the middle and the name under it.
 function header() {
   const top = THEME.logo
@@ -140,7 +164,7 @@ export async function buildWord(model, { preparedBy = '', date = new Date(), tem
   const meta = [['Document', model.docType], ['Date', formatDate(date)], ...(preparedBy ? [['Prepared by', preparedBy]] : []), ...(model.meta || []).filter((m) => !(m[0] === 'Vet' && m[1] === preparedBy))].filter((m) => m[1]);
   const body = [
     new Paragraph({ spacing: { before: 120, after: 0 }, children: [new TextRun({ text: String(model.docType).toUpperCase(), font: HEAD_FONT, bold: true, size: 20, color: TERRA, characterSpacing: 40 })] }),
-    new Paragraph({ spacing: { after: model.subtitle ? 40 : 160 }, children: [new TextRun({ text: model.title, font: HEAD_FONT, bold: true, size: 44, color: INK })] }),
+    new Paragraph({ spacing: { after: model.subtitle ? 40 : 160 }, children: [new TextRun({ text: model.title, font: HEAD_FONT, bold: true, size: 48, color: INK })] }),
     ...(model.subtitle ? [new Paragraph({ spacing: { after: 160 }, children: [run(model.subtitle, { color: MUTED, size: 22 })] })] : []),
     new Table({
       width: { size: PAGE_W, type: WidthType.DXA },
@@ -148,8 +172,8 @@ export async function buildWord(model, { preparedBy = '', date = new Date(), tem
       columnWidths: [2200, PAGE_W - 2200],
       borders: {
         top: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' }, bottom: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
-        left: { style: BorderStyle.SINGLE, size: 24, color: OLIVE }, right: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
-        insideHorizontal: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' }, insideVertical: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
+        left: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' }, right: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
+        insideHorizontal: { style: BorderStyle.SINGLE, size: 4, color: 'FFFFFF' }, insideVertical: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
       },
       rows: meta.map(([k, v]) => new TableRow({
         children: [
@@ -163,6 +187,10 @@ export async function buildWord(model, { preparedBy = '', date = new Date(), tem
   if (model.aiNote) body.push(new Paragraph({ spacing: { before: 140, after: 40 }, children: [run(`ⓘ  ${model.aiNote}`, { italics: true, color: MUTED, size: 18 })] }));
   for (const b of model.blocks) {
     if (!b.heading || (!b.text && !(b.items && b.items.length) && !(b.checks && b.checks.length) && !b.table && !(b.labels && b.labels.length))) continue;
+    if (b.tone && TONES[b.tone]) {
+      body.push(new Paragraph({ spacing: { before: 200 }, keepNext: true, children: [] }), callout(b));
+      continue;
+    }
     body.push(heading(b.heading));
     if (b.note && b.noteFirst) body.push(new Paragraph({ spacing: { after: 80 }, children: [run(b.note, { italics: true, color: TERRA, size: 19 })] }));
     if (b.text) String(b.text).split(/\n+/).forEach((t) => body.push(para(t)));
@@ -345,7 +373,9 @@ export function docModel(d, kindLabel, note = '') {
         const items = s.items || [];
         const pairs = items.map((x) => /^([^:]{1,40}):\s+(.+)$/.exec(x));
         if (items.length >= 3 && pairs.every(Boolean)) return { heading: s.heading, table: { head: ['Field', 'Detail'], rows: pairs.map((m) => [m[1], m[2]]), widths: [2800, PAGE_W - 2800] } };
-        return { heading: s.heading, text: s.text, items };
+        // The parts people must not miss stand out in a box.
+        const tone = /^text to send/i.test(s.heading) ? 'summary' : /^what the photo shows/i.test(s.heading) ? 'photo' : /straight away|urgent|emergenc/i.test(s.heading) ? 'urgent' : /keep yourself safe|within a day/i.test(s.heading) ? 'warn' : undefined;
+        return { heading: s.heading, text: s.text, items, tone };
       }),
       ...(d.due.length ? [{ heading: 'What’s due', table: { head: ['What', 'When'], rows: d.due.map((x) => [x.what, x.when ? dueLabel(x.when) : '']), widths: [5800, PAGE_W - 5800] } }] : []),
     ],
@@ -404,8 +434,8 @@ function feedBlocks(f) {
 export function careModel(c, lookup) {
   const meds = c.medications.map((m) => [m.name, m.how, m.how_often, m.how_long]);
   const blocks = [
-    { heading: 'Summary', text: c.summary },
-    { heading: 'What the photo shows', items: c.photo_findings || [] },
+    { heading: 'Summary', text: c.summary, tone: 'summary' },
+    { heading: 'What the photo shows', items: c.photo_findings || [], tone: 'photo' },
     ...(meds.length ? [{ heading: 'Medications', table: { head: ['Medication', 'How', 'How often', 'How long'], rows: meds, widths: [2600, 2600, 2400, PAGE_W - 7600] }, note: c.medications.map((m) => (m.tip ? `${m.name}: ${m.tip}` : '')).filter(Boolean).join('  ') || undefined }] : []),
     ...rangesBlocks(c.species_group),
     ...rehydrationBlocks(c.rehydration),
@@ -424,8 +454,8 @@ export function careModel(c, lookup) {
     blocks.push({ heading: 'How to release', items: c.release.how });
     blocks.push({ heading: 'Where to release', text: c.release.where });
   }
-  blocks.push({ heading: 'Call the vet within a day if', items: c.escalate.vet });
-  blocks.push({ heading: 'Get vet help straight away if', items: c.escalate.urgent });
+  blocks.push({ heading: 'Call the vet within a day if', items: c.escalate.vet, tone: 'warn' });
+  blocks.push({ heading: 'Get vet help straight away if', items: c.escalate.urgent, tone: 'urgent' });
   if (c.next_visit) blocks.push({ heading: 'Next vet visit', text: c.next_visit });
   return {
     docType: 'Care plan',
