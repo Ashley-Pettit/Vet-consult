@@ -141,7 +141,7 @@ test('photos are shrunk, numbered, sent first and shown with the findings', asyn
     body: () => apiReply({ ...SAMPLE_NOTE, objective: { ...SAMPLE_NOTE.objective, photo_findings: ['Photo 1: 4 cm linear wound, lateral left forelimb'] } }),
   });
   await openApp(page);
-  await page.locator('#add-photo').setInputFiles([{ name: 'wound.png', mimeType: 'image/png', buffer: PNG }, { name: 'bcs.png', mimeType: 'image/png', buffer: PNG }]);
+  await page.locator('#add-gallery').setInputFiles([{ name: 'wound.png', mimeType: 'image/png', buffer: PNG }, { name: 'bcs.png', mimeType: 'image/png', buffer: PNG }]);
   await expect(page.locator('#photo-list .thumb')).toHaveCount(2);
   await page.getByRole('button', { name: 'Remove photo 2' }).click();
   await expect(page.locator('#photo-list .thumb')).toHaveCount(1);
@@ -202,3 +202,20 @@ test('carer plan for a carer: Victorian sources, vet only for escalation, specie
   expect(await page.evaluate(() => navigator.clipboard.readText())).toMatch(/^Caring for Rusty at home/);
   expect(errors).toEqual([]);
 });
+
+test('take photo opens the camera; a video becomes three still frames sent as images', async ({ page }) => {
+  const { readFileSync } = await import('node:fs');
+  const calls = await mockApi(page);
+  await openApp(page);
+  await expect(page.locator('#add-photo')).toHaveAttribute('capture', 'environment');
+  await expect(page.locator('#add-gallery')).toHaveAttribute('multiple', '');
+  await page.locator('#add-video').setInputFiles({ name: 'clip.webm', mimeType: 'video/webm', buffer: readFileSync('tests/assets/clip.webm') });
+  await expect(page.locator('#photo-list .thumb')).toHaveCount(3);
+  await expect(page.locator('#photo-list figcaption').first()).toHaveText('▶ 1');
+  await page.locator('#transcript').fill('Rusty, kelpie cross, limping.');
+  await page.locator('#create').click();
+  await expect(page.locator('#view-note')).toBeVisible();
+  const content = calls[0].body.messages[0].content;
+  expect(content.filter((b) => b.type === 'image')).toHaveLength(3);
+});
+

@@ -33,6 +33,7 @@ function write(store, key, value) {
 
 const SETTINGS = 'css.settings';
 const DRAFT = 'css.draft';
+const LAST = 'css.last';
 const SESSION_KEY = 'css.key';
 
 export const store = {
@@ -63,15 +64,26 @@ export const store = {
     });
     write(session, SESSION_KEY, s.rememberKey ? null : s.apiKey || null);
   },
+  // Kept on the device (not just the tab), so answering a call or closing the app loses nothing.
   loadDraft() {
-    return read(session, DRAFT, '') || '';
+    return read(local, DRAFT, '') || read(session, DRAFT, '') || '';
   },
   saveDraft(text) {
-    write(session, DRAFT, text ? text : null);
+    write(local, DRAFT, text ? text : null);
+  },
+  /** The last thing Care Scribe made, so it can be reopened after the app is closed. */
+  loadLast() {
+    const v = read(local, LAST, null);
+    return v && typeof v === 'object' && v.type && v.data ? v : null;
+  },
+  saveLast(v) {
+    write(local, LAST, v);
   },
   clearAll() {
     write(local, SETTINGS, null);
     write(session, SESSION_KEY, null);
     write(session, DRAFT, null);
+    write(local, DRAFT, null);
+    write(local, LAST, null);
   },
 };

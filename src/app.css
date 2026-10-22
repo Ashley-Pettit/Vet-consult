@@ -733,3 +733,12 @@ textarea.is-example { border-style: dashed; border-color: var(--warn-line); back
 .discharge-note { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; border-radius: var(--radius); background: var(--accent-soft); }
 .discharge-note h2 { margin: 0; font-size: 1rem; }
 .discharge-note p { margin: 4px 0 0; font-size: 0.9rem; color: var(--ink); }
+
+/* Photos and video: three small buttons under the dictation box */
+.media-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.media-row[hidden] { display: none; }
+
+/* Pick up where you left off */
+.resume { margin: 0; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; border-radius: 12px; background: var(--accent-soft); font-size: 0.92rem; }
+.resume[hidden] { display: none; }
+.resume .link { flex: none; font-weight: 700; }

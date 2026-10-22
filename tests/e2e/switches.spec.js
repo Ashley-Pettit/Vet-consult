@@ -52,3 +52,27 @@ test('vet notes keep carer instructions out; a separate plain-English plan holds
   expect(calls[1].prompt).toContain('discharge instructions for the carer are in plan.home_care');
   expect(calls[1].prompt).toContain('quiet pen');
 });
+
+test('a call interrupts: the dictation and the last care plan survive closing the app', async ({ page, context }) => {
+  await mockApi(page, { body: () => textReply(EXAMPLE_CARER_PLAN) });
+  await page.addInitScript(() => { if (!localStorage.getItem('css.settings')) localStorage.setItem('css.settings', JSON.stringify({ role: 'carer', mode: 'carer' })); });
+  await openApp(page);
+  await page.locator('#transcript').fill('Ringtail joey, cat attack, half way through talking');
+  // The app is closed (new tab, same phone): the words are still there.
+  const again = await context.newPage();
+  await mockApi(again, { body: () => textReply(EXAMPLE_CARER_PLAN) });
+  await again.goto('./');
+  await expect(again.locator('#transcript')).toHaveValue('Ringtail joey, cat attack, half way through talking');
+  await again.locator('#create').click();
+  await expect(again.locator('#view-care')).toBeVisible();
+  await again.close();
+  // Back later: one tap reopens the plan, no new call to Claude.
+  const later = await context.newPage();
+  const calls = await mockApi(later, { body: () => textReply(EXAMPLE_CARER_PLAN) });
+  await later.goto('./');
+  await expect(later.locator('#resume')).toBeVisible();
+  await expect(later.locator('#resume-text')).toContainText('Care plan');
+  await later.locator('#resume-open').click();
+  await expect(later.locator('#view-care')).toBeVisible();
+  expect(calls).toHaveLength(0);
+});

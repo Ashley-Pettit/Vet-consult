@@ -3,7 +3,7 @@ import { Dictation, speechErrorMessage } from './speech.js';
 import { resolveProvider, friendly, AiError } from './ai.js';
 import { store } from './storage.js';
 import { localChecks } from './clinical.js';
-import { preparePhoto, MAX_PHOTOS } from './photos.js';
+import { preparePhoto, videoFrames, MAX_PHOTOS } from './photos.js';
 import { ABOUT_HTML } from './about.js';
 import { lookupSource, sourcesForPrompt, SOURCE_IDS } from './sources.js';
 import { region, setRegion } from './region.js';
@@ -102,6 +102,7 @@ function showView(name) {
   if (name !== 'about') lastView = name;
   els.toast.hidden = true;
   document.body.dataset.view = name;
+  if (name === 'record') renderResume();
   window.scrollTo({ top: 0 });
 }
 
@@ -432,7 +433,7 @@ function renderPhotos() {
     ...photos.map((p, i) =>
       el('figure', { class: 'thumb' }, [
         el('img', { src: p.url, alt: `Photo ${i + 1}` }),
-        el('figcaption', { text: String(i + 1) }),
+        el('figcaption', { text: p.video ? `▶ ${i + 1}` : String(i + 1) }),
         el('button', {
           type: 'button', class: 'thumb-x', 'aria-label': `Remove photo ${i + 1}`,
           onclick: () => {
@@ -444,19 +445,37 @@ function renderPhotos() {
       ]),
     ),
   );
-  els.photoLabel.hidden = photos.length >= MAX_PHOTOS;
+  $('media-row').hidden = photos.length >= MAX_PHOTOS;
   updateCreateState();
 }
 
-els.photoInput.addEventListener('change', async () => {
-  const files = [...els.photoInput.files].slice(0, MAX_PHOTOS - photos.length);
-  els.photoInput.value = '';
+// Take photo opens the camera straight away; Gallery picks existing photos; Video becomes three still frames.
+async function addPhotos(input) {
+  const files = [...input.files].slice(0, MAX_PHOTOS - photos.length);
+  input.value = '';
   for (const f of files) {
     try {
       photos.push(await preparePhoto(f));
     } catch {
       toast('That file couldn’t be read as a photo.');
     }
+  }
+  renderPhotos();
+}
+els.photoInput.addEventListener('change', () => addPhotos(els.photoInput));
+$('add-gallery').addEventListener('change', () => addPhotos($('add-gallery')));
+$('add-video').addEventListener('change', async () => {
+  const input = $('add-video');
+  const file = input.files[0];
+  input.value = '';
+  const room = MAX_PHOTOS - photos.length;
+  if (!file || room <= 0) return;
+  toast('Taking stills from the video…');
+  try {
+    photos.push(...(await videoFrames(file, Math.min(3, room))));
+    toast('Added still frames from the video. Claude reads stills, not sound.');
+  } catch {
+    toast('That video couldn’t be read here. Try a photo instead.');
   }
   renderPhotos();
 });
@@ -663,6 +682,7 @@ document.addEventListener('keydown', (e) => {
 /* ---------------- note view ---------------- */
 
 function showNotes(list, example) {
+  if (!example) remember('notes', list, list[0] && (list[0].patient.name || list[0].patient.species));
   for (const n of list) if (settings.clinician && !n.visit.clinician) n.visit.clinician = settings.clinician;
   notes = list;
   current = 0;
@@ -1117,6 +1137,7 @@ function renderCare(c) {
 }
 
 function showCare(sheet, from, info = '') {
+  remember('care', { sheet, from }, sheet.animal);
   careSheet = sheet;
   careFrom = from;
   renderMakeNext($('make-next-care'), from === 'record' ? 'carer' : null);
@@ -1210,6 +1231,7 @@ function renderDoc(d, kind) {
 }
 
 function showDoc(d, kind, info = '') {
+  remember('doc', { d, kind }, d.title);
   currentDoc = { d, kind };
   renderMakeNext($('make-next-doc'), kind);
   // "For the vet" leads with a ready-to-send text message.
@@ -1470,6 +1492,37 @@ els.forget.addEventListener('click', () => {
   toast('Saved settings removed from this device.');
 });
 
+/* ---------------- pick up where you left off ---------------- */
+
+const LAST_LABEL = { notes: 'Clinical notes', care: 'Care plan', doc: 'Record' };
+function remember(type, data, title) {
+  store.saveLast({ type, data, title: String(title || '').slice(0, 80), text: els.transcript.value, at: Date.now() });
+}
+function ago(ms) {
+  const m = Math.round(ms / 60000);
+  if (m < 1) return 'just now';
+  if (m < 60) return `${m} min ago`;
+  const h = Math.round(m / 60);
+  return h < 24 ? `${h} h ago` : `${Math.round(h / 24)} d ago`;
+}
+// The last thing made stays one tap away, even after the app was closed (for example to answer the phone).
+function renderResume() {
+  const last = store.loadLast();
+  const fresh = last && Date.now() - last.at < 7 * 864e5;
+  $('resume').hidden = !fresh;
+  if (!fresh) return;
+  const label = last.type === 'doc' && DOC_KINDS[last.data.kind] ? DOC_KINDS[last.data.kind].label : LAST_LABEL[last.type];
+  $('resume-text').textContent = `Last made: ${label}${last.title ? ` · ${last.title}` : ''} · ${ago(Date.now() - last.at)}`;
+}
+$('resume-open').addEventListener('click', () => {
+  const last = store.loadLast();
+  if (!last) return;
+  if (last.text && !els.transcript.value.trim()) setTranscript(last.text);
+  if (last.type === 'care') showCare(normaliseCareSheet(last.data.sheet, null), last.data.from === 'note' ? 'record' : last.data.from);
+  else if (last.type === 'doc') showDoc(normaliseDoc(last.data.d), last.data.kind);
+  else if (last.type === 'notes') showNotes(last.data.map(normaliseNote), false);
+});
+
 /* ---------------- start up ---------------- */
 
 const startMode = MODES.includes(settings.mode) ? settings.mode : 'carer';
@@ -1478,6 +1531,7 @@ applyRegion();
 applyRole();
 applyMode();
 setTranscript(store.loadDraft());
+renderResume();
 renderPhotos();
 showView(location.hash === '#how-it-works' ? 'about' : 'record');
 window.addEventListener('hashchange', () => location.hash === '#how-it-works' && openAbout());
