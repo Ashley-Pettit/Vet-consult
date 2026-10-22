@@ -9,14 +9,30 @@ import { dueLabel, formatDate, NOT_RECORDED, rehydrationTable, REHYDRATION_NOTE 
 import { rangesFor } from './species-ranges.js';
 import { region } from './region.js';
 
-const OLIVE = '647C50';
-const TERRA = 'AB6555';
+// Handout styles, chosen in Settings. Colours are set per printout from the chosen style.
+const THEMES = {
+  bunurong: { name: 'Bunurong Wildlife Care Inc', sub: 'Wildlife Shelter 15147751  ·  Registered Charity  ·  Inverloch, Victoria', primary: '647C50', accent: 'AB6555', tint: 'EEF2E8', line: 'D9DCCF', logo: true, motto: 'Forever home is best', creator: 'Bunurong Wildlife Care' },
+  plain: { name: 'Animal Welfare Companion', sub: 'Wildlife care record', primary: '2F3B45', accent: '2F3B45', tint: 'F1F3F5', line: 'D8DCE0', logo: false, motto: '', creator: 'Animal Welfare Companion' },
+  rspca: { name: '', sub: 'Wildlife care handout', primary: '0B4F8A', accent: '0B4F8A', tint: 'E8F1F9', line: 'CFDDEA', logo: false, wordmark: 'RSPCA', motto: '', creator: 'RSPCA' },
+};
+let THEME = THEMES.bunurong;
+let OLIVE = THEME.primary;
+let TERRA = THEME.accent;
+let TINT = THEME.tint;
+let LINE = THEME.line;
 const INK = '1C1C1C';
 const MUTED = '666666';
-const LINE = 'D9DCCF';
-const TINT = 'EEF2E8';
-const HEAD_FONT = 'Arial Narrow';
+// One font throughout, so every printout looks the same on any computer.
+const HEAD_FONT = 'Arial';
 const BODY_FONT = 'Arial';
+function useTheme(id) {
+  THEME = { ...(THEMES[id] || THEMES.bunurong) };
+  if (id === 'rspca') THEME.name = region().code === 'qld' ? 'RSPCA Queensland' : 'RSPCA Victoria';
+  OLIVE = THEME.primary;
+  TERRA = THEME.accent;
+  TINT = THEME.tint;
+  LINE = THEME.line;
+}
 const PAGE_W = 9638; // A4 minus 2 cm margins, in twentieths of a point
 
 const logoBytes = () => Uint8Array.from(atob(LOGO_PNG_BASE64), (c) => c.charCodeAt(0));
@@ -63,33 +79,30 @@ function table(head, rows, widths) {
   });
 }
 
+const NONE = { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' };
+// Header like the website: a coloured band with the logo (or wordmark) in the middle and the name under it.
 function header() {
+  const top = THEME.logo
+    ? new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 60, after: 40 }, children: [new ImageRun({ type: 'png', data: logoBytes(), transformation: { width: 92, height: 92 } })] })
+    : new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 120, after: 0 }, children: [new TextRun({ text: THEME.wordmark || THEME.name.toUpperCase(), font: HEAD_FONT, bold: true, size: THEME.wordmark ? 64 : 36, color: 'FFFFFF', characterSpacing: THEME.wordmark ? 60 : 30 })] });
   return new Header({
     children: [
       new Table({
         width: { size: PAGE_W, type: WidthType.DXA },
         layout: TableLayoutType.FIXED,
-        columnWidths: [1300, PAGE_W - 1300],
-        borders: {
-          top: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' }, left: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
-          right: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' }, insideVertical: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
-          insideHorizontal: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
-          bottom: { style: BorderStyle.SINGLE, size: 18, color: OLIVE },
-        },
+        columnWidths: [PAGE_W],
+        borders: { top: NONE, bottom: NONE, left: NONE, right: NONE, insideHorizontal: NONE, insideVertical: NONE },
         rows: [
           new TableRow({
             children: [
               new TableCell({
-                width: { size: 1300, type: WidthType.DXA },
-                margins: { bottom: 100 },
-                children: [new Paragraph({ children: [new ImageRun({ type: 'png', data: logoBytes(), transformation: { width: 62, height: 62 } })] })],
-              }),
-              new TableCell({
-                verticalAlign: VerticalAlign.CENTER,
-                margins: { bottom: 100 },
+                width: { size: PAGE_W, type: WidthType.DXA },
+                shading: { type: ShadingType.CLEAR, color: 'auto', fill: OLIVE },
+                margins: { top: 80, bottom: 120, left: 200, right: 200 },
                 children: [
-                  new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ text: 'BUNURONG WILDLIFE CARE INC', font: HEAD_FONT, bold: true, size: 26, color: OLIVE, characterSpacing: 30 })] }),
-                  new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ text: 'Wildlife Shelter 15147751  ·  Registered Charity  ·  Inverloch, Victoria', font: BODY_FONT, size: 16, color: MUTED })] }),
+                  top,
+                  ...(THEME.logo || THEME.wordmark ? [new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 20 }, children: [new TextRun({ text: THEME.name.toUpperCase(), font: HEAD_FONT, bold: true, size: 24, color: 'FFFFFF', characterSpacing: 40 })] })] : []),
+                  new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: THEME.sub, font: BODY_FONT, size: 16, color: 'FFFFFF' })] }),
                 ],
               }),
             ],
@@ -107,12 +120,12 @@ function footer(label) {
         border: { top: { style: BorderStyle.SINGLE, size: 6, color: LINE, space: 4 } },
         tabStops: [{ type: 'right', position: PAGE_W }],
         children: [
-          new TextRun({ text: 'FOREVER HOME IS BEST', font: HEAD_FONT, bold: true, size: 16, color: TERRA, characterSpacing: 20 }),
-          new TextRun({ text: `   ${label}`, font: BODY_FONT, size: 15, color: MUTED }),
+          ...(THEME.motto ? [new TextRun({ text: THEME.motto.toUpperCase(), font: HEAD_FONT, bold: true, size: 16, color: TERRA, characterSpacing: 20 }), new TextRun({ text: '   ', font: BODY_FONT, size: 15 })] : []),
+          new TextRun({ text: label, font: BODY_FONT, size: 15, color: MUTED }),
           new TextRun({ children: ['\tPage ', PageNumber.CURRENT, ' of ', PageNumber.TOTAL_PAGES], font: BODY_FONT, size: 15, color: MUTED }),
         ],
       }),
-      new Paragraph({ children: [new TextRun({ text: 'Wildlife emergencies: Wildlife Victoria 24/7 on 03 8400 7300', font: BODY_FONT, size: 15, color: MUTED })] }),
+      new Paragraph({ children: [new TextRun({ text: `Wildlife emergencies: ${region().hotline} (${region().hotlineHours}) on ${region().phone}`, font: BODY_FONT, size: 15, color: MUTED })] }),
     ],
   });
 }
@@ -120,7 +133,8 @@ function footer(label) {
 /**
  * model: { docType, title, subtitle, meta: [[label, value]], blocks: [{ heading, text?, items?, table?: { head, rows, widths? }, note? }], sources?: [{ title, publisher, url }] }
  */
-export async function buildWord(model, { preparedBy = '', date = new Date() } = {}) {
+export async function buildWord(model, { preparedBy = '', date = new Date(), template = 'bunurong' } = {}) {
+  useTheme(template);
   const meta = [['Document', model.docType], ['Date', formatDate(date)], ...(preparedBy ? [['Prepared by', preparedBy]] : []), ...(model.meta || [])].filter((m) => m[1]);
   const body = [
     new Paragraph({ spacing: { before: 120, after: 0 }, children: [new TextRun({ text: String(model.docType).toUpperCase(), font: HEAD_FONT, bold: true, size: 20, color: TERRA, characterSpacing: 40 })] }),
@@ -162,21 +176,62 @@ export async function buildWord(model, { preparedBy = '', date = new Date() } = 
       })),
     );
   }
+  const sections = [{
+    properties: { page: { size: { width: 11906, height: 16838 }, margin: { top: 2900, bottom: 1300, left: 1134, right: 1134, header: 400, footer: 450 } } },
+    headers: { default: header() },
+    footers: { default: footer(model.docType) },
+    children: body,
+  }];
+  if (model.tickSheet && model.tickSheet.items.length) sections.push(tickSheetSection(model.tickSheet, model.title));
   const doc = new Document({
-    creator: 'Bunurong Wildlife Care',
+    creator: THEME.creator,
     title: model.title,
     styles: { default: { document: { run: { font: BODY_FONT, size: 21 } } } },
     numbering: {
       config: [{ reference: 'dots', levels: [{ level: 0, format: LevelFormat.BULLET, text: '•', alignment: AlignmentType.LEFT, style: { paragraph: { indent: { left: 400, hanging: 260 } }, run: { color: OLIVE } } }] }],
     },
-    sections: [{
-      properties: { page: { size: { width: 11906, height: 16838 }, margin: { top: 1900, bottom: 1300, left: 1134, right: 1134, header: 500, footer: 450 } } },
-      headers: { default: header() },
-      footers: { default: footer(model.docType) },
-      children: body,
-    }],
+    sections,
   });
   return Packer.toBlob(doc);
+}
+
+// A landscape page for the fridge: one row per daily job, a big box per day.
+function tickSheetSection(t, title) {
+  const LAND_W = 16838 - 2 * 1000;
+  const first = 4200;
+  const dayW = Math.floor((LAND_W - first) / t.days);
+  const border = { style: BorderStyle.SINGLE, size: 8, color: '9AA39A' };
+  const big = (text, o = {}) => new TextRun({ text: String(text), font: BODY_FONT, size: 26, color: INK, ...o });
+  const rows = [
+    new TableRow({
+      tableHeader: true,
+      height: { value: 700, rule: 'atLeast' },
+      children: [
+        new TableCell({ width: { size: first, type: WidthType.DXA }, verticalAlign: VerticalAlign.CENTER, shading: { type: ShadingType.CLEAR, color: 'auto', fill: OLIVE }, margins: { left: 140 }, children: [new Paragraph({ children: [big('EACH DAY', { bold: true, color: 'FFFFFF', size: 22 })] })] }),
+        ...Array.from({ length: t.days }, (_, d) => new TableCell({ width: { size: dayW, type: WidthType.DXA }, verticalAlign: VerticalAlign.CENTER, shading: { type: ShadingType.CLEAR, color: 'auto', fill: OLIVE }, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [big(`Day ${d + 1}`, { bold: true, color: 'FFFFFF', size: 22 })] })] })),
+      ],
+    }),
+    ...t.items.map((item, i) => new TableRow({
+      cantSplit: true,
+      height: { value: 1150, rule: 'atLeast' },
+      children: [
+        new TableCell({ width: { size: first, type: WidthType.DXA }, verticalAlign: VerticalAlign.CENTER, shading: i % 2 ? { type: ShadingType.CLEAR, color: 'auto', fill: TINT } : undefined, margins: { left: 140, right: 100 }, children: [new Paragraph({ children: [big(item, { bold: true })] })] }),
+        ...Array.from({ length: t.days }, () => new TableCell({ width: { size: dayW, type: WidthType.DXA }, verticalAlign: VerticalAlign.CENTER, shading: i % 2 ? { type: ShadingType.CLEAR, color: 'auto', fill: TINT } : undefined, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [big('☐', { size: 44, color: '7A847A' })] })] })),
+      ],
+    })),
+  ];
+  return {
+    properties: { page: { size: { width: 11906, height: 16838, orientation: 'landscape' }, margin: { top: 900, bottom: 800, left: 1000, right: 1000, header: 300, footer: 300 } } },
+    // Its own empty header and footer, so the fridge sheet is all tick boxes.
+    headers: { default: new Header({ children: [new Paragraph({ children: [] })] }) },
+    footers: { default: new Footer({ children: [new Paragraph({ children: [] })] }) },
+    children: [
+      new Paragraph({ spacing: { after: 60 }, children: [new TextRun({ text: 'DAILY TICK SHEET', font: HEAD_FONT, bold: true, size: 22, color: TERRA, characterSpacing: 40 })] }),
+      new Paragraph({ spacing: { after: 200 }, children: [new TextRun({ text: title, font: HEAD_FONT, bold: true, size: 40, color: INK })] }),
+      new Table({ width: { size: LAND_W, type: WidthType.DXA }, layout: TableLayoutType.FIXED, columnWidths: [first, ...Array.from({ length: t.days }, () => dayW)], borders: { top: border, bottom: border, left: border, right: border, insideHorizontal: border, insideVertical: border }, rows }),
+      new Paragraph({ spacing: { before: 200 }, children: [new TextRun({ text: 'Tick each box when it is done. Stick it on the fridge or the enclosure.', font: BODY_FONT, size: 20, color: MUTED })] }),
+    ],
+  };
 }
 
 /* ---------------- adapters: each screen's content into the printout model ---------------- */
@@ -205,7 +260,7 @@ function rangesBlocks(id) {
   if (!g) return [];
   return [{
     heading: `Normal ranges: ${g.label}`,
-    table: { head: ['', ''], rows: [...g.vitals, ...g.warmth] },
+    table: { head: ['Measure', 'Normal or target'], rows: [...g.vitals, ...g.warmth] },
     items: g.notes,
     note: `From: ${g.sources.map((x) => `${x.title} (${x.publisher}, ${x.date})`).join('; ')}`,
   }];
@@ -235,15 +290,8 @@ export function careModel(c, lookup) {
     { heading: 'Activity and handling', items: c.activity },
     { heading: 'Other care', items: c.care },
   ];
-  if (c.daily_checks.length) {
-    const days = Math.min(c.log_days || 7, 14);
-    const first = 900;
-    const rest = Math.floor((PAGE_W - first) / c.daily_checks.length);
-    blocks.push({
-      heading: `Daily tick sheet (${days} days)`,
-      table: { head: ['Day', ...c.daily_checks], rows: Array.from({ length: days }, (_, i) => [String(i + 1), ...c.daily_checks.map(() => '☐')]), widths: [first, ...c.daily_checks.map(() => rest)] },
-    });
-  }
+  const tickDays = Math.min(c.log_days || 7, 14);
+  if (c.daily_checks.length) blocks.push({ heading: 'Daily tick sheet', text: `On the last page, sized to print and stick on the fridge (${tickDays} days).` });
   if (c.release.ready_when.length || c.release.how.length || c.release.where) {
     blocks.push({ heading: 'Ready for release when', items: c.release.ready_when });
     blocks.push({ heading: 'How to release', items: c.release.how });
@@ -256,6 +304,7 @@ export function careModel(c, lookup) {
     docType: 'Care plan',
     title: c.animal ? `Care plan: ${c.animal}` : 'Care plan',
     blocks,
+    tickSheet: c.daily_checks.length ? { items: c.daily_checks, days: tickDays } : null,
     sources: c.sources.map(lookup).filter(Boolean),
   };
 }

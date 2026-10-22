@@ -1422,7 +1422,7 @@ function shareOrCopy(text, title, copiedMsg, wordModel = null) {
 // Share a Word file through the phone's share sheet; where files can't be shared (most computers, inside Claude), save it instead.
 async function shareWord(model, title) {
   try {
-    const blob = await buildWord(model, { preparedBy: settings.clinician });
+    const blob = await buildWord(model, { preparedBy: settings.clinician, template: settings.template });
     const filename = wordFileName(model.title);
     const file = typeof File === 'function' ? new File([blob], filename, { type: blob.type || 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' }) : null;
     if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -1698,7 +1698,7 @@ async function saveWord(model, btn) {
   btn.disabled = true;
   btn.lastChild.textContent = 'Making printout…';
   try {
-    const blob = await buildWord(model, { preparedBy: settings.clinician });
+    const blob = await buildWord(model, { preparedBy: settings.clinician, template: settings.template });
     await deliverWord(blob, wordFileName(model.title));
   } catch {
     toast('Couldn’t make the printout. Try again.');

@@ -153,3 +153,17 @@ test('MOP and plan videos match the animal: never a bird video for a koala', asy
   assert.equal(videoForTags(groupsIn('injured animal, not sure what it is'), ''), null);
   assert.equal(videoFor('wombat', 'adult wombat').channel, 'WIRES');
 });
+
+test('plans: photos are identified with honest hedging, tone is positive, vet plans open with thanks', async () => {
+  const { buildCarerPlanPrompt, buildDocPrompt } = await import('../../src/note.js');
+  const withPhoto = buildCarerPlanPrompt('pigeon', '', { photoCount: 1 });
+  assert.match(withPhoto, /1 photo\(s\) are attached/);
+  assert.match(withPhoto, /"I can't tell from the photo"/);
+  assert.match(withPhoto, /never point out what wasn't said/);
+  assert.doesNotMatch(buildCarerPlanPrompt('pigeon', ''), /photo\(s\) are attached/);
+  assert.match(buildCarerPlanPrompt('RTP CBC', '', { fromVet: true }), /Thank you for caring for this ringtail joey/);
+  assert.doesNotMatch(buildCarerPlanPrompt('ringtail', ''), /Thank you for caring/);
+  const mop = buildDocPrompt('mop', 'feed it softened seed every 2 hours', { photoCount: 2 });
+  assert.match(mop, /The operator's own instructions come first/);
+  assert.match(mop, /2 photo\(s\) are attached/);
+});

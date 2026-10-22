@@ -209,7 +209,7 @@ Rules:
 - "sources": the ids of the sources you relied on, most important first. Only ids from the list; if unsure, leave one out. Never add notes or corrections after the JSON. If a section is not covered by any source, keep it brief and generic.
 - kind: "wildlife" for native or wild animals, otherwise "domestic".
 - SAY EACH THING ONCE. Every instruction belongs in exactly one section; no other section restates it, summarises it or refers back to it. Carers read this on a phone, so keep it short: one plain sentence per item, and aim for the whole plan to be readable in about two minutes.
-- summary: at most two short sentences: what happened to the animal, and the goal of care. No instructions.
+- summary: at most two short sentences (after the thank-you, when one is asked for): what happened to the animal, and the goal of care. No instructions.
 - medications: ONLY medications the carer has to give: ones dispensed, prescribed or to be continued. A drug the vet says was "given", "administered" or "had" at the clinic (a one-off injection, for example) is not a carer medication: leave it out of medications and, if useful, mention it once in the summary. For each: plain name with what it is for in brackets; how to give it, how often and for how long, each as a short phrase. A tip only if it genuinely helps.
 - plan: ONLY what changes over time, such as a medication finishing, starting solid food, weaning steps or moving to a bigger enclosure. Name a medication only on the day it stops or starts, with no dosing instructions (those are in medications). Never repeat the daily routine (feeds, toileting, weighing, cleaning) or the release (it has its own section). Two to four periods at most, one or two short tasks each. Leave it empty if nothing changes over time.
 - housing: where and how to keep the animal (space, warmth, quiet, hygiene), at most 4 items. feeding: what, how much if stated, how often, toileting, and water, at most 5 items. activity: handling and enrichment, at most 3 items. care: anything else not covered elsewhere, at most 3 items, often none.
@@ -246,14 +246,23 @@ ${JSON.stringify(note)}
 }
 
 /** Carer plan straight from spoken comments, with no vet note in between. */
-export function buildCarerPlanPrompt(dictation, sourceList = '', { fromVet = false, justIn = false, drugs = '' } = {}) {
+// Photos in plans: identify what can be seen, honestly hedged.
+export function photoLookRule(n) {
+  return n
+    ? `${n} photo(s) are attached. Look at them carefully and use what they show: the likely species and age or stage, visible injuries or wounds, body condition, fur or feathers, posture, and anything else that changes the care. Use it in the plan where it belongs. Be honest about how sure you are: say "looks like", "probably", "maybe" or "I can't tell from the photo" whenever you are not certain, and never state a guess as fact. What the person said always beats what a photo seems to show; if they conflict, follow their words and add the difference to "check".\n`
+    : '';
+}
+
+export function buildCarerPlanPrompt(dictation, sourceList = '', { fromVet = false, justIn = false, drugs = '', photoCount = 0 } = {}) {
   const who = fromVet
     ? `You are helping a vet who works with ${region().org} write a complete care plan for the wildlife carer who will look after this animal, from the vet's spoken comments below. The vet may use quick clinical shorthand; turn it into plain instructions the carer can follow.`
     : justIn
       ? `You are helping a wildlife carer at ${region().org} who has just taken this animal in. From their spoken comments below, write a complete care plan for it, starting now. Begin with what to do right now and over the next few hours (warmth, quiet, handling, fluids or food only as the sources allow), then carry on day by day until the vet visit or the next step mentioned.`
       : `You are helping a wildlife carer at ${region().org} write a complete care plan for another carer or foster carer, from their spoken comments below.`;
+  const tone = `Tone: positive, warm and confident. Describe what is known and what the plan covers; never point out what wasn't said (no "no details were given" or "nothing was mentioned"). If little was said, give sound general care for this animal.${fromVet ? ' Begin the summary with a short thank-you to the carer, for example "Thank you for caring for this ringtail joey."' : ''}`;
   return `${who}
-Speech recognition may mishear drug and species names; correct obvious mishearings.
+${tone}
+${photoLookRule(photoCount)}Speech recognition may mishear drug and species names; correct obvious mishearings.
 ${fromVet ? `${shorthandForPrompt()}\n` : ''}${drugsForPrompt(drugs)}
 ${vetCareForPrompt(dictation, { audience: fromVet ? undefined : 'carer' })}
 ${careRules(sourceList)}
@@ -901,7 +910,8 @@ export const DOC_KINDS = {
   - "Keep yourself safe": only when relevant to this species, for example never touch bats or flying-foxes, or use a thick towel and gloves for animals that bite or scratch.
   - "Call back straight away if": signs that need urgent help, then the contact number. This is the only place the contact number appears.
   - "Where it was found": the exact location word for word, because release goes back there.
-- Base every step on the reference sources below (${region().adj} first). Say what TO do; only say what not to do when it is specific to this animal or species.
+- The operator's own instructions come first. If they told the person to do something specific (for example "feed it softened seed every 2 hours" or "give a shallow dish of water"), include it exactly as they said, in the right section, and never contradict it with a "do not".
+- Base every other step on the reference sources below (${region().adj} first). Say what TO do; only say what not to do when it is specific to this animal or species.
 - Every "do not" in this plan ends with who can say otherwise. For food, water, handling, housing or anything that is not a medication: "unless a vet, wildlife carer or ${region().hotline} advises otherwise", for example "Do not give food or water unless a vet, wildlife carer or ${region().hotline} advises otherwise." For medications only: "unless a vet advises otherwise". Safety rules about touching bats or flying-foxes are the only exception: never soften those.
 - Make clear this is short-term only and the animal needs a vet, shelter or authorised carer for longer-term care, as ${region().adj} rules require.
 - NEVER suggest any medication, dose, procedure, force-feeding or euthanasia.
@@ -940,13 +950,11 @@ export function buildDocPrompt(kind, dictation, opts = {}) {
   const k = DOC_KINDS[kind];
   if (!k) throw new Error('unknown document kind');
   const clinician = opts.clinician ? `The carer is ${String(opts.clinician).slice(0, 80)}.\n` : '';
-  const photos = opts.photoCount
-    ? `${opts.photoCount} photo(s) are attached, numbered in order. Describe only what is clearly visible, objectively, as "Photo N: ...". Do not diagnose from photos alone.\n`
-    : '';
+  const photos = photoLookRule(opts.photoCount);
   return `You are a scribe for a wildlife carer at ${region().org}. Turn the carer's spoken comments into this document: ${k.title}.
 ${typeof k.rule === 'function' ? k.rule() : k.rule}${k.sources && opts.sourceList ? `\nReference sources (id | scope | title | key points), most important first:\n${opts.sourceList}\n` : ''}
 ${clinician}${photos}General rules:
-- Australian English and metric units.
+- Australian English and metric units. Positive, plain wording: describe what is known; never point out what wasn't said.
 - NEVER invent findings, values, doses, dates, names or numbers. Leave out what was not said.
 - Speech recognition may mishear drug, species and place names; correct obvious mishearings and add each to "check".
 - "title": the document title including the animal's name or description. "subtitle": one line with the date or case number if stated.
