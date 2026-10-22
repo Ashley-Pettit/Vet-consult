@@ -203,39 +203,103 @@ export async function buildWord(model, { preparedBy = '', date = new Date(), tem
 
 // A landscape page for the fridge: one row per daily job, a big box per day.
 function tickSheetSection(t, title) {
-  const LAND_W = 16838 - 2 * 1000;
-  const first = 4200;
+  const LAND_W = 16838 - 2 * 900;
+  const first = 3900;
   const dayW = Math.floor((LAND_W - first) / t.days);
-  const border = { style: BorderStyle.SINGLE, size: 8, color: '9AA39A' };
-  const big = (text, o = {}) => new TextRun({ text: String(text), font: BODY_FONT, size: 26, color: INK, ...o });
-  const rows = [
-    new TableRow({
-      tableHeader: true,
-      height: { value: 700, rule: 'atLeast' },
-      children: [
-        new TableCell({ width: { size: first, type: WidthType.DXA }, verticalAlign: VerticalAlign.CENTER, shading: { type: ShadingType.CLEAR, color: 'auto', fill: OLIVE }, margins: { left: 140 }, children: [new Paragraph({ children: [big('EACH DAY', { bold: true, color: 'FFFFFF', size: 22 })] })] }),
-        ...Array.from({ length: t.days }, (_, d) => new TableCell({ width: { size: dayW, type: WidthType.DXA }, verticalAlign: VerticalAlign.CENTER, shading: { type: ShadingType.CLEAR, color: 'auto', fill: OLIVE }, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [big(`Day ${d + 1}`, { bold: true, color: 'FFFFFF', size: 22 })] })] })),
-      ],
-    }),
-    ...t.items.map((item, i) => new TableRow({
-      cantSplit: true,
-      height: { value: 1150, rule: 'atLeast' },
-      children: [
-        new TableCell({ width: { size: first, type: WidthType.DXA }, verticalAlign: VerticalAlign.CENTER, shading: i % 2 ? { type: ShadingType.CLEAR, color: 'auto', fill: TINT } : undefined, margins: { left: 140, right: 100 }, children: [new Paragraph({ children: [big(item, { bold: true })] })] }),
-        ...Array.from({ length: t.days }, () => new TableCell({ width: { size: dayW, type: WidthType.DXA }, verticalAlign: VerticalAlign.CENTER, shading: i % 2 ? { type: ShadingType.CLEAR, color: 'auto', fill: TINT } : undefined, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [big('☐', { size: 44, color: '7A847A' })] })] })),
-      ],
-    })),
-  ];
+  const line = { style: BorderStyle.SINGLE, size: 6, color: 'B9C0B6' };
+  const none = { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' };
+  const txt = (text, o = {}) => new TextRun({ text: String(text), font: BODY_FONT, size: 24, color: INK, ...o });
+  const cell = (children, o = {}) => new TableCell({ verticalAlign: VerticalAlign.CENTER, margins: { left: 120, right: 100, top: 40, bottom: 40 }, children, ...o });
+  const fill = (c) => ({ type: ShadingType.CLEAR, color: 'auto', fill: c });
+  const centre = (runs) => new Paragraph({ alignment: AlignmentType.CENTER, children: runs });
+  const isWeight = (x) => /\bweigh|weight\b/i.test(x);
+
+  // Header band: what it is and who it's for, with blanks to fill in by hand.
+  const band = new Table({
+    width: { size: LAND_W, type: WidthType.DXA },
+    layout: TableLayoutType.FIXED,
+    columnWidths: [LAND_W - 5200, 5200],
+    borders: { top: none, bottom: none, left: none, right: none, insideHorizontal: none, insideVertical: none },
+    rows: [new TableRow({ children: [
+      cell([
+        new Paragraph({ spacing: { after: 40 }, children: [new TextRun({ text: `DAILY TICK SHEET${THEME.name ? `  ·  ${THEME.name.toUpperCase()}` : ''}`, font: HEAD_FONT, bold: true, size: 18, color: 'FFFFFF', characterSpacing: 30 })] }),
+        new Paragraph({ children: [new TextRun({ text: title, font: HEAD_FONT, bold: true, size: 36, color: 'FFFFFF' })] }),
+      ], { shading: fill(OLIVE), margins: { left: 240, right: 120, top: 160, bottom: 160 } }),
+      cell([
+        new Paragraph({ spacing: { after: 120 }, children: [txt('Week starting  ____ / ____ / ______', { size: 20, color: 'FFFFFF' })] }),
+        new Paragraph({ children: [txt('Carer  ______________________________', { size: 20, color: 'FFFFFF' })] }),
+      ], { shading: fill(OLIVE), margins: { left: 120, right: 240, top: 160, bottom: 160 } }),
+    ] })],
+  });
+
+  const head = new TableRow({
+    tableHeader: true,
+    height: { value: 760, rule: 'atLeast' },
+    children: [
+      cell([new Paragraph({ children: [txt('EACH DAY', { bold: true, size: 18, color: OLIVE })] })], { width: { size: first, type: WidthType.DXA }, shading: fill(TINT) }),
+      ...Array.from({ length: t.days }, (_, d) => cell([
+        centre([txt(`Day ${d + 1}`, { bold: true, size: 22 })]),
+        centre([txt('__ / __', { size: 16, color: MUTED })]),
+      ], { width: { size: dayW, type: WidthType.DXA }, shading: fill(TINT) })),
+    ],
+  });
+  const jobRow = (item, i) => new TableRow({
+    cantSplit: true,
+    height: { value: 980, rule: 'atLeast' },
+    children: [
+      cell([new Paragraph({ children: [txt(item, { bold: true })] })], { width: { size: first, type: WidthType.DXA }, shading: i % 2 ? fill('F7F8F4') : undefined }),
+      ...Array.from({ length: t.days }, () => cell([
+        isWeight(item) ? centre([txt('_____ g', { size: 20, color: MUTED })]) : centre([txt('☐', { size: 48, color: '8A938A' })]),
+      ], { width: { size: dayW, type: WidthType.DXA }, shading: i % 2 ? fill('F7F8F4') : undefined })),
+    ],
+  });
+  const blankRow = (label, h) => new TableRow({
+    cantSplit: true,
+    height: { value: h, rule: 'atLeast' },
+    children: [
+      cell([new Paragraph({ children: [txt(label, { bold: true, size: 20, color: MUTED })] })], { width: { size: first, type: WidthType.DXA } }),
+      ...Array.from({ length: t.days }, () => cell([new Paragraph({ children: [] })], { width: { size: dayW, type: WidthType.DXA } })),
+    ],
+  });
+  const grid = new Table({
+    width: { size: LAND_W, type: WidthType.DXA },
+    layout: TableLayoutType.FIXED,
+    columnWidths: [first, ...Array.from({ length: t.days }, () => dayW)],
+    borders: { top: line, bottom: line, left: line, right: line, insideHorizontal: line, insideVertical: line },
+    rows: [head, ...t.items.map(jobRow), blankRow('Initials', 620), blankRow('Notes', 1100)],
+  });
+
+  // Foot: when to get help, and the emergency line, so the sheet works on its own.
+  const urgent = (t.urgent || []).slice(0, 3);
+  const foot = new Table({
+    width: { size: LAND_W, type: WidthType.DXA },
+    layout: TableLayoutType.FIXED,
+    columnWidths: [LAND_W - 5200, 5200],
+    borders: { top: none, bottom: none, left: none, right: none, insideHorizontal: none, insideVertical: { style: BorderStyle.SINGLE, size: 6, color: 'FFFFFF' } },
+    rows: [new TableRow({ cantSplit: true, children: [
+      cell([
+        new Paragraph({ spacing: { after: 60 }, children: [txt('GET VET HELP STRAIGHT AWAY IF', { bold: true, size: 17, color: TERRA })] }),
+        ...(urgent.length ? urgent : ['It is cold, limp, not feeding or breathing with effort']).map((x) => new Paragraph({ spacing: { after: 20 }, children: [txt(`•  ${x}`, { size: 19 })] })),
+      ], { shading: fill('FBEFEB'), margins: { left: 200, right: 160, top: 120, bottom: 120 } }),
+      cell([
+        new Paragraph({ spacing: { after: 60 }, children: [txt('WILDLIFE EMERGENCIES', { bold: true, size: 17, color: OLIVE })] }),
+        new Paragraph({ children: [txt(region().hotline, { bold: true, size: 20 })] }),
+        new Paragraph({ children: [txt(`${region().phone}  (${region().hotlineHours})`, { bold: true, size: 26, color: TERRA })] }),
+      ], { shading: fill(TINT), margins: { left: 200, right: 160, top: 120, bottom: 120 } }),
+    ] })],
+  });
+
   return {
-    properties: { page: { size: { width: 11906, height: 16838, orientation: 'landscape' }, margin: { top: 900, bottom: 800, left: 1000, right: 1000, header: 300, footer: 300 } } },
-    // Its own empty header and footer, so the fridge sheet is all tick boxes.
+    properties: { page: { size: { width: 11906, height: 16838, orientation: 'landscape' }, margin: { top: 700, bottom: 600, left: 900, right: 900, header: 300, footer: 300 } } },
+    // Its own empty header and footer, so the fridge sheet is all about the day's jobs.
     headers: { default: new Header({ children: [new Paragraph({ children: [] })] }) },
     footers: { default: new Footer({ children: [new Paragraph({ children: [] })] }) },
     children: [
-      new Paragraph({ spacing: { after: 60 }, children: [new TextRun({ text: 'DAILY TICK SHEET', font: HEAD_FONT, bold: true, size: 22, color: TERRA, characterSpacing: 40 })] }),
-      new Paragraph({ spacing: { after: 200 }, children: [new TextRun({ text: title, font: HEAD_FONT, bold: true, size: 40, color: INK })] }),
-      new Table({ width: { size: LAND_W, type: WidthType.DXA }, layout: TableLayoutType.FIXED, columnWidths: [first, ...Array.from({ length: t.days }, () => dayW)], borders: { top: border, bottom: border, left: border, right: border, insideHorizontal: border, insideVertical: border }, rows }),
-      new Paragraph({ spacing: { before: 200 }, children: [new TextRun({ text: 'Tick each box when it is done. Stick it on the fridge or the enclosure.', font: BODY_FONT, size: 20, color: MUTED })] }),
+      band,
+      new Paragraph({ spacing: { after: 160 }, children: [] }),
+      grid,
+      new Paragraph({ spacing: { before: 100, after: 160 }, children: [txt('Tick each box when it is done, and initial the day. Stick this on the fridge or the enclosure.', { size: 18, color: MUTED })] }),
+      foot,
     ],
   };
 }
@@ -364,7 +428,7 @@ export function careModel(c, lookup) {
     title: c.animal ? `Care plan: ${c.animal}` : 'Care plan',
     aiNote: careAiNote(c),
     blocks,
-    tickSheet: c.daily_checks.length ? { items: c.daily_checks, days: tickDays } : null,
+    tickSheet: c.daily_checks.length ? { items: c.daily_checks, days: tickDays, urgent: c.escalate.urgent } : null,
     sources: c.sources.map(lookup).filter(Boolean),
   };
 }

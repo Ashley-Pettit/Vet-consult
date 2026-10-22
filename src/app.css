@@ -1082,3 +1082,28 @@ body[data-kb="open"] .tx-hint { display: none; }
 }
 .tx-clear:hover, .tx-clear:focus-visible { color: var(--ink); background: var(--accent-soft); }
 .tx-clear svg { width: 12px; height: 12px; }
+
+/* Tick sheet on a phone: job names stay put on the left, days swipe sideways, boxes are big and tappable */
+.tick-hint { margin: 0 0 6px; font-size: 0.82rem; color: var(--muted); }
+.tick-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.ticksheet { border-collapse: separate; border-spacing: 0; width: max-content; min-width: 100%; table-layout: auto; font-size: 0.88rem; }
+.ticksheet th, .ticksheet td { border: 0; border-bottom: 1px solid var(--line); padding: 0; text-align: center; }
+.ticksheet tr:last-child th, .ticksheet tr:last-child td { border-bottom: 0; }
+.ticksheet thead th { background: var(--accent-soft); color: var(--ink); font-size: 0.75rem; font-weight: 750; letter-spacing: 0.02em; height: 34px; min-width: 46px; padding: 0 4px; white-space: nowrap; }
+.ticksheet tbody th, .ticksheet thead th:first-child {
+  position: sticky; left: 0; z-index: 1; text-align: left; white-space: normal;
+  width: 128px; min-width: 128px; max-width: 150px; padding: 8px 10px; background: var(--surface);
+  box-shadow: 1px 0 0 var(--line); font-weight: 650; color: var(--ink); line-height: 1.25;
+}
+.ticksheet thead th:first-child { background: var(--accent-soft); }
+.ticksheet tbody tr:nth-child(even) td { background: color-mix(in srgb, var(--accent-soft) 35%, transparent); }
+.ticksheet td { height: 48px; min-width: 46px; }
+.ticksheet .box {
+  display: inline-grid; place-items: center; width: 28px; height: 28px; padding: 0; cursor: pointer;
+  border: 2px solid var(--muted); border-radius: 7px; background: transparent; color: transparent;
+}
+.ticksheet .box.on { background: var(--accent); border-color: var(--accent); }
+.ticksheet .box.on::after { content: ""; width: 7px; height: 12px; border: solid var(--accent-ink); border-width: 0 3px 3px 0; transform: translateY(-1px) rotate(45deg); }
+.ticksheet .box:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+@media (max-width: 600px) { .ticksheet .day-word { display: none; } .ticksheet thead th:not(:first-child)::before { content: "Day\A"; white-space: pre; font-size: 0.62rem; font-weight: 600; opacity: 0.7; } }
+@media (min-width: 601px) { .tick-hint { display: none; } }

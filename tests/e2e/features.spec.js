@@ -265,3 +265,17 @@ test('a photo shows Processing while it is shrunk on the phone', async ({ page }
   await expect(page.locator('#crop-dlg')).toBeVisible();
   await expect(page.locator('.photo-busy')).toHaveCount(0);
 });
+
+test('a mic that never starts falls back to keyboard voice typing instead of sitting on "One moment"', async ({ page }) => {
+  test.setTimeout(30000);
+  await page.addInitScript(() => {
+    class Stuck { start() {} stop() {} abort() {} }
+    window.SpeechRecognition = Stuck;
+    window.webkitSpeechRecognition = Stuck;
+  });
+  await openApp(page);
+  await page.locator('#mic').click();
+  await expect(page.locator('#mic-status')).toContainText('One moment');
+  await expect(page.locator('body')).toHaveAttribute('data-mic', 'keyboard', { timeout: 10000 });
+  await expect(page.locator('#banner')).toContainText('mic didn’t start');
+});

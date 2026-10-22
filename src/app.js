@@ -359,6 +359,22 @@ dictation.onfinal = (t) => {
   setTranscript(appendSegment(els.transcript.value, t));
   els.transcript.scrollTop = els.transcript.scrollHeight;
 };
+// If the mic never actually starts (no permission prompt, a blocked browser), don't sit on "One moment…" forever:
+// stop after a few seconds and switch to the keyboard's own voice typing, which works everywhere.
+let startWatch = null;
+const prevOnState = dictation.onstate;
+dictation.onstate = (st) => {
+  prevOnState(st);
+  clearTimeout(startWatch);
+  if (st === 'starting') {
+    startWatch = setTimeout(() => {
+      if (dictation.state !== 'starting') return;
+      dictation.cancel();
+      banner('The mic didn’t start. Use the microphone on your keyboard instead, or check the browser lets this site use the mic.');
+      startKeyboardVoice();
+    }, 6000);
+  }
+};
 dictation.onerror = (code) => {
   if (code === 'interrupted' || code === 'network' || code === 'audio-capture') alertStopped();
   banner(speechErrorMessage(code));
@@ -401,6 +417,9 @@ let kbWasOn = false;
 let startedOnPress = false;
 els.mic.addEventListener('pointerdown', (e) => {
   kbWasOn = document.body.dataset.mic === 'keyboard';
+  // Phones only allow the mic from a completed tap (pointerdown on a touch screen doesn't count, so the mic would
+  // sit on "One moment…"). Start early only for a mouse; on touch the click below starts it.
+  if (e.pointerType !== 'mouse') return;
   if (keyboardVoice || busy || e.button > 0 || dictation.state !== 'idle') return;
   startedOnPress = true;
   banner('');
@@ -1492,6 +1511,35 @@ function pigeonFact(text) {
   return el('p', { class: 'working-fact pigeon-fact' }, [el('span', { class: 'fact-label', text: 'Did you know?' }), PIGEON_FACT]);
 }
 
+// Ticks on the on-screen sheet are kept on this device, per plan, so the day's jobs can be ticked on the phone.
+const tickKey = (c) => `css.ticks.${(c.animal || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 60)}`;
+function loadTicks(c) {
+  try {
+    return new Set(JSON.parse(localStorage.getItem(tickKey(c)) || '[]'));
+  } catch {
+    return new Set();
+  }
+}
+function tickBox(c, r, d, job) {
+  const id = `${r}-${d}`;
+  const on = loadTicks(c).has(id);
+  const b = el('button', { type: 'button', class: `box${on ? ' on' : ''}`, 'aria-pressed': String(on), 'aria-label': `${job}, day ${d + 1}` });
+  b.addEventListener('click', () => {
+    const set = loadTicks(c);
+    const now = !set.has(id);
+    if (now) set.add(id);
+    else set.delete(id);
+    b.classList.toggle('on', now);
+    b.setAttribute('aria-pressed', String(now));
+    try {
+      localStorage.setItem(tickKey(c), JSON.stringify([...set]));
+    } catch {
+      /* ticks still show for now */
+    }
+  });
+  return b;
+}
+
 function renderCare(c) {
   const sec = (title, items, cls) => (items.length ? el('section', { class: 'care-sec ' + (cls || '') }, [el('h2', { text: title }), list(items)]) : null);
   const name = c.animal || currentNote()?.patient.name || '';
@@ -1506,14 +1554,15 @@ function renderCare(c) {
           el('h2', { text: `Daily tick sheet (${days} days)` }),
           el('button', { type: 'button', class: 'btn small ghost', onclick: () => printTickSheet() }, 'Print for the fridge'),
         ]),
-        el('div', { class: 'tbl', tabindex: '0', role: 'region', 'aria-label': 'Daily tick sheet' }, [
+        el('p', { class: 'tick-hint', text: 'Tap a box to tick it. Swipe sideways for more days.' }),
+        el('div', { class: 'tbl tick-wrap', tabindex: '0', role: 'region', 'aria-label': 'Daily tick sheet' }, [
           el('table', { class: 'ticksheet' }, [
             el('thead', {}, [el('tr', {}, [
               el('th', { scope: 'col', text: 'Each day' }),
-              ...Array.from({ length: days }, (_, d) => el('th', { scope: 'col', text: `Day ${d + 1}` })),
+              ...Array.from({ length: days }, (_, d) => el('th', { scope: 'col' }, [el('span', { class: 'day-word', text: 'Day ' }), String(d + 1)])),
             ])]),
-            el('tbody', {}, c.daily_checks.map((x) =>
-              el('tr', {}, [el('th', { scope: 'row', text: x }), ...Array.from({ length: days }, () => el('td', { 'aria-label': 'not ticked' }, el('span', { class: 'box' })))]),
+            el('tbody', {}, c.daily_checks.map((x, r) =>
+              el('tr', {}, [el('th', { scope: 'row', text: x }), ...Array.from({ length: days }, (_, d) => el('td', {}, tickBox(c, r, d, x)))]),
             )),
           ]),
         ]),

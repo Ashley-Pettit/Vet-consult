@@ -114,6 +114,23 @@ export const VIC_SOURCES = [
     ],
   },
   {
+    id: 'vic-mange-management',
+    title: 'Treating mange and Stages of mange',
+    publisher: 'Mange Management Inc (St Andrews, Victoria)',
+    scope: 'vic',
+    url: 'https://mangemanagement.org.au/treating-mange/',
+    points: [
+      'Key Victorian source for wombat mange: Mange Management Inc supports people treating free-living wombats and takes reports of mangy wombats (mangemanagement.org.au, Report a Wombat).',
+      'Free-living wombats with mange usually do not cope with captivity, so mild and moderate cases are best treated where they live.',
+      'In the wild, treatment is given without catching or touching the wombat: a scoop on a long pole pours the treatment along the back, or a burrow flap at an active burrow tips it on as the wombat passes. Approach slowly and never chase.',
+      'Treatment is weekly until all scabs have fallen off; the product, dose and length of treatment come from a vet or Mange Management, not from this plan.',
+      'Stages: mild (early hair loss, usually not seen by day), moderate (crusty scabs on face, ears, sides and shoulders; may be out by day, blind or deaf), severe (scabs over most of the body, infected or flyblown, rotting smell).',
+      'A severe case with infected wounds, flystrike or a rotting smell is too far gone for treatment in the wild: a vet should assess it for humane euthanasia.',
+      'Scratched-off scabs leave shallow wounds that usually heal in days; in warm weather protect them from flies.',
+      'Before starting treatment, tell Mange Management about the wombat so treatment can be coordinated.',
+    ],
+  },
+  {
     id: 'au-sarcoptic-mange-treatment-sheet',
     title: 'Guidelines for the treatment of Australian wildlife with sarcoptic mange: information sheet',
     publisher: 'Threatened Species Recovery Hub, National Environmental Science Program',
