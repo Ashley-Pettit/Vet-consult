@@ -57,6 +57,7 @@ import {
   feedAmounts,
 } from './note.js';
 import { chartByKey } from './feeding.js';
+import { planLink, unpackPlan, linkCode } from './sharelink.js';
 
 const $ = (id) => document.getElementById(id);
 const els = {
@@ -577,6 +578,8 @@ const confirmNew = $('confirm-new');
 confirmNew.addEventListener('close', () => {
   if (confirmNew.returnValue !== 'new') return;
   confirmNew.returnValue = '';
+  // A shared link stays in the address bar until they start something new.
+  if (linkCode(location.hash)) history.replaceState(null, '', location.pathname + location.search);
   dictation.cancel();
   endKeyboardVoice();
   setTranscript('');
@@ -1754,10 +1757,11 @@ $('care-back-2').addEventListener('click', () => (careFrom === 'note' ? showView
 const canShare = () => typeof navigator.share === 'function';
 let pendingSend = null;
 // wordModel (optional): the same content as a Word document, offered first so it can be forwarded as a file.
-function shareOrCopy(text, title, copiedMsg, wordModel = null) {
-  pendingSend = { text, title, copiedMsg, wordModel };
-  if (!canShare() && !wordModel) return finishSend('copy');
+function shareOrCopy(text, title, copiedMsg, wordModel = null, linkData = null) {
+  pendingSend = { text, title, copiedMsg, wordModel, linkData };
+  if (!canShare() && !wordModel && !linkData) return finishSend('copy');
   $('share-word').hidden = !wordModel;
+  $('share-link').hidden = !linkData;
   $('share-go').hidden = !canShare();
   $('share-sheet').showModal();
 }
@@ -1786,6 +1790,7 @@ async function finishSend(how) {
   pendingSend = null;
   if (!job) return;
   if (how === 'word' && job.wordModel) return shareWord(job.wordModel, job.title);
+  if (how === 'link' && job.linkData) return shareLink(job.linkData, job.title);
   if (how === 'share') {
     try {
       await navigator.share({ title: job.title, text: job.text });
@@ -1800,13 +1805,32 @@ async function finishSend(how) {
     toast(ok ? job.copiedMsg : 'Couldn’t copy. Select the text and copy it instead.');
   }
 }
+// A link that opens this plan in the app: the plan travels inside the link, so nothing is stored anywhere.
+async function shareLink(data, title) {
+  let url;
+  try {
+    url = await planLink({ v: 1, region: region().code, ...data });
+  } catch {
+    return toast('Couldn’t make a link. Share it as Word or text instead.');
+  }
+  if (canShare()) {
+    try {
+      await navigator.share({ title, text: `${title}: open the plan here`, url });
+      return;
+    } catch (e) {
+      if (e && e.name === 'AbortError') return;
+    }
+  }
+  const ok = await copyText(url);
+  toast(ok ? 'Link copied. Paste it into a text, email or WhatsApp.' : 'Couldn’t copy the link.');
+}
 $('share-sheet').addEventListener('close', () => {
   const how = $('share-sheet').returnValue;
   $('share-sheet').returnValue = '';
   finishSend(how);
 });
 els.careCopy.addEventListener('click', () =>
-  shareOrCopy(careSheetText(careSheet, lookupSource), $('care-title').textContent, 'Care plan copied. Paste it into an email, SMS or the discharge sheet.', careModel(careSheet, lookupSource)),
+  shareOrCopy(careSheetText(careSheet, lookupSource), $('care-title').textContent, 'Care plan copied. Paste it into an email, SMS or the discharge sheet.', careModel(careSheet, lookupSource), { type: 'care', sheet: careSheet }),
 );
 
 /* ---------------- intake record / care log / for the vet ---------------- */
@@ -1902,7 +1926,7 @@ async function createDoc(kind, text) {
 $('doc-back').addEventListener('click', () => showView('record'));
 $('doc-copy').addEventListener('click', () => {
   if (!currentDoc) return;
-  shareOrCopy(docText(currentDoc.d) + (currentDoc.kind === 'mop' ? `${mopVideo(currentDoc.d) ? `\n\n${videoLine(mopVideo(currentDoc.d))}` : ''}\n\n${aiNoteFor(currentDoc.d.title)}` : ''), $('doc-title').textContent, 'Copied. Paste it wherever it needs to go.', docModel(currentDoc.d, DOC_KINDS[currentDoc.kind].label, currentDoc.kind === 'mop' ? aiNoteFor(currentDoc.d.title) : ''));
+  shareOrCopy(docText(currentDoc.d) + (currentDoc.kind === 'mop' ? `${mopVideo(currentDoc.d) ? `\n\n${videoLine(mopVideo(currentDoc.d))}` : ''}\n\n${aiNoteFor(currentDoc.d.title)}` : ''), $('doc-title').textContent, 'Copied. Paste it wherever it needs to go.', docModel(currentDoc.d, DOC_KINDS[currentDoc.kind].label, currentDoc.kind === 'mop' ? aiNoteFor(currentDoc.d.title) : ''), { type: 'doc', kind: currentDoc.kind, d: currentDoc.d });
 });
 $('doc-new').addEventListener('click', addMoreInfo);
 
@@ -2341,6 +2365,27 @@ if (isExampleText()) setTranscript('');
 renderResume();
 renderPhotos();
 showView(location.hash === '#how-it-works' ? 'about' : 'record');
+// Opened from a shared link: show the plan straight away, and keep it under Recent.
+async function openSharedLink() {
+  const code = linkCode(location.hash);
+  if (!code) return;
+  try {
+    const p = await unpackPlan(code);
+    if (p.region && p.region !== region().code) setRegion(p.region);
+    if (p.type === 'care' && p.sheet) {
+      const c = normaliseCareSheet(p.sheet, null);
+      showCare(c, 'record', 'Shared with you. Check it with the person who sent it.');
+    } else if (p.type === 'doc' && p.d && DOC_KINDS[p.kind]) {
+      const d = normaliseDoc(p.d);
+      showDoc(d, p.kind, 'Shared with you. Check it with the person who sent it.');
+    }
+    renderResume();
+  } catch {
+    banner('That link couldn’t be opened. It may have been cut short: ask for it again, or for the Word document.');
+  }
+}
+openSharedLink();
+window.addEventListener('hashchange', openSharedLink);
 window.addEventListener('hashchange', () => location.hash === '#how-it-works' && openAbout());
 dictation.onstate('idle');
 

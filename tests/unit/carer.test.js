@@ -261,3 +261,15 @@ test('photos: plans get their own "What the photo shows" section', async () => {
   assert.deepEqual(c.photo_findings, ['Looks like a young ringtail, lightly furred', 'No wounds I can see']);
   assert.match(careSheetText(c, () => null), /What the photo shows\n- Looks like a young ringtail/);
 });
+
+test('share links: a plan packs into a short link and comes back exactly', async () => {
+  const { packPlan, unpackPlan, planLink, linkCode } = await import('../../src/sharelink.js');
+  const { EXAMPLE_CARER_PLAN } = await import('../../src/note.js');
+  const data = { v: 1, region: 'vic', type: 'care', sheet: EXAMPLE_CARER_PLAN };
+  const code = await packPlan(data);
+  assert.deepEqual(await unpackPlan(code), data);
+  const url = await planLink(data, null);
+  assert.match(url, /^https:\/\/ashley-pettit\.github\.io\/Vet-consult\/care\/#p=z/);
+  assert.ok(url.length < JSON.stringify(data).length, `link ${url.length} vs json ${JSON.stringify(data).length}`);
+  assert.equal(linkCode(new URL(url).hash), code);
+});

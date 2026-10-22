@@ -6,7 +6,7 @@ Last updated 23 October 2026. Highest value first within each group.
 
 | Item | What it means | Notes |
 |---|---|---|
-| Sharing link | Send a plan as a link that opens the plan in the app | Works without a database: the plan is packed (compressed) into the link itself, after the `#`, so it never reaches a server. Links are long, so best for WhatsApp, email and Messages rather than SMS. "Send a link to the app" in Share is already marked Coming soon. |
+| Sharing link (done: the plan is packed into the link itself, no database) | Send a plan as a link that opens the plan in the app | Works without a database: the plan is packed (compressed) into the link itself, after the `#`, so it never reaches a server. Links are long, so best for WhatsApp, email and Messages rather than SMS. "Send a link to the app" in Share is already marked Coming soon. |
 | Weight tracker | Log weights over time and chart growth | Per animal, on the device at first. Later against Wombaroo growth curves for the species. Feeds the feed calculator automatically. |
 | Dose calculator for vets | mg/kg to mL from the drug's concentration | Uses the vet's own drug list in Settings for concentrations; species cautions from the checked species points shown alongside. Never suggests a dose, only does the sum. |
 

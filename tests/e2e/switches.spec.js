@@ -237,3 +237,27 @@ test('dark by default, with a switch at the top to light that is remembered', as
   await expect(page.locator('#theme-toggle')).toHaveAttribute('aria-label', 'Switch to dark mode');
   expect(errors.filter((e) => /Content Security Policy/i.test(e))).toEqual([]);
 });
+
+test('Share a link: the plan travels inside the link and opens in the app on another phone', async ({ page, context, browserName }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await page.addInitScript(() => { navigator.share = undefined; navigator.canShare = undefined; });
+  await mockApi(page, { body: () => textReply(EXAMPLE_CARER_PLAN) });
+  await openApp(page);
+  await page.locator('#transcript').fill('Ringtail joey, cat attack.');
+  await page.locator('#create').click();
+  await expect(page.locator('#view-care')).toBeVisible();
+  await page.locator('#care-copy').click();
+  await page.locator('#share-link').click();
+  await expect(page.locator('#toast')).toContainText('Link copied');
+  const url = await page.evaluate(() => navigator.clipboard.readText());
+  expect(url).toMatch(/#p=z/);
+  expect(url.length).toBeLessThan(6000);
+  // Someone else opens it: no API call, the plan is just there.
+  const other = await context.newPage();
+  const calls = await mockApi(other, { body: () => textReply(EXAMPLE_CARER_PLAN) });
+  await other.goto(url);
+  await expect(other.locator('#view-care')).toBeVisible();
+  await expect(other.locator('#care-title')).toContainText(/ringtail/i);
+  await expect(other.locator('#view-care')).toContainText('Shared with you');
+  expect(calls).toHaveLength(0);
+});
