@@ -269,8 +269,9 @@ test('while a plan is being written, Fast or Detailed can be picked for next tim
   await page.locator('#create').click();
   await expect(page.locator('#view-working')).toBeVisible();
   await expect(page.locator('input[name=speed][value="claude-sonnet-5-5"]')).toBeChecked();
-  await page.locator('.speed-pick label', { hasText: 'Fast (Haiku)' }).click();
-  await expect(page.locator('#speed-help')).toContainText('next plan uses Fast');
+  await page.locator('.speed-pick label', { hasText: 'Fast' }).click();
+  await expect(page.locator('#speed-help')).toContainText('next plan will be fast');
+  await expect(page.locator('.speed-pick')).not.toContainText(/Haiku|Sonnet/);
   await expect(page.locator('#view-care')).toBeVisible();
   expect(calls[0].body.model).toBe('claude-sonnet-5-5'); // this plan kept its model
   await page.locator('#new-care').click();

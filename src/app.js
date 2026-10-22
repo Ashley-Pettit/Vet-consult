@@ -752,7 +752,7 @@ document.querySelectorAll('input[name="speed"]').forEach((r) =>
     store.saveSettings(saved);
     // The plan being written keeps its model: the new default is applied once it's finished.
     if (!aborter && !overriding) applyModelChoice();
-    $('speed-help').textContent = `Saved. Your next plan uses ${r.value === QUICK_MODEL ? 'Fast (Haiku)' : 'Detailed (Sonnet)'}; this one carries on as it is.`;
+    $('speed-help').textContent = `Saved. Your next plan will be ${r.value === QUICK_MODEL ? 'fast' : 'detailed'}; this one carries on as it is.`;
   }),
 );
 const QUICK_MODEL = 'claude-haiku-5-5';
