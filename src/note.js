@@ -5,7 +5,7 @@ import { speciesGroupsForPrompt, SPECIES_GROUP_IDS, rangesFor } from './species-
 import { videoFor, watchUrl } from './videos.js';
 import { drugsForPrompt } from './drugs.js';
 import { shorthandForPrompt } from './shorthand.js';
-import { vetCareForPrompt } from './species-vet.js';
+import { vetCareForPrompt, groupsIn } from './species-vet.js';
 
 // Pure logic: prompt, parsing, normalising and plain-text formatting of clinical notes.
 // No DOM access here so it can be unit tested in Node.
@@ -595,6 +595,18 @@ export function feedAmounts(fc, weightG) {
   return { perDay: round(perDay), perFeed: round(perDay / fc.feeds), feeds: fc.feeds };
 }
 
+// The species group decides which checked ranges and video appear, so it must match the animal named.
+// If Claude's group is for a different kind of animal (a bird group for a koala, say), show none rather than wrong figures.
+const GROUP_CLASS = { macropod: 'mammal', ringtail: 'mammal', brushtail: 'mammal', glider: 'mammal', wombat: 'mammal', koala: 'mammal', echidna: 'mammal', flyingfox: 'mammal', bird: 'bird', raptor: 'bird', waterbird: 'bird', bluetongue: 'reptile', dragon: 'reptile', python: 'reptile', turtle: 'reptile' };
+const TAG_CLASS = (t) => (['bird', 'reptile'].includes(t) ? t : ['frog'].includes(t) ? 'frog' : t && ['passerine', 'magpie', 'parrot', 'lorikeet', 'pigeon', 'frogmouth-owl', 'raptor', 'kookaburra', 'waterbird', 'seabird', 'penguin', 'shorebird', 'curlew', 'lapwing', 'brush-turkey', 'ibis', 'pelican', 'cuckoo', 'cassowary', 'black-cockatoo'].includes(t) ? 'bird' : ['skink', 'dragon', 'python', 'venomous-snake', 'freshwater-turtle', 'sea-turtle', 'goanna'].includes(t) ? 'reptile' : 'mammal');
+export function checkedGroup(group, animalText) {
+  if (!SPECIES_GROUP_IDS.includes(group)) return '';
+  const tags = groupsIn(animalText);
+  if (!tags.length) return group;
+  const classes = new Set(tags.map(TAG_CLASS));
+  return classes.has(GROUP_CLASS[group]) ? group : '';
+}
+
 export function normaliseCareSheet(raw, knownSources = null) {
   const r = obj(raw);
   const rel = obj(r.release);
@@ -631,7 +643,7 @@ export function normaliseCareSheet(raw, knownSources = null) {
     escalate: { vet: arr(esc.vet, 10), urgent: arr(esc.urgent, 10) },
     feed_calc: feedCalcOf(r.feed_calc),
     rehydration: rehydrationOf(r.rehydration),
-    species_group: SPECIES_GROUP_IDS.includes(str(r.species_group, 30)) ? str(r.species_group, 30) : '',
+    species_group: checkedGroup(str(r.species_group, 30), [str(r.animal, 80), str(r.species, 80)].join(' ')),
     next_visit: str(r.next_visit, 300),
     sources,
   };

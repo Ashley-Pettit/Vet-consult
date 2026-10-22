@@ -181,3 +181,13 @@ test('feed calculator: checked inputs, amounts worked out on the device', async 
   assert.equal(feedCalcOf({ applies: true, percent_body_weight_per_day: 90, feeds_per_day: 4 }).applies, false); // nonsense refused
   assert.equal(feedAmounts(f, ''), null);
 });
+
+test('checked ranges only appear when the group matches the animal named', async () => {
+  const { checkedGroup } = await import('../../src/note.js');
+  assert.equal(checkedGroup('koala', 'Koala, adult female'), 'koala');
+  assert.equal(checkedGroup('bird', 'Koala, adult female'), '');
+  assert.equal(checkedGroup('bird', 'Crested pigeon'), 'bird');
+  assert.equal(checkedGroup('ringtail', 'Common ringtail possum joey'), 'ringtail');
+  assert.equal(checkedGroup('python', 'Mystery animal'), 'python'); // nothing to compare with: keep Claude's pick
+  assert.equal(checkedGroup('made-up', 'Koala'), '');
+});

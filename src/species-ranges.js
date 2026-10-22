@@ -83,7 +83,7 @@ export const SPECIES_RANGES = {
     ],
   },
   bird: {
-    label: 'Native birds (songbirds, parrots, lorikeets)',
+    label: 'Native birds (general)',
     vitals: [['Body temperature', '40-44°C (can be about 38.5°C at rest)']],
     warmth: [['Hatchlings and nestlings', '28-32°C, warmer with fewer feathers'], ['Fledglings and adults', '28°C'], ['Sick adult birds', '28-33°C with 50-70% humidity'], ['Head injury', 'keep cooler, 21-23°C']],
     notes: ['Birds’ breathing is subtle; the sources give no normal heart or breathing rates.'],
