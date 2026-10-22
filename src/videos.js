@@ -65,7 +65,10 @@ function pick(key, context) {
 
 /** The care video for a species group, refined by the plan's own words (a lorikeet gets the lorikeet video). */
 export const videoFor = (group, context = '', tags = []) => {
-  for (const key of [...tags, group].filter(Boolean)) {
+  let keys = [...tags, group].filter(Boolean);
+  // A named species beats its class: a brush-turkey chick never gets the general baby-bird (renesting) video.
+  if (keys.some((k) => k !== 'bird' && k !== 'reptile')) keys = keys.filter((k) => k !== 'bird' && k !== 'reptile');
+  for (const key of keys) {
     const v = pick(key, context);
     if (v) return v;
   }

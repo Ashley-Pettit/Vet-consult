@@ -183,3 +183,15 @@ test('streamed replies report token usage', async () => {
   const body = await readStream(res);
   assert.deepEqual(body.usage, { input_tokens: 1000, output_tokens: 250 });
 });
+
+test('a dropped connection is retried quietly before any error is shown', async () => {
+  let calls = 0;
+  const fetch = async () => {
+    calls += 1;
+    if (calls === 1) throw new TypeError('Failed to fetch');
+    return jsonResponse(200, apiReply());
+  };
+  const p = await resolveProvider({ apiKey: 'k' }, { claude: null, fetch });
+  assert.match(await p.generate('x'), /Rusty/);
+  assert.equal(calls, 2);
+});

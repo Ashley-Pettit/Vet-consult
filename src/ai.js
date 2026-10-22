@@ -146,7 +146,22 @@ export async function readStream(res) {
   return { content: [{ type: 'text', text }], stop_reason: stopReason, usage };
 }
 
-async function callMessages(url, headers, prompt, model, signal, fetchImpl, { viaProxy = false, images = [] } = {}) {
+// A dropped connection or a busy moment usually clears in a second or two: try twice more, quietly, before showing an error.
+const RETRY_CODES = new Set(['network', 'overloaded', 'server', 'empty']);
+async function callMessages(url, headers, prompt, model, signal, fetchImpl, opts = {}) {
+  const tries = opts.tries || 3;
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await callOnce(url, headers, prompt, model, signal, fetchImpl, opts);
+    } catch (e) {
+      const retry = e instanceof AiError && RETRY_CODES.has(e.code) && attempt < tries && !(signal && signal.aborted);
+      if (!retry) throw e;
+      await new Promise((r) => setTimeout(r, opts.retryDelayMs ?? 1500 * attempt));
+    }
+  }
+}
+
+async function callOnce(url, headers, prompt, model, signal, fetchImpl, { viaProxy = false, images = [] } = {}) {
   if (typeof navigator !== 'undefined' && navigator.onLine === false) throw new AiError('offline', AI_MESSAGES.offline);
   const t = withTimeout(signal, CONFIG.timeoutMs);
   let res;
