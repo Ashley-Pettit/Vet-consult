@@ -103,7 +103,10 @@
         <div id="kb-coach-text">Tap the microphone on your keyboard and start talking.</div>
       </div>
       <p id="example-note" class="example-note" hidden><strong>This is an example.</strong> Normally you’d say this into the mic or type it yourself. Tap Create to see what you’d get, or Start over to use your own words.</p>
-      <textarea id="transcript" rows="7" spellcheck="true" autocomplete="off" placeholder="Your words appear here as you talk. You can also type or fix anything."></textarea>
+      <div class="tx-wrap">
+        <textarea id="transcript" rows="7" spellcheck="true" autocomplete="off" placeholder="Your words appear here as you talk. You can also type or fix anything."></textarea>
+        <button type="button" class="tx-clear" id="clear-text" hidden><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>Clear</button>
+      </div>
       <div class="media-row" id="media-row" aria-label="Add photos (up to 5)">
         <label class="chip photo-chip" id="add-photo-label" title="Take a photo with the camera">
           <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><span>Take photo</span>
@@ -348,6 +351,17 @@
       <button type="submit" class="btn primary" value="share" id="share-go">Share…</button>
       <button type="submit" class="btn ghost" value="copy">Copy as text</button>
       <button type="submit" class="link" value="cancel">Cancel</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="confirm-clear" class="confirm" aria-labelledby="confirm-clear-title">
+  <form method="dialog">
+    <h2 id="confirm-clear-title">Clear your words?</h2>
+    <p>This empties the text box. Your photos stay.</p>
+    <div class="dlg-actions">
+      <button type="submit" class="btn ghost" value="cancel">Keep them</button>
+      <button type="submit" class="btn primary" value="clear">Clear</button>
     </div>
   </form>
 </dialog>

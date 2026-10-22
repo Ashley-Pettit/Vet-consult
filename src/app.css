@@ -785,3 +785,11 @@ dialog.confirm p { margin: 0; }
 .usage .usage-total { margin: 4px 0; font-weight: 600; font-size: 0.9rem; }
 .usage h3 { margin: 0 0 4px; font-size: 0.95rem; }
 .usage { overflow-x: auto; }
+
+/* Clear button, bottom right inside the dictation box */
+.tx-wrap { position: relative; }
+.tx-wrap #transcript { width: 100%; padding-bottom: 44px; }
+.tx-clear { position: absolute; right: 8px; bottom: 10px; display: inline-flex; align-items: center; gap: 4px; min-height: 32px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--muted); background: var(--surface, var(--bg)); color: var(--ink); font-size: 0.85rem; font-weight: 600; cursor: pointer; box-shadow: 0 1px 2px rgb(0 0 0 / 0.08); }
+.tx-clear svg { width: 14px; height: 14px; }
+.tx-clear:hover { border-color: var(--ink); }
+.tx-wrap { scroll-margin-bottom: 96px; }

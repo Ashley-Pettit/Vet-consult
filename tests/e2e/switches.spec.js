@@ -148,3 +148,22 @@ test('Opus can be picked (Sonnet by default) and Settings shows AI usage', async
   await page.locator('#usage-reset').click();
   await expect(page.locator('#usage-body')).toContainText('No AI requests');
 });
+
+test('Clear sits in the dictation box and asks first', async ({ page }) => {
+  await openApp(page);
+  await expect(page.locator('#clear-text')).toBeHidden();
+  await page.locator('#transcript').fill('Ringtail joey, CBC, small wound.');
+  await expect(page.locator('#clear-text')).toBeVisible();
+  await page.locator('#clear-text').click();
+  await page.getByRole('button', { name: 'Keep them' }).click();
+  await expect(page.locator('#transcript')).toHaveValue('Ringtail joey, CBC, small wound.');
+  await page.locator('#clear-text').click();
+  await page.locator('#confirm-clear').getByRole('button', { name: 'Clear' }).click();
+  await expect(page.locator('#transcript')).toHaveValue('');
+  await expect(page.locator('#clear-text')).toBeHidden();
+  const box = await page.locator('#transcript').boundingBox();
+  await page.locator('#transcript').fill('x');
+  const btn = await page.locator('#clear-text').boundingBox();
+  expect(btn.x + btn.width).toBeGreaterThan(box.x + box.width - 30); // bottom right
+  expect(btn.y + btn.height).toBeGreaterThan(box.y + box.height - 30);
+});

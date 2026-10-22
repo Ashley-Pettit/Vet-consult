@@ -154,6 +154,12 @@ function setTranscript(text) {
   store.saveDraft(text);
   autoGrow(els.transcript);
   updateCreateState();
+  updateClearButton();
+}
+
+// Clear button, bottom right of the text box: only when there is something to clear, and it asks first.
+function updateClearButton() {
+  $('clear-text').hidden = !els.transcript.value.trim();
 }
 
 async function copyText(text, fallbackEl) {
@@ -384,6 +390,20 @@ els.transcript.addEventListener('input', () => {
   store.saveDraft(els.transcript.value);
   autoGrow(els.transcript);
   updateCreateState();
+  updateClearButton();
+});
+
+const confirmClear = $('confirm-clear');
+$('clear-text').addEventListener('click', () => (busy ? null : confirmClear.showModal()));
+confirmClear.addEventListener('close', () => {
+  const how = confirmClear.returnValue;
+  confirmClear.returnValue = '';
+  if (how !== 'clear') return;
+  dictation.cancel();
+  endKeyboardVoice();
+  setTranscript('');
+  banner('');
+  els.transcript.focus();
 });
 
 // Example words are shown as an example, not as the user's own: a note above the box and a tinted box,
