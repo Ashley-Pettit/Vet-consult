@@ -902,7 +902,7 @@ export const DOC_KINDS = {
   - "Call back straight away if": signs that need urgent help.
   - "Where it was found": the exact location word for word, because release goes back there.
 - Base every step on the reference sources below (${region().adj} first). Say what TO do; only say what not to do when it is specific to this animal or species.
-- Every "do not" in this plan ends with "unless the vet or ${region().hotline} advises otherwise", for example "Do not give food or water unless the vet or ${region().hotline} advises otherwise." Safety rules about touching bats or flying-foxes are the only exception: never soften those.
+- Every "do not" in this plan ends with who can say otherwise. For food, water, handling, housing or anything that is not a medication: "unless a wildlife carer or ${region().hotline} advises otherwise", for example "Do not give food or water unless a wildlife carer or ${region().hotline} advises otherwise." For medications only: "unless a vet advises otherwise". Safety rules about touching bats or flying-foxes are the only exception: never soften those.
 - Make clear this is short-term only and the animal needs a vet, shelter or authorised carer for longer-term care, as ${region().adj} rules require.
 - NEVER suggest any medication, dose, procedure, force-feeding or euthanasia.
 - Contact: ${region().hotline} on ${region().phone} (${region().hotlineHours}), unless the operator gave a different number.

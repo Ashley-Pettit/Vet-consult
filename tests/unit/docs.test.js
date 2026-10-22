@@ -91,7 +91,8 @@ test('MOP plan: plain steps for a member of the public, a text to send, grounded
   assert.match(p, /NEVER suggest any medication, dose, procedure, force-feeding or euthanasia/);
   assert.match(p, /"Basic first aid"/);
   assert.match(p, /"Getting it to a vet or shelter"/);
-  assert.match(p, /Every "do not" in this plan ends with "unless the vet or Wildlife Victoria advises otherwise"/);
+  assert.match(p, /"unless a wildlife carer or Wildlife Victoria advises otherwise"/);
+  assert.match(p, /For medications only: "unless a vet advises otherwise"/);
   assert.match(p, /Wildlife Victoria on 03 8400 7300/);
   setRegion('qld');
   try {
