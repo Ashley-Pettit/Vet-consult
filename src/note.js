@@ -188,7 +188,7 @@ ${JSON.stringify(note)}
 }
 
 /** Ask Claude for plain-English home-care instructions for a foster carer or adopter. */
-const CARE_SHAPE = `{"animal":"","species":"","kind":"domestic|wildlife","summary":"",
+const CARE_SHAPE = `{"animal":"","species":"","kind":"domestic|wildlife","summary":"","photo_findings":[],
 "medications":[{"name":"","how":"","how_often":"","how_long":"","tip":""}],
 "plan":[{"when":"","tasks":[]}],
 "housing":[],"feeding":[],"activity":[],"care":[],
@@ -275,10 +275,12 @@ ${JSON.stringify(note)}
 
 /** Carer plan straight from spoken comments, with no vet note in between. */
 // Photos in plans: identify what can be seen, honestly hedged.
-export function photoLookRule(n) {
-  return n
-    ? `${n} photo(s) are attached. Look at them carefully and use what they show: the likely species and age or stage, visible injuries or wounds, body condition, fur or feathers, posture, and anything else that changes the care. Use it in the plan where it belongs. Be honest about how sure you are: say "looks like", "probably", "maybe" or "I can't tell from the photo" whenever you are not certain, and never state a guess as fact. What the person said always beats what a photo seems to show; if they conflict, follow their words and add the difference to "check".\n`
-    : '';
+export function photoLookRule(n, where = 'care') {
+  if (!n) return '';
+  const own = where === 'doc'
+    ? 'Also add a section headed "What the photo shows" (straight after "Text to send" if there is one, otherwise first) with 2 to 4 short items: what you can see that matters for this animal.'
+    : 'Also put what you can see in "photo_findings": 2 to 4 short items (the likely species and age or stage, any injuries or wounds, body condition, and anything else that matters), each one hedged as needed.';
+  return `${n} photo(s) are attached. Look at them carefully and use what they show: the likely species and age or stage, visible injuries or wounds, body condition, fur or feathers, posture, and anything else that changes the care. Use it in the plan where it belongs. ${own} Be honest about how sure you are: say "looks like", "probably", "maybe" or "I can't tell from the photo" whenever you are not certain, and never state a guess as fact. What the person said always beats what a photo seems to show; if they conflict, follow their words and add the difference to "check".\n`;
 }
 
 export function buildCarerPlanPrompt(dictation, sourceList = '', { fromVet = false, justIn = false, drugs = '', photoCount = 0 } = {}) {
@@ -707,6 +709,7 @@ export function normaliseCareSheet(raw, knownSources = null) {
     species: str(r.species, 80),
     kind,
     summary: str(r.summary, 1200),
+    photo_findings: arr(r.photo_findings, 6),
     medications: (Array.isArray(r.medications) ? r.medications : [])
       .map((m) => {
         const x = obj(m);
@@ -749,6 +752,11 @@ export function careSheetText(c, lookup = () => null) {
   L.push(c.kind === 'wildlife' ? `Care plan: ${c.animal || 'wildlife in care'}` : `Caring for ${c.animal || 'your animal'} at home`);
   L.push(careAiNote(c), '');
   if (c.summary) L.push(c.summary, '');
+  if (c.photo_findings && c.photo_findings.length) {
+    L.push('What the photo shows');
+    c.photo_findings.forEach((x) => L.push(`- ${x}`));
+    L.push('');
+  }
   if (c.medications.length) {
     L.push('Medications');
     c.medications.forEach((m) => {
@@ -1110,7 +1118,7 @@ export function buildDocPrompt(kind, dictation, opts = {}) {
   const k = DOC_KINDS[kind];
   if (!k) throw new Error('unknown document kind');
   const clinician = opts.clinician ? `The carer is ${String(opts.clinician).slice(0, 80)}.\n` : '';
-  const photos = photoLookRule(opts.photoCount);
+  const photos = photoLookRule(opts.photoCount, 'doc');
   return `You are a scribe for a wildlife carer at ${region().org}. Turn the carer's spoken comments into this document: ${k.title}.
 ${typeof k.rule === 'function' ? k.rule() : k.rule}${k.sources && opts.sourceList ? `\nReference sources (id | scope | title | key points), most important first:\n${opts.sourceList}\n` : ''}
 ${clinician}${photos}General rules:

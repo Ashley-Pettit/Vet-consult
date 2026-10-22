@@ -1107,3 +1107,51 @@ body[data-kb="open"] .tx-hint { display: none; }
 .ticksheet .box:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 @media (max-width: 600px) { .ticksheet .day-word { display: none; } .ticksheet thead th:not(:first-child)::before { content: "Day\A"; white-space: pre; font-size: 0.62rem; font-weight: 600; opacity: 0.7; } }
 @media (min-width: 601px) { .tick-hint { display: none; } }
+
+/* Fridge sheet: printed on its own, branded like the Word printouts */
+#fridge-print { display: none; }
+/* Theme colours match the Word printouts (set by class: the page's security rules don't allow inline styles). */
+#fridge-print.fp-bunurong { --fp-main: #647C50; --fp-accent: #AB6555; --fp-tint: #EEF2E8; }
+#fridge-print.fp-plain { --fp-main: #2F3B45; --fp-accent: #2F3B45; --fp-tint: #F1F3F5; }
+#fridge-print.fp-rspca { --fp-main: #0B4F8A; --fp-accent: #0B4F8A; --fp-tint: #E8F1F9; }
+@media print {
+  body[data-print="fridge"] > *:not(#fridge-print) { display: none !important; }
+  body[data-print="fridge"], html:has(body[data-print="fridge"]) { background: #fff !important; }
+  body[data-print="fridge"] #fridge-print { display: block !important; color: #1d2226; font-family: Arial, Helvetica, sans-serif; }
+  @page { size: A4 landscape; margin: 10mm; }
+  #fridge-print * { color-adjust: exact; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .fp-band { display: flex; justify-content: space-between; align-items: center; gap: 12mm; background: var(--fp-main); color: #fff; padding: 5mm 7mm; border-radius: 2mm; }
+  .fp-id { display: flex; align-items: center; gap: 5mm; }
+  .fp-id img { width: 18mm; height: 18mm; border-radius: 50%; }
+  .fp-word { font-size: 20pt; letter-spacing: 2px; color: #fff; }
+  .fp-band h1 { margin: 1mm 0 0; font-size: 18pt; color: #fff; }
+  .fp-band .fp-kicker { color: #fff; opacity: 0.9; }
+  .fp-blanks p { margin: 0 0 3mm; font-size: 10pt; color: #fff; }
+  .fp-kicker { margin: 0; font-size: 8pt; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; }
+  .fp-grid { width: 100%; margin-top: 5mm; border-collapse: collapse; table-layout: fixed; font-size: 12pt; }
+  .fp-grid th, .fp-grid td { border: 0.3mm solid #b9c0b6; text-align: center; vertical-align: middle; }
+  .fp-grid thead th { background: var(--fp-tint); height: 12mm; font-size: 11pt; }
+  .fp-grid thead th span { display: block; font-size: 8pt; font-weight: 400; color: #666; }
+  .fp-grid thead th:first-child { width: 58mm; text-align: left; padding-left: 3mm; color: var(--fp-main); font-size: 8pt; letter-spacing: 1px; text-transform: uppercase; }
+  .fp-grid tbody th { text-align: left; padding: 0 3mm; font-weight: 700; }
+  .fp-grid tbody tr { height: 15mm; }
+  .fp-grid tbody tr:nth-child(even) { background: #f7f8f4; }
+  .fp-grid .fp-blank th { color: #666; font-size: 10pt; }
+  .fp-grid .fp-blank { height: 9mm; background: #fff !important; }
+  .fp-grid .fp-notes { height: 16mm; }
+  .fp-box { display: inline-block; width: 8mm; height: 8mm; border: 0.5mm solid #8a938a; border-radius: 1mm; }
+  .fp-g { color: #666; font-size: 10pt; }
+  .fp-hint { margin: 2mm 0 3mm; font-size: 9pt; color: #666; }
+  .fp-foot { display: grid; grid-template-columns: 1fr 70mm; gap: 3mm; }
+  .fp-urgent { background: #fbefeb; padding: 3mm 5mm; border-radius: 2mm; }
+  .fp-urgent .fp-kicker { color: var(--fp-accent); }
+  .fp-urgent ul { margin: 1mm 0 0; padding-left: 5mm; font-size: 9.5pt; }
+  .fp-sos { background: var(--fp-tint); padding: 3mm 5mm; border-radius: 2mm; }
+  .fp-sos .fp-kicker { color: var(--fp-main); }
+  .fp-sos p { margin: 1mm 0 0; font-size: 10pt; font-weight: 700; }
+  .fp-sos .fp-phone { font-size: 13pt; color: var(--fp-accent); }
+}
+/* What the photo shows: near the top of a plan when photos were sent */
+.care-sec.photo-look { background: var(--accent-soft); border-radius: 12px; padding: 12px 14px; }
+.care-sec.photo-look h2 { display: flex; align-items: center; gap: 8px; }
+.care-sec.photo-look h2 svg { width: 18px; height: 18px; flex: none; }

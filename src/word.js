@@ -11,7 +11,7 @@ import { rangesFor } from './species-ranges.js';
 import { region } from './region.js';
 
 // Handout styles, chosen in Settings. Colours are set per printout from the chosen style.
-const THEMES = {
+export const THEMES = {
   bunurong: { name: 'Bunurong Wildlife Care Inc', sub: 'Wildlife Shelter 15147751  ·  Registered Charity  ·  Inverloch, Victoria', primary: '647C50', accent: 'AB6555', tint: 'EEF2E8', line: 'D9DCCF', logo: true, motto: 'Forever home is best', creator: 'Bunurong Wildlife Care' },
   plain: { name: 'Animal Welfare Companion', sub: 'Wildlife care record', primary: '2F3B45', accent: '2F3B45', tint: 'F1F3F5', line: 'D8DCE0', logo: false, motto: '', creator: 'Animal Welfare Companion' },
   rspca: { name: '', sub: 'Wildlife care handout', primary: '0B4F8A', accent: '0B4F8A', tint: 'E8F1F9', line: 'CFDDEA', logo: false, wordmark: 'RSPCA', motto: '', creator: 'RSPCA' },
@@ -182,7 +182,8 @@ export async function buildWord(model, { preparedBy = '', date = new Date(), tem
       })),
     );
   }
-  const sections = [{
+  // The fridge sheet on its own is just the tick sheet page.
+  const sections = model.fridgeOnly ? [] : [{
     properties: { page: { size: { width: 11906, height: 16838 }, margin: { top: 2900, bottom: 1300, left: 1134, right: 1134, header: 400, footer: 450 } } },
     headers: { default: header() },
     footers: { default: footer(model.docType) },
@@ -222,6 +223,8 @@ function tickSheetSection(t, title) {
     borders: { top: none, bottom: none, left: none, right: none, insideHorizontal: none, insideVertical: none },
     rows: [new TableRow({ children: [
       cell([
+        ...(THEME.logo ? [new Paragraph({ spacing: { after: 60 }, children: [new ImageRun({ type: 'png', data: logoBytes(), transformation: { width: 54, height: 54 } })] })] : []),
+        ...(THEME.wordmark ? [new Paragraph({ spacing: { after: 40 }, children: [new TextRun({ text: THEME.wordmark, font: HEAD_FONT, bold: true, size: 40, color: 'FFFFFF', characterSpacing: 40 })] })] : []),
         new Paragraph({ spacing: { after: 40 }, children: [new TextRun({ text: `DAILY TICK SHEET${THEME.name ? `  ·  ${THEME.name.toUpperCase()}` : ''}`, font: HEAD_FONT, bold: true, size: 18, color: 'FFFFFF', characterSpacing: 30 })] }),
         new Paragraph({ children: [new TextRun({ text: title, font: HEAD_FONT, bold: true, size: 36, color: 'FFFFFF' })] }),
       ], { shading: fill(OLIVE), margins: { left: 240, right: 120, top: 160, bottom: 160 } }),
@@ -402,6 +405,7 @@ export function careModel(c, lookup) {
   const meds = c.medications.map((m) => [m.name, m.how, m.how_often, m.how_long]);
   const blocks = [
     { heading: 'Summary', text: c.summary },
+    { heading: 'What the photo shows', items: c.photo_findings || [] },
     ...(meds.length ? [{ heading: 'Medications', table: { head: ['Medication', 'How', 'How often', 'How long'], rows: meds, widths: [2600, 2600, 2400, PAGE_W - 7600] }, note: c.medications.map((m) => (m.tip ? `${m.name}: ${m.tip}` : '')).filter(Boolean).join('  ') || undefined }] : []),
     ...rangesBlocks(c.species_group),
     ...rehydrationBlocks(c.rehydration),

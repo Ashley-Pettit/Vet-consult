@@ -251,3 +251,13 @@ test("videos about the animal's own condition beat the general species video", a
   // No condition named: the species video as before.
   assert.match(v('Adult bare-nosed wombat, bright, eating well').title, /pouch/);
 });
+
+test('photos: plans get their own "What the photo shows" section', async () => {
+  const { buildCarerPlanPrompt, buildDocPrompt, normaliseCareSheet, careSheetText, EXAMPLE_CARER_PLAN } = await import('../../src/note.js');
+  assert.match(buildCarerPlanPrompt('wombat', '', { photoCount: 1 }), /"photo_findings"/);
+  assert.match(buildDocPrompt('mop', 'wombat in a yard', { photoCount: 2 }), /What the photo shows/);
+  assert.doesNotMatch(buildDocPrompt('mop', 'wombat in a yard', {}), /What the photo shows/);
+  const c = normaliseCareSheet({ ...EXAMPLE_CARER_PLAN, photo_findings: ['Looks like a young ringtail, lightly furred', 'No wounds I can see'] }, null);
+  assert.deepEqual(c.photo_findings, ['Looks like a young ringtail, lightly furred', 'No wounds I can see']);
+  assert.match(careSheetText(c, () => null), /What the photo shows\n- Looks like a young ringtail/);
+});

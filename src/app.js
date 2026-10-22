@@ -11,7 +11,7 @@ import { rangesFor } from './species-ranges.js';
 import { videoFor, videoForTags, watchUrl, embedUrl, thumbUrl } from './videos.js';
 import { groupsIn, factsFor, namedAnimal } from './species-vet.js';
 import { SPECIES_CARE } from './species-care.js';
-import { buildWord, docModel, careModel, noteModel, wordFileName, dischargeModel } from './word.js';
+import { buildWord, docModel, careModel, noteModel, wordFileName, dischargeModel, THEMES } from './word.js';
 import {
   NOTE_TYPES,
   NOTE_TYPE_ORDER,
@@ -1443,24 +1443,77 @@ function rehydrationSection(r) {
 }
 
 // Print just the tick sheet, large, for the fridge. Where printing isn't possible (inside Claude), the Word printout has it on its own page.
+// The fridge sheet: branded like the Word printouts (logo, name, blanks for the week and carer, who to call).
+function fridgeModel(c) {
+  const days = Math.min(c.log_days || 7, 14);
+  return { docType: 'Daily tick sheet', title: els.careTitle.textContent, blocks: [], fridgeOnly: true, tickSheet: { items: c.daily_checks, days, urgent: c.escalate.urgent } };
+}
+function fridgeSheet(c) {
+  const t = THEMES[settings.template] && (settings.template !== 'rspca' || store.rspcaUnlocked()) ? THEMES[settings.template] : THEMES.bunurong;
+  const m = fridgeModel(c);
+  const days = m.tickSheet.days;
+  const isWeight = (x) => /\bweigh|weight\b/i.test(x);
+  const logo = document.querySelector('.band .logo');
+  const box = el('div', { id: 'fridge-print', class: `fp-${t === THEMES.rspca ? 'rspca' : t === THEMES.plain ? 'plain' : 'bunurong'}` }, [
+    el('header', { class: 'fp-band' }, [
+      el('div', { class: 'fp-id' }, [
+        t.logo && logo ? el('img', { src: logo.src, alt: '' }) : t.wordmark ? el('strong', { class: 'fp-word', text: t.wordmark }) : null,
+        el('div', {}, [
+          el('p', { class: 'fp-kicker', text: `Daily tick sheet${t.name ? ` · ${t.name}` : ''}` }),
+          el('h1', { text: m.title }),
+        ]),
+      ]),
+      el('div', { class: 'fp-blanks' }, [el('p', { text: 'Week starting  ____ / ____ / ______' }), el('p', { text: 'Carer  ______________________' })]),
+    ]),
+    el('table', { class: 'fp-grid' }, [
+      el('thead', {}, [el('tr', {}, [
+        el('th', { text: 'Each day' }),
+        ...Array.from({ length: days }, (_, d) => el('th', {}, [`Day ${d + 1}`, el('span', { text: '__ / __' })])),
+      ])]),
+      el('tbody', {}, [
+        ...m.tickSheet.items.map((x) => el('tr', {}, [el('th', { text: x }), ...Array.from({ length: days }, () => el('td', {}, isWeight(x) ? el('span', { class: 'fp-g', text: '_____ g' }) : el('span', { class: 'fp-box' })))])),
+        el('tr', { class: 'fp-blank' }, [el('th', { text: 'Initials' }), ...Array.from({ length: days }, () => el('td'))]),
+        el('tr', { class: 'fp-blank fp-notes' }, [el('th', { text: 'Notes' }), ...Array.from({ length: days }, () => el('td'))]),
+      ]),
+    ]),
+    el('p', { class: 'fp-hint', text: 'Tick each box when it is done, and initial the day. Stick this on the fridge or the enclosure.' }),
+    el('footer', { class: 'fp-foot' }, [
+      el('div', { class: 'fp-urgent' }, [
+        el('p', { class: 'fp-kicker', text: 'Get vet help straight away if' }),
+        el('ul', {}, (m.tickSheet.urgent.length ? m.tickSheet.urgent.slice(0, 3) : ['It is cold, limp, not feeding or breathing with effort']).map((x) => el('li', { text: x }))),
+      ]),
+      el('div', { class: 'fp-sos' }, [
+        el('p', { class: 'fp-kicker', text: 'Wildlife emergencies' }),
+        el('p', { text: region().hotline }),
+        el('p', { class: 'fp-phone', text: `${region().phone} (${region().hotlineHours})` }),
+      ]),
+    ]),
+  ]);
+  return box;
+}
 function printTickSheet() {
-  document.body.dataset.print = 'ticks';
+  const c = careSheet;
+  if (!c || !c.daily_checks.length) return;
+  // Inside Claude there's no printing: hand over the same sheet as a Word file instead.
+  if (inClaude) return saveWord(fridgeModel(c), document.querySelector('.care-sec.ticks .sec-head button'));
+  document.getElementById('fridge-print')?.remove();
+  document.body.append(fridgeSheet(c));
+  document.body.dataset.print = 'fridge';
+  // Paper is white: print in the light theme, then switch back.
+  const theme = document.documentElement.dataset.theme;
+  document.documentElement.dataset.theme = 'light';
   const done = () => {
+    document.documentElement.dataset.theme = theme;
     delete document.body.dataset.print;
+    document.getElementById('fridge-print')?.remove();
     window.removeEventListener('afterprint', done);
   };
   window.addEventListener('afterprint', done);
   try {
     window.print();
   } catch {
-    /* not allowed here */
+    done();
   }
-  setTimeout(() => {
-    if (document.body.dataset.print === 'ticks' && inClaude) {
-      done();
-      toast('Printing isn’t available here. The Word printout has the tick sheet on its own page.');
-    }
-  }, 600);
 }
 
 // Feed calculator: Claude gives the species' daily % of body weight and feeds a day; the sums are done here, and
@@ -1585,6 +1638,9 @@ function renderCare(c) {
     ...[
       el('p', { class: 'ai-check top', text: careAiNote(c) }),
       c.summary ? el('p', { class: 'care-summary', text: c.summary }) : null,
+      c.photo_findings && c.photo_findings.length
+        ? el('section', { class: 'care-sec photo-look' }, [el('h2', {}, [svgIcon('<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>'), 'What the photo shows']), list(c.photo_findings)])
+        : null,
       pigeonFact(`${c.animal} ${c.species} ${c.summary}`),
       c.medications.length
         ? el('section', { class: 'care-sec' }, [
@@ -1861,6 +1917,7 @@ const MAKE_NEXT = [
   ['intake', 'Intake record'],
   ['log', 'Care log'],
   ['tovet', 'Summary for the vet'],
+  ['mop', 'MOP plan'],
 ];
 const MAKE_ICONS = {
   carer: '<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>',
@@ -1868,6 +1925,7 @@ const MAKE_ICONS = {
   log: '<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/>',
   tovet: '<path d="M6 3v6a4 4 0 0 0 8 0V3"/><path d="M10 13v3a4 4 0 0 0 8 0v-2"/><circle cx="18" cy="12" r="2"/>',
   vet: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/>',
+  mop: '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/>',
 };
 const svgIcon = (inner) => {
   const t = document.createElement('template');
