@@ -1059,3 +1059,16 @@ body[data-kb="open"] .tx-hint { display: none; }
   .hero-title { font-size: 1.7rem; }
   .mode-intro { font-size: 0.86rem; line-height: 1.4; }
 }
+
+/* Header: Recent (clock) and Settings on the right, logo centred */
+.bar { grid-template-columns: 92px 1fr 92px; }
+.bar-right { display: flex; justify-content: flex-end; gap: 4px; }
+.bar > #open-about { justify-self: start; }
+.recent-item:first-child { border-color: var(--accent); }
+
+/* Loading: fixed-height lines and a soft fade, so nothing jumps */
+.working-step { min-height: 2.8em; display: flex; align-items: center; justify-content: center; transition: opacity 0.25s ease; }
+.working-fact { min-height: 7.6em; transition: none; }
+#working-fact-text { transition: opacity 0.25s ease; }
+.working-step.fading, #working-fact-text.fading { opacity: 0; }
+@media (prefers-reduced-motion: reduce) { .working-step, #working-fact-text { transition: none; } }

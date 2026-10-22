@@ -6,14 +6,14 @@ test('carer or vet at the top, remembered; the old link is gone', async ({ page 
   await openApp(page);
   await expect(page.locator('#role-switch')).toHaveCount(0);
   await expect(page.locator('input[name=role][value=carer]')).toBeChecked();
-  await expect(page.locator('#mode label:visible')).toHaveCount(5);
+  await expect(page.locator('#mode label:visible')).toHaveCount(4); // intake is made from a plan, not a tab
   await page.locator('#role-seg label', { hasText: 'Vet' }).click();
   await expect(page.locator('#mode label:visible')).toHaveCount(2);
   await expect(page.locator('input[name=mode]:checked')).toHaveValue('carer'); // vets start on the care plan
   await page.reload();
   await expect(page.locator('input[name=role][value=vet]')).toBeChecked();
   await page.locator('#role-seg label', { hasText: 'Carer' }).click();
-  await expect(page.locator('#mode label:visible')).toHaveCount(5);
+  await expect(page.locator('#mode label:visible')).toHaveCount(4); // intake is made from a plan, not a tab
 });
 
 test('QLD uses RSPCA Queensland first, its phone line, and is remembered', async ({ page }) => {
@@ -70,9 +70,10 @@ test('a call interrupts: the dictation and the last care plan survive closing th
   const later = await context.newPage();
   const calls = await mockApi(later, { body: () => textReply(EXAMPLE_CARER_PLAN) });
   await later.goto('./');
-  await expect(later.locator('#resume')).toBeVisible();
-  await expect(later.locator('#resume')).toContainText('Care plan');
-  await later.locator('#resume-open').click();
+  await expect(later.locator('#open-recent')).toBeVisible();
+  await later.locator('#open-recent').click();
+  await expect(later.locator('#recent-dlg')).toContainText('Care plan');
+  await later.locator('#recent-dlg .recent-item').first().click();
   await expect(later.locator('#view-care')).toBeVisible();
   expect(calls).toHaveLength(0);
 });
@@ -92,7 +93,8 @@ test('New asks first; keeping it changes nothing, starting new clears the words 
   await page.getByRole('button', { name: 'Start new' }).click();
   await expect(page.locator('#view-record')).toBeVisible();
   await expect(page.locator('#transcript')).toHaveValue('');
-  await expect(page.locator('#resume')).toContainText('Care plan');
+  await page.locator('#open-recent').click();
+  await expect(page.locator('#recent-dlg')).toContainText('Care plan');
 });
 
 test('Copy offers Share or Copy as text; no extra copy button at the top of the care plan', async ({ page, context }) => {
@@ -144,7 +146,7 @@ test('Opus can be picked (Sonnet by default) and Settings shows AI usage', async
   await expect(table).toContainText('Most thorough (Opus 5.5)');
   await expect(table).toContainText('12,000');
   await expect(page.locator('#usage-body')).toContainText('About $0.11 USD'); // 12k x $4 + 3k x $20 per million
-  await expect(page.locator('#usage-balance')).toContainText('Claude Console');
+  await expect(page.locator('#usage-balance')).not.toContainText('Credit balance');
   await page.locator('#usage-reset').click();
   await expect(page.locator('#usage-body')).toContainText('No AI requests');
 });
@@ -215,8 +217,8 @@ test('Recent: each plan is kept on the device, the animal leads, and any one reo
     await page.locator('#new-care').click();
     await page.getByRole('button', { name: 'Start new' }).click();
   }
-  await expect(page.locator('#resume-title')).toContainText('Ringtail possum joey');
-  await page.locator('#resume-all').click();
+  await page.locator('#open-recent').click();
+  await expect(page.locator('#recent-dlg .recent-item').first()).toContainText('Ringtail possum joey');
   await expect(page.locator('#recent-dlg .recent-item')).toHaveCount(2);
   await page.locator('#recent-dlg .recent-item', { hasText: 'Koala' }).click();
   await expect(page.locator('#care-title')).toContainText(/koala/i);

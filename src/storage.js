@@ -131,7 +131,10 @@ export const store = {
   },
   loadRecent() {
     const v = read(local, RECENT, []);
-    return Array.isArray(v) ? v.filter((x) => x && typeof x === 'object' && x.type && x.data) : [];
+    const list = Array.isArray(v) ? v.filter((x) => x && typeof x === 'object' && x.type && x.data) : [];
+    // Saved before Recent existed: the last thing made still shows.
+    const last = this.loadLast();
+    return list.length || !last ? list : [last];
   },
   clearRecent() {
     write(local, RECENT, null);

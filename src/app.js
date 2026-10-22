@@ -763,16 +763,22 @@ function startWorkingFeed(title) {
   let facts = factsFor(text);
   if (!facts.length) facts = SPECIES_CARE.map((w) => ({ text: `${w.warning} ${w.why}`, source: w.source_title }));
   facts = facts.sort(() => Math.random() - 0.5).slice(0, 12);
+  // Calm: the step changes every 6 seconds and the fact every 12, each with a soft fade, in boxes of fixed height.
   let i = 0;
-  const show = () => {
-    $('working-step').textContent = steps[Math.min(i, steps.length - 1)];
-    const f = facts.length && i >= 1 ? facts[(i - 1) % facts.length] : null;
-    $('working-fact').hidden = !f;
-    if (f) $('working-fact-text').textContent = f.text;
-    i += 1;
+  const fade = (node, text) => {
+    if (node.textContent === text) return;
+    node.classList.add('fading');
+    setTimeout(() => { node.textContent = text; node.classList.remove('fading'); }, 250);
   };
-  show();
-  const t = setInterval(show, 4500);
+  $('working-fact').hidden = !facts.length;
+  if (facts.length) $('working-fact-text').textContent = facts[0].text;
+  $('working-step').textContent = steps[0];
+  const show = () => {
+    i += 1;
+    fade($('working-step'), steps[Math.min(i, steps.length - 1)]);
+    if (facts.length && i % 2 === 0) fade($('working-fact-text'), facts[(i / 2) % facts.length].text);
+  };
+  const t = setInterval(show, 6000);
   return () => {
     clearInterval(t);
     $('working-fact').hidden = true;
@@ -826,6 +832,8 @@ const mode = () => document.querySelector('input[name="mode"]:checked')?.value |
 const MODES = ['intake', 'log', 'carer', 'tovet', 'mop', 'funding', 'vet'];
 const ROLE_MODES = { carer: ['carer', 'intake', 'log', 'tovet', 'mop', 'funding'], vet: ['carer', 'vet'] };
 
+// Every dictation box ends with the reassurance about typos (in the placeholder, so it adds nothing to the screen).
+const TYPO_NOTE = ' Typos and misheard words are fine. The AI sorts them out.';
 const MODE_TEXT = {
   vet: { button: 'Create notes', placeholder: 'Your words appear here as you talk. You can also type or fix anything.' },
   carer: { button: 'Create care plan', placeholder: 'Describe the animal, its condition, medications and anything the carer needs to know.' },
@@ -864,7 +872,7 @@ function applyRegion() {
   $('sos-phone').textContent = r.phone;
   $('sos-phone').href = `tel:${r.tel}`;
   MODE_TEXT.intake.placeholder = `${r.caseLabel}, the animal, exactly where it was found, its condition and what you did.`;
-  if (mode() === 'intake') els.transcript.placeholder = MODE_TEXT.intake.placeholder;
+  if (mode() === 'intake') els.transcript.placeholder = MODE_TEXT.intake.placeholder + TYPO_NOTE;
 }
 document.querySelectorAll('input[name="region"]').forEach((r) =>
   r.addEventListener('change', () => {
@@ -896,7 +904,7 @@ function applyMode() {
   const m = mode();
   document.body.dataset.mode = m;
   els.create.textContent = MODE_TEXT[m].button;
-  els.transcript.placeholder = MODE_TEXT[m].placeholder;
+  els.transcript.placeholder = MODE_TEXT[m].placeholder + TYPO_NOTE;
   document.querySelectorAll('[data-modes]').forEach((n) => (n.hidden = !n.dataset.modes.split(' ').includes(m)));
   if (dictation.state === 'idle' && document.body.dataset.mic !== 'keyboard') els.micStatus.textContent = idleStatus();
 }
@@ -2082,12 +2090,6 @@ function renderUsage(p) {
   bal.replaceChildren();
   if (viaAccount) {
     bal.textContent = 'You’re using your own Claude account, so this counts toward your Claude plan’s usage limits. Claude doesn’t share token counts with apps.';
-  } else {
-    bal.append(
-      'Credit balance isn’t available to apps. The account owner can see it in the ',
-      el('a', { href: 'https://console.anthropic.com/settings/billing', target: '_blank', rel: 'noopener', text: 'Claude Console, Billing' }),
-      '. These figures only count this device.',
-    );
   }
 }
 
@@ -2176,21 +2178,11 @@ function ago(ms) {
 const capFirst = (t) => (t ? t[0].toUpperCase() + t.slice(1) : t);
 const lastLabel = (last) => (last.type === 'doc' && DOC_KINDS[last.data.kind] ? DOC_KINDS[last.data.kind].label : LAST_LABEL[last.type]);
 function renderResume() {
-  const last = store.loadLast();
-  const fresh = last && Date.now() - last.at < 7 * 864e5;
+  // Recent lives behind the clock at the top, so the front screen stays clear.
   const recent = store.loadRecent();
-  $('resume').hidden = !fresh && !recent.length;
-  $('resume-all').hidden = recent.length < 2;
-  $('resume-all').textContent = `All recent (${recent.length})`;
-  const shown = fresh ? last : recent[0];
-  if (!shown) return;
-  // The animal leads, so it's easy to tell which one this was.
-  const label = lastLabel(shown);
-  const title = capFirst(String(shown.title || '').trim());
-  $('resume-title').textContent = title || label;
-  $('resume-text').textContent = `${title ? `${label} · ` : ''}${ago(Date.now() - shown.at)}`;
-  $('resume-open').setAttribute('aria-label', `Open ${title || label}`);
-  $('resume-open').onclick = () => openSaved(shown);
+  const btn = $('open-recent');
+  btn.hidden = !recent.length;
+  btn.setAttribute('aria-label', recent.length ? `Recent (${recent.length})` : 'Recent');
 }
 function openSaved(last) {
   if (!last) return;
@@ -2199,7 +2191,7 @@ function openSaved(last) {
   else if (last.type === 'doc') showDoc(normaliseDoc(last.data.d), last.data.kind);
   else if (last.type === 'notes') showNotes(last.data.map(normaliseNote), false);
 }
-$('resume-all').addEventListener('click', () => {
+$('open-recent').addEventListener('click', () => {
   const list = $('recent-list');
   list.replaceChildren(...store.loadRecent().map((r) => {
     const label = lastLabel(r);
