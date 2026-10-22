@@ -8,7 +8,7 @@ import { ABOUT_HTML } from './about.js';
 import { lookupSource, sourcesForPrompt, SOURCE_IDS } from './sources.js';
 import { region, setRegion } from './region.js';
 import { rangesFor } from './species-ranges.js';
-import { videoFor, watchUrl, embedUrl } from './videos.js';
+import { videoFor, watchUrl, embedUrl, thumbUrl } from './videos.js';
 import { buildWord, docModel, careModel, noteModel, wordFileName } from './word.js';
 import {
   NOTE_TYPES,
@@ -1068,11 +1068,14 @@ let careFrom = 'note'; // where Back goes: the vet note, or the dictation screen
 function videoSection(v) {
   if (!v) return null;
   const box = el('div', { class: 'video-box' });
-  const play = el('button', { type: 'button', class: 'btn ghost video-play' }, [el('span', { 'aria-hidden': 'true', text: '▶ ' }), 'Play video here']);
+  // The thumbnail with a play button; if the thumbnail can't load here, the button still works on its own.
+  const thumb = el('img', { src: thumbUrl(v), alt: '', loading: 'lazy', class: 'video-thumb' });
+  thumb.addEventListener('error', () => thumb.remove());
+  const play = el('button', { type: 'button', class: 'video-play', 'aria-label': `Play video: ${v.title}` }, [el('span', { class: 'video-play-icon', 'aria-hidden': 'true' })]);
   play.addEventListener('click', () => {
     box.replaceChildren(el('iframe', { src: embedUrl(v), title: v.title, allow: 'autoplay; encrypted-media; picture-in-picture', allowfullscreen: '', loading: 'lazy', referrerpolicy: 'strict-origin-when-cross-origin' }));
   });
-  box.append(play);
+  box.append(thumb, play);
   return el('section', { class: 'care-sec video' }, [
     el('h2', { text: 'Watch' }),
     el('p', {}, [el('strong', { text: v.title }), ` (${v.channel}, ${v.date})`]),

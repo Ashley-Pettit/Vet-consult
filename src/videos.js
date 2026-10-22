@@ -21,3 +21,4 @@ export const VIDEOS = {
 export const videoFor = (group) => VIDEOS[group] || null;
 export const watchUrl = (v) => `https://www.youtube.com/watch?v=${v.id}`;
 export const embedUrl = (v) => `https://www.youtube-nocookie.com/embed/${v.id}?rel=0&modestbranding=1&autoplay=1`;
+export const thumbUrl = (v) => `https://i.ytimg.com/vi/${v.id}/hqdefault.jpg`;
