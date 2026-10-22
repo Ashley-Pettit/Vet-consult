@@ -3,7 +3,7 @@ import { Dictation, speechErrorMessage } from './speech.js';
 import { resolveProvider, friendly, AiError } from './ai.js';
 import { store } from './storage.js';
 import { localChecks } from './clinical.js';
-import { preparePhoto, videoFrames, MAX_PHOTOS } from './photos.js';
+import { preparePhoto, MAX_PHOTOS } from './photos.js';
 import { ABOUT_HTML } from './about.js';
 import { lookupSource, sourcesForPrompt, SOURCE_IDS } from './sources.js';
 import { region, setRegion } from './region.js';
@@ -456,7 +456,7 @@ function renderPhotos() {
     ...photos.map((p, i) =>
       el('figure', { class: 'thumb' }, [
         el('img', { src: p.url, alt: `Photo ${i + 1}` }),
-        el('figcaption', { text: p.video ? `▶ ${i + 1}` : String(i + 1) }),
+        el('figcaption', { text: String(i + 1) }),
         el('button', {
           type: 'button', class: 'thumb-x', 'aria-label': `Remove photo ${i + 1}`,
           onclick: () => {
@@ -472,7 +472,7 @@ function renderPhotos() {
   updateCreateState();
 }
 
-// Take photo opens the camera straight away; Gallery picks existing photos; Video becomes three still frames.
+// Take photo opens the camera straight away; Gallery picks existing photos.
 async function addPhotos(input) {
   const files = [...input.files].slice(0, MAX_PHOTOS - photos.length);
   input.value = '';
@@ -487,22 +487,6 @@ async function addPhotos(input) {
 }
 els.photoInput.addEventListener('change', () => addPhotos(els.photoInput));
 $('add-gallery').addEventListener('change', () => addPhotos($('add-gallery')));
-$('add-video').addEventListener('change', async () => {
-  const input = $('add-video');
-  const file = input.files[0];
-  input.value = '';
-  const room = MAX_PHOTOS - photos.length;
-  if (!file || room <= 0) return;
-  toast('Taking stills from the video…');
-  try {
-    photos.push(...(await videoFrames(file, Math.min(3, room))));
-    toast('Added still frames from the video. Claude reads stills, not sound.');
-  } catch {
-    toast('That video couldn’t be read here. Try a photo instead.');
-  }
-  renderPhotos();
-});
-
 /* ---------------- talking to Claude ---------------- */
 
 async function ensureProvider() {

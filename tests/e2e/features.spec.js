@@ -203,19 +203,10 @@ test('carer plan for a carer: Victorian sources, vet only for escalation, specie
   expect(errors).toEqual([]);
 });
 
-test('take photo opens the camera; a video becomes three still frames sent as images', async ({ page }) => {
-  const { readFileSync } = await import('node:fs');
-  const calls = await mockApi(page);
+test('take photo opens the camera; gallery picks several; there is no video button', async ({ page }) => {
   await openApp(page);
   await expect(page.locator('#add-photo')).toHaveAttribute('capture', 'environment');
   await expect(page.locator('#add-gallery')).toHaveAttribute('multiple', '');
-  await page.locator('#add-video').setInputFiles({ name: 'clip.webm', mimeType: 'video/webm', buffer: readFileSync('tests/assets/clip.webm') });
-  await expect(page.locator('#photo-list .thumb')).toHaveCount(3);
-  await expect(page.locator('#photo-list figcaption').first()).toHaveText('▶ 1');
-  await page.locator('#transcript').fill('Rusty, kelpie cross, limping.');
-  await page.locator('#create').click();
-  await expect(page.locator('#view-note')).toBeVisible();
-  const content = calls[0].body.messages[0].content;
-  expect(content.filter((b) => b.type === 'image')).toHaveLength(3);
+  await expect(page.locator('#add-video')).toHaveCount(0);
 });
 
