@@ -32,3 +32,10 @@ Last updated 23 October 2026. Highest value first within each group.
 - Photo analysis, photo on/off setting, Word handout styles (Bunurong, plain, RSPCA with access code)
 - Feedback with an Opus retry, AI polish for edited notes, quick updates on Haiku
 - Species research: mammals, birds, reptiles, frogs, QLD birds; Australian wildlife shorthand; drug names
+
+## From the October 2026 wildlife advice review
+- Queensland after-hours route: 1300 ANIMAL runs 7am to 7pm. Find and verify after-hours options (emergency vets, 24-hour rescue groups, bat rescue, snake catchers) before adding them.
+- Videos: several are still overseas or a near-miss (greater glider for sugar glider, entangled cockatoo for a sick galah). Swap in Australian how-to videos as they turn up.
+- Full source reads: the Wombaroo bird booklet (pages 42 to 77: waterbirds, seabirds, raptors, owls) and the DEECA Part B bird chapters couldn't be read online. Local PDF copies would let us add checked bird feeding amounts and frequencies.
+- Bird and small-mammal feed charts: the calculator uses Wombaroo growth charts for kangaroos, wallabies, wombats, koalas, possums, gliders, flying-foxes and echidnas. Dasyurids, bandicoots, microbats and all birds still have no checked chart, so their figures show as unsure.
+- Re-run the 32-case review (scratchpad eval harness) after big prompt changes.
