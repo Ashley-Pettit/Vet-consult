@@ -736,6 +736,16 @@ async function withModel(model, job) {
 
 // On the loading screen: pick the default model for next time. The plan being written isn't touched.
 let modelChoice = null;
+// The app picks the model for some jobs: Quick polish is always fast, media statements always the most thorough,
+// short "Add more info" updates are fast and a "try again" after a thumbs down is the most thorough.
+const FORCED_MODEL = { polish: 'claude-haiku-5-5', media: 'claude-opus-5-5' };
+function forcedModelNote() {
+  const m = FORCED_MODEL[mode()] || (overriding ? settings.model : null);
+  if (!m) return '';
+  if (mode() === 'polish') return 'Quick polish always uses the fast setting.';
+  if (mode() === 'media') return 'Media statements always use the most thorough setting.';
+  return m === 'claude-haiku-5-5' ? 'A short update, so this one uses the fast setting.' : 'This one uses the most thorough setting, to get it right.';
+}
 function applyModelChoice() {
   if (!modelChoice || overriding) return;
   settings = { ...settings, model: modelChoice };
@@ -810,7 +820,10 @@ async function runWorking(title, sub, job) {
   const swap = looking ? setTimeout(() => { els.workingTitle.textContent = title; els.workingSub.textContent = sub; }, 7000) : null;
   showView('working');
   syncSpeedPick();
-  $('speed-help').textContent = 'This one carries on as it is.';
+  // Some jobs always use a set model, whatever the default is: say so instead of offering a choice that does nothing here.
+  const forced = forcedModelNote();
+  document.querySelector('.speed-pick').hidden = Boolean(forced);
+  $('speed-help').textContent = forced || 'This one carries on as it is.';
   els.stop.focus();
   const t0 = Date.now();
   const tick = setInterval(() => {
@@ -1968,6 +1981,16 @@ async function createDoc(kind, text) {
   showDoc(d, kind);
 }
 
+// The Word version of the current document. A MOP plan is for the member of the public, so it reads as plain
+// care instructions, with the video link, and leaves out the operator's text message and due list.
+function docWordModel() {
+  const { d, kind } = currentDoc;
+  if (kind === 'mop') {
+    const v = mopVideo(d);
+    return docModel(d, 'Care instructions until help arrives', aiNoteFor(d.title), { forPublic: true, video: v ? { ...v, url: watchUrl(v) } : null });
+  }
+  return docModel(d, kind === 'media' ? 'Draft media statement, for review' : DOC_KINDS[kind].label, '');
+}
 $('doc-back').addEventListener('click', () => showView('record'));
 $('doc-copy').addEventListener('click', () => {
   if (!currentDoc) return;
@@ -1975,7 +1998,7 @@ $('doc-copy').addEventListener('click', () => {
   if (currentDoc.kind === 'media') {
     return shareOrCopy(mediaReleaseText(currentDoc.d), $('doc-title').textContent, 'Statement copied, without the private notes. Send it for review before it goes out.', docModel(currentDoc.d, 'Draft media statement, for review'), { type: 'doc', kind: 'media', d: currentDoc.d });
   }
-  shareOrCopy(docText(currentDoc.d) + (currentDoc.kind === 'mop' ? `${mopVideo(currentDoc.d) ? `\n\n${videoLine(mopVideo(currentDoc.d))}` : ''}\n\n${aiNoteFor(currentDoc.d.title)}` : ''), $('doc-title').textContent, 'Copied. Paste it wherever it needs to go.', docModel(currentDoc.d, DOC_KINDS[currentDoc.kind].label, currentDoc.kind === 'mop' ? aiNoteFor(currentDoc.d.title) : ''), { type: 'doc', kind: currentDoc.kind, d: currentDoc.d });
+  shareOrCopy(docText(currentDoc.d) + (currentDoc.kind === 'mop' ? `${mopVideo(currentDoc.d) ? `\n\n${videoLine(mopVideo(currentDoc.d))}` : ''}\n\n${aiNoteFor(currentDoc.d.title)}` : ''), $('doc-title').textContent, 'Copied. Paste it wherever it needs to go.', docWordModel(), { type: 'doc', kind: currentDoc.kind, d: currentDoc.d });
 });
 $('doc-new').addEventListener('click', addMoreInfo);
 
@@ -2245,7 +2268,7 @@ async function saveWord(model, btn) {
     btn.lastChild.textContent = label;
   }
 }
-$('word-doc').addEventListener('click', (e) => currentDoc && saveWord(docModel(currentDoc.d, currentDoc.kind === 'media' ? 'Draft media statement, for review' : DOC_KINDS[currentDoc.kind].label, currentDoc.kind === 'mop' ? aiNoteFor(currentDoc.d.title) : ''), e.currentTarget));
+$('word-doc').addEventListener('click', (e) => currentDoc && saveWord(docWordModel(), e.currentTarget));
 $('word-care').addEventListener('click', (e) => careSheet && saveWord(careModel(careSheet, lookupSource, wordPhotos()), e.currentTarget));
 $('word-note').addEventListener('click', (e) => currentNote() && saveWord(noteModel(currentNote()), e.currentTarget));
 

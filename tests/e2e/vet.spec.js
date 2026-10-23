@@ -87,6 +87,7 @@ test('Quick polish: fast tidy-up ready to copy, with SOAP notes made in the back
 
 test('Media statement: a draft media release, always on the most thorough model, with notes kept out of publication', async ({ page }) => {
   const calls = await mockApi(page, {
+    delayMs: 1500,
     body: () => textReply({
       title: 'Wombat recovering after car strike near Kilcunda', subtitle: '',
       sections: [
@@ -103,6 +104,8 @@ test('Media statement: a draft media release, always on the most thorough model,
   await expect(page.locator('#create')).toHaveText('Draft statement');
   await page.locator('#transcript').fill('Wombat hit on the Bass Highway near Kilcunda, recovering well, slow down at dusk, keep the burrow location private.');
   await page.locator('#create').click();
+  await expect(page.locator('#speed-help')).toContainText('Media statements always use the most thorough setting');
+  await expect(page.locator('.speed-pick')).toBeHidden();
   await expect(page.locator('#view-doc')).toBeVisible();
   await expect(page.locator('#doc-title')).toContainText('Wombat recovering');
   await expect(page.locator('#view-doc')).toContainText('Not for publication');

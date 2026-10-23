@@ -1180,7 +1180,6 @@ body[data-kb="open"] .tx-hint { display: none; }
 #polish-soap[data-state="ready"] .soap-dot { background: var(--accent); }
 @keyframes soap-pulse { 50% { opacity: 0.3; } }
 @media (prefers-reduced-motion: reduce) { #polish-soap[data-state="working"] .soap-dot { animation: none; } }
-body[data-mode="polish"] .speed-pick { display: none; }
 
 /* Vet tabs: Notes, Care plan, then the two quick tools */
 body[data-role="vet"] .mode label:has(input[value="polish"]), body[data-role="vet"] .mode label:has(input[value="media"]) { order: 1; }
@@ -1208,9 +1207,9 @@ body[data-role="vet"] .mode label:has(input[value="polish"]), body[data-role="ve
 .speed-pick { display: flex; align-items: center; gap: 8px; margin: 0; }
 .speed-label { font-size: 0.85rem; color: var(--muted); font-weight: 600; }
 .speed-help { margin: 0; font-size: 0.8rem; color: var(--muted); text-align: center; }
-body[data-mode="polish"] .speed-help { display: none; }
 .working-actions { gap: 10px; flex-wrap: nowrap; }
 .working-actions #stop { min-width: 0; padding-left: 18px; padding-right: 18px; }
 .speed-pick { gap: 6px; }
 .speed-pick .seg span { padding: 8px 12px; }
 @media (max-width: 350px) { .working-actions { flex-wrap: wrap; } }
+.speed-pick[hidden] { display: none !important; }

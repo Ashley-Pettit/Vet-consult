@@ -180,7 +180,8 @@ function footer(label) {
  */
 export async function buildWord(model, { preparedBy = '', date = new Date(), template = 'bunurong' } = {}) {
   useTheme(template);
-  const meta = [['Document', model.docType], ['Date', formatDate(date)], ...(preparedBy ? [['Prepared by', preparedBy]] : []), ...(model.meta || []).filter((m) => !(m[0] === 'Vet' && m[1] === preparedBy))].filter((m) => m[1]);
+  // The document type is already the coloured line above the title, so it isn't repeated here.
+  const meta = [['Date', formatDate(date)], ...(preparedBy ? [['Prepared by', preparedBy]] : []), ...(model.meta || []).filter((m) => !(m[0] === 'Vet' && m[1] === preparedBy))].filter((m) => m[1]);
   const body = [
     new Paragraph({ spacing: { before: 120, after: 0 }, children: [new TextRun({ text: String(model.docType).toUpperCase(), font: HEAD_FONT, bold: true, size: 20, color: TERRA, characterSpacing: 40 })] }),
     new Paragraph({ spacing: { after: model.subtitle ? 40 : 160 }, children: [new TextRun({ text: model.title, font: HEAD_FONT, bold: true, size: 48, color: INK })] }),
@@ -204,6 +205,8 @@ export async function buildWord(model, { preparedBy = '', date = new Date(), tem
   ];
   // The AI note sits quietly under the details, not as a section of its own.
   if (model.aiNote) body.push(new Paragraph({ spacing: { before: 140, after: 40 }, children: [run(`ⓘ  ${model.aiNote}`, { italics: true, color: MUTED, size: 18 })] }));
+  // A video worth watching, as one short linked line under the details.
+  if (model.watch) body.push(new Paragraph({ spacing: { before: 40, after: 40 }, children: [run('▶  Watch: ', { bold: true, size: 18, color: OLIVE }), new ExternalHyperlink({ link: model.watch.url, children: [run(`${model.watch.title} (${model.watch.channel}${model.watch.date ? `, ${model.watch.date}` : ''})`, { size: 18, color: OLIVE, underline: {} })] })] }));
   for (const b of model.blocks) {
     if (!b.heading || (!b.text && !(b.items && b.items.length) && !(b.checks && b.checks.length) && !b.table && !(b.labels && b.labels.length) && !(b.photos && b.photos.length))) continue;
     if (b.tone && TONES[b.tone]) {
@@ -380,12 +383,14 @@ function medLabel(l) {
 
 /* ---------------- adapters: each screen's content into the printout model ---------------- */
 
-export function docModel(d, kindLabel, note = '') {
+export function docModel(d, kindLabel, note = '', { forPublic = false, video = null } = {}) {
   return {
     docType: kindLabel,
-    title: d.title || kindLabel,
+    // A printout for a member of the public reads as plain instructions, not an internal plan name.
+    title: forPublic ? (d.title || kindLabel).replace(/^short-term care plan:\s*/i, 'Looking after the ') : d.title || kindLabel,
     subtitle: d.subtitle,
     aiNote: note,
+    watch: video,
     blocks: [
       // The ready-to-send text message is for the phone, not the printout.
       ...d.sections.filter((s) => !/^text to (your vet|send)/i.test(s.heading)).map((s) => {
@@ -397,7 +402,7 @@ export function docModel(d, kindLabel, note = '') {
         const tone = /^(text to send)/i.test(s.heading) ? 'summary' : /^(not for publication|keep out of the story)/i.test(s.heading) ? 'urgent' : /^(quote|suggested quote)/i.test(s.heading) ? 'warn' : /^what the photo shows/i.test(s.heading) ? 'photo' : /straight away|urgent|emergenc/i.test(s.heading) ? 'urgent' : /keep yourself safe|within a day/i.test(s.heading) ? 'warn' : undefined;
         return { heading: s.heading, text: s.text, items, tone };
       }),
-      ...(d.due.length ? [{ heading: 'What’s due', table: { head: ['What', 'When'], rows: d.due.map((x) => [x.what, x.when ? dueLabel(x.when) : '']), widths: [5800, PAGE_W - 5800] } }] : []),
+      ...(d.due.length && !forPublic ? [{ heading: 'What’s due', table: { head: ['What', 'When'], rows: d.due.map((x) => [x.what, x.when ? dueLabel(x.when) : '']), widths: [5800, PAGE_W - 5800] } }] : []),
     ],
   };
 }
