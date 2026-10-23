@@ -98,7 +98,7 @@ test('Media statement: a draft media release, always on the most thorough model,
   });
   await asVet(page);
   await openApp(page);
-  await page.locator('#mode label', { hasText: 'Media' }).click();
+  await page.locator('#adv-tab').click(); // Advanced opens on Media statement
   await expect(page.locator('#create')).toHaveText('Draft statement');
   await page.locator('#transcript').fill('Wombat hit on the Bass Highway near Kilcunda, recovering well, slow down at dusk, keep the burrow location private.');
   await page.locator('#create').click();

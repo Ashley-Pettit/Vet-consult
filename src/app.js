@@ -904,7 +904,7 @@ function applyRole() {
   const role = settings.role === 'vet' ? 'vet' : 'carer';
   document.body.dataset.role = role;
   document.querySelector(`input[name="role"][value="${role}"]`).checked = true;
-  document.querySelectorAll('#mode label[data-roles]').forEach((l) => (l.hidden = !l.dataset.roles.split(' ').includes(role)));
+  document.querySelectorAll('#mode [data-roles]').forEach((l) => (l.hidden = !l.dataset.roles.split(' ').includes(role)));
   if (!ROLE_MODES[role].includes(mode())) document.querySelector(`input[name="mode"][value="${ROLE_MODES[role][0]}"]`).checked = true;
 }
 document.querySelectorAll('input[name="role"]').forEach((r) =>
@@ -960,6 +960,13 @@ function updateMediaFrom() {
   const org = mediaOrg();
   $('media-from-text').textContent = `Statement from: ${org ? org.split(',')[0] : 'your organisation (choose it in Settings, or say it)'}`;
 }
+const ADVANCED = ['media', 'witness'];
+$('adv-tab').addEventListener('click', () => {
+  if (ADVANCED.includes(mode())) return;
+  const m = ADVANCED.includes(settings.advMode) ? settings.advMode : 'media';
+  document.querySelector(`input[name="mode"][value="${m}"]`).checked = true;
+  document.querySelector(`input[name="mode"][value="${m}"]`).dispatchEvent(new Event('change'));
+});
 function applyMode() {
   updateMediaFrom();
   const m = mode();
@@ -967,6 +974,12 @@ function applyMode() {
   els.create.textContent = MODE_TEXT[m].button;
   els.transcript.placeholder = MODE_TEXT[m].placeholder + TYPO_NOTE;
   document.querySelectorAll('[data-modes]').forEach((n) => (n.hidden = !n.dataset.modes.split(' ').includes(m)));
+  // Media and expert witness statements sit together under Advanced, with a slider to pick one.
+  const adv = ADVANCED.includes(m);
+  $('adv-tab').setAttribute('aria-pressed', String(adv));
+  $('adv-seg').hidden = !adv || settings.role !== 'vet';
+  $('adv-seg').dataset.pick = adv ? m : '';
+  if (adv) settings.advMode = m;
   if (dictation.state === 'idle' && document.body.dataset.mic !== 'keyboard') els.micStatus.textContent = idleStatus();
 }
 document.querySelectorAll('input[name="mode"]').forEach((r) =>
