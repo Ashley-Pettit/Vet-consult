@@ -219,6 +219,6 @@ test('Rapid polish prompt keeps every fact and the vet shorthand, and returns pl
   assert.match(p, /Keep standard veterinary abbreviations/);
   assert.match(p, /Our in-house mange wash/);
   assert.match(p, /<dictation>\nadult wombat bcs 3\/9/);
-  assert.match(p, /"polished"/);
+  assert.match(p, /<polished>/);
   assert.match(p, /"animals"/);
 });

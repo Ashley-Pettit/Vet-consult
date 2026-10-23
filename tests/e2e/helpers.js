@@ -37,6 +37,8 @@ const textOf = (content) => (typeof content === 'string' ? content : content.fil
  */
 export async function mockApi(page, { status = 200, body = apiReply(), delayMs = 0 } = {}) {
   const calls = [];
+  // Tests check the real call path, so the examples' ready-made replies are switched off.
+  await page.addInitScript({ content: "try { localStorage.setItem('css.nobake', '1'); } catch (e) {}" });
   // The app talks to the Animal Welfare Companion connection on Cloudflare (or straight to Anthropic with a personal key).
   await page.route(/^https:\/\/(api\.anthropic\.com\/v1\/messages|care-scribe-proxy\.ashley-98e\.workers\.dev\/?)$/, async (route) => {
     const req = JSON.parse(route.request().postData() || '{}');

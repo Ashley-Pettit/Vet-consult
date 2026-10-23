@@ -1,6 +1,7 @@
 import { CONFIG } from './config.js';
 import { Dictation, speechErrorMessage } from './speech.js';
 import { resolveProvider, friendly, AiError, onUsage } from './ai.js';
+import { withBaked } from './baked.js';
 import { store } from './storage.js';
 import { localChecks } from './clinical.js';
 import { preparePhoto, MAX_PHOTOS } from './photos.js';
@@ -40,6 +41,9 @@ import {
   EXAMPLE_WOMBAT_VET_DICTATION,
   EXAMPLE_VET_PLAN_DICTATION,
   EXAMPLE_FUNDING_DICTATION,
+  EXAMPLE_POLISH_DICTATION,
+  EXAMPLE_MEDIA_DICTATION,
+  EXAMPLE_WITNESS_DICTATION,
   appendSegment,
   buildPrompt,
   buildPolishPrompt,
@@ -531,7 +535,7 @@ confirmClear.addEventListener('close', () => {
 // Example words are shown as an example, not as the user's own: a note above the box and a tinted box,
 // until they edit or replace them.
 function isExampleText() {
-  return [EXAMPLE_DICTATION, EXAMPLE_BATCH_DICTATION, EXAMPLE_CARER_DICTATION, EXAMPLE_FOSTER_DICTATION, EXAMPLE_INTAKE_DICTATION, EXAMPLE_LOG_DICTATION, EXAMPLE_TOVET_DICTATION, EXAMPLE_MOP_DICTATION, EXAMPLE_JOEY_CARER_DICTATION, EXAMPLE_WOMBAT_VET_DICTATION, EXAMPLE_VET_PLAN_DICTATION, EXAMPLE_FUNDING_DICTATION].some((x) => x.trim() === els.transcript.value.trim());
+  return [EXAMPLE_DICTATION, EXAMPLE_BATCH_DICTATION, EXAMPLE_CARER_DICTATION, EXAMPLE_FOSTER_DICTATION, EXAMPLE_INTAKE_DICTATION, EXAMPLE_LOG_DICTATION, EXAMPLE_TOVET_DICTATION, EXAMPLE_MOP_DICTATION, EXAMPLE_JOEY_CARER_DICTATION, EXAMPLE_WOMBAT_VET_DICTATION, EXAMPLE_VET_PLAN_DICTATION, EXAMPLE_FUNDING_DICTATION, EXAMPLE_POLISH_DICTATION, EXAMPLE_MEDIA_DICTATION, EXAMPLE_WITNESS_DICTATION].some((x) => x.trim() === els.transcript.value.trim());
 }
 function updateExampleNote() {
   const on = isExampleText();
@@ -553,6 +557,9 @@ $('load-vet-plan-example').addEventListener('click', () => loadExample(EXAMPLE_V
 $('load-tovet-example').addEventListener('click', () => loadExample(EXAMPLE_TOVET_DICTATION));
 $('load-mop-example').addEventListener('click', () => loadExample(EXAMPLE_MOP_DICTATION));
 $('load-funding-example').addEventListener('click', () => loadExample(EXAMPLE_FUNDING_DICTATION));
+$('load-polish-example').addEventListener('click', () => loadExample(EXAMPLE_POLISH_DICTATION));
+$('load-media-example').addEventListener('click', () => loadExample(EXAMPLE_MEDIA_DICTATION));
+$('load-witness-example').addEventListener('click', () => loadExample(EXAMPLE_WITNESS_DICTATION));
 
 els.clear.addEventListener('click', () => {
   const previous = els.transcript.value;
@@ -740,8 +747,15 @@ const BEST_MODEL = 'claude-opus-5-5';
 // A short, simple update goes to the fast model; anything long or with drugs and doses keeps the chosen model.
 const isQuickUpdate = (t) => t.length <= 180 && t.split(/\s+/).length <= 32 && !/\b(mg|ml|mL|dose|tablet|inject|antibiotic|meloxicam|metacam|\d+\s*(mg|ml|kg))\b/i.test(t);
 
+// The built-in examples answer from ready-made replies (see baked.js), even with no Claude connection.
+const bakedOff = () => { try { return localStorage.getItem('css.nobake') === '1'; } catch { return false; } };
+const stopped = () => new AiError('cancelled', 'Stopped.');
+function withExamples(p) {
+  if (bakedOff()) return p;
+  return p || isExampleText() ? withBaked(p, stopped) : null;
+}
 async function ensureProvider() {
-  provider = await resolveProvider(settings);
+  provider = withExamples(await resolveProvider(settings));
   return provider;
 }
 
@@ -2096,7 +2110,7 @@ function mediaOrg() {
 
 // Rapid polish always uses the fast model, whatever is chosen in Settings.
 async function quickProvider() {
-  return resolveProvider({ ...settings, model: QUICK_MODEL });
+  return withExamples(await resolveProvider({ ...settings, model: QUICK_MODEL }));
 }
 async function createPolish(text) {
   const via = await quickProvider();
@@ -2107,11 +2121,22 @@ async function createPolish(text) {
   banner('');
   const source = els.transcript.value;
   const prompt = buildPolishPrompt(text, { clinician: settings.clinician, photoCount: sendPhotos().length, drugs: settings.drugs });
-  const r = await runWorking('Polishing your notes', 'Clean notes to paste, with SOAP notes from the same words.', (signal) => askJson(prompt, signal, { images: sendPhotos(), via }));
-  const polished = String((r && r.polished) || '').replace(/^```[a-z]*\n?|```$/g, '').trim();
+  const out = String((await runWorking('Polishing your notes', 'Clean notes to paste, with SOAP notes from the same words.', (signal) => via.generate(prompt, signal, { images: sendPhotos() }))) || '');
+  // The polished notes come first as plain text, then the SOAP notes as JSON. A hiccup in the JSON only costs
+  // the SOAP notes (made again in the background), never the polished notes.
+  const tagged = out.match(/<polished>([\s\S]*?)<\/polished>/i);
+  let polished = tagged ? tagged[1] : '';
+  let r = null;
+  try {
+    r = extractJson(tagged ? out.slice(tagged.index + tagged[0].length) : out);
+  } catch {
+    r = null;
+  }
+  if (!polished && r && typeof r.polished === 'string') polished = r.polished;
+  polished = polished.replace(/^```[a-z]*\n?|```$/g, '').trim();
   if (!polished) throw new AiError('empty', '');
   // The SOAP notes came back in the same reply: keep them so "SOAP notes" opens straight away.
-  const list = normaliseResult(r);
+  const list = r ? normaliseResult(r) : [];
   for (const n of list) if (!n.visit.type) n.visit.type = NOTE_TYPES.consult.title;
   if (list.length && els.transcript.value === source) madeFrom.vet = { text: source, notes: list };
   showPolish(polished);
