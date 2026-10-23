@@ -153,6 +153,13 @@
         </label>
       </div>
       <div class="photo-list" id="photo-list" aria-label="Attached photos"></div>
+      <div class="doc-attach" data-modes="witness">
+        <label class="photo-tile doc-tile" title="Inspector's notes, earlier records or lab reports"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M12 17v-6M9 14l3-3 3 3"/></svg><span>Add documents</span>
+          <input type="file" id="add-doc" multiple class="sr-only">
+        </label>
+        <p class="help">Inspector’s notes, earlier records or lab reports (PDF, Word or text, up to 5). Claude reads them with your notes and keeps them separate from your own findings.</p>
+        <ul class="doc-list" id="doc-list" aria-label="Attached documents"></ul>
+      </div>
       <p id="interim" class="interim" aria-hidden="true"></p>
       <p class="examples" id="examples"><span class="ex-label">Not sure what to say? Try an example:</span>
         <button type="button" class="chip" data-modes="intake" id="load-intake-example">Wombat, car strike</button>

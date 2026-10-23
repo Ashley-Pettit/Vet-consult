@@ -13,12 +13,18 @@ const LOG = process.env.BAKE_LOG || '/tmp/bake-log.json';
 const regions = (process.env.REGIONS || 'vic,qld').split(',');
 const only = process.env.ONLY ? process.env.ONLY.split(',') : null;
 
+// Every example, in its own tab and in every "Use the same notes for" button it offers, so no tap from an
+// example ever needs a real call. Clinical notes also bake the "Make carer plan" step.
+const CARER_TABS = ['carer', 'intake', 'log', 'tovet', 'mop'];
+const VET_TABS = ['carer', 'vet', 'media', 'witness'];
+const clash = (a, b) => (a === 'media' && b === 'witness') || (a === 'witness' && b === 'media');
 const JOBS = [
-  ['carer', 'intake', 'INTAKE'], ['carer', 'log', 'LOG'], ['carer', 'carer', 'JOEY_CARER'], ['carer', 'tovet', 'TOVET'],
-  ['carer', 'mop', 'MOP'], ['carer', 'funding', 'FUNDING'],
-  ['vet', 'vet', 'WOMBAT_VET', { openCare: true }], ['vet', 'carer', 'WOMBAT_VET'], ['vet', 'media', 'WOMBAT_VET'],
-  ['vet', 'carer', 'VET_PLAN'], ['vet', 'vet', 'VET_PLAN'], ['vet', 'polish', 'POLISH'],
-  ['vet', 'media', 'MEDIA'], ['vet', 'witness', 'WITNESS'], ['vet', 'vet', 'WITNESS'],
+  ...[['intake', 'INTAKE'], ['log', 'LOG'], ['carer', 'JOEY_CARER'], ['tovet', 'TOVET'], ['mop', 'MOP']]
+    .flatMap(([home, ex]) => CARER_TABS.map((m) => ['carer', m, ex])),
+  ['carer', 'funding', 'FUNDING'],
+  ...[['vet', 'WOMBAT_VET'], ['carer', 'VET_PLAN'], ['media', 'MEDIA'], ['witness', 'WITNESS']]
+    .flatMap(([home, ex]) => VET_TABS.filter((m) => !clash(home, m)).map((m) => ['vet', m, ex, m === 'vet' ? { openCare: true } : {}])),
+  ['vet', 'polish', 'POLISH'],
 ].filter((j) => !only || only.includes(`${j[1]}:${j[2]}`));
 
 const existing = (await import('../src/baked-examples.js')).default;

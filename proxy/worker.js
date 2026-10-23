@@ -11,24 +11,30 @@
 
 const MODELS = new Set(['claude-sonnet-5-5', 'claude-opus-5-5', 'claude-haiku-5-5']);
 const MAX_TOKENS = 8000;
-const MAX_BODY_BYTES = 8_000_000; // up to 5 resized photos
+const MAX_BODY_BYTES = 30_000_000; // up to 5 resized photos and 5 PDFs (expert witness statements)
 const MAX_IMAGES = 5;
+const MAX_DOCS = 5;
 const IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 
-/** A plain string, or photo blocks followed by text. Nothing else gets through. */
+/** A plain string, or photo and PDF blocks followed by text. Nothing else gets through. */
 function validContent(c) {
   if (typeof c === 'string') return c.length > 0;
-  if (!Array.isArray(c) || !c.length || c.length > MAX_IMAGES + 1) return false;
+  if (!Array.isArray(c) || !c.length || c.length > MAX_IMAGES + MAX_DOCS + 1) return false;
   let images = 0;
+  let docs = 0;
   for (const b of c) {
     if (b && b.type === 'text' && typeof b.text === 'string') continue;
     if (b && b.type === 'image' && b.source && b.source.type === 'base64' && IMAGE_TYPES.has(b.source.media_type) && typeof b.source.data === 'string') {
       images++;
       continue;
     }
+    if (b && b.type === 'document' && b.source && b.source.type === 'base64' && b.source.media_type === 'application/pdf' && typeof b.source.data === 'string' && (b.title === undefined || typeof b.title === 'string')) {
+      docs++;
+      continue;
+    }
     return false;
   }
-  return images <= MAX_IMAGES && c[c.length - 1].type === 'text';
+  return images <= MAX_IMAGES && docs <= MAX_DOCS && c[c.length - 1].type === 'text';
 }
 
 function cors(origin) {

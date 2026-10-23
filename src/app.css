@@ -1208,3 +1208,15 @@ body[data-role="vet"] .mode label:has(input[value="witness"]) { order: 2; }
 /* Numbered opinions in an expert witness statement */
 .doc-sec ol.num-list { margin: 0; padding-left: 1.6em; display: grid; gap: 8px; }
 .doc-sec ol.num-list li::marker { font-weight: 700; color: var(--accent); }
+
+/* Documents for an expert witness statement */
+.doc-attach { display: grid; gap: 6px; }
+.doc-attach .help { margin: 0; font-size: 0.82rem; color: var(--muted); }
+.doc-tile[hidden] { display: none; }
+.doc-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.doc-list:empty { display: none; }
+.doc-item { display: grid; grid-template-columns: 1fr auto; grid-template-rows: auto auto; column-gap: 10px; align-items: center; padding: 8px 10px 8px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.doc-item .doc-name { font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.doc-item .doc-meta { grid-column: 1; font-size: 0.8rem; color: var(--muted); }
+.doc-item .thumb-x { grid-column: 2; grid-row: 1 / span 2; position: static; }
+.doc-item.busy { display: flex; gap: 8px; color: var(--muted); font-size: 0.88rem; }

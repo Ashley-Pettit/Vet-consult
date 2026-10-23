@@ -19,8 +19,8 @@ export function bakeKey(prompt) {
   return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
 }
 
-export function bakedReply(prompt, images = []) {
-  if (images && images.length) return null;
+export function bakedReply(prompt, images = [], documents = []) {
+  if ((images && images.length) || (documents && documents.length)) return null;
   return (BAKED.replies || {})[bakeKey(prompt)] ?? null;
 }
 
@@ -39,7 +39,7 @@ function pause(ms, signal) {
  */
 export function withBaked(p, makeCancelled) {
   const generate = async (prompt, signal, opts = {}) => {
-    const baked = bakedReply(prompt, opts.images);
+    const baked = bakedReply(prompt, opts.images, opts.documents);
     if (baked != null) {
       try {
         await pause(BAKED_DELAY_MS, signal);

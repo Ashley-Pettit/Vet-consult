@@ -44,6 +44,8 @@ export const AI_MESSAGES = {
   refused: 'Claude declined to write this note. Reword the dictation and try again.',
   cancelled: 'Stopped.',
   photos: 'The photos couldn’t be sent. Remove them and try again, or try smaller photos.',
+  pdf_connection: 'This connection can’t take PDFs yet. Attach the document as Word (.docx) or text, or add a photo of each page.',
+  pdf: 'PDFs can’t be read inside the Claude app version yet. Open the website version, or attach the document as Word (.docx) or text.',
 };
 
 export function friendly(err) {
@@ -62,9 +64,10 @@ function statusToCode(status) {
 }
 
 /** Text alone, or photos first then the text, as Messages API content blocks. */
-export function messageContent(prompt, images = []) {
-  if (!images.length) return prompt;
+export function messageContent(prompt, images = [], documents = []) {
+  if (!images.length && !documents.length) return prompt;
   return [
+    ...documents.map((d) => ({ type: 'document', title: d.name, source: { type: 'base64', media_type: d.mediaType || 'application/pdf', data: d.data } })),
     ...images.map((i) => ({ type: 'image', source: { type: 'base64', media_type: i.mediaType || 'image/jpeg', data: i.data } })),
     { type: 'text', text: prompt },
   ];
@@ -161,7 +164,7 @@ async function callMessages(url, headers, prompt, model, signal, fetchImpl, opts
   }
 }
 
-async function callOnce(url, headers, prompt, model, signal, fetchImpl, { viaProxy = false, images = [] } = {}) {
+async function callOnce(url, headers, prompt, model, signal, fetchImpl, { viaProxy = false, images = [], documents = [] } = {}) {
   if (typeof navigator !== 'undefined' && navigator.onLine === false) throw new AiError('offline', AI_MESSAGES.offline);
   const t = withTimeout(signal, CONFIG.timeoutMs);
   let res;
@@ -172,7 +175,7 @@ async function callOnce(url, headers, prompt, model, signal, fetchImpl, { viaPro
       body: JSON.stringify({
         model,
         max_tokens: CONFIG.maxTokens,
-        messages: [{ role: 'user', content: messageContent(prompt, images) }],
+        messages: [{ role: 'user', content: messageContent(prompt, images, documents) }],
         // Through the connection the reply streams in, so long care plans never sit silent and get dropped.
         ...(viaProxy ? { stream: true } : {}),
       }),
@@ -254,7 +257,8 @@ export async function resolveProvider(settings = {}, env = {}) {
         id: 'claude',
         label: 'Claude (this account)',
         images: canImages,
-        async generate(prompt, signal, { images = [] } = {}) {
+        async generate(prompt, signal, { images = [], documents = [] } = {}) {
+          if (documents.length) throw new AiError('pdf', AI_MESSAGES.pdf);
           try {
             const m = CONFIG.models.find((x) => x.id === model) || CONFIG.models[0];
             const opts = { signal, cache: false, model: m.id, modelTier: m.tier || 'default' };
@@ -277,7 +281,7 @@ export async function resolveProvider(settings = {}, env = {}) {
       id: 'proxy',
       label: 'Animal Welfare Companion connection',
       images: true,
-      generate: (prompt, signal, { images = [] } = {}) => callMessages(CONFIG.proxyUrl, {}, prompt, model, signal, fetchImpl, { viaProxy: true, images }),
+      generate: (prompt, signal, { images = [], documents = [] } = {}) => callMessages(CONFIG.proxyUrl, {}, prompt, model, signal, fetchImpl, { viaProxy: true, images, documents }),
     };
   }
 
@@ -286,7 +290,7 @@ export async function resolveProvider(settings = {}, env = {}) {
       id: 'key',
       label: 'Your API key',
       images: true,
-      generate: (prompt, signal, { images = [] } = {}) =>
+      generate: (prompt, signal, { images = [], documents = [] } = {}) =>
         callMessages(
           ANTHROPIC_URL,
           {
@@ -298,7 +302,7 @@ export async function resolveProvider(settings = {}, env = {}) {
           model,
           signal,
           fetchImpl,
-          { images },
+          { images, documents },
         ),
     };
   }

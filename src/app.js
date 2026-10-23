@@ -2,6 +2,7 @@ import { CONFIG } from './config.js';
 import { Dictation, speechErrorMessage } from './speech.js';
 import { resolveProvider, friendly, AiError, onUsage } from './ai.js';
 import { withBaked } from './baked.js';
+import { readDocument, DocError, MAX_DOCS, DOC_ACCEPT } from './docs.js';
 import { store } from './storage.js';
 import { localChecks } from './clinical.js';
 import { preparePhoto, MAX_PHOTOS } from './photos.js';
@@ -92,6 +93,7 @@ let current = 0;
 let isExample = false;
 let careSheet = null;
 let photos = [];
+let documents = []; // attached to an expert witness statement
 let plainAtRender = ''; // the clinical notes as Claude wrote them, to spot hand edits
 // Photos can be switched off in Settings to keep AI costs down.
 const sendPhotos = () => (settings.photosOn === false ? [] : photos);
@@ -155,7 +157,7 @@ function updateCreateState() {
   updateExampleNote();
   const has = els.transcript.value.trim().length > 0;
   els.create.disabled = !has || busy; // allowed while listening: it stops the mic first
-  els.clear.disabled = !has && photos.length === 0;
+  els.clear.disabled = !has && photos.length === 0 && documents.length === 0;
   els.examples.hidden = has;
   if (dictation.state === 'idle' && document.body.dataset.mic !== 'keyboard') els.micStatus.textContent = idleStatus();
 }
@@ -564,18 +566,23 @@ $('load-witness-example').addEventListener('click', () => loadExample(EXAMPLE_WI
 els.clear.addEventListener('click', () => {
   const previous = els.transcript.value;
   const prevPhotos = photos;
+  const prevDocs = documents;
   dictation.cancel();
   endKeyboardVoice();
   setTranscript('');
   photos = [];
+  documents = [];
   renderPhotos();
+  renderDocs();
   banner('');
   toast('Dictation cleared.', {
     label: 'Undo',
     run: () => {
       setTranscript(previous);
       photos = prevPhotos;
+      documents = prevDocs;
       renderPhotos();
+      renderDocs();
     },
   });
   els.mic.focus();
@@ -594,10 +601,46 @@ confirmNew.addEventListener('close', () => {
   setTranscript('');
   photos.forEach((p) => URL.revokeObjectURL(p.url));
   photos = [];
+  documents = [];
   renderPhotos();
+  renderDocs();
   banner('');
   showView('record');
   els.mic.focus();
+});
+
+/* ---------------- documents (expert witness statements) ---------------- */
+
+$('add-doc').accept = DOC_ACCEPT;
+const kb = (n) => (n >= 1048576 ? `${(n / 1048576).toFixed(1)} MB` : `${Math.max(1, Math.round(n / 1024))} KB`);
+function renderDocs() {
+  $('doc-list').replaceChildren(
+    ...documents.map((d, i) =>
+      el('li', { class: 'doc-item' }, [
+        el('span', { class: 'doc-name', text: d.name }),
+        el('span', { class: 'doc-meta', text: `${d.kind === 'pdf' ? 'PDF' : 'Text'} · ${kb(d.size)}${d.cut ? ' · long, first part used' : ''}` }),
+        el('button', { type: 'button', class: 'thumb-x', 'aria-label': `Remove ${d.name}`, onclick: () => { documents.splice(i, 1); renderDocs(); } }, '×'),
+      ]),
+    ),
+  );
+  document.querySelector('.doc-tile').hidden = documents.length >= MAX_DOCS;
+  updateCreateState();
+}
+$('add-doc').addEventListener('change', async (e) => {
+  const input = e.target;
+  const files = [...input.files].slice(0, MAX_DOCS - documents.length);
+  input.value = '';
+  for (const f of files) {
+    const busyItem = el('li', { class: 'doc-item busy', role: 'status' }, [el('span', { class: 'photo-spin', 'aria-hidden': 'true' }), `Reading ${f.name}…`]);
+    $('doc-list').append(busyItem);
+    try {
+      documents.push(await readDocument(f));
+    } catch (err) {
+      toast(err instanceof DocError ? err.message : `${f.name} couldn’t be read. Try PDF, Word (.docx) or text.`);
+    }
+    busyItem.remove();
+    renderDocs();
+  }
 });
 
 /* ---------------- photos ---------------- */
@@ -1952,11 +1995,18 @@ async function createDoc(kind, text) {
   const opts = { clinician: settings.clinician, photoCount: sendPhotos().length, sourceList: sourcesForPrompt() };
   // A media statement is from the organisation chosen in Settings (an RSPCA template makes it an RSPCA statement).
   if (kind === 'media') opts.org = mediaOrg();
+  // An expert witness statement can rely on attached documents: Word and text go in the prompt, PDFs as files.
+  const docs = kind === 'witness' ? documents : [];
+  if (docs.length) opts.documents = docs;
+  const pdfs = docs.filter((x) => x.kind === 'pdf');
   // An intake starts its care plan at the same moment, in a second call, so "Need advice right now?" is ready
   // (or nearly) by the time the record is read. Two shorter replies, so neither gets cut off.
   if (kind === 'intake') startIntakeCare();
-  const reply = await runWorking(`Writing the ${DOC_KINDS[kind].label.replace(/^[A-Z](?=[a-z])/, (x) => x.toLowerCase())}`, DOC_KINDS[kind].working, (signal) =>
-    askJson(buildDocPrompt(kind, text, opts), signal, { images: sendPhotos() }),
+  const reply = await runWorking(`Writing the ${DOC_KINDS[kind].label.replace(/^[A-Z](?=[a-z])/, (x) => x.toLowerCase())}`, docs.length ? `Reading ${docs.length === 1 ? 'your document' : `${docs.length} documents`} with your notes.` : DOC_KINDS[kind].working, (signal) =>
+    askJson(buildDocPrompt(kind, text, opts), signal, { images: sendPhotos(), documents: pdfs }).catch((e) => {
+      // A connection that doesn't take PDFs yet rejects the whole request: say that, not "check the model".
+      throw pdfs.length && e && e.code === 'bad_request' ? new AiError('pdf_connection', '') : e;
+    }),
   );
   const d = normaliseDoc(reply);
   if (!d.sections.length) throw new AiError('empty', '');
