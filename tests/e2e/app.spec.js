@@ -74,10 +74,10 @@ test.describe('dictation', () => {
     await expect(page.locator('#transcript')).toHaveValue(DICTATION);
   });
 
-  test('vet has three choices: care plan, clinical notes or quick polish', async ({ page }) => {
+  test('vet has four choices: care plan, clinical notes, quick polish or media briefing', async ({ page }) => {
     await openApp(page);
     await expect(page.locator('#types')).toHaveCount(0);
-    await expect(page.locator('#mode label:visible')).toHaveCount(3);
+    await expect(page.locator('#mode label:visible')).toHaveCount(4);
     await expect(page.getByRole('radio', { name: 'Clinical notes' })).toBeChecked();
     await expect(page.getByRole('radio', { name: 'Care plan' })).not.toBeChecked();
   });

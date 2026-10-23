@@ -1112,6 +1112,18 @@ ${wildlifeSafetyRules()}
 - Never invent doses, results or diagnoses. Record medications only as the carer said them.
 - "due": rechecks or treatments due, timing exactly as stated.`,
   },
+  media: {
+    label: 'Media briefing',
+    copy: 'Copy briefing',
+    working: 'A clear briefing for journalists, using only what you said. Written on the most thorough model.',
+    title: 'Media briefing from the vet',
+    sources: true,
+    rule: () => `The author is a vet working with ${region().org}, not a carer. Turn their spoken comments into a short media briefing that a journalist, radio host or the organisation's social media team can use straight away. Plain, warm, factual Australian English for the general public: no clinical jargon (say "broken leg", not "fractured radius"), no hype, no exclamation marks.
+- "title": a clear, factual headline (under 12 words). "subtitle": the date or place if stated.
+- Sections, in this order, leaving out any with nothing to say: "Key message" (one or two sentences: the one thing the public should take away), "What happened", "How the animal is doing" (only what the vet said, including any uncertainty about the outlook), "What the public can do" (two to four practical points from the reference sources that fit this story, for example slowing down at dawn and dusk, keeping dogs on a lead, who to call and how), "Suggested quote" (one or two sentences in the vet's voice, built only from what they actually said, headed so it's clear it needs their approval before use), "Background" (only if useful), "Keep out of the story" (sensitive details that must not be published: exact locations of threatened species or nests, private addresses, names of members of the public without their consent, graphic injury details, anything the vet said is confidential), "Media contact" (the clinician and organisation only if given).
+- NEVER invent facts, numbers, names, ages, places, dates or quotes. If a journalist would expect something that wasn't given (species confirmation, location, consent to name the finder, release date), add it to "check" instead.
+- Keep it to about 300 words outside "Keep out of the story".`,
+  },
   funding: {
     label: 'Funding submission',
     copy: 'Copy submission',

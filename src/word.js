@@ -394,7 +394,7 @@ export function docModel(d, kindLabel, note = '') {
         const pairs = items.map((x) => /^([^:]{1,40}):\s+(.+)$/.exec(x));
         if (items.length >= 3 && pairs.every(Boolean)) return { heading: s.heading, table: { head: ['Field', 'Detail'], rows: pairs.map((m) => [m[1], m[2]]), widths: [2800, PAGE_W - 2800] } };
         // The parts people must not miss stand out in a box.
-        const tone = /^text to send/i.test(s.heading) ? 'summary' : /^what the photo shows/i.test(s.heading) ? 'photo' : /straight away|urgent|emergenc/i.test(s.heading) ? 'urgent' : /keep yourself safe|within a day/i.test(s.heading) ? 'warn' : undefined;
+        const tone = /^(text to send|key message)/i.test(s.heading) ? 'summary' : /^keep out of the story/i.test(s.heading) ? 'urgent' : /^suggested quote/i.test(s.heading) ? 'warn' : /^what the photo shows/i.test(s.heading) ? 'photo' : /straight away|urgent|emergenc/i.test(s.heading) ? 'urgent' : /keep yourself safe|within a day/i.test(s.heading) ? 'warn' : undefined;
         return { heading: s.heading, text: s.text, items, tone };
       }),
       ...(d.due.length ? [{ heading: 'What’s due', table: { head: ['What', 'When'], rows: d.due.map((x) => [x.what, x.when ? dueLabel(x.when) : '']), widths: [5800, PAGE_W - 5800] } }] : []),

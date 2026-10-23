@@ -848,12 +848,13 @@ async function askJson(prompt0, signal, opts = {}) {
 }
 
 const mode = () => document.querySelector('input[name="mode"]:checked')?.value || 'vet';
-const MODES = ['intake', 'log', 'carer', 'tovet', 'mop', 'funding', 'vet', 'polish'];
-const ROLE_MODES = { carer: ['carer', 'intake', 'log', 'tovet', 'mop', 'funding'], vet: ['carer', 'vet', 'polish'] };
+const MODES = ['intake', 'log', 'carer', 'tovet', 'mop', 'funding', 'vet', 'polish', 'media'];
+const ROLE_MODES = { carer: ['carer', 'intake', 'log', 'tovet', 'mop', 'funding'], vet: ['carer', 'vet', 'polish', 'media'] };
 
 // Every dictation box ends with the reassurance about typos (in the placeholder, so it adds nothing to the screen).
 const TYPO_NOTE = ' Typos and misheard words are fine. The AI sorts them out.';
 const MODE_TEXT = {
+  media: { button: 'Create briefing', placeholder: 'The animal, what happened, how it is doing, the message for the public, and anything that must stay private.' },
   polish: { button: 'Polish notes', placeholder: 'Type or say your notes as you would jot them. Shorthand is fine.' },
   vet: { button: 'Create notes', placeholder: 'Your words appear here as you talk. You can also type or fix anything.' },
   carer: { button: 'Create care plan', placeholder: 'Describe the animal, its condition, medications and anything the carer needs to know.' },
@@ -951,6 +952,8 @@ async function createNote() {
   try {
     if (mode() === 'polish') return await createPolish(finalText);
     if (mode() === 'carer') return await createCarePlan(finalText);
+    // Media briefings go out in public: always the most thorough model.
+    if (mode() === 'media') return await withModel(BEST_MODEL, () => createDoc('media', finalText));
     if (DOC_KINDS[mode()]) return await createDoc(mode(), finalText);
     if (!(await ensureProvider())) {
       if (finalText === EXAMPLE_DICTATION.trim()) return showNotes([normaliseNote(EXAMPLE_NOTE)], true);
@@ -1981,6 +1984,7 @@ const MAKE_ICONS = {
   tovet: '<path d="M6 3v6a4 4 0 0 0 8 0V3"/><path d="M10 13v3a4 4 0 0 0 8 0v-2"/><circle cx="18" cy="12" r="2"/>',
   vet: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/>',
   mop: '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/>',
+  media: '<path d="M3 10v4h3l6 4V6L6 10z"/><path d="M16 9a4 4 0 0 1 0 6M19 6a8 8 0 0 1 0 12"/>',
 };
 const svgIcon = (inner) => {
   const t = document.createElement('template');
@@ -1989,7 +1993,7 @@ const svgIcon = (inner) => {
 };
 function renderMakeNext(box, current) {
   // A vet flicks between the carer plan and clinical notes from the same words, to copy either into their system.
-  const pool = settings.role === 'vet' ? [['carer', 'Carer plan'], ['vet', 'Clinical notes']] : MAKE_NEXT;
+  const pool = settings.role === 'vet' ? [['carer', 'Carer plan'], ['vet', 'Clinical notes'], ['media', 'Media briefing']] : MAKE_NEXT;
   const options = current && current !== 'funding' ? pool.filter(([m]) => m !== current) : [];
   box.hidden = !options.length;
   if (!options.length) return box.replaceChildren();

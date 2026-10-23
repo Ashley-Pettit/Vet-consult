@@ -84,3 +84,28 @@ test('Quick polish: fast tidy-up ready to copy, with SOAP notes made in the back
   expect(calls).toHaveLength(2); // the polish, then the SOAP notes in the background; nothing more on opening them
   expect(calls.every((c) => c.body.model === 'claude-haiku-5-5')).toBe(true);
 });
+
+test('Media briefing: always on the most thorough model, with what to keep out of the story', async ({ page }) => {
+  const calls = await mockApi(page, {
+    body: () => textReply({
+      title: 'Wombat recovering after car strike near Kilcunda', subtitle: '',
+      sections: [
+        { heading: 'Key message', text: 'Slow down at dusk on the Bass Highway.' },
+        { heading: 'How the animal is doing', items: ['Bright and eating; mange treatment under way'] },
+        { heading: 'Keep out of the story', items: ['The exact burrow location'] },
+      ],
+      due: [], check: ['Consent to name the motorist?'],
+    }),
+  });
+  await asVet(page);
+  await openApp(page);
+  await page.locator('#mode label', { hasText: 'Media' }).click();
+  await expect(page.locator('#create')).toHaveText('Create briefing');
+  await page.locator('#transcript').fill('Wombat hit on the Bass Highway near Kilcunda, recovering well, slow down at dusk, keep the burrow location private.');
+  await page.locator('#create').click();
+  await expect(page.locator('#view-doc')).toBeVisible();
+  await expect(page.locator('#doc-title')).toContainText('Wombat recovering');
+  await expect(page.locator('#view-doc')).toContainText('Keep out of the story');
+  expect(calls[0].body.model).toBe('claude-opus-5-5');
+  expect(calls[0].prompt).toMatch(/media briefing/);
+});
