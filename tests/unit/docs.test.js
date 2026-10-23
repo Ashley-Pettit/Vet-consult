@@ -126,8 +126,13 @@ test('media statement: no RSPCA unless the vet says it', async () => {
   const { buildDocPrompt } = await import('../../src/note.js');
   const { setRegion } = await import('../../src/region.js');
   setRegion('qld');
-  const p = buildDocPrompt('media', 'Koala season warning in Logan');
-  assert.match(p, /Never mention the RSPCA unless the vet did/);
+  const p = buildDocPrompt('media', 'Koala season warning in Logan', { org: '' });
+  assert.match(p, /Never mention the RSPCA unless the author did/);
+  assert.match(p, /write "\[Organisation\]"/);
+  // RSPCA staff (the RSPCA template): the statement is from the RSPCA.
+  const r = buildDocPrompt('media', 'Koala season warning in Logan', { org: 'RSPCA Queensland' });
+  assert.match(r, /The statement is from RSPCA Queensland/);
+  assert.doesNotMatch(r, /Never mention the RSPCA/);
   assert.match(p, /just say to call a local wildlife rescue group or vet/);
   setRegion('vic');
   assert.doesNotMatch(buildDocPrompt('media', 'Wombat warning'), /run by the RSPCA/);

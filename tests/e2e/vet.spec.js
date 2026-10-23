@@ -109,3 +109,19 @@ test('Media statement: a draft media release, always on the most thorough model,
   expect(calls[0].body.model).toBe('claude-opus-5-5');
   expect(calls[0].prompt).toMatch(/draft news statement \(media release\)/);
 });
+
+test('Media statement comes from the organisation in Settings: RSPCA staff get an RSPCA statement', async ({ page }) => {
+  const calls = await mockApi(page, { body: () => textReply({ title: 'Koala season warning', subtitle: '', sections: [{ heading: 'Statement', text: 'Koalas are on the move.' }], due: [], check: [] }) });
+  await asVet(page);
+  await page.addInitScript(() => {
+    const s = JSON.parse(localStorage.getItem('css.settings') || '{}');
+    localStorage.setItem('css.settings', JSON.stringify({ ...s, template: 'rspca', region: 'qld', mode: 'media' }));
+    localStorage.setItem('css.rspca', 'true');
+  });
+  await openApp(page);
+  await expect(page.locator('#media-from-text')).toContainText('RSPCA Queensland');
+  await page.locator('#transcript').fill('Koala breeding season warning for Logan drivers.');
+  await page.locator('#create').click();
+  await expect(page.locator('#view-doc')).toBeVisible();
+  expect(calls[0].prompt).toMatch(/The statement is from RSPCA Queensland/);
+});

@@ -261,6 +261,13 @@ Reply with ONLY one JSON object in this shape:
 ${CARE_SHAPE}` : ''}`;
 }
 
+/** Who the media statement is from: the organisation the author names, else the one chosen in Settings. */
+function mediaOrgLine(org) {
+  return org
+    ? `The author works for ${org} (a vet or staff member). The statement is from ${org}, unless the author names a different organisation they speak for, in which case use theirs.`
+    : 'The author is a vet or staff member at an animal welfare or wildlife organisation. Use the organisation they name; if they don\'t name one, write "[Organisation]" wherever the name is needed and add a check asking for it.';
+}
+
 /** Quick polish: the vet's own notes, tidied into clean notes ready to paste into the practice system. Plain text back. */
 export function buildPolishPrompt(notes, { drugs = '' } = {}) {
   return `You are a fast scribe for a vet in ${region().name}. Turn the vet's typed or dictated notes below into clean clinical notes, ready to paste straight into a practice management (CRM) system.
@@ -1123,13 +1130,13 @@ ${wildlifeSafetyRules()}
     working: 'A draft statement for the media, using only what you said. Written on the most thorough model.',
     title: 'Draft media statement from the vet',
     sources: true,
-    rule: () => `The author is a vet working with ${region().org}, not a carer. Turn their spoken comments into a draft news statement (media release) the organisation could send to journalists or post as an announcement, in the style of a media release from an animal welfare organisation or wildlife hospital. Never mention the RSPCA unless the vet did. Name other organisations or people only if the vet named them, except the state wildlife emergency line in "What the public can do"${region().code === 'qld' ? ' (in Queensland that line is run by the RSPCA, so unless the vet mentioned the RSPCA, just say to call a local wildlife rescue group or vet)' : ''}. The organisation is ${region().org}. It may be about a case, an animal welfare issue, a seasonal warning, an appeal or an organisation announcement. Plain, warm, factual Australian English for the general public: no clinical jargon (say "broken leg", not "fractured radius"), no hype, no exclamation marks.
+    rule: (o = {}) => `${mediaOrgLine(o.org)} Turn their spoken comments into a draft news statement (media release) the organisation could send to journalists or post as an announcement, in the style of a media release from an animal welfare organisation or wildlife hospital. ${/rspca/i.test(o.org || '') ? 'Name other organisations or people only if the author named them, except the state wildlife emergency line in "What the public can do".' : `Never mention the RSPCA unless the author did. Name other organisations or people only if the author named them, except the state wildlife emergency line in "What the public can do"${region().code === 'qld' ? ' (in Queensland that line is run by the RSPCA, so unless the author mentioned the RSPCA, just say to call a local wildlife rescue group or vet)' : ''}.`} It may be about a case, an animal welfare issue, a seasonal warning, an appeal or an organisation announcement. Plain, warm, factual Australian English for the general public: no clinical jargon (say "broken leg", not "fractured radius"), no hype, no exclamation marks.
 - "title": the headline: clear and factual, under 12 words. "subtitle": "Media statement" plus the date or place if stated.
 - Sections, in this order, leaving out any with nothing to say:
   - "Statement": the release itself as 3 to 5 short paragraphs in "text", separated by blank lines. The first paragraph says who, what, where and when in one or two sentences; then the detail, including how any animal is doing (only what the vet said, with any uncertainty); then why it matters to the public.
-  - "Quote": one or two sentences in the vet's voice, built only from what they actually said, attributed to them by name and role if given (for example "Dr Sam Lee, veterinarian"). Write it so it can be dropped straight into the release.
+  - "Quote": one or two sentences in the vet's voice, built only from what they actually said, attributed to them by name and role if given (for example "Dr Sam Lee, senior veterinarian"); if no name was given, write "[Name], [role]" and add a check. Write it so it can be dropped straight into the release.
   - "What the public can do": two to four practical points from the reference sources that fit this statement, for example slowing down at dawn and dusk, keeping cats in at night, who to call and how.
-  - "About the organisation": one or two sentences, only from facts given in the comments or in these rules (${region().org}). Never invent history, numbers or awards.
+  - "About the organisation": one or two sentences, only from facts given in the comments or in these rules. Never invent history, numbers or awards; if nothing is known about the organisation beyond its name, leave this section out.
   - "Media contact": the person and contact details only if given.
   - "Not for publication": notes for the vet only, such as details that must stay out (exact locations of threatened species or nests, private addresses, names of members of the public without consent, graphic injury details) and anything the vet said was confidential.
 - NEVER invent facts, numbers, names, ages, places, dates or quotes. Anything a journalist would expect that wasn't given (spokesperson name, species confirmation, consent to name a member of the public, release date) goes in "check" instead.
@@ -1157,7 +1164,7 @@ export function buildDocPrompt(kind, dictation, opts = {}) {
   const clinician = opts.clinician ? `The carer is ${String(opts.clinician).slice(0, 80)}.\n` : '';
   const photos = photoLookRule(opts.photoCount, 'doc');
   return `You are a scribe for a wildlife carer at ${region().org}. Turn the carer's spoken comments into this document: ${k.title}.
-${typeof k.rule === 'function' ? k.rule() : k.rule}${k.sources && opts.sourceList ? `\nReference sources (id | scope | title | key points), most important first:\n${opts.sourceList}\n` : ''}
+${typeof k.rule === 'function' ? k.rule(opts) : k.rule}${k.sources && opts.sourceList ? `\nReference sources (id | scope | title | key points), most important first:\n${opts.sourceList}\n` : ''}
 ${clinician}${photos}General rules:
 - Australian English and metric units. Positive, plain wording: describe what is known; never point out what wasn't said.
 - NEVER invent findings, values, doses, dates, names or numbers. Leave out what was not said.

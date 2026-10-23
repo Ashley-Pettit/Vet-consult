@@ -922,7 +922,13 @@ $('open-funding').addEventListener('click', () => {
   els.mic.focus();
 });
 
+// Media tab: who the statement will be from (the template in Settings), with a quick way to change it.
+function updateMediaFrom() {
+  const org = mediaOrg();
+  $('media-from-text').textContent = `Statement from: ${org ? org.split(',')[0] : 'your organisation (choose it in Settings, or say it)'}`;
+}
 function applyMode() {
+  updateMediaFrom();
   const m = mode();
   document.body.dataset.mode = m;
   els.create.textContent = MODE_TEXT[m].button;
@@ -1949,6 +1955,8 @@ async function createDoc(kind, text) {
   }
   banner('');
   const opts = { clinician: settings.clinician, photoCount: sendPhotos().length, sourceList: sourcesForPrompt() };
+  // A media statement is from the organisation chosen in Settings (an RSPCA template makes it an RSPCA statement).
+  if (kind === 'media') opts.org = mediaOrg();
   // An intake starts its care plan at the same moment, in a second call, so "Need advice right now?" is ready
   // (or nearly) by the time the record is read. Two shorter replies, so neither gets cut off.
   if (kind === 'intake') startIntakeCare();
@@ -2084,6 +2092,13 @@ function startVetNotes(via = provider) {
   pendingVetNotes = { text, promise };
 }
 
+function mediaOrg() {
+  const t = settings.template === 'rspca' && store.rspcaUnlocked() ? 'rspca' : settings.template || 'bunurong';
+  if (t === 'rspca') return region().code === 'qld' ? 'RSPCA Queensland' : 'RSPCA Victoria';
+  if (t === 'bunurong') return 'Bunurong Wildlife Care, a registered wildlife shelter and charity in Inverloch, Victoria';
+  return '';
+}
+
 /* ---------------- Quick polish (vets): fast tidy-up, SOAP notes in the background ---------------- */
 
 // Quick polish always uses the fast model, whatever is chosen in Settings.
@@ -2152,6 +2167,7 @@ $('polish-soap').addEventListener('click', async () => {
   }
 });
 $('polish-back').addEventListener('click', () => showView('record'));
+$('media-from-change').addEventListener('click', () => openSettings());
 
 $('discharge-pack').addEventListener('click', async (e) => {
   if (!careSheet) return;
@@ -2375,6 +2391,7 @@ els.settings.addEventListener('close', async () => {
   store.saveSettings(settings);
   provider = null;
   renderPhotos();
+  updateMediaFrom();
   if (key && !/^sk-ant-/.test(key)) toast('Saved, but that doesn’t look like an Anthropic key. Keys start with sk-ant-.');
   else toast('Settings saved.');
 });

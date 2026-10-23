@@ -1191,3 +1191,6 @@ body[data-role="vet"] .mode label:has(input[value="polish"]), body[data-role="ve
 .doc-sec.tone-urgent { background: var(--err-soft); border-color: var(--err); }
 .doc-sec.tone-warn { background: var(--warn-soft); border-color: var(--warn); }
 .doc-sec p + p { margin-top: 10px; }
+
+.media-from { margin: -6px 0 0; font-size: 0.88rem; color: var(--muted); }
+.media-from span { font-weight: 650; color: var(--ink); }
