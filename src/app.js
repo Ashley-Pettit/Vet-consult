@@ -824,12 +824,13 @@ async function askJson(prompt0, signal, opts = {}) {
 }
 
 const mode = () => document.querySelector('input[name="mode"]:checked')?.value || 'vet';
-const MODES = ['intake', 'log', 'carer', 'tovet', 'mop', 'funding', 'vet', 'polish', 'media'];
-const ROLE_MODES = { carer: ['carer', 'intake', 'log', 'tovet', 'mop', 'funding'], vet: ['carer', 'vet', 'polish', 'media'] };
+const MODES = ['intake', 'log', 'carer', 'tovet', 'mop', 'funding', 'vet', 'polish', 'media', 'witness'];
+const ROLE_MODES = { carer: ['carer', 'intake', 'log', 'tovet', 'mop', 'funding'], vet: ['carer', 'vet', 'polish', 'media', 'witness'] };
 
 // Every dictation box ends with the reassurance about typos (in the placeholder, so it adds nothing to the screen).
 const TYPO_NOTE = ' Typos and misheard words are fine. The AI sorts them out.';
 const MODE_TEXT = {
+  witness: { button: 'Draft witness statement', placeholder: 'The animal and how it came to you, when and where you examined it, what you found (body condition, weight, wounds, parasites, behaviour), any tests and treatment, and your opinion: its welfare, pain or suffering, likely cause and how long it had been going on. Add your name and qualifications.' },
   media: { button: 'Draft statement', placeholder: 'What you want to announce: the case or issue, what happened, how the animal is doing, what you want the public to do, who to quote, and anything that must stay private.' },
   polish: { button: 'Polish notes', placeholder: 'Type or say your notes as you would jot them. Shorthand is fine.' },
   vet: { button: 'Create notes', placeholder: 'Your words appear here as you talk. You can also type or fix anything.' },
@@ -1913,6 +1914,7 @@ function showDoc(d, kind, info = '') {
   madeFrom[kind] = { text: els.transcript.value, d, info };
   renderDoc(d, kind);
   if (kind === 'media' && !info) info = 'Draft for review. Nothing here is public until it has been checked and approved.';
+  if (kind === 'witness' && !info) info = 'Draft only. Check every fact and opinion against your records before you sign it.';
   $('doc-banner').textContent = info;
   $('doc-banner').hidden = !info;
   showView('doc');
@@ -1951,7 +1953,7 @@ function docWordModel() {
     const v = mopVideo(d);
     return docModel(d, 'Care instructions until help arrives', aiNoteFor(d.title), { forPublic: true, video: v ? { ...v, url: watchUrl(v) } : null });
   }
-  return docModel(d, kind === 'media' ? 'Draft media statement, for review' : DOC_KINDS[kind].label, '');
+  return docModel(d, kind === 'media' ? 'Draft media statement, for review' : kind === 'witness' ? 'Draft expert witness statement' : DOC_KINDS[kind].label, '');
 }
 $('doc-back').addEventListener('click', () => showView('record'));
 $('doc-copy').addEventListener('click', () => {
@@ -1985,6 +1987,7 @@ const MAKE_ICONS = {
   vet: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/>',
   mop: '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/>',
   media: '<path d="M3 10v4h3l6 4V6L6 10z"/><path d="M16 9a4 4 0 0 1 0 6M19 6a8 8 0 0 1 0 12"/>',
+  witness: '<path d="M12 3v18M8 21h8M5 7h14"/><path d="M5 7l-3 7a3 3 0 0 0 6 0zM19 7l-3 7a3 3 0 0 0 6 0z"/>',
 };
 const svgIcon = (inner) => {
   const t = document.createElement('template');
@@ -1993,7 +1996,7 @@ const svgIcon = (inner) => {
 };
 function renderMakeNext(box, current) {
   // A vet flicks between the carer plan and clinical notes from the same words, to copy either into their system.
-  const pool = settings.role === 'vet' ? [['carer', 'Carer plan'], ['vet', 'Clinical notes'], ['media', 'Media statement']] : MAKE_NEXT;
+  const pool = settings.role === 'vet' ? [['carer', 'Carer plan'], ['vet', 'Clinical notes'], ['media', 'Media statement'], ['witness', 'Expert witness statement']] : MAKE_NEXT;
   const options = current && current !== 'funding' ? pool.filter(([m]) => m !== current) : [];
   box.hidden = !options.length;
   if (!options.length) return box.replaceChildren();

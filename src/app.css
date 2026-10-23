@@ -1174,6 +1174,12 @@ body[data-kb="open"] .tx-hint { display: none; }
 
 /* Vet tabs: Notes, Care plan, then the two quick tools */
 body[data-role="vet"] .mode label:has(input[value="polish"]), body[data-role="vet"] .mode label:has(input[value="media"]) { order: 1; }
+body[data-role="vet"] .mode label:has(input[value="witness"]) { order: 2; }
+/* Five vet tabs: keep the short labels until there's room for the long ones */
+@media (min-width: 640px) and (max-width: 1199px) {
+  body[data-role="vet"] .mode .sm { display: inline; }
+  body[data-role="vet"] .mode .lg { display: none; }
+}
 
 /* Doc sections that must not be missed */
 .doc-sec.tone-key, .doc-sec.tone-urgent, .doc-sec.tone-warn { border-radius: 10px; padding: 10px 12px; border-left: 4px solid; }

@@ -88,7 +88,7 @@ export const store = {
       template: ['bunurong', 'plain', 'rspca'].includes(s.template) ? s.template : 'bunurong',
       model: typeof s.model === 'string' ? s.model : '',
       noteType: typeof s.noteType === 'string' ? s.noteType : 'consult',
-      mode: ['vet', 'carer', 'intake', 'log', 'tovet', 'mop', 'funding', 'polish', 'media'].includes(s.mode) ? s.mode : 'carer',
+      mode: ['vet', 'carer', 'intake', 'log', 'tovet', 'mop', 'funding', 'polish', 'media', 'witness'].includes(s.mode) ? s.mode : 'carer',
       role: s.role === 'vet' ? 'vet' : 'carer',
       region: s.region === 'qld' ? 'qld' : 'vic',
       rememberKey: Boolean(s.rememberKey),
