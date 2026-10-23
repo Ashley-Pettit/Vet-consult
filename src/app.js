@@ -885,18 +885,18 @@ const MODES = ['intake', 'log', 'carer', 'tovet', 'mop', 'funding', 'vet', 'poli
 const ROLE_MODES = { carer: ['carer', 'intake', 'log', 'tovet', 'mop', 'funding'], vet: ['carer', 'vet', 'polish', 'media', 'witness'] };
 
 // Every dictation box ends with the reassurance about typos (in the placeholder, so it adds nothing to the screen).
-const TYPO_NOTE = ' Typos and misheard words are fine. The AI sorts them out.';
+const TYPO_NOTE = ' Typos are fine.';
 const MODE_TEXT = {
-  witness: { button: 'Draft witness statement', placeholder: 'The animal and how it came to you, when and where you examined it, what you found (body condition, weight, wounds, parasites, behaviour), any tests and treatment, and your opinion: its welfare, pain or suffering, likely cause and how long it had been going on. Add your name and qualifications.' },
-  media: { button: 'Draft statement', placeholder: 'What you want to announce: the case or issue, what happened, how the animal is doing, what you want the public to do, who to quote, and anything that must stay private.' },
-  polish: { button: 'Polish notes', placeholder: 'Type or say your notes as you would jot them. Shorthand is fine.' },
-  vet: { button: 'Create notes', placeholder: 'Your words appear here as you talk. You can also type or fix anything.' },
-  carer: { button: 'Create care plan', placeholder: 'Describe the animal, its condition, medications and anything the carer needs to know.' },
-  intake: { button: 'Create record', placeholder: 'Wildlife Victoria case number, the animal, exactly where it was found, its condition and what you did.' },
-  log: { button: 'Create log', placeholder: 'The animal, weight, feeds, medications given, toileting, behaviour and anything you’re watching.' },
-  funding: { button: 'Create draft', placeholder: 'The funder, what you need and why, costs, numbers of animals and volunteers, timeline and how you’ll measure success.' },
-  mop: { button: 'Create MOP plan', placeholder: 'The caller, the animal and its condition, any injuries, exactly where it was found, what they have at home, and which vet or shelter it is going to and when.' },
-  tovet: { button: 'Create summary', placeholder: 'The animal, its history in care, what you’ve noticed, current meds and your questions.' },
+  witness: { button: 'Draft witness statement', placeholder: 'Your exam, findings and opinion, plus your name and qualifications.' },
+  media: { button: 'Draft statement', placeholder: 'The story, how the animal is doing, and what the public should do.' },
+  polish: { button: 'Polish notes', placeholder: 'Jot your notes. Shorthand is fine.' },
+  vet: { button: 'Create notes', placeholder: 'Talk or type the consult.' },
+  carer: { button: 'Create care plan', placeholder: 'The animal, its condition, meds and care needs.' },
+  intake: { button: 'Create record', placeholder: 'Case number, the animal, where it was found and its condition.' },
+  log: { button: 'Create log', placeholder: 'Weight, feeds, meds, toileting and behaviour.' },
+  funding: { button: 'Create draft', placeholder: 'The funder, what you need and why, and the costs.' },
+  mop: { button: 'Create MOP plan', placeholder: 'The animal, its condition, where it was found and where it’s going.' },
+  tovet: { button: 'Create summary', placeholder: 'The animal, what you’ve noticed and your questions.' },
 };
 
 // Carer or vet, chosen with the switch at the top and remembered. Carers see their four tools; vets see care plan and notes.
