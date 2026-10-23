@@ -1872,7 +1872,11 @@ function mopVideo(d) {
   return videoForTags(groupsIn(text), text);
 }
 
+// Numbered items (the opinions in an expert witness statement) show as a numbered list, not bullets with numbers.
+const NUMBERED = /^\d+[.)]\s+/;
+const docList = (items) => (items.length > 1 && items.every((x) => NUMBERED.test(x)) ? el('ol', { class: 'num-list' }, items.map((x) => el('li', { text: x.replace(NUMBERED, '') }))) : list(items));
 function renderDoc(d, kind) {
+  document.querySelector('#doc-checks .sum-title').textContent = kind === 'witness' ? 'Review before signing' : 'Review before sending';
   $('doc-title').textContent = d.title || DOC_KINDS[kind].label;
   $('doc-subtitle').textContent = d.subtitle;
   $('doc-subtitle').hidden = !d.subtitle;
@@ -1885,7 +1889,7 @@ function renderDoc(d, kind) {
     ...(kind === 'mop' ? [el('p', { class: 'ai-disclaimer', text: aiNoteFor(d.title) })] : []),
     ...d.sections.filter((s) => !(TEXT_HEADING[kind] && TEXT_HEADING[kind].test(s.heading))).map((s) =>
       // The parts that must not be missed stand out, as in the Word printout.
-      el('section', { class: `doc-sec${/^(text to send)/i.test(s.heading) ? ' tone-key' : /^(not for publication|keep out of the story)|straight away/i.test(s.heading) ? ' tone-urgent' : /^quote$|^suggested quote|keep yourself safe/i.test(s.heading) ? ' tone-warn' : ''}` }, [el('h2', { text: s.heading }), ...(s.text ? s.text.split(/\n\s*\n|\n/).filter((x) => x.trim()).map((x) => el('p', { text: x.trim() })) : [list(s.items)])]),
+      el('section', { class: `doc-sec${/^(text to send)/i.test(s.heading) ? ' tone-key' : /^(not for publication|keep out of the story)|straight away/i.test(s.heading) ? ' tone-urgent' : /^quote$|^suggested quote|keep yourself safe/i.test(s.heading) ? ' tone-warn' : ''}` }, [el('h2', { text: s.heading }), ...(s.text ? s.text.split(/\n\s*\n|\n/).filter((x) => x.trim()).map((x) => el('p', { text: x.trim() })) : [docList(s.items)])]),
     ),
     ...(kind === 'mop' && mopVideo(d) ? [videoSection(mopVideo(d))] : []), // no video: nothing, not the word "null"
     ...(d.due.length
@@ -1997,7 +2001,8 @@ const svgIcon = (inner) => {
 function renderMakeNext(box, current) {
   // A vet flicks between the carer plan and clinical notes from the same words, to copy either into their system.
   const pool = settings.role === 'vet' ? [['carer', 'Carer plan'], ['vet', 'Clinical notes'], ['media', 'Media statement'], ['witness', 'Expert witness statement']] : MAKE_NEXT;
-  const options = current && current !== 'funding' ? pool.filter(([m]) => m !== current) : [];
+  // A statement for a prosecution and a media statement don't mix: neither offers the other.
+  const options = current && current !== 'funding' ? pool.filter(([m]) => m !== current && !(current === 'witness' && m === 'media') && !(current === 'media' && m === 'witness')) : [];
   box.hidden = !options.length;
   if (!options.length) return box.replaceChildren();
   box.replaceChildren(
@@ -2128,7 +2133,7 @@ function watchSoap() {
   const text = els.transcript.value;
   const ready = () => {
     btn.dataset.state = 'ready';
-    $('polish-soap-text').textContent = 'Open SOAP notes';
+    $('polish-soap-text').textContent = 'SOAP notes';
     $('polish-soap-help').textContent = 'SOAP notes are ready.';
   };
   btn.dataset.state = 'working';

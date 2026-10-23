@@ -95,6 +95,12 @@ function callout(b) {
 const para = (text) => new Paragraph({ spacing: { after: 120, line: 312 }, children: [run(text)] });
 const check = (text) => new Paragraph({ spacing: { after: 80, line: 288 }, indent: { left: 120 }, children: [new TextRun({ text: '☐  ', font: 'Segoe UI Symbol', size: 26, color: '7A847A' }), run(text)] });
 const bullet = (text) => new Paragraph({ numbering: { reference: 'dots', level: 0 }, spacing: { after: 70, line: 300 }, children: [run(text)] });
+// An item that already carries its number ("1. In my opinion…") keeps it, with a hanging indent instead of a bullet.
+const numbered = (text) => {
+  const m = String(text).match(/^(\d+[.)])\s+([\s\S]*)$/);
+  return new Paragraph({ indent: { left: 400, hanging: 400 }, spacing: { after: 90, line: 300 }, children: [run(`${m[1]}\t`, { bold: true }), run(m[2])], tabStops: [{ type: 'left', position: 400 }] });
+};
+const itemPara = (text) => (/^\d+[.)]\s+/.test(String(text)) ? numbered(text) : bullet(text));
 
 function cell(text, { head = false, width, shade } = {}) {
   return new TableCell({
@@ -216,7 +222,7 @@ export async function buildWord(model, { preparedBy = '', date = new Date(), tem
     body.push(heading(b.heading));
     if (b.note && b.noteFirst) body.push(new Paragraph({ spacing: { after: 80 }, children: [run(b.note, { italics: true, color: TERRA, size: 19 })] }));
     if (b.text) String(b.text).split(/\n+/).forEach((t) => body.push(para(t)));
-    if (b.items) b.items.forEach((t) => body.push(bullet(t)));
+    if (b.items) b.items.forEach((t) => body.push(itemPara(t)));
     if (b.checks) b.checks.forEach((t) => body.push(check(t)));
     if (b.table) body.push(table(b.table.head, b.table.rows, b.table.widths), new Paragraph({ spacing: { after: 60 }, children: [] }));
     if (b.labels) b.labels.forEach((l) => body.push(medLabel(l), new Paragraph({ spacing: { after: 120 }, children: [] })));
