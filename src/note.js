@@ -1113,16 +1113,22 @@ ${wildlifeSafetyRules()}
 - "due": rechecks or treatments due, timing exactly as stated.`,
   },
   media: {
-    label: 'Media briefing',
-    copy: 'Copy briefing',
-    working: 'A clear briefing for journalists, using only what you said. Written on the most thorough model.',
-    title: 'Media briefing from the vet',
+    label: 'Media statement',
+    copy: 'Copy statement',
+    working: 'A draft statement for the media, using only what you said. Written on the most thorough model.',
+    title: 'Draft media statement from the vet',
     sources: true,
-    rule: () => `The author is a vet working with ${region().org}, not a carer. Turn their spoken comments into a short media briefing that a journalist, radio host or the organisation's social media team can use straight away. Plain, warm, factual Australian English for the general public: no clinical jargon (say "broken leg", not "fractured radius"), no hype, no exclamation marks.
-- "title": a clear, factual headline (under 12 words). "subtitle": the date or place if stated.
-- Sections, in this order, leaving out any with nothing to say: "Key message" (one or two sentences: the one thing the public should take away), "What happened", "How the animal is doing" (only what the vet said, including any uncertainty about the outlook), "What the public can do" (two to four practical points from the reference sources that fit this story, for example slowing down at dawn and dusk, keeping dogs on a lead, who to call and how), "Suggested quote" (one or two sentences in the vet's voice, built only from what they actually said, headed so it's clear it needs their approval before use), "Background" (only if useful), "Keep out of the story" (sensitive details that must not be published: exact locations of threatened species or nests, private addresses, names of members of the public without their consent, graphic injury details, anything the vet said is confidential), "Media contact" (the clinician and organisation only if given).
-- NEVER invent facts, numbers, names, ages, places, dates or quotes. If a journalist would expect something that wasn't given (species confirmation, location, consent to name the finder, release date), add it to "check" instead.
-- Keep it to about 300 words outside "Keep out of the story".`,
+    rule: () => `The author is a vet working with ${region().org}, not a carer. Turn their spoken comments into a draft news statement (media release) the organisation could send to journalists or post as an announcement, in the style of an RSPCA or wildlife hospital media release. It may be about a case, an animal welfare issue, a seasonal warning, an appeal or an organisation announcement. Plain, warm, factual Australian English for the general public: no clinical jargon (say "broken leg", not "fractured radius"), no hype, no exclamation marks.
+- "title": the headline: clear and factual, under 12 words. "subtitle": "Media statement" plus the date or place if stated.
+- Sections, in this order, leaving out any with nothing to say:
+  - "Statement": the release itself as 3 to 5 short paragraphs in "text", separated by blank lines. The first paragraph says who, what, where and when in one or two sentences; then the detail, including how any animal is doing (only what the vet said, with any uncertainty); then why it matters to the public.
+  - "Quote": one or two sentences in the vet's voice, built only from what they actually said, attributed to them by name and role if given (for example "Dr Sam Lee, veterinarian"). Write it so it can be dropped straight into the release.
+  - "What the public can do": two to four practical points from the reference sources that fit this statement, for example slowing down at dawn and dusk, keeping cats in at night, who to call and how.
+  - "About the organisation": one or two sentences, only from facts given in the comments or in these rules (${region().org}). Never invent history, numbers or awards.
+  - "Media contact": the person and contact details only if given.
+  - "Not for publication": notes for the vet only, such as details that must stay out (exact locations of threatened species or nests, private addresses, names of members of the public without consent, graphic injury details) and anything the vet said was confidential.
+- NEVER invent facts, numbers, names, ages, places, dates or quotes. Anything a journalist would expect that wasn't given (spokesperson name, species confirmation, consent to name a member of the public, release date) goes in "check" instead.
+- Keep the statement and quote to about 300 words.`,
   },
   funding: {
     label: 'Funding submission',

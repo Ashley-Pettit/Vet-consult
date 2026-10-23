@@ -854,7 +854,7 @@ const ROLE_MODES = { carer: ['carer', 'intake', 'log', 'tovet', 'mop', 'funding'
 // Every dictation box ends with the reassurance about typos (in the placeholder, so it adds nothing to the screen).
 const TYPO_NOTE = ' Typos and misheard words are fine. The AI sorts them out.';
 const MODE_TEXT = {
-  media: { button: 'Create briefing', placeholder: 'The animal, what happened, how it is doing, the message for the public, and anything that must stay private.' },
+  media: { button: 'Draft statement', placeholder: 'What you want to announce: the case or issue, what happened, how the animal is doing, what you want the public to do, who to quote, and anything that must stay private.' },
   polish: { button: 'Polish notes', placeholder: 'Type or say your notes as you would jot them. Shorthand is fine.' },
   vet: { button: 'Create notes', placeholder: 'Your words appear here as you talk. You can also type or fix anything.' },
   carer: { button: 'Create care plan', placeholder: 'Describe the animal, its condition, medications and anything the carer needs to know.' },
@@ -952,7 +952,7 @@ async function createNote() {
   try {
     if (mode() === 'polish') return await createPolish(finalText);
     if (mode() === 'carer') return await createCarePlan(finalText);
-    // Media briefings go out in public: always the most thorough model.
+    // Media statements go out in public: always the most thorough model.
     if (mode() === 'media') return await withModel(BEST_MODEL, () => createDoc('media', finalText));
     if (DOC_KINDS[mode()]) return await createDoc(mode(), finalText);
     if (!(await ensureProvider())) {
@@ -1902,7 +1902,7 @@ function renderDoc(d, kind) {
     ...(kind === 'mop' ? [el('p', { class: 'ai-disclaimer', text: aiNoteFor(d.title) })] : []),
     ...d.sections.filter((s) => !(TEXT_HEADING[kind] && TEXT_HEADING[kind].test(s.heading))).map((s) =>
       // The parts that must not be missed stand out, as in the Word printout.
-      el('section', { class: `doc-sec${/^(key message|text to send)/i.test(s.heading) ? ' tone-key' : /^keep out of the story|straight away/i.test(s.heading) ? ' tone-urgent' : /^suggested quote|keep yourself safe/i.test(s.heading) ? ' tone-warn' : ''}` }, [el('h2', { text: s.heading }), s.text ? el('p', { text: s.text }) : list(s.items)]),
+      el('section', { class: `doc-sec${/^(text to send)/i.test(s.heading) ? ' tone-key' : /^(not for publication|keep out of the story)|straight away/i.test(s.heading) ? ' tone-urgent' : /^quote$|^suggested quote|keep yourself safe/i.test(s.heading) ? ' tone-warn' : ''}` }, [el('h2', { text: s.heading }), s.text ? el('p', { text: s.text }) : list(s.items)]),
     ),
     ...(kind === 'mop' && mopVideo(d) ? [videoSection(mopVideo(d))] : []), // no video: nothing, not the word "null"
     ...(d.due.length
@@ -1994,7 +1994,7 @@ const svgIcon = (inner) => {
 };
 function renderMakeNext(box, current) {
   // A vet flicks between the carer plan and clinical notes from the same words, to copy either into their system.
-  const pool = settings.role === 'vet' ? [['carer', 'Carer plan'], ['vet', 'Clinical notes'], ['media', 'Media briefing']] : MAKE_NEXT;
+  const pool = settings.role === 'vet' ? [['carer', 'Carer plan'], ['vet', 'Clinical notes'], ['media', 'Media statement']] : MAKE_NEXT;
   const options = current && current !== 'funding' ? pool.filter(([m]) => m !== current) : [];
   box.hidden = !options.length;
   if (!options.length) return box.replaceChildren();

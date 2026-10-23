@@ -74,7 +74,7 @@ test.describe('dictation', () => {
     await expect(page.locator('#transcript')).toHaveValue(DICTATION);
   });
 
-  test('vet has four choices: care plan, clinical notes, quick polish or media briefing', async ({ page }) => {
+  test('vet has four choices: care plan, clinical notes, quick polish or media statement', async ({ page }) => {
     await openApp(page);
     await expect(page.locator('#types')).toHaveCount(0);
     await expect(page.locator('#mode label:visible')).toHaveCount(4);
