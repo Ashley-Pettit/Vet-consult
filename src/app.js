@@ -2794,3 +2794,6 @@ const countMade = () => {
 };
 ['view-care', 'view-doc', 'view-note'].forEach((id) => new MutationObserver(() => { if (!$(id).hidden) countMade(); }).observe($(id), { attributes: true, attributeFilter: ['hidden'] }));
 setTimeout(maybeShowHomeTip, 2500);
+
+/* ---------------- privacy policy (linked from the disclaimer) ---------------- */
+$('open-privacy').addEventListener('click', () => $('privacy-dlg').showModal());

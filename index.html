@@ -366,7 +366,7 @@
   <!-- 5. How it works -->
   <section id="view-about" class="view about" hidden aria-labelledby="about-title"></section>
 
-  <p class="foot">You’re responsible for the record. Check every detail and dose before saving. Speech is processed by your browser’s speech service and the note by Claude.</p>
+  <p class="foot">You’re responsible for the record. Check every detail and dose before saving. Speech is processed by your browser’s speech service and the note by Claude. <button type="button" class="link foot-link" id="open-privacy">Privacy policy</button></p>
   <footer class="site-foot">
     <div class="sos">
       <p class="sos-title">Emergency response</p>
@@ -503,6 +503,58 @@
     <div class="dlg-actions">
       <button type="submit" class="btn ghost" value="cancel">No thanks</button>
       <button type="submit" class="btn primary" value="retry" autofocus>Try again</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="privacy-dlg" class="confirm privacy-dlg" aria-labelledby="privacy-title">
+  <form method="dialog">
+    <div class="dlg-head"><h2 id="privacy-title">Privacy policy</h2><button type="submit" class="link" value="">Close</button></div>
+    <div class="privacy-body">
+      <p class="privacy-date">Animal Welfare Companion · last updated 23 October 2026</p>
+
+      <h3>What this tool is for</h3>
+      <p>Animal Welfare Companion helps vets, wildlife carers and hotline staff draft documents: clinical notes, care plans, records, statements and similar. Everything it writes is a draft for a person to check, change and approve.</p>
+
+      <h3>Not used to make decisions</h3>
+      <ul>
+        <li>The tool writes up what you tell it. It doesn’t make decisions about animals or people, and it doesn’t diagnose, prescribe, assess anyone, or decide on treatment, release, euthanasia, prosecution or anything else.</li>
+        <li>Those decisions stay with qualified people: the vet, the carer, the inspector or the organisation.</li>
+        <li>What you enter isn’t used to profile you or anyone else.</li>
+      </ul>
+
+      <h3>AI can make mistakes</h3>
+      <ul>
+        <li>The drafts are written by AI (Claude, made by Anthropic). AI can misread, leave things out or get things wrong, including doses, species details and names.</li>
+        <li>Check every detail before you save, send, sign or act on it. If in doubt, trust an expert over this tool.</li>
+        <li>It isn’t a substitute for veterinary advice. For an animal in danger, contact a vet or your local wildlife emergency line.</li>
+      </ul>
+
+      <h3>What happens to what you enter</h3>
+      <ul>
+        <li><strong>Your words, photos and documents</strong> are sent to Claude to write the draft. On the website they go through the Animal Welfare Companion connection to Anthropic. In the Claude app they go through your own Claude account.</li>
+        <li><strong>Anthropic</strong> handles them under its own terms and privacy policy. Its commercial terms say it doesn’t train its models on content sent this way. If you use the Claude app, your own Claude account settings apply.</li>
+        <li><strong>Speech</strong> is turned into text by your browser’s or phone’s speech service (for example Google or Apple) before it reaches the tool.</li>
+        <li><strong>Built-in examples</strong> use answers made earlier, so trying them sends nothing.</li>
+      </ul>
+
+      <h3>What’s kept, and where</h3>
+      <ul>
+        <li>There are no accounts and no database. The tool doesn’t keep your notes on a server.</li>
+        <li>Your settings and recent items are saved in this browser on this device only. Clear them with “Clear recent”, or by clearing this site’s data in your browser.</li>
+        <li>A shared link holds the plan inside the link itself. Anyone with the link can open it, so share it only with people who should see it.</li>
+        <li>Word files and copies you make are yours to store and handle under your organisation’s rules.</li>
+      </ul>
+
+      <h3>Personal information</h3>
+      <ul>
+        <li>Only enter what the draft needs. Avoid names, addresses and phone numbers of members of the public unless they’re needed and the person agrees.</li>
+        <li>Handle drafts that include personal information under your organisation’s privacy policy and the Australian Privacy Principles.</li>
+        <li>Keep exact locations of threatened species, nests and burrows out of anything that may be published.</li>
+      </ul>
+
+      <h3>Questions</h3>
+      <p>Contact the organisation that gave you access to this tool.</p>
     </div>
   </form>
 </dialog>

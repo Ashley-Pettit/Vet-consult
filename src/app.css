@@ -1220,3 +1220,12 @@ body[data-role="vet"] .mode label:has(input[value="witness"]) { order: 2; }
 .doc-item .doc-meta { grid-column: 1; font-size: 0.8rem; color: var(--muted); }
 .doc-item .thumb-x { grid-column: 2; grid-row: 1 / span 2; position: static; }
 .doc-item.busy { display: flex; gap: 8px; color: var(--muted); font-size: 0.88rem; }
+
+/* Privacy policy: linked from the disclaimer */
+.foot-link { font-size: inherit; padding: 0; text-decoration: underline; text-underline-offset: 2px; color: inherit; }
+.privacy-dlg { width: min(560px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); }
+.privacy-body { overflow-y: auto; max-height: calc(100dvh - 140px); display: grid; gap: 8px; padding-right: 4px; }
+.privacy-body h3 { margin: 10px 0 0; font-size: 0.95rem; }
+.privacy-body p, .privacy-body li { margin: 0; font-size: 0.9rem; line-height: 1.5; color: var(--ink); }
+.privacy-body ul { margin: 0; padding-left: 1.2em; display: grid; gap: 6px; }
+.privacy-date { color: var(--muted) !important; font-size: 0.8rem !important; }
