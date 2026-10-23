@@ -806,7 +806,7 @@ async function runWorking(title, sub, job) {
   // With photos attached, say so first: looking at the photos is the slow part.
   const looking = sendPhotos().length && !/^Hmm/.test(title);
   els.workingTitle.textContent = looking ? 'Analysing the image' : title;
-  els.workingSub.textContent = looking ? 'Looking for the species, injuries and anything else that helps the plan.' : sub;
+  els.workingSub.textContent = looking ? 'Checking species, age and any injuries.' : sub;
   const swap = looking ? setTimeout(() => { els.workingTitle.textContent = title; els.workingSub.textContent = sub; }, 7000) : null;
   showView('working');
   syncSpeedPick();
@@ -976,7 +976,7 @@ async function createNote() {
     const prompt = buildPrompt(finalText, { clinician: settings.clinician, photoCount: sendPhotos().length, drugs: settings.drugs });
     const result = await runWorking(
       'Writing the clinical notes',
-      'Claude is turning your words into SOAP notes.',
+      'Turning your words into SOAP notes.',
       (signal) => askJson(prompt, signal, { images: sendPhotos() }),
     );
     const list = normaliseResult(extractJson(result));
@@ -1761,7 +1761,7 @@ async function openCare() {
     return;
   }
   try {
-    const reply = await runWorking('Writing the care plan', `Everything the carer needs, from ${region().adj} guidance.`, (signal) =>
+    const reply = await runWorking('Writing the care plan', 'A plan the carer can follow on their own.', (signal) =>
       askJson(buildCareSheetPrompt(n, sourcesForPrompt()), signal),
     );
     showCare(normaliseCareSheet(extractJson(reply), SOURCE_IDS()), 'note');
@@ -1780,7 +1780,7 @@ async function createCarePlan(text) {
     return;
   }
   banner('');
-  const reply = await runWorking('Writing the care plan', `Everything the carer needs, from ${region().adj} guidance.`, (signal) =>
+  const reply = await runWorking('Writing the care plan', 'A plan the carer can follow on their own.', (signal) =>
     askJson(buildCarerPlanPrompt(text, sourcesForPrompt(), { fromVet: settings.role === 'vet', drugs: settings.drugs, photoCount: sendPhotos().length }), signal, { images: sendPhotos() }),
   );
   notes = [];
@@ -2045,7 +2045,7 @@ async function waitForIntakeCare() {
   const { promise } = pendingCare;
   busy = true;
   try {
-    return await runWorking('Finishing the care plan', 'It started when you made the intake record, so it’s nearly done.', (signal) =>
+    return await runWorking('Finishing the care plan', 'It started earlier, so it’s nearly done.', (signal) =>
       Promise.race([promise, new Promise((_, reject) => signal.addEventListener('abort', () => reject(new AiError('cancelled', '')), { once: true }))]),
     );
   } catch {
@@ -2112,7 +2112,7 @@ async function createPolish(text) {
     return;
   }
   banner('');
-  const out = await runWorking('Polishing your notes', 'A quick tidy-up, ready to paste into your system.', (signal) => via.generate(buildPolishPrompt(text, { drugs: settings.drugs }), signal));
+  const out = await runWorking('Polishing your notes', 'A quick tidy-up, ready to paste.', (signal) => via.generate(buildPolishPrompt(text, { drugs: settings.drugs }), signal));
   const polished = String(out || '').replace(/^```[a-z]*\n?|```$/g, '').trim();
   if (!polished) throw new AiError('empty', '');
   showPolish(polished);
@@ -2155,7 +2155,7 @@ $('polish-soap').addEventListener('click', async () => {
   if (!pendingVetNotes) return;
   busy = true;
   try {
-    const list = await runWorking('Writing the SOAP notes', 'Nearly done: they started while you read the polished notes.', () => pendingVetNotes.promise);
+    const list = await runWorking('Writing the SOAP notes', 'Nearly done: started in the background.', () => pendingVetNotes.promise);
     if (list) showNotes(list, false);
     else {
       showView('polish');
@@ -2191,7 +2191,7 @@ async function makeNext(m) {
   settings.mode = m;
   store.saveSettings(settings);
   if (m === 'vet' && !(madeFrom.vet && madeFrom.vet.text === els.transcript.value) && pendingVetNotes && pendingVetNotes.text === els.transcript.value) {
-    const list = await runWorking('Writing the clinical notes', 'Nearly done: it started while you read the care plan.', () => pendingVetNotes.promise);
+    const list = await runWorking('Writing the clinical notes', 'Nearly done: started in the background.', () => pendingVetNotes.promise);
     if (list) return showNotes(list, false);
   }
   const prev = madeFrom[m];

@@ -1194,3 +1194,23 @@ body[data-role="vet"] .mode label:has(input[value="polish"]), body[data-role="ve
 
 .media-from { margin: -6px 0 0; font-size: 0.88rem; color: var(--muted); }
 .media-from span { font-weight: 650; color: var(--ink); }
+
+/* Loading screen: compact, so the fact, Stop and the speed choice all fit on a phone without scrolling */
+.working { padding: 28px 0 20px; gap: 10px; }
+.working .pulse { width: 48px; height: 48px; }
+.working .pulse::before { inset: 13px; }
+.working h1 { margin: 4px 0 0; font-size: clamp(1.15rem, 5.6vw, 1.35rem); line-height: 1.2; }
+#working-sub { margin: 0; max-width: 34rem; }
+#working-elapsed { margin: 0; font-size: 0.82rem; }
+.working-feed { margin-top: 4px; width: 100%; }
+.working-actions { display: flex; align-items: center; justify-content: center; gap: 12px 16px; flex-wrap: wrap; margin-top: 6px; }
+.working-actions #stop { min-width: 96px; }
+.speed-pick { display: flex; align-items: center; gap: 8px; margin: 0; }
+.speed-label { font-size: 0.85rem; color: var(--muted); font-weight: 600; }
+.speed-help { margin: 0; font-size: 0.8rem; color: var(--muted); text-align: center; }
+body[data-mode="polish"] .speed-help { display: none; }
+.working-actions { gap: 10px; flex-wrap: nowrap; }
+.working-actions #stop { min-width: 0; padding-left: 18px; padding-right: 18px; }
+.speed-pick { gap: 6px; }
+.speed-pick .seg span { padding: 8px 12px; }
+@media (max-width: 350px) { .working-actions { flex-wrap: wrap; } }

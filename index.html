@@ -175,20 +175,22 @@
   <section id="view-working" class="view working" hidden aria-labelledby="working-title">
     <div class="pulse" aria-hidden="true"></div>
     <h1 id="working-title">Writing the clinical note</h1>
-    <p class="muted" id="working-sub">Claude is turning your words into a SOAP note.</p>
+    <p class="muted" id="working-sub">Turning your words into SOAP notes.</p>
     <p class="muted" id="working-elapsed" aria-live="off">Usually 10 to 40 seconds</p>
     <div class="working-feed" aria-live="polite">
       <p class="working-fact" id="working-fact" hidden><span class="fact-label">Did you know?</span> <span id="working-fact-text"></span></p>
     </div>
-    <button type="button" class="btn ghost" id="stop">Stop</button>
-    <fieldset class="speed-pick">
-      <legend>Next time, use</legend>
-      <div class="seg">
-        <label><input type="radio" name="speed" value="claude-haiku-5-5"><span>Fast</span></label>
-        <label><input type="radio" name="speed" value="claude-sonnet-5-5"><span>Detailed</span></label>
+    <div class="working-actions">
+      <button type="button" class="btn ghost" id="stop">Stop</button>
+      <div class="speed-pick" role="radiogroup" aria-labelledby="speed-label">
+        <span class="speed-label" id="speed-label">Next time:</span>
+        <div class="seg">
+          <label><input type="radio" name="speed" value="claude-haiku-5-5"><span>Fast</span></label>
+          <label><input type="radio" name="speed" value="claude-sonnet-5-5"><span>Detailed</span></label>
+        </div>
       </div>
-      <p class="help" id="speed-help">This one carries on as it is.</p>
-    </fieldset>
+    </div>
+    <p class="help speed-help" id="speed-help">This one carries on as it is.</p>
   </section>
 
   <!-- 3. Note -->

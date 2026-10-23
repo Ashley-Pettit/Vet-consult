@@ -1063,7 +1063,7 @@ export const DOC_KINDS = {
   intake: {
     label: 'Intake record',
     copy: 'Copy record',
-    working: 'Rescue details first, so release goes back to the right spot.',
+    working: 'Where, when and what happened, recorded.',
     title: 'Rescue and intake record for the shelter register',
     rule: () => `Write the rescue and intake record a ${region().adj} wildlife carer keeps for every animal admitted, in plain, objective Australian English.
 - First section "Register entry": a list with exactly these items, in this order, each as "Field: value", writing "Not recorded" when it was not said: "Case number", "Common name", "Species code", "Date in", "Sex (M, F or U)", "Age class", "Main injury", "Cause", "Where found", "Status". This matches the ${region().adj} wildlife record requirements, so an auditor can read it at a glance. Only give codes that were actually said.
@@ -1087,7 +1087,7 @@ export const DOC_KINDS = {
   mop: {
     label: 'MOP care plan',
     copy: 'Share plan',
-    working: 'A short first-aid plan the person can follow until a vet or shelter takes over.',
+    working: 'First aid until a rescuer takes over.',
     title: 'Short-term care plan for a member of the public (MOP) caring for wildlife until it reaches a vet or shelter',
     sources: true,
     rule: () => `A hotline operator${region().code === 'vic' ? ' (for example at Wildlife Victoria)' : ' (for example at RSPCA Queensland)'} is talking to a member of the public (MOP) who has found an animal and will look after it for a short time, until they can get it to a vet or shelter, or a rescuer collects it, for longer-term care. From the operator's notes about the call, write the short plan the operator sends that person: directions for temporary care and basic first aid only.
@@ -1115,7 +1115,7 @@ ${wildlifeSafetyRules()}
   tovet: {
     label: 'For the vet',
     copy: 'Copy summary',
-    working: 'A clear summary and your questions, ready for the vet.',
+    working: 'A clear summary and your questions.',
     title: 'Summary for the vet visit, from the carer',
     rule: `Write a concise summary a wildlife carer hands to a vet before or during a visit, in clear clinical Australian English with metric units. The vet should be able to read it in under a minute.
 - First section "Text to your vet": one plain message of at most 450 characters the carer can paste straight into a text, covering the animal, what happened, the key findings and their main question. No headings or lists in it.
@@ -1127,7 +1127,7 @@ ${wildlifeSafetyRules()}
   media: {
     label: 'Media statement',
     copy: 'Copy statement',
-    working: 'A draft statement for the media, using only what you said. Written on the most thorough model.',
+    working: 'A draft for review, using only what you said.',
     title: 'Draft media statement from the vet',
     sources: true,
     rule: (o = {}) => `${mediaOrgLine(o.org)} Turn their spoken comments into a draft news statement (media release) the organisation could send to journalists or post as an announcement, in the style of a media release from an animal welfare organisation or wildlife hospital. ${/rspca/i.test(o.org || '') ? 'Name other organisations or people only if the author named them, except the state wildlife emergency line in "What the public can do".' : `Never mention the RSPCA unless the author did. Name other organisations or people only if the author named them, except the state wildlife emergency line in "What the public can do"${region().code === 'qld' ? ' (in Queensland that line is run by the RSPCA, so unless the author mentioned the RSPCA, just say to call a local wildlife rescue group or vet)' : ''}.`} It may be about a case, an animal welfare issue, a seasonal warning, an appeal or an organisation announcement. Plain, warm, factual Australian English for the general public: no clinical jargon (say "broken leg", not "fractured radius"), no hype, no exclamation marks.
@@ -1145,7 +1145,7 @@ ${wildlifeSafetyRules()}
   funding: {
     label: 'Funding submission',
     copy: 'Copy submission',
-    working: 'Grant-ready sections, using only the facts and figures you gave.',
+    working: 'Grant-ready sections from your facts.',
     title: 'Draft funding or grant submission',
     rule: `Write a draft funding or grant submission for Bunurong Wildlife Care Inc, a registered charity and authorised wildlife shelter (Wildlife Shelter 15147751) in Inverloch, Victoria, that rescues, rehabilitates and releases native wildlife across Bass Coast and South Gippsland. Write in the shelter's voice ("we"), plain and confident Australian English, warm but not overblown. No hype words like "passionate", "world-class" or "game-changing".
 - "title": a short project title. "subtitle": the funder or grant round if stated.
