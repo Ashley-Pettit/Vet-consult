@@ -268,21 +268,23 @@ function mediaOrgLine(org) {
     : 'The author is a vet or staff member at an animal welfare or wildlife organisation. Use the organisation they name; if they don\'t name one, write "[Organisation]" wherever the name is needed and add a check asking for it.';
 }
 
-/** Quick polish: the vet's own notes, tidied into clean notes ready to paste into the practice system. Plain text back. */
-export function buildPolishPrompt(notes, { drugs = '' } = {}) {
-  return `You are a fast scribe for a vet in ${region().name}. Turn the vet's typed or dictated notes below into clean clinical notes, ready to paste straight into a practice management (CRM) system.
+/** Rapid polish: one call returns the vet's notes tidied for pasting into the practice system ("polished")
+ *  and the full SOAP notes ("animals"), from the same words. */
+const SOAP_REPLY = '- Reply with ONLY {"animals":[NOTE, ...]} (one NOTE per animal, no markdown) where NOTE is:';
+export function buildPolishPrompt(notes, opts = {}) {
+  const soap = buildPrompt(notes, opts);
+  if (!soap.includes(SOAP_REPLY)) throw new Error('SOAP reply line changed');
+  const polish = `
+POLISHED NOTES ("polished"): the vet's own notes, tidied into clean clinical notes ready to paste straight into a practice management (CRM) system. One plain-text string, with each line separated by a newline (\\n in the JSON):
 - Fix spelling, grammar and punctuation, and obvious speech-recognition or typing mistakes (especially drug, species and anatomy names).
 - Keep every fact, number, drug, dose, route, time and date exactly as given. Never add, remove or guess clinical content.
 - Keep standard veterinary abbreviations as vets write them (SID, BID, SC, PO, BCS and so on); spell out only non-standard or misheard ones.
 - Keep the vet's order. Where the notes clearly cover them, use short labelled lines such as "History:", "Exam:", "Assessment:", "Plan:"; otherwise just clean sentences or short lines.
-- Concise, professional, Australian English. No preamble, no markdown, no notes about what you changed.
-${shorthandForPrompt()}
-${drugsForPrompt(drugs)}
-Reply with ONLY the polished notes.
-
-<notes>
-${String(notes || '').slice(0, MAX_DICTATION)}
-</notes>`;
+- Concise, professional, Australian English. No markdown, no notes about what you changed.
+`;
+  return `Do two jobs from the same notes in ONE reply: polished notes for pasting, and formal SOAP clinical notes.\n${soap
+    .replace(SOAP_REPLY, '- Reply with ONLY {"polished":"…","animals":[NOTE, ...]} (no markdown). "polished" is described below the NOTE shape; "animals" has one NOTE per animal, where NOTE is:')
+    .replace('\n<dictation>\n', `${polish}\n<dictation>\n`)}`;
 }
 
 /** Carer plan from a finished vet note. */

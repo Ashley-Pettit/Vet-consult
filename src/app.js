@@ -727,46 +727,14 @@ async function withModel(model, job) {
     return await job();
   } finally {
     overriding -= 1;
-    // Keep a default chosen on the loading screen while this ran.
-    settings = modelChoice ? { ...saved, model: modelChoice } : saved;
-    modelChoice = null;
+    settings = saved;
     provider = null;
   }
 }
 
-// On the loading screen: pick the default model for next time. The plan being written isn't touched.
-let modelChoice = null;
-// The app picks the model for some jobs: Quick polish is always fast, media statements always the most thorough,
-// short "Add more info" updates are fast and a "try again" after a thumbs down is the most thorough.
-const FORCED_MODEL = { polish: 'claude-haiku-5-5', media: 'claude-opus-5-5' };
-function forcedModelNote() {
-  const m = FORCED_MODEL[mode()] || (overriding ? settings.model : null);
-  if (!m) return '';
-  if (mode() === 'polish') return 'Quick polish always uses the fast setting.';
-  if (mode() === 'media') return 'Media statements always use the most thorough setting.';
-  return m === 'claude-haiku-5-5' ? 'A short update, so this one uses the fast setting.' : 'This one uses the most thorough setting, to get it right.';
-}
-function applyModelChoice() {
-  if (!modelChoice || overriding) return;
-  settings = { ...settings, model: modelChoice };
-  modelChoice = null;
-  provider = null;
-}
+// The app picks the model for some jobs: Rapid polish is always fast and media statements always the most thorough.
+// Short "Add more info" updates are fast and a "try again" after a thumbs down is the most thorough.
 let overriding = 0; // a one-off model (Fast for a quick update, Opus for a retry) is in use
-function syncSpeedPick() {
-  document.querySelectorAll('input[name="speed"]').forEach((r) => (r.checked = r.value === (modelChoice || store.loadSettings().model || CONFIG.defaultModel)));
-}
-document.querySelectorAll('input[name="speed"]').forEach((r) =>
-  r.addEventListener('change', () => {
-    if (!r.checked) return;
-    modelChoice = r.value;
-    const saved = { ...store.loadSettings(), model: r.value };
-    store.saveSettings(saved);
-    // The plan being written keeps its model: the new default is applied once it's finished.
-    if (!aborter && !overriding) applyModelChoice();
-    $('speed-help').textContent = `Saved. Your next plan will be ${r.value === QUICK_MODEL ? 'fast' : 'detailed'}; this one carries on as it is.`;
-  }),
-);
 const QUICK_MODEL = 'claude-haiku-5-5';
 const BEST_MODEL = 'claude-opus-5-5';
 // A short, simple update goes to the fast model; anything long or with drugs and doses keeps the chosen model.
@@ -819,11 +787,6 @@ async function runWorking(title, sub, job) {
   els.workingSub.textContent = looking ? 'Checking species, age and any injuries.' : sub;
   const swap = looking ? setTimeout(() => { els.workingTitle.textContent = title; els.workingSub.textContent = sub; }, 7000) : null;
   showView('working');
-  syncSpeedPick();
-  // Some jobs always use a set model, whatever the default is: say so instead of offering a choice that does nothing here.
-  const forced = forcedModelNote();
-  document.querySelector('.speed-pick').hidden = Boolean(forced);
-  $('speed-help').textContent = forced || 'This one carries on as it is.';
   els.stop.focus();
   const t0 = Date.now();
   const tick = setInterval(() => {
@@ -840,7 +803,6 @@ async function runWorking(title, sub, job) {
     clearTimeout(swap);
     clearInterval(tick);
     aborter = null;
-    applyModelChoice();
   }
 }
 
@@ -851,7 +813,7 @@ const RETRY_NOTE = '\n\nImportant: your last reply could not be read. Reply with
 let promptExtra = '';
 async function askJson(prompt0, signal, opts = {}) {
   const prompt = promptExtra ? `${prompt0}\n\n${promptExtra}` : prompt0;
-  const via = opts.via || provider; // a fixed provider (the fast one for Quick polish) or the current one
+  const via = opts.via || provider; // a fixed provider (the fast one for Rapid polish) or the current one
   const first = await via.generate(prompt, signal, opts);
   try {
     return extractJson(first);
@@ -2122,9 +2084,9 @@ function mediaOrg() {
   return '';
 }
 
-/* ---------------- Quick polish (vets): fast tidy-up, SOAP notes in the background ---------------- */
+/* ---------------- Rapid polish (vets): one fast call gives the tidy-up and the SOAP notes ---------------- */
 
-// Quick polish always uses the fast model, whatever is chosen in Settings.
+// Rapid polish always uses the fast model, whatever is chosen in Settings.
 async function quickProvider() {
   return resolveProvider({ ...settings, model: QUICK_MODEL });
 }
@@ -2135,12 +2097,18 @@ async function createPolish(text) {
     return;
   }
   banner('');
-  const out = await runWorking('Polishing your notes', 'A quick tidy-up, ready to paste.', (signal) => via.generate(buildPolishPrompt(text, { drugs: settings.drugs }), signal));
-  const polished = String(out || '').replace(/^```[a-z]*\n?|```$/g, '').trim();
+  const source = els.transcript.value;
+  const prompt = buildPolishPrompt(text, { clinician: settings.clinician, photoCount: sendPhotos().length, drugs: settings.drugs });
+  const r = await runWorking('Polishing your notes', 'Clean notes to paste, with SOAP notes from the same words.', (signal) => askJson(prompt, signal, { images: sendPhotos(), via }));
+  const polished = String((r && r.polished) || '').replace(/^```[a-z]*\n?|```$/g, '').trim();
   if (!polished) throw new AiError('empty', '');
+  // The SOAP notes came back in the same reply: keep them so "SOAP notes" opens straight away.
+  const list = normaliseResult(r);
+  for (const n of list) if (!n.visit.type) n.visit.type = NOTE_TYPES.consult.title;
+  if (list.length && els.transcript.value === source) madeFrom.vet = { text: source, notes: list };
   showPolish(polished);
-  // The full SOAP notes start now, on the fast model, so they're ready (or nearly) when asked for.
-  startVetNotes(via);
+  // Only if the SOAP part was missing: make it in the background as before.
+  if (!list.length) startVetNotes(via);
   watchSoap();
 }
 function showPolish(text) {
@@ -2162,7 +2130,7 @@ function watchSoap() {
   };
   btn.dataset.state = 'working';
   $('polish-soap-text').textContent = 'SOAP notes';
-  $('polish-soap-help').textContent = 'Full SOAP notes are being made in the background from the same words.';
+  $('polish-soap-help').textContent = 'Full SOAP notes are being made from the same words.';
   if (madeFrom.vet && madeFrom.vet.text === text) return ready();
   if (pendingVetNotes && pendingVetNotes.text === text) pendingVetNotes.promise.then((list) => list && els.transcript.value === text && ready());
 }

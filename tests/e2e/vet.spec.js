@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { withKey, mockApi, openApp, textReply, asVet, apiReply } from './helpers.js';
+import { withKey, mockApi, openApp, textReply, asVet, apiReply, SAMPLE_NOTE } from './helpers.js';
 import { EXAMPLE_CARER_PLAN } from '../../src/note.js';
 
 const quick = { patient: { species: 'Bare-nosed wombat', sex: 'Female', weight_kg: '24' }, visit: { type: 'Clinical consult' },
@@ -61,16 +61,14 @@ test('vets see a kind word about pigeons, only for pigeons and only for vets', a
   await expect(page.locator('#view-care .pigeon-fact')).toContainText('Pigeons are sweet, kind and accepting');
 });
 
-test('Quick polish: fast tidy-up ready to copy, with SOAP notes made in the background on the fast model', async ({ page, context }) => {
+test('Rapid polish: one fast call gives the tidy-up to copy and the SOAP notes', async ({ page, context }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
   const calls = await mockApi(page, {
-    body: (prompt) => (/fast scribe/.test(prompt)
-      ? { content: [{ type: 'text', text: 'History: Adult wombat, car strike.\nExam: BCS 3/9, laceration L forelimb.\nPlan: Meloxicam 0.2 mg/kg SC SID.' }], stop_reason: 'end_turn' }
-      : apiReply()),
+    body: () => textReply({ polished: 'History: Adult wombat, car strike.\nExam: BCS 3/9, laceration L forelimb.\nPlan: Meloxicam 0.2 mg/kg SC SID.', animals: [SAMPLE_NOTE] }),
   });
   await asVet(page);
   await openApp(page);
-  await page.locator('#mode label', { hasText: 'Quick polish' }).click();
+  await page.locator('#mode label', { hasText: 'Rapid polish' }).click();
   await expect(page.locator('#create')).toHaveText('Polish notes');
   await page.locator('#transcript').fill('adult wombat car strike bcs 3/9 lac L fl meloxicam 0.2 sc sid');
   await page.locator('#create').click();
@@ -81,7 +79,7 @@ test('Quick polish: fast tidy-up ready to copy, with SOAP notes made in the back
   await expect(page.locator('#polish-soap')).toHaveAttribute('data-state', 'ready');
   await page.locator('#polish-soap').click();
   await expect(page.locator('#view-note')).toBeVisible();
-  expect(calls).toHaveLength(2); // the polish, then the SOAP notes in the background; nothing more on opening them
+  expect(calls).toHaveLength(1); // the polish and the SOAP notes come back in the same call
   expect(calls.every((c) => c.body.model === 'claude-haiku-5-5')).toBe(true);
 });
 
@@ -104,8 +102,6 @@ test('Media statement: a draft media release, always on the most thorough model,
   await expect(page.locator('#create')).toHaveText('Draft statement');
   await page.locator('#transcript').fill('Wombat hit on the Bass Highway near Kilcunda, recovering well, slow down at dusk, keep the burrow location private.');
   await page.locator('#create').click();
-  await expect(page.locator('#speed-help')).toContainText('Media statements always use the most thorough setting');
-  await expect(page.locator('.speed-pick')).toBeHidden();
   await expect(page.locator('#view-doc')).toBeVisible();
   await expect(page.locator('#doc-title')).toContainText('Wombat recovering');
   await expect(page.locator('#view-doc')).toContainText('Not for publication');

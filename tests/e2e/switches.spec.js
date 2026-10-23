@@ -262,25 +262,15 @@ test('Share a link: the plan travels inside the link and opens in the app on ano
   expect(calls).toHaveLength(0);
 });
 
-test('while a plan is being written, Fast or Detailed can be picked for next time without changing this one', async ({ page }) => {
+test('the loading screen offers no model choice: just the fact and Stop', async ({ page }) => {
   const calls = await mockApi(page, { body: () => textReply(EXAMPLE_CARER_PLAN), delayMs: 1500 });
   await openApp(page);
   await page.locator('#transcript').fill('Ringtail joey, cat attack.');
   await page.locator('#create').click();
   await expect(page.locator('#view-working')).toBeVisible();
-  await expect(page.locator('input[name=speed][value="claude-sonnet-5-5"]')).toBeChecked();
-  await page.locator('.speed-pick label', { hasText: 'Fast' }).click();
-  await expect(page.locator('#speed-help')).toContainText('next plan will be fast');
-  await expect(page.locator('.speed-pick')).not.toContainText(/Haiku|Sonnet/);
+  await expect(page.locator('input[name=speed]')).toHaveCount(0);
+  await expect(page.locator('#view-working')).not.toContainText(/Fast|Detailed|Next time/);
+  await expect(page.locator('#stop')).toBeVisible();
   await expect(page.locator('#view-care')).toBeVisible();
-  expect(calls[0].body.model).toBe('claude-sonnet-5-5'); // this plan kept its model
-  await page.locator('#new-care').click();
-  await page.getByRole('button', { name: 'Start new' }).click();
-  await page.locator('#transcript').fill('Brushtail possum, dog attack.');
-  await page.locator('#create').click();
-  await expect(page.locator('#view-care')).toBeVisible();
-  expect(calls[calls.length - 1].body.model).toBe('claude-haiku-5-5');
-  await page.reload();
-  await page.locator('#open-settings').click();
-  await expect(page.locator('#model')).toHaveValue('claude-haiku-5-5');
+  expect(calls[0].body.model).toBe('claude-sonnet-5-5');
 });
