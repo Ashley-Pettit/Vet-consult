@@ -49,6 +49,7 @@ import {
   buildPrompt,
   buildPolishPrompt,
   buildRevisionPrompt,
+  buildAmendPrompt,
   buildCareSheetPrompt,
   extractJson,
   normaliseNote,
@@ -1385,10 +1386,40 @@ const moreMic = $('more-mic');
 const moreHelp = $('more-help');
 let moreVoice = null;
 const MORE_HELP = 'It’s added to what you already said and the record is rewritten.';
-function addMoreInfo() {
+// "Change": a finished care plan or document is edited in place, by voice or typing; the rest stays as it was.
+let amendTarget = null;
+const MORE_TEXT = {
+  add: { title: 'Add more info', placeholder: 'e.g. She weighed 24.6 kilos, and the case number is 26-04417.', go: 'Update' },
+  amend: { title: 'Change or add something', placeholder: 'e.g. Feeds every 3 hours, not 4. She weighs 130 grams now.', go: 'Make change' },
+};
+const AMEND_HELP = 'Say or type what to change or add. Everything else stays as it is.';
+function openMore(target) {
+  amendTarget = target;
+  const t = MORE_TEXT[target ? 'amend' : 'add'];
+  $('more-title').textContent = t.title;
+  moreText.placeholder = t.placeholder;
+  $('more-go').textContent = t.go;
+  addMoreInfo(true);
+}
+function changePlan() {
+  if (busy) return;
+  openMore({ type: 'care' });
+}
+function changeDoc() {
+  if (busy || !currentDoc) return;
+  openMore({ type: 'doc' });
+}
+function addMoreInfo(keepTarget) {
+  if (keepTarget !== true) {
+    amendTarget = null;
+    $('more-title').textContent = MORE_TEXT.add.title;
+    moreText.placeholder = MORE_TEXT.add.placeholder;
+    $('more-go').textContent = MORE_TEXT.add.go;
+  }
   moreText.value = '';
   $('more-go').disabled = true;
-  moreHelp.textContent = keyboardVoice ? `${keyboardTip()} ${MORE_HELP}` : `Tap the mic and say what you missed. ${MORE_HELP}`;
+  const helpText = amendTarget ? AMEND_HELP : MORE_HELP;
+  moreHelp.textContent = keyboardVoice ? `${keyboardTip()} ${helpText}` : amendTarget ? `Tap the mic and say the change. ${AMEND_HELP}` : `Tap the mic and say what you missed. ${MORE_HELP}`;
   more.showModal();
   if (keyboardVoice) moreText.focus(); // inside the tap, so the phone keyboard (and its mic key) opens straight away
   else startMoreVoice();
@@ -1409,7 +1440,7 @@ function startMoreVoice() {
   moreVoice.onstate = (st) => {
     moreMic.setAttribute('aria-pressed', String(st !== 'idle'));
     more.dataset.mic = st;
-    moreHelp.textContent = st === 'starting' ? 'One moment…' : st === 'listening' ? 'Listening. Talk now, then tap Update.' : `Tap the mic to add more, or type. ${MORE_HELP}`;
+    moreHelp.textContent = st === 'starting' ? 'One moment…' : st === 'listening' ? `Listening. Talk now, then tap ${$('more-go').textContent}.` : amendTarget ? `Tap the mic to say more, or type. ${AMEND_HELP}` : `Tap the mic to add more, or type. ${MORE_HELP}`;
     if (st === 'listening') cueListening();
   };
   moreVoice.onerror = (c) => (moreHelp.textContent = speechErrorMessage(c));
@@ -1419,7 +1450,7 @@ function startMoreVoice() {
 moreMic.addEventListener('click', () => {
   if (keyboardVoice) {
     moreText.focus();
-    moreHelp.textContent = `${keyboardTip()} ${MORE_HELP}`;
+    moreHelp.textContent = `${keyboardTip()} ${amendTarget ? AMEND_HELP : MORE_HELP}`;
     return;
   }
   startMoreVoice();
@@ -1445,6 +1476,7 @@ more.addEventListener('close', async () => {
   const extra = moreText.value.trim();
   if (more.returnValue !== 'go' || !extra) return;
   more.returnValue = '';
+  if (amendTarget) return amend(amendTarget, extra);
   setTranscript(appendSegment(els.transcript.value, extra));
   if (isQuickUpdate(extra) && settings.model !== QUICK_MODEL) await withModel(QUICK_MODEL, () => createNote());
   else await createNote();
@@ -1452,6 +1484,41 @@ more.addEventListener('close', async () => {
 more.addEventListener('click', (e) => e.target === more && more.close()); // tap outside to cancel
 els.back.addEventListener('click', addMoreInfo);
 $('note-more').addEventListener('click', addMoreInfo);
+
+/** Apply a spoken or typed change to the plan or document on screen. */
+async function amend(target, change) {
+  if (busy) return;
+  const isCare = target.type === 'care';
+  const current = isCare ? careSheet : currentDoc && currentDoc.d;
+  if (!current) return;
+  const what = isCare ? 'care plan' : DOC_KINDS[currentDoc.kind].label.toLowerCase();
+  const view = isCare ? 'care' : 'doc';
+  busy = true;
+  try {
+    const run = async () => {
+      if (!(await ensureProvider())) throw new AiError('forbidden', NO_CLAUDE);
+      return runWorking(isCare ? 'Updating the plan' : `Updating the ${what}`, 'Making your change and keeping the rest.', (signal) => askJson(buildAmendPrompt(what, current, change), signal));
+    };
+    // Always the chosen model (Detailed by default): a change has to reach every place it applies, which the fast model can miss.
+    const reply = await run();
+    // The words it was made from now include the change, so "Use the same notes for" picks it up too.
+    setTranscript(appendSegment(els.transcript.value, `Change: ${change}`));
+    if (isCare) {
+      const sheet = normaliseCareSheet(reply, SOURCE_IDS());
+      showCare(sheet, careFrom, els.careBanner.hidden ? '' : els.careBanner.textContent);
+    } else {
+      const d = normaliseDoc(reply);
+      if (!d.sections.length) throw new AiError('empty', '');
+      showDoc(d, currentDoc.kind);
+    }
+    toast('Updated.');
+  } catch (e) {
+    showView(view);
+    toast(e && e.code === 'cancelled' ? 'Stopped. Nothing was changed.' : friendly(e));
+  } finally {
+    busy = false;
+  }
+}
 // The logo always goes home.
 $('home').addEventListener('click', () => {
   if (busy) return;
@@ -1682,7 +1749,7 @@ function renderCare(c) {
   const name = c.animal || currentNote()?.patient.name || '';
   els.careTitle.textContent = c.kind === 'wildlife' ? `Care plan: ${name || 'wildlife in care'}` : `Caring for ${name || 'your animal'} at home`;
   $('care-back-label').textContent = careFrom === 'note' ? 'Back to note' : 'Back';
-  $('care-back-2').textContent = careFrom === 'note' ? 'Back' : 'Add more info';
+  $('care-back-2').textContent = 'Change plan';
   // Tick sheet: one row per daily job, one column per day, big boxes. Printable on its own for the fridge.
   const days = Math.min(c.log_days || 7, 14);
   const log = c.daily_checks.length
@@ -1839,7 +1906,7 @@ $('discharge-btn').addEventListener('click', openCare);
 $('copy-top').addEventListener('click', () => els.copy.click());
 $('care-back').addEventListener('click', () => showView(careFrom === 'note' ? 'note' : 'record'));
 // A plan made straight from the carer's words can take more info in place; one made from a vet note goes back to it.
-$('care-back-2').addEventListener('click', () => (careFrom === 'note' ? showView('note') : addMoreInfo()));
+$('care-back-2').addEventListener('click', changePlan);
 // Copy offers Share (the phone's share sheet) or Copy as text. Without sharing (some computers), it just copies.
 const canShare = () => typeof navigator.share === 'function';
 let pendingSend = null;
@@ -2045,7 +2112,8 @@ $('doc-copy').addEventListener('click', () => {
   }
   shareOrCopy(docText(currentDoc.d) + (currentDoc.kind === 'mop' ? `${mopVideo(currentDoc.d) ? `\n\n${videoLine(mopVideo(currentDoc.d))}` : ''}\n\n${aiNoteFor(currentDoc.d.title)}` : ''), $('doc-title').textContent, 'Copied. Paste it wherever it needs to go.', docWordModel(), { type: 'doc', kind: currentDoc.kind, d: currentDoc.d });
 });
-$('doc-new').addEventListener('click', addMoreInfo);
+$('doc-new').addEventListener('click', changeDoc);
+$('doc-check-change').addEventListener('click', changeDoc);
 
 /* ---------------- make another from the same words ---------------- */
 
