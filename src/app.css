@@ -1246,3 +1246,10 @@ body[data-role="vet"] .mode .adv-tab { order: 2; }
 .adv-seg[data-pick="witness"] .adv-thumb { transform: translateX(100%); }
 @media (prefers-reduced-motion: reduce) { .adv-thumb, .adv-seg label > span { transition: none; } }
 @media (max-width: 360px) { .adv-seg label > span { font-size: 0.8rem; gap: 6px; padding: 6px; } }
+
+/* Rapid polish: SOAP notes right under the polished notes */
+.polish-soap-sec { display: grid; gap: 10px; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); }
+.polish-soap-sec[hidden] { display: none; }
+.polish-soap-sec h2 { margin: 0; font: 700 1.1rem/1.2 var(--display); text-transform: uppercase; letter-spacing: 0.5px; }
+.polish-soap-wait { display: flex; align-items: center; gap: 8px; margin: 0; }
+.polish-soap-wait[hidden] { display: none; }

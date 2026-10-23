@@ -2211,25 +2211,45 @@ function showPolish(text) {
   $('polish-out').value = text;
   remember('polish', { text }, firstLine(text));
   showView('polish');
-  $('polish-out').style.height = 'auto';
-  $('polish-out').style.height = `${Math.min($('polish-out').scrollHeight + 4, window.innerHeight * 0.6)}px`;
+  fitBox($('polish-out'));
+  $('polish-soap-sec').hidden = true; // shown by watchSoap when these words have SOAP notes
   $('polish-title').focus();
 }
 const firstLine = (t) => String(t).split('\n').find((x) => x.trim())?.replace(/^[A-Za-z ]{2,20}:\s*/, '').slice(0, 70) || 'Polished notes';
-function watchSoap() {
-  const btn = $('polish-soap');
-  const text = els.transcript.value;
-  const ready = () => {
-    btn.dataset.state = 'ready';
-    $('polish-soap-text').textContent = 'SOAP notes';
-    $('polish-soap-help').textContent = 'SOAP notes are ready.';
-  };
-  btn.dataset.state = 'working';
-  $('polish-soap-text').textContent = 'SOAP notes';
-  $('polish-soap-help').textContent = 'Full SOAP notes are being made from the same words.';
-  if (madeFrom.vet && madeFrom.vet.text === text) return ready();
-  if (pendingVetNotes && pendingVetNotes.text === text) pendingVetNotes.promise.then((list) => list && els.transcript.value === text && ready());
+// The SOAP notes sit right under the polished notes, as text ready to copy. They usually come back in the
+// same reply; if not, they're written in the background and appear here when ready.
+function fitBox(t) {
+  t.style.height = 'auto';
+  t.style.height = `${Math.min(t.scrollHeight + 4, window.innerHeight * 0.7)}px`;
 }
+function showPolishSoap(list) {
+  const out = $('polish-soap-out');
+  out.value = list.map((n) => toPlainText(n)).join('\n\n----------\n\n');
+  out.hidden = false;
+  $('polish-soap-actions').hidden = false;
+  $('polish-soap-help').hidden = true;
+  fitBox(out);
+}
+function watchSoap() {
+  const text = els.transcript.value;
+  $('polish-soap-sec').hidden = false;
+  $('polish-soap-out').hidden = true;
+  $('polish-soap-actions').hidden = true;
+  $('polish-soap-help').hidden = false;
+  $('polish-soap-help').lastChild.textContent = 'Writing the SOAP notes from the same words…';
+  if (madeFrom.vet && madeFrom.vet.text === text) return showPolishSoap(madeFrom.vet.notes);
+  if (pendingVetNotes && pendingVetNotes.text === text) {
+    pendingVetNotes.promise.then((list) => {
+      if (els.transcript.value !== text) return;
+      if (list) showPolishSoap(list);
+      else $('polish-soap-help').lastChild.textContent = 'The SOAP notes didn’t come through. Tap Polish notes again to retry.';
+    });
+  }
+}
+$('polish-soap-copy').addEventListener('click', async () => {
+  const ok = await copyText($('polish-soap-out').value);
+  toast(ok ? 'SOAP notes copied. Paste them into your system.' : 'Couldn’t copy. Select the text and copy it instead.');
+});
 $('polish-copy').addEventListener('click', async () => {
   const ok = await copyText($('polish-out').value);
   toast(ok ? 'Copied. Paste it into your system.' : 'Couldn’t copy. Select the text and copy it instead.');

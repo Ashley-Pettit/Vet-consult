@@ -76,7 +76,8 @@ test('Rapid polish: one fast call gives the tidy-up to copy and the SOAP notes',
   await expect(page.locator('#polish-out')).toHaveValue(/Exam: BCS 3\/9/);
   await page.locator('#polish-copy').click();
   expect(await page.evaluate(() => navigator.clipboard.readText())).toMatch(/^History: Adult wombat/);
-  await expect(page.locator('#polish-soap')).toHaveAttribute('data-state', 'ready');
+  await expect(page.locator('#polish-soap-out')).toBeVisible(); // SOAP notes show straight under, no extra tap
+  await expect(page.locator('#polish-soap-out')).toHaveValue(/S: /);
   await page.locator('#polish-soap').click();
   await expect(page.locator('#view-note')).toBeVisible();
   expect(calls).toHaveLength(1); // the polish and the SOAP notes come back in the same call

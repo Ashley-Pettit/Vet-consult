@@ -316,9 +316,17 @@
     <textarea id="polish-out" class="polish-out" rows="10" spellcheck="true"></textarea>
     <div class="polish-actions">
       <button type="button" class="btn primary" id="polish-copy">Copy notes</button>
-      <button type="button" class="btn ghost" id="polish-soap"><span class="soap-dot" aria-hidden="true"></span><span id="polish-soap-text">SOAP notes</span></button>
     </div>
-    <p class="help" id="polish-soap-help">Full SOAP notes are made from the same words.</p>
+    <section class="polish-soap-sec" id="polish-soap-sec" aria-labelledby="polish-soap-title">
+      <h2 id="polish-soap-title">SOAP notes</h2>
+      <p class="help polish-soap-wait" id="polish-soap-help" role="status"><span class="photo-spin" aria-hidden="true"></span>Writing the SOAP notes from the same words…</p>
+      <label for="polish-soap-out" class="sr-only">SOAP notes</label>
+      <textarea id="polish-soap-out" class="polish-out" rows="10" spellcheck="true" hidden></textarea>
+      <div class="polish-actions" id="polish-soap-actions" hidden>
+        <button type="button" class="btn primary" id="polish-soap-copy">Copy SOAP</button>
+        <button type="button" class="btn ghost" id="polish-soap">Full notes</button>
+      </div>
+    </section>
   </section>
 
   <section id="view-doc" class="view" hidden aria-labelledby="doc-title">
