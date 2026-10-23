@@ -8,7 +8,7 @@ test('carer or vet at the top, remembered; the old link is gone', async ({ page 
   await expect(page.locator('input[name=role][value=carer]')).toBeChecked();
   await expect(page.locator('#mode label:visible')).toHaveCount(4); // intake is made from a plan, not a tab
   await page.locator('#role-seg label', { hasText: 'Vet' }).click();
-  await expect(page.locator('#mode label:visible')).toHaveCount(2);
+  await expect(page.locator('#mode label:visible')).toHaveCount(3);
   await expect(page.locator('input[name=mode]:checked')).toHaveValue('carer'); // vets start on the care plan
   await page.reload();
   await expect(page.locator('input[name=role][value=vet]')).toBeChecked();

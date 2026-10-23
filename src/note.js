@@ -261,6 +261,23 @@ Reply with ONLY one JSON object in this shape:
 ${CARE_SHAPE}` : ''}`;
 }
 
+/** Quick polish: the vet's own notes, tidied into clean notes ready to paste into the practice system. Plain text back. */
+export function buildPolishPrompt(notes, { drugs = '' } = {}) {
+  return `You are a fast scribe for a vet in ${region().name}. Turn the vet's typed or dictated notes below into clean clinical notes, ready to paste straight into a practice management (CRM) system.
+- Fix spelling, grammar and punctuation, and obvious speech-recognition or typing mistakes (especially drug, species and anatomy names).
+- Keep every fact, number, drug, dose, route, time and date exactly as given. Never add, remove or guess clinical content.
+- Keep standard veterinary abbreviations as vets write them (SID, BID, SC, PO, BCS and so on); spell out only non-standard or misheard ones.
+- Keep the vet's order. Where the notes clearly cover them, use short labelled lines such as "History:", "Exam:", "Assessment:", "Plan:"; otherwise just clean sentences or short lines.
+- Concise, professional, Australian English. No preamble, no markdown, no notes about what you changed.
+${shorthandForPrompt()}
+${drugsForPrompt(drugs)}
+Reply with ONLY the polished notes.
+
+<notes>
+${String(notes || '').slice(0, MAX_DICTATION)}
+</notes>`;
+}
+
 /** Carer plan from a finished vet note. */
 export function buildCareSheetPrompt(note, sourceList = '') {
   return `You are helping a vet working with ${region().org} write a complete care plan for a wildlife carer, based on the clinical note below.

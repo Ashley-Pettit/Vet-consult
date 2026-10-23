@@ -41,6 +41,7 @@ import {
   EXAMPLE_FUNDING_DICTATION,
   appendSegment,
   buildPrompt,
+  buildPolishPrompt,
   buildRevisionPrompt,
   buildCareSheetPrompt,
   extractJson,
@@ -75,7 +76,7 @@ const els = {
   settings: $('settings'), openSettings: $('open-settings'), clinician: $('clinician'), model: $('model'),
   apiKey: $('api-key'), rememberKey: $('remember-key'), keyField: $('key-field'), conn: $('conn-status'),
   forget: $('forget'), toast: $('toast'), toastText: $('toast-text'), toastAction: $('toast-action'),
-  views: { record: $('view-record'), working: $('view-working'), note: $('view-note'), care: $('view-care'), doc: $('view-doc'), about: $('view-about') },
+  views: { record: $('view-record'), working: $('view-working'), note: $('view-note'), care: $('view-care'), doc: $('view-doc'), polish: $('view-polish'), about: $('view-about') },
 };
 
 const inClaude = Boolean(globalThis.claude);
@@ -836,22 +837,24 @@ const RETRY_NOTE = '\n\nImportant: your last reply could not be read. Reply with
 let promptExtra = '';
 async function askJson(prompt0, signal, opts = {}) {
   const prompt = promptExtra ? `${prompt0}\n\n${promptExtra}` : prompt0;
-  const first = await provider.generate(prompt, signal, opts);
+  const via = opts.via || provider; // a fixed provider (the fast one for Quick polish) or the current one
+  const first = await via.generate(prompt, signal, opts);
   try {
     return extractJson(first);
   } catch (e) {
     if (!e || e.code !== 'invalid_json' || (signal && signal.aborted)) throw e;
-    return extractJson(await provider.generate(prompt + RETRY_NOTE, signal, opts));
+    return extractJson(await via.generate(prompt + RETRY_NOTE, signal, opts));
   }
 }
 
 const mode = () => document.querySelector('input[name="mode"]:checked')?.value || 'vet';
-const MODES = ['intake', 'log', 'carer', 'tovet', 'mop', 'funding', 'vet'];
-const ROLE_MODES = { carer: ['carer', 'intake', 'log', 'tovet', 'mop', 'funding'], vet: ['carer', 'vet'] };
+const MODES = ['intake', 'log', 'carer', 'tovet', 'mop', 'funding', 'vet', 'polish'];
+const ROLE_MODES = { carer: ['carer', 'intake', 'log', 'tovet', 'mop', 'funding'], vet: ['carer', 'vet', 'polish'] };
 
 // Every dictation box ends with the reassurance about typos (in the placeholder, so it adds nothing to the screen).
 const TYPO_NOTE = ' Typos and misheard words are fine. The AI sorts them out.';
 const MODE_TEXT = {
+  polish: { button: 'Polish notes', placeholder: 'Type or say your notes as you would jot them. Shorthand is fine.' },
   vet: { button: 'Create notes', placeholder: 'Your words appear here as you talk. You can also type or fix anything.' },
   carer: { button: 'Create care plan', placeholder: 'Describe the animal, its condition, medications and anything the carer needs to know.' },
   intake: { button: 'Create record', placeholder: 'Wildlife Victoria case number, the animal, exactly where it was found, its condition and what you did.' },
@@ -946,6 +949,7 @@ async function createNote() {
   }
   const finalText = els.transcript.value.trim() || text;
   try {
+    if (mode() === 'polish') return await createPolish(finalText);
     if (mode() === 'carer') return await createCarePlan(finalText);
     if (DOC_KINDS[mode()]) return await createDoc(mode(), finalText);
     if (!(await ensureProvider())) {
@@ -2052,13 +2056,13 @@ $('text-vet-send').addEventListener('click', async () => {
 // The vet's clinical notes, written in the background after the care plan appears, for the discharge pack and
 // so "Clinical notes" opens straight away. One quiet call; nothing waits for it.
 let pendingVetNotes = null; // { text, promise }
-function startVetNotes() {
+function startVetNotes(via = provider) {
   const text = els.transcript.value;
-  if (settings.role !== 'vet' || !text.trim() || !provider) return;
+  if (settings.role !== 'vet' || !text.trim() || !via) return;
   if (madeFrom.vet && madeFrom.vet.text === text) return;
   if (pendingVetNotes && pendingVetNotes.text === text) return;
   const prompt = buildPrompt(text.trim(), { clinician: settings.clinician, photoCount: sendPhotos().length, drugs: settings.drugs });
-  const promise = askJson(prompt, undefined, { images: sendPhotos() })
+  const promise = askJson(prompt, undefined, { images: sendPhotos(), via })
     .then((r) => {
       const list = normaliseResult(r);
       for (const n of list) if (!n.visit.type) n.visit.type = NOTE_TYPES.consult.title;
@@ -2068,6 +2072,75 @@ function startVetNotes() {
     .catch(() => null);
   pendingVetNotes = { text, promise };
 }
+
+/* ---------------- Quick polish (vets): fast tidy-up, SOAP notes in the background ---------------- */
+
+// Quick polish always uses the fast model, whatever is chosen in Settings.
+async function quickProvider() {
+  return resolveProvider({ ...settings, model: QUICK_MODEL });
+}
+async function createPolish(text) {
+  const via = await quickProvider();
+  if (!via) {
+    banner(NO_CLAUDE, 'info');
+    return;
+  }
+  banner('');
+  const out = await runWorking('Polishing your notes', 'A quick tidy-up, ready to paste into your system.', (signal) => via.generate(buildPolishPrompt(text, { drugs: settings.drugs }), signal));
+  const polished = String(out || '').replace(/^```[a-z]*\n?|```$/g, '').trim();
+  if (!polished) throw new AiError('empty', '');
+  showPolish(polished);
+  // The full SOAP notes start now, on the fast model, so they're ready (or nearly) when asked for.
+  startVetNotes(via);
+  watchSoap();
+}
+function showPolish(text) {
+  $('polish-out').value = text;
+  remember('polish', { text }, firstLine(text));
+  showView('polish');
+  $('polish-out').style.height = 'auto';
+  $('polish-out').style.height = `${Math.min($('polish-out').scrollHeight + 4, window.innerHeight * 0.6)}px`;
+  $('polish-title').focus();
+}
+const firstLine = (t) => String(t).split('\n').find((x) => x.trim())?.replace(/^[A-Za-z ]{2,20}:\s*/, '').slice(0, 70) || 'Polished notes';
+function watchSoap() {
+  const btn = $('polish-soap');
+  const text = els.transcript.value;
+  const ready = () => {
+    btn.dataset.state = 'ready';
+    $('polish-soap-text').textContent = 'Open SOAP notes';
+    $('polish-soap-help').textContent = 'SOAP notes are ready.';
+  };
+  btn.dataset.state = 'working';
+  $('polish-soap-text').textContent = 'SOAP notes';
+  $('polish-soap-help').textContent = 'Full SOAP notes are being made in the background from the same words.';
+  if (madeFrom.vet && madeFrom.vet.text === text) return ready();
+  if (pendingVetNotes && pendingVetNotes.text === text) pendingVetNotes.promise.then((list) => list && els.transcript.value === text && ready());
+}
+$('polish-copy').addEventListener('click', async () => {
+  const ok = await copyText($('polish-out').value);
+  toast(ok ? 'Copied. Paste it into your system.' : 'Couldn’t copy. Select the text and copy it instead.');
+});
+$('polish-soap').addEventListener('click', async () => {
+  if (busy) return;
+  const text = els.transcript.value;
+  if (madeFrom.vet && madeFrom.vet.text === text) return showNotes(madeFrom.vet.notes, false);
+  if (!pendingVetNotes || pendingVetNotes.text !== text) startVetNotes(await quickProvider());
+  if (!pendingVetNotes) return;
+  busy = true;
+  try {
+    const list = await runWorking('Writing the SOAP notes', 'Nearly done: they started while you read the polished notes.', () => pendingVetNotes.promise);
+    if (list) showNotes(list, false);
+    else {
+      showView('polish');
+      toast('The SOAP notes didn’t come through. Try again.');
+      pendingVetNotes = null;
+    }
+  } finally {
+    busy = false;
+  }
+});
+$('polish-back').addEventListener('click', () => showView('record'));
 
 $('discharge-pack').addEventListener('click', async (e) => {
   if (!careSheet) return;
@@ -2308,7 +2381,7 @@ els.forget.addEventListener('click', () => {
 
 /* ---------------- pick up where you left off ---------------- */
 
-const LAST_LABEL = { notes: 'Clinical notes', care: 'Care plan', doc: 'Record' };
+const LAST_LABEL = { notes: 'Clinical notes', care: 'Care plan', doc: 'Record', polish: 'Polished notes' };
 function remember(type, data, title) {
   store.saveLast({ type, data, title: String(title || '').slice(0, 80), text: els.transcript.value, at: Date.now() });
 }
@@ -2335,6 +2408,7 @@ function openSaved(last) {
   if (last.type === 'care') showCare(normaliseCareSheet(last.data.sheet, null), last.data.from === 'note' ? 'record' : last.data.from);
   else if (last.type === 'doc') showDoc(normaliseDoc(last.data.d), last.data.kind);
   else if (last.type === 'notes') showNotes(last.data.map(normaliseNote), false);
+  else if (last.type === 'polish') showPolish(String(last.data.text || ''));
 }
 $('open-recent').addEventListener('click', () => {
   const list = $('recent-list');

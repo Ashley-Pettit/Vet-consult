@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { withKey, mockApi, openApp, textReply } from './helpers.js';
+import { withKey, mockApi, openApp, textReply, asVet, apiReply } from './helpers.js';
 import { EXAMPLE_CARER_PLAN } from '../../src/note.js';
 
 const quick = { patient: { species: 'Bare-nosed wombat', sex: 'Female', weight_kg: '24' }, visit: { type: 'Clinical consult' },
@@ -59,4 +59,28 @@ test('vets see a kind word about pigeons, only for pigeons and only for vets', a
   await page.locator('#transcript').fill('Crested pigeon, wing droop.');
   await page.locator('#create').click();
   await expect(page.locator('#view-care .pigeon-fact')).toContainText('Pigeons are sweet, kind and accepting');
+});
+
+test('Quick polish: fast tidy-up ready to copy, with SOAP notes made in the background on the fast model', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  const calls = await mockApi(page, {
+    body: (prompt) => (/fast scribe/.test(prompt)
+      ? { content: [{ type: 'text', text: 'History: Adult wombat, car strike.\nExam: BCS 3/9, laceration L forelimb.\nPlan: Meloxicam 0.2 mg/kg SC SID.' }], stop_reason: 'end_turn' }
+      : apiReply()),
+  });
+  await asVet(page);
+  await openApp(page);
+  await page.locator('#mode label', { hasText: 'Quick polish' }).click();
+  await expect(page.locator('#create')).toHaveText('Polish notes');
+  await page.locator('#transcript').fill('adult wombat car strike bcs 3/9 lac L fl meloxicam 0.2 sc sid');
+  await page.locator('#create').click();
+  await expect(page.locator('#view-polish')).toBeVisible();
+  await expect(page.locator('#polish-out')).toHaveValue(/Exam: BCS 3\/9/);
+  await page.locator('#polish-copy').click();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toMatch(/^History: Adult wombat/);
+  await expect(page.locator('#polish-soap')).toHaveAttribute('data-state', 'ready');
+  await page.locator('#polish-soap').click();
+  await expect(page.locator('#view-note')).toBeVisible();
+  expect(calls).toHaveLength(2); // the polish, then the SOAP notes in the background; nothing more on opening them
+  expect(calls.every((c) => c.body.model === 'claude-haiku-5-5')).toBe(true);
 });

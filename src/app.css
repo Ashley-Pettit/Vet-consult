@@ -1169,3 +1169,15 @@ body[data-kb="open"] .tx-hint { display: none; }
 .speed-pick input:checked + span { background: var(--accent); color: var(--accent-ink); }
 .speed-pick input:focus-visible + span { outline: 3px solid var(--accent); outline-offset: 2px; }
 .speed-pick .help { margin: 0; font-size: 0.8rem; color: var(--muted); text-align: center; }
+
+/* Quick polish */
+.polish-out { width: 100%; min-height: 220px; font: inherit; line-height: 1.5; padding: 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); resize: vertical; }
+.polish-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.polish-actions .btn { flex: 1 1 160px; }
+#polish-soap { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+#polish-soap .soap-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); }
+#polish-soap[data-state="working"] .soap-dot { background: var(--warn); animation: soap-pulse 1.2s ease-in-out infinite; }
+#polish-soap[data-state="ready"] .soap-dot { background: var(--accent); }
+@keyframes soap-pulse { 50% { opacity: 0.3; } }
+@media (prefers-reduced-motion: reduce) { #polish-soap[data-state="working"] .soap-dot { animation: none; } }
+body[data-mode="polish"] .speed-pick { display: none; }

@@ -210,3 +210,13 @@ test('assessment: no guessed problems; prognosis kept when said; extra corrected
   const twice = '{"animals":[{"patient":{"name":"A"}}]}\n\nCorrection: use this one\n{"animals":[{"patient":{"name":"B"}}]}';
   assert.equal(extractJson(twice).animals[0].patient.name, 'B');
 });
+
+test('Quick polish prompt keeps every fact and the vet shorthand, and returns plain notes', async () => {
+  const { buildPolishPrompt } = await import('../../src/note.js');
+  const p = buildPolishPrompt('adult wombat bcs 3/9 meloxicam sc sid', { drugs: 'Our in-house mange wash' });
+  assert.match(p, /ready to paste straight into a practice management \(CRM\) system/);
+  assert.match(p, /Never add, remove or guess clinical content/);
+  assert.match(p, /Keep standard veterinary abbreviations/);
+  assert.match(p, /Our in-house mange wash/);
+  assert.match(p, /<notes>\nadult wombat bcs 3\/9/);
+});
