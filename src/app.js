@@ -575,7 +575,7 @@ els.clear.addEventListener('click', () => {
 
 // "New" on any result: asks first, then a clean start. The result stays under "Last made".
 const confirmNew = $('confirm-new');
-['new-note', 'new-care', 'new-doc'].forEach((id) => $(id).addEventListener('click', () => (busy ? null : confirmNew.showModal())));
+['new-note', 'new-care', 'new-doc', 'new-polish'].forEach((id) => $(id).addEventListener('click', () => (busy ? null : confirmNew.showModal())));
 confirmNew.addEventListener('close', () => {
   if (confirmNew.returnValue !== 'new') return;
   confirmNew.returnValue = '';
@@ -1901,7 +1901,8 @@ function renderDoc(d, kind) {
   $('doc').replaceChildren(
     ...(kind === 'mop' ? [el('p', { class: 'ai-disclaimer', text: aiNoteFor(d.title) })] : []),
     ...d.sections.filter((s) => !(TEXT_HEADING[kind] && TEXT_HEADING[kind].test(s.heading))).map((s) =>
-      el('section', { class: 'doc-sec' }, [el('h2', { text: s.heading }), s.text ? el('p', { text: s.text }) : list(s.items)]),
+      // The parts that must not be missed stand out, as in the Word printout.
+      el('section', { class: `doc-sec${/^(key message|text to send)/i.test(s.heading) ? ' tone-key' : /^keep out of the story|straight away/i.test(s.heading) ? ' tone-urgent' : /^suggested quote|keep yourself safe/i.test(s.heading) ? ' tone-warn' : ''}` }, [el('h2', { text: s.heading }), s.text ? el('p', { text: s.text }) : list(s.items)]),
     ),
     ...(kind === 'mop' && mopVideo(d) ? [videoSection(mopVideo(d))] : []), // no video: nothing, not the word "null"
     ...(d.due.length

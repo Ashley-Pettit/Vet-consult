@@ -1181,3 +1181,12 @@ body[data-kb="open"] .tx-hint { display: none; }
 @keyframes soap-pulse { 50% { opacity: 0.3; } }
 @media (prefers-reduced-motion: reduce) { #polish-soap[data-state="working"] .soap-dot { animation: none; } }
 body[data-mode="polish"] .speed-pick { display: none; }
+
+/* Vet tabs: Notes, Care plan, then the two quick tools */
+body[data-role="vet"] .mode label:has(input[value="polish"]), body[data-role="vet"] .mode label:has(input[value="media"]) { order: 1; }
+
+/* Doc sections that must not be missed */
+.doc-sec.tone-key, .doc-sec.tone-urgent, .doc-sec.tone-warn { border-radius: 10px; padding: 10px 12px; border-left: 4px solid; }
+.doc-sec.tone-key { background: var(--accent-soft); border-color: var(--accent); }
+.doc-sec.tone-urgent { background: var(--err-soft); border-color: var(--err); }
+.doc-sec.tone-warn { background: var(--warn-soft); border-color: var(--warn); }
