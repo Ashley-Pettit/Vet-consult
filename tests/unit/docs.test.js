@@ -102,3 +102,33 @@ test('MOP plan: plain steps for a member of the public, a text to send, grounded
     setRegion('vic');
   }
 });
+
+test('media statement copies as it would go out: no private notes, ENDS before About', async () => {
+  const { mediaReleaseText, normaliseDoc } = await import('../../src/note.js');
+  const d = normaliseDoc({
+    title: 'Wombat road strikes rise around Inverloch', subtitle: 'Media statement, Inverloch',
+    sections: [
+      { heading: 'Statement', text: 'Para one.\n\nPara two.' },
+      { heading: 'Quote', text: '"Slow down," said Dr Sam Lee, veterinarian.' },
+      { heading: 'What the public can do', items: ['Slow down at dawn and dusk'] },
+      { heading: 'About the organisation', text: 'Bunurong Wildlife Care is a registered wildlife shelter.' },
+      { heading: 'Not for publication', items: ['The burrow location'] },
+    ],
+    due: [], check: ['Consent to name the motorist?'],
+  });
+  const t = mediaReleaseText(d);
+  assert.match(t, /^Wombat road strikes rise around Inverloch\nMedia statement, Inverloch\n\nPara one\.\n\nPara two\./);
+  assert.match(t, /ENDS\n\nAbout the organisation\nBunurong/);
+  assert.doesNotMatch(t, /burrow|Not for publication|Consent/);
+});
+
+test('media statement: no RSPCA unless the vet says it', async () => {
+  const { buildDocPrompt } = await import('../../src/note.js');
+  const { setRegion } = await import('../../src/region.js');
+  setRegion('qld');
+  const p = buildDocPrompt('media', 'Koala season warning in Logan');
+  assert.match(p, /Never mention the RSPCA unless the vet did/);
+  assert.match(p, /just say to call a local wildlife rescue group or vet/);
+  setRegion('vic');
+  assert.doesNotMatch(buildDocPrompt('media', 'Wombat warning'), /run by the RSPCA/);
+});

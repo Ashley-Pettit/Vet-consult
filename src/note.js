@@ -385,6 +385,11 @@ const str = (v, max = 2000) => {
   if (typeof v !== 'string') return '';
   return v.replace(/\s+/g, ' ').trim().slice(0, max);
 };
+// Like str, but keeps paragraph breaks (a blank line between paragraphs), for longer prose such as a media statement.
+const paras = (v, max = 4000) => {
+  if (typeof v !== 'string') return str(v, max);
+  return v.split(/\n\s*\n/).map((p) => p.replace(/\s+/g, ' ').trim()).filter(Boolean).join('\n\n').slice(0, max);
+};
 const arr = (v, max = 40) => (Array.isArray(v) ? v.map((x) => str(x, 600)).filter(Boolean).slice(0, max) : str(v) ? [str(v)] : []);
 const obj = (v) => (v && typeof v === 'object' && !Array.isArray(v) ? v : {});
 
@@ -1118,7 +1123,7 @@ ${wildlifeSafetyRules()}
     working: 'A draft statement for the media, using only what you said. Written on the most thorough model.',
     title: 'Draft media statement from the vet',
     sources: true,
-    rule: () => `The author is a vet working with ${region().org}, not a carer. Turn their spoken comments into a draft news statement (media release) the organisation could send to journalists or post as an announcement, in the style of an RSPCA or wildlife hospital media release. It may be about a case, an animal welfare issue, a seasonal warning, an appeal or an organisation announcement. Plain, warm, factual Australian English for the general public: no clinical jargon (say "broken leg", not "fractured radius"), no hype, no exclamation marks.
+    rule: () => `The author is a vet working with ${region().org}, not a carer. Turn their spoken comments into a draft news statement (media release) the organisation could send to journalists or post as an announcement, in the style of a media release from an animal welfare organisation or wildlife hospital. Never mention the RSPCA unless the vet did. Name other organisations or people only if the vet named them, except the state wildlife emergency line in "What the public can do"${region().code === 'qld' ? ' (in Queensland that line is run by the RSPCA, so unless the vet mentioned the RSPCA, just say to call a local wildlife rescue group or vet)' : ''}. The organisation is ${region().org}. It may be about a case, an animal welfare issue, a seasonal warning, an appeal or an organisation announcement. Plain, warm, factual Australian English for the general public: no clinical jargon (say "broken leg", not "fractured radius"), no hype, no exclamation marks.
 - "title": the headline: clear and factual, under 12 words. "subtitle": "Media statement" plus the date or place if stated.
 - Sections, in this order, leaving out any with nothing to say:
   - "Statement": the release itself as 3 to 5 short paragraphs in "text", separated by blank lines. The first paragraph says who, what, where and when in one or two sentences; then the detail, including how any animal is doing (only what the vet said, with any uncertainty); then why it matters to the public.
@@ -1178,7 +1183,7 @@ export function normaliseDoc(raw) {
       .map((x) => {
         const s = obj(x);
         const items = arr(s.items, 30);
-        return { heading: str(s.heading, 80), text: items.length ? '' : str(s.text, 4000), items };
+        return { heading: str(s.heading, 80), text: items.length ? '' : paras(s.text, 4000), items };
       })
       .filter((s) => s.heading && (s.text || s.items.length))
       .slice(0, 16),
@@ -1198,6 +1203,27 @@ export function dueLabel(when, from = new Date()) {
 
 // Shown on every MOP plan, word for word as Bunurong Wildlife Care asked.
 export const MOP_DISCLAIMER = 'This is an ai tool which can make mistakes. In doubt? Defer to an expert.';
+
+/**
+ * The media statement as it would go out once approved: headline, statement, quote, public advice, ENDS, then
+ * About and Media contact. The vet's private notes and review questions are left out.
+ */
+export function mediaReleaseText(d) {
+  const by = (re) => d.sections.find((s) => re.test(s.heading));
+  const body = (s) => (s ? [s.text, ...s.items.map((x) => `- ${x}`)].filter(Boolean).join('\n') : '');
+  const L = [d.title || 'Media statement'];
+  if (d.subtitle) L.push(d.subtitle);
+  L.push('');
+  for (const re of [/^statement/i, /^quote/i]) if (by(re)) L.push(body(by(re)), '');
+  const pub = by(/^what the public can do/i);
+  if (pub) L.push('What you can do', body(pub), '');
+  L.push('ENDS', '');
+  const about = by(/^about/i);
+  if (about) L.push(about.heading, body(about), '');
+  const contact = by(/^media contact/i);
+  if (contact) L.push('Media contact', body(contact));
+  return L.join('\n').trim();
+}
 
 export function docText(d, date = new Date()) {
   const L = [d.title || 'Report'];

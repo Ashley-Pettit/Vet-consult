@@ -30,6 +30,7 @@ import {
   buildDocPrompt,
   normaliseDoc,
   docText,
+  mediaReleaseText,
   dueLabel,
   EXAMPLE_INTAKE_DICTATION,
   EXAMPLE_LOG_DICTATION,
@@ -1930,6 +1931,7 @@ function showDoc(d, kind, info = '') {
   $('advice-cta').hidden = kind !== 'intake';
   madeFrom[kind] = { text: els.transcript.value, d, info };
   renderDoc(d, kind);
+  if (kind === 'media' && !info) info = 'Draft for review. Nothing here is public until it has been checked and approved.';
   $('doc-banner').textContent = info;
   $('doc-banner').hidden = !info;
   showView('doc');
@@ -1961,6 +1963,10 @@ async function createDoc(kind, text) {
 $('doc-back').addEventListener('click', () => showView('record'));
 $('doc-copy').addEventListener('click', () => {
   if (!currentDoc) return;
+  // A media statement copies as it would go out once approved, without the vet's private notes.
+  if (currentDoc.kind === 'media') {
+    return shareOrCopy(mediaReleaseText(currentDoc.d), $('doc-title').textContent, 'Statement copied, without the private notes. Send it for review before it goes out.', docModel(currentDoc.d, 'Draft media statement, for review'), { type: 'doc', kind: 'media', d: currentDoc.d });
+  }
   shareOrCopy(docText(currentDoc.d) + (currentDoc.kind === 'mop' ? `${mopVideo(currentDoc.d) ? `\n\n${videoLine(mopVideo(currentDoc.d))}` : ''}\n\n${aiNoteFor(currentDoc.d.title)}` : ''), $('doc-title').textContent, 'Copied. Paste it wherever it needs to go.', docModel(currentDoc.d, DOC_KINDS[currentDoc.kind].label, currentDoc.kind === 'mop' ? aiNoteFor(currentDoc.d.title) : ''), { type: 'doc', kind: currentDoc.kind, d: currentDoc.d });
 });
 $('doc-new').addEventListener('click', addMoreInfo);
@@ -2223,7 +2229,7 @@ async function saveWord(model, btn) {
     btn.lastChild.textContent = label;
   }
 }
-$('word-doc').addEventListener('click', (e) => currentDoc && saveWord(docModel(currentDoc.d, DOC_KINDS[currentDoc.kind].label, currentDoc.kind === 'mop' ? aiNoteFor(currentDoc.d.title) : ''), e.currentTarget));
+$('word-doc').addEventListener('click', (e) => currentDoc && saveWord(docModel(currentDoc.d, currentDoc.kind === 'media' ? 'Draft media statement, for review' : DOC_KINDS[currentDoc.kind].label, currentDoc.kind === 'mop' ? aiNoteFor(currentDoc.d.title) : ''), e.currentTarget));
 $('word-care').addEventListener('click', (e) => careSheet && saveWord(careModel(careSheet, lookupSource, wordPhotos()), e.currentTarget));
 $('word-note').addEventListener('click', (e) => currentNote() && saveWord(noteModel(currentNote()), e.currentTarget));
 
