@@ -1902,7 +1902,7 @@ function renderDoc(d, kind) {
     ...(kind === 'mop' ? [el('p', { class: 'ai-disclaimer', text: aiNoteFor(d.title) })] : []),
     ...d.sections.filter((s) => !(TEXT_HEADING[kind] && TEXT_HEADING[kind].test(s.heading))).map((s) =>
       // The parts that must not be missed stand out, as in the Word printout.
-      el('section', { class: `doc-sec${/^(text to send)/i.test(s.heading) ? ' tone-key' : /^(not for publication|keep out of the story)|straight away/i.test(s.heading) ? ' tone-urgent' : /^quote$|^suggested quote|keep yourself safe/i.test(s.heading) ? ' tone-warn' : ''}` }, [el('h2', { text: s.heading }), s.text ? el('p', { text: s.text }) : list(s.items)]),
+      el('section', { class: `doc-sec${/^(text to send)/i.test(s.heading) ? ' tone-key' : /^(not for publication|keep out of the story)|straight away/i.test(s.heading) ? ' tone-urgent' : /^quote$|^suggested quote|keep yourself safe/i.test(s.heading) ? ' tone-warn' : ''}` }, [el('h2', { text: s.heading }), ...(s.text ? s.text.split(/\n\s*\n|\n/).filter((x) => x.trim()).map((x) => el('p', { text: x.trim() })) : [list(s.items)])]),
     ),
     ...(kind === 'mop' && mopVideo(d) ? [videoSection(mopVideo(d))] : []), // no video: nothing, not the word "null"
     ...(d.due.length
