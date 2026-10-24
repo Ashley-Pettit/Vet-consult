@@ -142,6 +142,15 @@ export const SPECIES_GROUP_IDS = Object.keys(SPECIES_RANGES);
 export const speciesGroupsForPrompt = () => SPECIES_GROUP_IDS.map((id) => `${id} (${SPECIES_RANGES[id].label})`).join(', ');
 
 /** The figures to show for a group in the chosen state (state-specific warmth where the sources differ). */
+// Rows written for babies (unfurred joeys, puggles, nestlings): an adult's plan leaves them out, so it only shows what applies.
+const YOUNG_CONTEXT = /\b(joeys?|pouch young|puggles?|nestlings?|hatchlings?|fledglings?|chicks?|ducklings?|cygnets?|babies|baby|orphan(ed)?|pups?|pinkies|pinky|squabs?|squeakers?)\b/i;
+const YOUNG_ROW = /unfurred|furless|velvet|fine fur|pouch|puggle|nestling|hatchling|branchling|joey|duckling|chick|squab/i;
+export function rangesForAnimal(id, state = 'vic', context = '') {
+  const g = rangesFor(id, state);
+  if (!g || YOUNG_CONTEXT.test(String(context))) return g;
+  const keep = ([k]) => !YOUNG_ROW.test(k) || /adult|juvenile/i.test(k);
+  return { ...g, warmth: g.warmth.filter(keep), vitals: g.vitals.filter(keep) };
+}
 export function rangesFor(id, state = 'vic') {
   const g = SPECIES_RANGES[id];
   if (!g) return null;

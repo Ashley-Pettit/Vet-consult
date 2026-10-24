@@ -569,7 +569,7 @@ export const CARE_CONDITIONS = [
    "title": "How to wrap a bird’s wing",
    "channel": "Palomacy (USA)",
    "date": "2020",
-   "warning": "From the USA: the care carries over, but follow your state’s rules and your wildlife service."
+   "warning": "Let a vet check the wing first: wrap only if the vet says to. From the USA: follow your state’s rules and your wildlife service."
   }
  },
  {
@@ -871,7 +871,12 @@ export const CARE_CONDITIONS = [
    "heatwave",
    "heat wave",
    "overheated",
-   "hyperthermi"
+   "hyperthermi",
+   "hot day",
+   "hot today",
+   "hot weather",
+   "extreme heat",
+   "heat-stress"
   ],
   "video": {
    "id": "VBzRwrY8D_8",

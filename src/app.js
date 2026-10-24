@@ -10,7 +10,7 @@ import { preparePhoto, MAX_PHOTOS } from './photos.js';
 import { ABOUT_HTML } from './about.js';
 import { lookupSource, sourcesForPrompt, SOURCE_IDS } from './sources.js';
 import { region, setRegion } from './region.js';
-import { rangesFor } from './species-ranges.js';
+import { rangesFor, rangesForAnimal } from './species-ranges.js';
 import { careVideoFor, watchUrl, embedUrl, thumbUrl } from './videos.js';
 import { groupsIn, factsFor, namedAnimal } from './species-vet.js';
 import { SPECIES_CARE } from './species-care.js';
@@ -1276,7 +1276,7 @@ function renderNote() {
       el('span', { text: [p.name ? p.species : '', p.breed].filter(Boolean).join(' · ') }),
     ]),
     el('div', { class: 'grid' }, [
-      p.sex && kv('Sex', p.sex), p.age && kv('Age', p.age), p.weight_kg && kv('Weight', p.weight_kg, ' kg'), p.animal_id && kv('Animal ID', p.animal_id),
+      p.sex && kv('Sex', p.sex), p.age && kv('Age', p.age), p.weight_kg && (Number(p.weight_kg) < 1 ? kv('Weight', Math.round(Number(p.weight_kg) * 1000), ' g') : kv('Weight', p.weight_kg, ' kg')), p.animal_id && kv('Animal ID', p.animal_id),
       p.microchip && kv('Microchip', p.microchip), p.intake_type && kv('Intake', p.intake_type), n.visit.clinician && kv('Clinician', n.visit.clinician),
     ].filter(Boolean)),
   ]);
@@ -1625,21 +1625,24 @@ function videoSection(v) {
   const thumb = el('img', { src: thumbUrl(v), alt: '', loading: 'lazy', class: 'video-thumb' });
   thumb.addEventListener('error', () => thumb.remove());
   const play = el('button', { type: 'button', class: 'video-play', 'aria-label': `Play video: ${v.title}` }, [el('span', { class: 'video-play-icon', 'aria-hidden': 'true' })]);
+  // A small thumbnail beside the title, so the care comes first; tapping play opens the full-width player.
+  const row = el('div', { class: 'video-row' });
   play.addEventListener('click', () => {
+    row.classList.add('playing');
     box.replaceChildren(el('iframe', { src: embedUrl(v), title: v.title, allow: 'autoplay; encrypted-media; picture-in-picture', allowfullscreen: '', loading: 'lazy', referrerpolicy: 'strict-origin-when-cross-origin' }));
   });
   box.append(thumb, play);
+  row.append(box, el('div', { class: 'video-info' }, [el('strong', { text: v.title }), el('span', { class: 'help', text: `${v.channel}${v.date ? `, ${v.date}` : ''}` })]));
   return el('section', { class: 'care-sec video' }, [
     el('h2', { text: 'Watch' }),
-    el('p', {}, [el('strong', { text: v.title }), ` (${v.channel}, ${v.date})`]),
+    row,
     v.warning ? el('p', { class: 'help', text: v.warning }) : null,
-    box,
   ]);
 }
 
 // Normal ranges and pouch / enclosure temperatures for the species, shown from the checked table (never from Claude).
-function rangesSection(id) {
-  const g = id ? rangesFor(id, region().code) : null;
+function rangesSection(id, context = '') {
+  const g = id ? rangesForAnimal(id, region().code, context) : null;
   if (!g) return null;
   const rows = (pairs) => pairs.map(([k, v]) => el('div', { class: 'kv' }, [el('span', { class: 'k', text: k }), el('span', { class: 'v', text: v })]));
   return el('section', { class: 'care-sec ranges' }, [
@@ -1981,7 +1984,7 @@ function renderCare(c) {
           ])
         : null,
       videoSection(carePlanVideo(c)),
-      rangesSection(c.species_group),
+      rangesSection(c.species_group, [c.animal, c.summary, c.title].filter(Boolean).join(' ')),
       rehydrationSection(c.rehydration),
       c.plan.length
         ? el('section', { class: 'care-sec' }, [
@@ -2103,6 +2106,10 @@ function shareOrCopy(text, title, copiedMsg, wordModel = null, linkData = null) 
   if (!canShare() && !wordModel && !linkData) return finishSend('copy');
   $('share-word').hidden = !wordModel;
   $('share-pdf').hidden = !wordModel || !buildPdf;
+  // PDF leads where it can be made (it looks the same on every phone); inside Claude, Word leads.
+  $('share-word').classList.toggle('primary', !buildPdf);
+  $('share-word').classList.toggle('ghost', Boolean(buildPdf));
+  $('share-sub').textContent = buildPdf ? 'Send it by text, email or WhatsApp. A PDF looks right on any phone; Word can be edited.' : 'Send it by text, email or WhatsApp: as a Word document, as plain text, or as a link that opens the plan in the app.';
   $('share-link').hidden = !linkData;
   $('share-go').hidden = !canShare();
   $('share-sheet').showModal();
@@ -2214,9 +2221,12 @@ function carePlanVideo(c) {
 
 // The MOP plan shows the same how-to-look-after video as the care plan, for the animal named; none if there isn't one.
 function mopVideo(d) {
+  // The animal and its age come from the title and what was said, not the plan's general advice ("call back if you
+  // see a joey" is not a joey).
+  const said = [d.title, d.subtitle, els.transcript.value].filter(Boolean).join(' ');
   const text = [d.title, d.subtitle, ...d.sections.map((x) => [x.heading, x.text, ...(x.items || [])].join(' '))].join(' ');
-  const tags = groupsIn(text);
-  return tags.length ? careVideoFor('', text, tags) : null;
+  const tags = groupsIn(said).length ? groupsIn(said) : groupsIn(text);
+  return tags.length ? careVideoFor('', said, tags) : null;
 }
 
 // Numbered items (the opinions in an expert witness statement) show as a numbered list, not bullets with numbers.

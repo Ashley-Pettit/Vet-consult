@@ -2,7 +2,7 @@
 // the Word library. The library itself (word-docx.js) loads only when someone actually asks for a Word file.
 import { dueLabel, formatDate, NOT_RECORDED, rehydrationTable, REHYDRATION_NOTE, careAiNote, feedAmounts } from './note.js';
 import { chartByKey } from './feeding.js';
-import { rangesFor } from './species-ranges.js';
+import { rangesFor, rangesForAnimal } from './species-ranges.js';
 import { region } from './region.js';
 
 export const PAGE_W = 9638; // A4 minus 2 cm margins, in twentieths of a point
@@ -38,8 +38,8 @@ export function docModel(d, kindLabel, note = '', { forPublic = false, video = n
   };
 }
 
-function rangesBlocks(id) {
-  const g = id ? rangesFor(id, region().code) : null;
+function rangesBlocks(id, context = '') {
+  const g = id ? rangesForAnimal(id, region().code, context) : null;
   if (!g) return [];
   return [{
     heading: `Normal ranges: ${g.label}`,
@@ -99,7 +99,7 @@ export function careModel(c, lookup, photos = [], video = null) {
   const blocks = [
     { heading: 'Summary', text: c.summary, tone: 'summary' },
     ...(meds.length ? [{ heading: 'Medications', table: { head: ['Medication', 'How', 'How often', 'How long'], rows: meds, widths: [2600, 2600, 2400, PAGE_W - 7600] }, note: c.medications.map((m) => (m.tip ? `${m.name}: ${m.tip}` : '')).filter(Boolean).join('  ') || undefined }] : []),
-    ...rangesBlocks(c.species_group),
+    ...rangesBlocks(c.species_group, [c.animal, c.summary].filter(Boolean).join(' ')),
     ...rehydrationBlocks(c.rehydration),
     // The day-by-day plan as one table, rather than a scatter of small headed sections.
     ...(c.plan.length ? [{ heading: 'Day-by-day plan', table: { head: ['When', 'What to do'], rows: c.plan.map((p) => [p.when, p.tasks.length > 1 ? p.tasks.map((x) => `•  ${x}`).join('\n') : p.tasks.join('')]), widths: [2700, PAGE_W - 2700] } }] : []),

@@ -863,6 +863,58 @@ export const MAMMAL_POINTS = [
   "url": "https://www.wildlife.vic.gov.au/__data/assets/pdf_file/0018/92511/Fact-Sheet-Wildlife-and-Heat-Stress-2018.pdf"
  },
  {
+  "species": "ringtail",
+  "topic": "disease",
+  "audience": "carer",
+  "point": "Possums, koalas and wombats wandering on the ground in daytime looking for water may be heat-stressed. For small wildlife, place in a cool ventilated container on a damp towel, offer a small bowl of water and gently spray with room-temperature water; do not handle large animals or any flying-fox.",
+  "why": "Public and carer heat-stress first aid.",
+  "source_title": "Wildlife and heat stress: community information fact sheet",
+  "publisher": "Department of Environment, Land, Water and Planning (DELWP), Victoria",
+  "authors": "DELWP",
+  "date": "2018",
+  "scope": "vic",
+  "url": "https://www.wildlife.vic.gov.au/__data/assets/pdf_file/0018/92511/Fact-Sheet-Wildlife-and-Heat-Stress-2018.pdf"
+ },
+ {
+  "species": "brushtail",
+  "topic": "disease",
+  "audience": "carer",
+  "point": "Possums, koalas and wombats wandering on the ground in daytime looking for water may be heat-stressed. For small wildlife, place in a cool ventilated container on a damp towel, offer a small bowl of water and gently spray with room-temperature water; do not handle large animals or any flying-fox.",
+  "why": "Public and carer heat-stress first aid.",
+  "source_title": "Wildlife and heat stress: community information fact sheet",
+  "publisher": "Department of Environment, Land, Water and Planning (DELWP), Victoria",
+  "authors": "DELWP",
+  "date": "2018",
+  "scope": "vic",
+  "url": "https://www.wildlife.vic.gov.au/__data/assets/pdf_file/0018/92511/Fact-Sheet-Wildlife-and-Heat-Stress-2018.pdf"
+ },
+ {
+  "species": "glider",
+  "topic": "disease",
+  "audience": "carer",
+  "point": "Possums, koalas and wombats wandering on the ground in daytime looking for water may be heat-stressed. For small wildlife, place in a cool ventilated container on a damp towel, offer a small bowl of water and gently spray with room-temperature water; do not handle large animals or any flying-fox.",
+  "why": "Public and carer heat-stress first aid.",
+  "source_title": "Wildlife and heat stress: community information fact sheet",
+  "publisher": "Department of Environment, Land, Water and Planning (DELWP), Victoria",
+  "authors": "DELWP",
+  "date": "2018",
+  "scope": "vic",
+  "url": "https://www.wildlife.vic.gov.au/__data/assets/pdf_file/0018/92511/Fact-Sheet-Wildlife-and-Heat-Stress-2018.pdf"
+ },
+ {
+  "species": "wombat",
+  "topic": "disease",
+  "audience": "carer",
+  "point": "Possums, koalas and wombats wandering on the ground in daytime looking for water may be heat-stressed. For small wildlife, place in a cool ventilated container on a damp towel, offer a small bowl of water and gently spray with room-temperature water; do not handle large animals or any flying-fox.",
+  "why": "Public and carer heat-stress first aid.",
+  "source_title": "Wildlife and heat stress: community information fact sheet",
+  "publisher": "Department of Environment, Land, Water and Planning (DELWP), Victoria",
+  "authors": "DELWP",
+  "date": "2018",
+  "scope": "vic",
+  "url": "https://www.wildlife.vic.gov.au/__data/assets/pdf_file/0018/92511/Fact-Sheet-Wildlife-and-Heat-Stress-2018.pdf"
+ },
+ {
   "species": "koala",
   "topic": "diagnostics",
   "audience": "vet",
