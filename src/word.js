@@ -66,7 +66,14 @@ function feedBlocks(f) {
   const chart = f.chart ? chartByKey(f.chart) : null;
   if (chart) {
     // The chart itself, so the carer can read the next amount off the printout as the joey grows.
-    const rows = chart.points.map(([g, ml, product]) => [g >= 1000 ? `${(g / 1000).toFixed(g % 1000 ? 2 : 0)} kg` : `${g} g`, `${ml} mL a day`, product.replace(/^Wombaroo /, '')]);
+    // Only the part of the chart that matters from today's weight on, with today's amount in its place.
+    const w = Number(f.weight_g) || 0;
+    const fmt = (g) => (g >= 1000 ? `${(g / 1000).toFixed(g % 1000 ? 2 : 0).replace(/0$/, '')} kg` : `${g} g`);
+    const above = chart.points.findIndex(([g]) => g > w);
+    const from = !w ? 0 : above < 0 ? chart.points.length - 1 : a && a.perDay ? above : Math.max(0, above - 1);
+    const pts = chart.points.slice(from).map(([g, ml, product]) => [g, `${ml} mL a day`, product.replace(/^Wombaroo /, '')]);
+    if (w && a && a.perDay && !pts.some(([g]) => g === w)) pts.push([w, `about ${a.perDay} mL a day (today)`, String(a.product || '').replace(/^Wombaroo /, '')]);
+    const rows = pts.sort((x, y) => x[0] - y[0]).map(([g, ...rest]) => [g === w ? `${fmt(g)} (now)` : fmt(g), ...rest]);
     return [{
       heading: 'Feed calculator',
       text: `${a && a.perDay ? `For ${f.weight_g} g: about ${a.perDay} mL a day of ${a.product}, as ${a.feeds} feeds of about ${a.perFeed} mL. ` : ''}Feed ${f.feeds} times a day. Weigh daily and read the amount for the new weight from the chart below (in between two weights, use an amount in between).`,

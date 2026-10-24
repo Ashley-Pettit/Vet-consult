@@ -108,10 +108,10 @@ export const CARE_CONDITIONS = [
    "crusty skin"
   ],
   "video": {
-   "id": "juBHYfLoBHs",
-   "title": "Wombat mange: how to build and install a burrow flap",
-   "channel": "Wombat Rescue",
-   "date": "2022"
+   "id": "3j2RDNKT_Oo",
+   "title": "Treating sarcoptic mange",
+   "channel": "WIRES",
+   "date": "2023"
   }
  },
  {

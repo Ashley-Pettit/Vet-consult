@@ -157,7 +157,7 @@ export async function buildPdf(model, { preparedBy = '', date = new Date(), temp
       },
     );
     if (model.aiNote) content.push({ text: model.aiNote, italics: true, color: MUTED, fontSize: 8.5, margin: [0, 6, 0, 2] });
-    if (model.watch) content.push({ text: [{ text: '▶ Watch: ', bold: true, color: OLIVE }, { text: `${model.watch.title} (${model.watch.channel}${model.watch.date ? `, ${model.watch.date}` : ''})`, link: model.watch.url, color: OLIVE, decoration: 'underline' }], fontSize: 8.5, margin: [0, 2, 0, 2] });
+    if (model.watch) content.push({ text: [{ text: 'Watch: ', bold: true, color: OLIVE }, { text: `${model.watch.title} (${model.watch.channel}${model.watch.date ? `, ${model.watch.date}` : ''})`, link: model.watch.url, color: OLIVE, decoration: 'underline' }], fontSize: 8.5, margin: [0, 2, 0, 2] });
 
     for (const b of model.blocks || []) {
       const has = b.text || (b.items && b.items.length) || (b.checks && b.checks.length) || b.table || (b.labels && b.labels.length) || (b.photos && b.photos.length);
