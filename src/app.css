@@ -1254,13 +1254,12 @@ body[data-role="vet"] .mode .adv-tab { order: 2; }
 .polish-soap-wait { display: flex; align-items: center; gap: 8px; margin: 0; }
 .polish-soap-wait[hidden] { display: none; }
 
-/* MOP plans: the operator's directions as dropdowns */
-.mop-dir { display: grid; gap: 10px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+/* MOP plans: the operator's directions as dropdowns, inside the Change dialog */
+.mop-dir { display: grid; gap: 8px; margin-top: 4px; }
 .mop-dir[hidden] { display: none; }
-.mop-dir h2 { margin: 0; font: 700 1rem/1.2 var(--display); text-transform: uppercase; letter-spacing: 0.5px; }
-.mop-dir .help { margin: 0; font-size: 0.85rem; color: var(--muted); }
-.mop-dir-grid { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
-.mop-dir-grid .field { display: grid; gap: 4px; margin: 0; }
-.mop-dir-grid label { font-weight: 650; font-size: 0.88rem; }
-.mop-dir-grid select { width: 100%; min-height: 44px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--ink); font: inherit; font-size: 0.92rem; }
-.mop-dir #mop-dir-go { justify-self: start; }
+.mop-dir h3 { margin: 0; font: 700 0.9rem/1.2 var(--display); text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); }
+.mop-dir-grid { display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.mop-dir-grid .field { display: grid; gap: 3px; margin: 0; }
+.mop-dir-grid label { font-weight: 650; font-size: 0.84rem; }
+.mop-dir-grid select { width: 100%; min-height: 42px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--ink); font: inherit; font-size: 0.9rem; }
+dialog.more { max-height: calc(100dvh - 24px); overflow-y: auto; }

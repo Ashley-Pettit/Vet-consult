@@ -1406,6 +1406,7 @@ const MORE_TEXT = {
 const AMEND_HELP = 'Say or type what to change or add. Everything else stays as it is.';
 function openMore(target) {
   amendTarget = target;
+  renderMopDirections(Boolean(target && target.type === 'doc' && currentDoc && currentDoc.kind === 'mop'));
   const t = MORE_TEXT[target ? 'amend' : 'add'];
   $('more-title').textContent = t.title;
   moreText.placeholder = t.placeholder;
@@ -1423,6 +1424,7 @@ function changeDoc() {
 function addMoreInfo(keepTarget) {
   if (keepTarget !== true) {
     amendTarget = null;
+    renderMopDirections(false);
     $('more-title').textContent = MORE_TEXT.add.title;
     moreText.placeholder = MORE_TEXT.add.placeholder;
     $('more-go').textContent = MORE_TEXT.add.go;
@@ -1479,15 +1481,20 @@ $('more-go').addEventListener('click', async (e) => {
   const t0 = Date.now();
   while (moreVoice.state !== 'idle' && Date.now() - t0 < 1800) await new Promise((res) => setTimeout(res, 60));
   if (pending && !moreText.value.includes(pending)) moreText.value = appendSegment(moreText.value, pending);
-  if (moreText.value.trim()) more.close('go');
+  if (moreText.value.trim() || (amendTarget && mopDirectionText())) more.close('go');
 });
 $('more-cancel').addEventListener('click', () => more.close());
-moreText.addEventListener('input', () => ($('more-go').disabled = !moreText.value.trim()));
+moreText.addEventListener('input', () => ($('more-go').disabled = !moreText.value.trim() && !(amendTarget && mopDirectionText())));
 more.addEventListener('close', async () => {
-  const extra = moreText.value.trim();
+  const typed = moreText.value.trim();
+  const picked = amendTarget ? mopDirectionText() : '';
+  const extra = [typed, picked].filter(Boolean).join('\n\n');
   if (more.returnValue !== 'go' || !extra) return;
   more.returnValue = '';
-  if (amendTarget) return amend(amendTarget, extra);
+  if (amendTarget) {
+    if (picked) keepMopPicks();
+    return amend(amendTarget, extra);
+  }
   setTranscript(appendSegment(els.transcript.value, extra));
   if (isQuickUpdate(extra) && settings.model !== QUICK_MODEL) await withModel(QUICK_MODEL, () => createNote());
   else await createNote();
@@ -1533,31 +1540,29 @@ const MOP_DIRECTIONS = [
   ] },
 ];
 let mopPicks = {};
-function renderMopDirections(kind) {
-  const box = $('mop-dir');
-  box.hidden = kind !== 'mop';
-  if (kind !== 'mop') return;
+// In the Change dialog for a MOP plan: the directions sit under the mic and text box. Say it, type it, pick it, or all three.
+function renderMopDirections(show) {
+  $('mop-dir').hidden = !show;
+  if (!show) return;
   $('mop-dir-grid').replaceChildren(...MOP_DIRECTIONS.map((d) => {
-    const sel = el('select', { id: `mop-dir-${d.id}` }, d.options.map(([v, text], i) => el('option', { value: String(i), text })));
+    const sel = el('select', { id: `mop-dir-${d.id}` }, d.options.map(([, text], i) => el('option', { value: String(i), text })));
     sel.value = String(mopPicks[d.id] || 0);
-    sel.addEventListener('change', () => ($('mop-dir-go').disabled = false));
+    sel.addEventListener('change', () => ($('more-go').disabled = !moreText.value.trim() && !mopDirectionText()));
     return el('div', { class: 'field' }, [el('label', { for: `mop-dir-${d.id}`, text: d.label }), sel]);
   }));
-  $('mop-dir-go').disabled = true;
 }
-$('mop-dir-go').addEventListener('click', () => {
-  const picks = {};
-  const lines = [];
-  for (const d of MOP_DIRECTIONS) {
-    const i = Number($(`mop-dir-${d.id}`).value) || 0;
-    picks[d.id] = i;
-    if (i && i !== (mopPicks[d.id] || 0)) lines.push(`${d.label}: ${d.options[i][0]}`);
-  }
-  mopPicks = picks;
-  $('mop-dir-go').disabled = true;
-  if (!lines.length) return;
-  amend({ type: 'doc' }, `The operator's directions. Follow them exactly: they replace anything in the plan they contradict, including the text to send and the "Food and water" section, unless one is unsafe for this species, in which case keep the safe advice and add a check.\n${lines.join('\n')}`);
-});
+/** The directions picked that differ from last time, as one instruction (empty if none changed). */
+function mopDirectionText() {
+  if ($('mop-dir').hidden) return '';
+  const lines = MOP_DIRECTIONS.map((d) => {
+    const i = Number(($(`mop-dir-${d.id}`) || {}).value) || 0;
+    return i && i !== (mopPicks[d.id] || 0) ? `${d.label}: ${d.options[i][0]}` : '';
+  }).filter(Boolean);
+  return lines.length ? `The operator's directions. Follow them exactly: they replace anything in the plan they contradict, including the text to send and the "Food and water" section, unless one is unsafe for this species, in which case keep the safe advice and add a check.\n${lines.join('\n')}` : '';
+}
+function keepMopPicks() {
+  for (const d of MOP_DIRECTIONS) mopPicks[d.id] = Number(($(`mop-dir-${d.id}`) || {}).value) || 0;
+}
 
 /** Apply a spoken or typed change to the plan or document on screen. */
 async function amend(target, change) {
@@ -2120,7 +2125,6 @@ function showDoc(d, kind, info = '') {
   remember('doc', { d, kind }, d.title);
   currentDoc = { d, kind };
   renderMakeNext($('make-next-doc'), kind);
-  renderMopDirections(kind);
   // "For the vet" and the MOP plan lead with a ready-to-send text message.
   const textSec = TEXT_HEADING[kind] ? d.sections.find((x) => TEXT_HEADING[kind].test(x.heading)) : null;
   $('text-vet').hidden = !textSec;
