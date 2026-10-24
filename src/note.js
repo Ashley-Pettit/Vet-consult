@@ -3,7 +3,7 @@ import { animalTags } from './sources.js';
 import { CONFIG } from './config.js';
 import { region } from './region.js';
 import { speciesGroupsForPrompt, SPECIES_GROUP_IDS, rangesFor } from './species-ranges.js';
-import { videoFor, watchUrl } from './videos.js';
+import { careVideoFor, watchUrl } from './videos.js';
 import { drugsForPrompt } from './drugs.js';
 import { shorthandForPrompt } from './shorthand.js';
 import { vetCareForPrompt, groupsIn, namedAnimal } from './species-vet.js';
@@ -807,7 +807,7 @@ export function careSheetText(c, lookup = () => null) {
     g.notes.forEach((x) => L.push(`- ${x}`));
     L.push(`From: ${g.sources.map((x) => `${x.title} (${x.publisher}, ${x.date})`).join('; ')}`, '');
   }
-  const v = videoFor(c.species_group, [c.title, c.summary, c.animal].filter(Boolean).join(' '));
+  const v = careVideoFor(c.species_group, [c.title, c.summary, c.animal].filter(Boolean).join(' '));
   if (v) L.push(`Watch: ${v.title} (${v.channel}): ${watchUrl(v)}`, '');
   if (c.rehydration && c.rehydration.needed) {
     L.push('Rehydration');

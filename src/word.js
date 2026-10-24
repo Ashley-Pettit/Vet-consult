@@ -87,7 +87,7 @@ function feedBlocks(f) {
   }];
 }
 
-export function careModel(c, lookup, photos = []) {
+export function careModel(c, lookup, photos = [], video = null) {
   const meds = c.medications.map((m) => [m.name, m.how, m.how_often, m.how_long]);
   const blocks = [
     { heading: 'Summary', text: c.summary, tone: 'summary' },
@@ -118,6 +118,8 @@ export function careModel(c, lookup, photos = []) {
     docType: 'Care plan',
     title: c.animal ? `Care plan: ${c.animal}` : 'Care plan',
     aiNote: careAiNote(c),
+    // The care video, as a link on the printout.
+    watch: video && video.id ? { ...video, url: `https://www.youtube.com/watch?v=${video.id}` } : null,
     blocks,
     tickSheet: c.daily_checks.length ? { items: c.daily_checks, days: tickDays, urgent: c.escalate.urgent } : null,
     sources: c.sources.map(lookup).filter(Boolean),

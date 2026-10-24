@@ -42,6 +42,39 @@ export const VIDEOS = {
   'general': {"id": "PVqgAgfDFyk", "title": "How to contain an injured bird or small animal", "channel": "Wildlife Victoria", "date": "2019"},
 };
 
+// Care plans show a video about CARING for the animal (feeding, housing, warmth, handling), picked October 2026 from
+// Australian wildlife groups, hospitals and licensed carers, and checked with YouTube's oEmbed (title, channel, embeddable).
+// "-young" videos are only for joeys, chicks and other young; an animal with no good care video gets none rather
+// than a rescue video. The rescue videos above stay for the MOP plan, where someone is waiting for a rescuer.
+export const CARE_VIDEOS = {
+  "koala": {"id": "W6nGpjHsx90", "title": "Providing quality food for koalas in care", "channel": "Queensland Environment", "date": "2025"},
+  "koala-young": {"id": "R5N0LoXGEnY", "title": "Caring for koala joeys at Ipswich Koala Protection Society", "channel": "WWF-Australia", "date": "2021"},
+  "macropod-young": {"id": "inYW6jisj_4", "title": "Raising a kangaroo joey: from bottle feeds to the mob", "channel": "Australia Zoo", "date": "2022"},
+  "wombat-young": {"id": "Cz_N4LX8FkE", "title": "How to give a wombat joey a bottle", "channel": "Sleepy Burrows Wombat Sanctuary", "date": "2017"},
+  "ringtail": {"id": "3AAfzvOvAmM", "title": "How to build a ringtail possum drey", "channel": "WIRES", "date": "2021"},
+  "ringtail-young": {"id": "5vKL2bjUEQ0", "title": "Ringtail possum joeys in care: twins Jack and Jill", "channel": "Megabattie (licensed wildlife carer)", "date": "2022"},
+  "brushtail-young": {"id": "fp6pxWYgwI4", "title": "Brushtail possum joeys in care: feeding and care", "channel": "Megabattie (licensed wildlife carer)", "date": "2023"},
+  "glider": {"id": "mb8TI-LuoAM", "title": "Feeding an injured sugar glider", "channel": "Rayya The Vet", "date": "2013"},
+  "echidna": {"id": "LgpQdHOboB8", "title": "Echidna care, with NQ Wildlife Care’s echidna coordinator", "channel": "NQ Wildlife Care", "date": "2023"},
+  "echidna-young": {"id": "wvlBuq2kg2k", "title": "Feeding an echidna puggle", "channel": "NQ Wildlife Care", "date": "2023"},
+  "flyingfox": {"id": "GMVCZ52-G0Y", "title": "A young flying-fox in care: the first days", "channel": "Megabattie (licensed wildlife carer)", "date": "2020", "warning": "Never touch a bat. Only trained, vaccinated people handle bats."},
+  "flyingfox-young": {"id": "34o4w-kwejY", "title": "Caring for an orphan flying-fox pup", "channel": "Megabattie (licensed wildlife carer)", "date": "2020", "warning": "The pup was found on her mother, who had died. Never touch a bat. Only trained, vaccinated people handle bats."},
+  "microbat": {"id": "hGnsJNAe6E8", "title": "A microbat in care", "channel": "Megabattie (licensed wildlife carer)", "date": "2022", "warning": "Never touch a bat. Only trained, vaccinated people handle bats."},
+  "bandicoot-young": {"id": "FmJP_m1GZWE", "title": "A baby bandicoot in care", "channel": "Megabattie (licensed wildlife carer)", "date": "2019"},
+  "babybird": {"id": "K9FETK07HvQ", "title": "How to help a baby bird", "channel": "Wildlife Victoria", "date": "2019"},
+  "frogmouth-owl": {"id": "k87V8EHCOMM", "title": "Tawny frogmouths in care", "channel": "WIRES", "date": "2018"},
+  "raptor": {"id": "609kgWiTArQ", "title": "A white-bellied sea eagle in rehabilitation", "channel": "Perth Wildlife Hospital", "date": "2026", "warning": "Wear thick gloves near any bird of prey: the talons cause the injuries."},
+  "penguin": {"id": "XrVFmjszL9s", "title": "Little penguin rehabilitation in the wildlife clinic", "channel": "Phillip Island Nature Parks", "date": "2021"},
+  "lorikeet": {"id": "bg0F486rjWU", "title": "Lorikeet paralysis syndrome", "channel": "RSPCA QLD", "date": "2023"},
+  "pigeon": {"id": "hbyTI8JVSlU", "title": "Rescuing an injured pigeon: avian vet exam and treatment", "channel": "Bird Vet Melbourne", "date": "2023"},
+  "pigeon-young": {"id": "nuVsaqD17sY", "title": "How to safely feed a squeaker (baby pigeon)", "channel": "Palomacy Pigeon & Dove Adoptions (USA)", "date": "2022", "warning": "An American rescue group. Ask your vet or carer before hand-feeding."},
+  "black-cockatoo": {"id": "szjwVRQ9XJQ", "title": "Join us on a cockatoo care round", "channel": "Perth Zoo", "date": "2024"},
+  "skink": {"id": "FeaiB0L78Dg", "title": "Blue-tongue lizard care, with a reptile vet", "channel": "Sugarland Animal Hospital (Bundaberg)", "date": "2020"},
+  "skink-young": {"id": "M3UwR_x18ZQ", "title": "Baby blue-tongue lizards at Australia Zoo Wildlife Hospital", "channel": "Australia Zoo", "date": "2026"},
+  "dragon": {"id": "POE6PMLML8A", "title": "Dragon returns to its den: treatment and release", "channel": "RSPCA Queensland", "date": "2022"},
+  "sea-turtle": {"id": "8bSR0xS06Ik", "title": "Rehabilitating a stranded loggerhead turtle", "channel": "Australia Zoo Wildlife Warriors", "date": "2023"},
+};
+
 // Videos about the animal's particular condition (mange, chlamydia, netting, a window strike...), checked October 2026.
 // When the plan mentions the condition for one of these animals, this video beats the general species one.
 const CONDITION_VIDEOS = [
@@ -65,7 +98,8 @@ const CONDITION_VIDEOS = [
    "date": "2022",
    "condition": "Sarcoptic mange",
    "warning": "NSW program; Victorian and Queensland viewers need their local mange group or wildlife service for treatment kits and permits."
-  }
+  },
+  "care": true
  },
  {
   "groups": [
@@ -389,7 +423,8 @@ const CONDITION_VIDEOS = [
    "date": "2023",
    "condition": "Psittacine beak and feather disease",
    "warning": "Keep infected birds away from other parrots."
-  }
+  },
+  "care": true
  },
  {
   "groups": [
@@ -516,9 +551,9 @@ const CONDITION_VIDEOS = [
 
 const hasWord = (text, w) => new RegExp(`(^|[^a-z])${w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'i').test(text);
 /** The condition video for these animals and words, or null. */
-export function conditionVideo(keys, context = '') {
+export function conditionVideo(keys, context = '', { care = false } = {}) {
   const t = String(context).toLowerCase();
-  const hit = CONDITION_VIDEOS.find((c) => c.groups.some((g) => keys.includes(g)) && c.words.some((w) => hasWord(t, w)));
+  const hit = CONDITION_VIDEOS.find((c) => (!care || c.care) && c.groups.some((g) => keys.includes(g)) && c.words.some((w) => hasWord(t, w)));
   return hit ? hit.video : null;
 }
 
@@ -557,6 +592,23 @@ export const videoFor = (group, context = '', tags = []) => {
   // Fall back to the containment video only when every animal named is a bird or small animal.
   const named = [...tags, group].filter((g) => g && g !== 'reptile');
   return named.length && named.every((g) => SMALL.has(g)) ? VIDEOS.general : null;
+};
+
+/** The care video for a care plan: how to look after this animal (a joey's or chick's own video when it's young), or none. */
+export const careVideoFor = (group, context = '', tags = []) => {
+  let keys = [...tags, group].filter(Boolean);
+  if (keys.some((k) => k !== 'bird' && k !== 'reptile')) keys = keys.filter((k) => k !== 'bird' && k !== 'reptile');
+  const byCondition = conditionVideo(keys, context, { care: true });
+  if (byCondition) return byCondition;
+  const young = YOUNG.test(context);
+  for (const key of keys) {
+    const k = key in ALIAS ? ALIAS[key] : key;
+    if (!k) continue;
+    if (young && CARE_VIDEOS[k + '-young']) return CARE_VIDEOS[k + '-young'];
+    if (CARE_VIDEOS[k]) return CARE_VIDEOS[k];
+    if (young && BIRDS.has(key)) return CARE_VIDEOS.babybird;
+  }
+  return null;
 };
 
 /** The video for the animals detected in a document's text, or none. */

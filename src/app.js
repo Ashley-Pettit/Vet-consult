@@ -11,7 +11,7 @@ import { ABOUT_HTML } from './about.js';
 import { lookupSource, sourcesForPrompt, SOURCE_IDS } from './sources.js';
 import { region, setRegion } from './region.js';
 import { rangesFor } from './species-ranges.js';
-import { videoFor, videoForTags, watchUrl, embedUrl, thumbUrl } from './videos.js';
+import { careVideoFor, videoForTags, watchUrl, embedUrl, thumbUrl } from './videos.js';
 import { groupsIn, factsFor, namedAnimal } from './species-vet.js';
 import { SPECIES_CARE } from './species-care.js';
 import { docModel, careModel, noteModel, wordFileName, dischargeModel, THEMES } from './word.js';
@@ -2191,7 +2191,7 @@ $('share-sheet').addEventListener('close', () => {
   finishSend(how);
 });
 els.careCopy.addEventListener('click', () =>
-  shareOrCopy(careSheetText(careSheet, lookupSource), $('care-title').textContent, 'Care plan copied. Paste it into an email, SMS or the discharge sheet.', careModel(careSheet, lookupSource, wordPhotos()), { type: 'care', sheet: careSheet }),
+  shareOrCopy(careSheetText(careSheet, lookupSource), $('care-title').textContent, 'Care plan copied. Paste it into an email, SMS or the discharge sheet.', careModel(careSheet, lookupSource, wordPhotos(), carePlanVideo(careSheet)), { type: 'care', sheet: careSheet }),
 );
 
 /* ---------------- intake record / care log / for the vet ---------------- */
@@ -2201,13 +2201,13 @@ let currentDoc = null;
 // Documents that open with a ready-to-send text message, and the heading Claude gives it.
 const TEXT_HEADING = { tovet: /^text to your vet$/i, mop: /^text to send$/i };
 
-// A care plan's video: the species group Claude picked, refined by the animal named (a lorikeet, not just a bird).
+// A care plan's video is about caring for the animal: the species group Claude picked, refined by the animal named (a lorikeet, not just a bird).
 function carePlanVideo(c) {
   // What was said counts too, so a condition the summary leaves out (mange, netting) still finds its video.
   const context = [c.title, c.summary, c.animal, els.transcript.value].filter(Boolean).join(' ');
   // The species group Claude picked comes first; the animal's name only refines a general group like "bird".
   const tags = groupsIn(context);
-  return ['bird', 'waterbird', ''].includes(c.species_group) ? videoFor(c.species_group, context, tags) : videoFor(c.species_group, context) || videoFor('', context, tags);
+  return ['bird', 'waterbird', ''].includes(c.species_group) ? careVideoFor(c.species_group, context, tags) : careVideoFor(c.species_group, context) || careVideoFor('', context, tags);
 }
 
 // The MOP plan's video is for the animal named in the plan; nothing if no animal with a good video is named.
@@ -2629,7 +2629,7 @@ async function saveWord(model, btn) {
   }
 }
 $('word-doc').addEventListener('click', (e) => currentDoc && saveWord(docWordModel(), e.currentTarget));
-$('word-care').addEventListener('click', (e) => careSheet && saveWord(careModel(careSheet, lookupSource, wordPhotos()), e.currentTarget));
+$('word-care').addEventListener('click', (e) => careSheet && saveWord(careModel(careSheet, lookupSource, wordPhotos(), carePlanVideo(careSheet)), e.currentTarget));
 $('word-note').addEventListener('click', (e) => currentNote() && saveWord(noteModel(currentNote()), e.currentTarget));
 
 /* ---------------- how it works ---------------- */
