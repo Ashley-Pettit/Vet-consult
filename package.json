@@ -18,6 +18,7 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "docx": "^9.13.0"
+    "docx": "^9.13.0",
+    "pdfmake": "^0.2.15"
   }
 }

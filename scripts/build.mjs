@@ -13,7 +13,7 @@ mkdirSync(art, { recursive: true });
 
 const common = { bundle: true, minify: true, target: ['es2020', 'safari14'], legalComments: 'none', logLevel: 'warning' };
 // Code splitting: the Word library becomes its own file, fetched only when someone asks for a Word printout.
-await build({ ...common, entryPoints: [root + 'src/app.js'], outdir: out, format: 'esm', splitting: true, entryNames: '[name]', chunkNames: 'chunks/[name]-[hash]' });
+await build({ ...common, entryPoints: [root + 'src/app.js'], outdir: out, format: 'esm', splitting: true, entryNames: '[name]', chunkNames: 'chunks/[name]-[hash]', define: { __NO_PDF__: 'false' } });
 await build({ ...common, entryPoints: [root + 'src/app.css'], outfile: out + 'app.css' });
 cpSync(root + 'public', out, { recursive: true });
 
@@ -39,7 +39,7 @@ const safeJs = (code) =>
     .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, (c) => '\\x' + c.charCodeAt(0).toString(16).padStart(2, '0'));
 
 // Single-file artifact build: inline everything, no CSP meta, no manifest/service worker.
-const iife = await build({ ...common, entryPoints: [root + 'src/app.js'], format: 'iife', write: false });
+const iife = await build({ ...common, entryPoints: [root + 'src/app.js'], format: 'iife', write: false, define: { __NO_PDF__: 'true' } });
 const body = html.match(/<body>([\s\S]*)<\/body>/)[1].replace(/<script[\s\S]*?<\/script>/, '');
 const artifact =
   `<title>Animal Welfare Companion</title>\n<meta name="claude:viewport-fit-sides" content="cover">\n<style>${css}` +

@@ -185,7 +185,9 @@ test('the care plan is easy to forward: Share plan, with the video link in the t
   expect(await page.evaluate(() => window.__shared[0].text)).toMatch(/https:\/\/www\.youtube\.com\/watch\?v=/);
 });
 
-test('Share offers a Word document first, then text, then a link to the plan', async ({ page }) => {
+test('Share offers a Word document or PDF first, then text, then a link to the plan', async ({ page }) => {
+  const pdfLoads = [];
+  page.on('request', (r) => { if (/\/chunks\/pdf-/.test(r.url())) pdfLoads.push(r.url()); });
   await page.addInitScript(() => {
     window.__shared = [];
     navigator.canShare = (d) => Boolean(d && d.files);
@@ -204,6 +206,16 @@ test('Share offers a Word document first, then text, then a link to the plan', a
   const f = await page.evaluate(() => window.__shared[0].files[0]);
   expect(f.name).toMatch(/\.docx$/);
   expect(f.size).toBeGreaterThan(3000);
+  // PDF is made only when tapped: its maker isn't even downloaded until then.
+  expect(pdfLoads.length).toBe(0);
+  await page.locator('#care-copy').click();
+  await page.getByRole('button', { name: 'Share as PDF' }).click();
+  await expect.poll(() => page.evaluate(() => window.__shared.length), { timeout: 15000 }).toBe(2);
+  const pdf = await page.evaluate(() => window.__shared[1].files[0]);
+  expect(pdf.name).toMatch(/\.pdf$/);
+  expect(pdf.type).toBe('application/pdf');
+  expect(pdf.size).toBeGreaterThan(20000);
+  expect(pdfLoads.length).toBe(1);
 });
 
 test('Recent: each plan is kept on the device, the animal leads, and any one reopens without calling Claude', async ({ page }) => {

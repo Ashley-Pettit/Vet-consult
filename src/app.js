@@ -15,6 +15,9 @@ import { videoFor, videoForTags, watchUrl, embedUrl, thumbUrl } from './videos.j
 import { groupsIn, factsFor, namedAnimal } from './species-vet.js';
 import { SPECIES_CARE } from './species-care.js';
 import { docModel, careModel, noteModel, wordFileName, dischargeModel, THEMES } from './word.js';
+// PDF printouts (same layout as Word): the website loads the PDF maker only when PDF is tapped. The version inside
+// Claude is one file that loads all at once, so it leaves PDF out to stay quick to open.
+const buildPdf = __NO_PDF__ ? null : async (...args) => (await import('./pdf.js')).buildPdf(...args);
 // The Word library is big: it loads only the first time someone asks for a Word file.
 let wordLib = null;
 const buildWord = async (...args) => {
@@ -1994,6 +1997,7 @@ function shareOrCopy(text, title, copiedMsg, wordModel = null, linkData = null) 
   pendingSend = { text, title, copiedMsg, wordModel, linkData };
   if (!canShare() && !wordModel && !linkData) return finishSend('copy');
   $('share-word').hidden = !wordModel;
+  $('share-pdf').hidden = !wordModel || !buildPdf;
   $('share-link').hidden = !linkData;
   $('share-go').hidden = !canShare();
   $('share-sheet').showModal();
@@ -2018,11 +2022,32 @@ async function shareWord(model, title) {
     toast('Couldn’t make the Word document. Try again.');
   }
 }
+// The PDF is only made when PDF is tapped: nothing is built ahead of time.
+async function sharePdf(model, title) {
+  toast('Making the PDF…');
+  try {
+    const blob = await buildPdf(model, { preparedBy: settings.clinician, template: settings.template });
+    const filename = wordFileName(model.title).replace(/\.docx$/i, '.pdf');
+    const file = typeof File === 'function' ? new File([blob], filename, { type: 'application/pdf' }) : null;
+    if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], title });
+        return;
+      } catch (e) {
+        if (e && e.name === 'AbortError') return;
+      }
+    }
+    await deliverWord(blob, filename, 'Downloaded. Open the PDF to print, email or forward.');
+  } catch {
+    toast('Couldn’t make the PDF. Try again, or share it as Word.');
+  }
+}
 async function finishSend(how) {
   const job = pendingSend;
   pendingSend = null;
   if (!job) return;
   if (how === 'word' && job.wordModel) return shareWord(job.wordModel, job.title);
+  if (how === 'pdf' && job.wordModel && buildPdf) return sharePdf(job.wordModel, job.title);
   if (how === 'link' && job.linkData) return shareLink(job.linkData, job.title);
   if (how === 'share') {
     try {
@@ -2465,7 +2490,7 @@ async function makeNext(m) {
 /* ---------------- Word printouts ---------------- */
 
 // Save a Word file: through Claude's downloads inside Claude, otherwise a normal download.
-async function deliverWord(blob, filename) {
+async function deliverWord(blob, filename, doneMsg = 'Downloaded. Open it in Word to print, email or forward.') {
   const downloads = inClaude && globalThis.claude.use ? await globalThis.claude.use('downloads') : null;
   if (downloads) {
     try {
@@ -2482,7 +2507,7 @@ async function deliverWord(blob, filename) {
   a.click();
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 10000);
-  toast('Downloaded. Open it in Word to print, email or forward.');
+  toast(doneMsg);
 }
 
 async function saveWord(model, btn) {

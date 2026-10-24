@@ -328,7 +328,8 @@ function tickSheetSection(t, title) {
       ], { shading: fill(OLIVE), margins: { left: 240, right: 120, top: 160, bottom: 160 } }),
       cell([
         new Paragraph({ spacing: { after: 120 }, children: [txt('Week starting  ____ / ____ / ______', { size: 20, color: 'FFFFFF' })] }),
-        new Paragraph({ children: [txt('Carer  ______________________________', { size: 20, color: 'FFFFFF' })] }),
+        new Paragraph({ spacing: { after: 120 }, children: [txt('Carer  ______________________________', { size: 20, color: 'FFFFFF' })] }),
+        new Paragraph({ children: [txt('Tick each box when it is done, and initial the day. Stick this on the fridge or the enclosure.', { size: 17, color: 'E8ECE2' })] }),
       ], { shading: fill(OLIVE), margins: { left: 120, right: 240, top: 160, bottom: 160 } }),
     ] })],
   });
@@ -345,7 +346,7 @@ function tickSheetSection(t, title) {
     ],
   });
   // Rows shrink a little when there are many jobs, so the sheet and its emergency box fit on one page.
-  const rowH = Math.max(560, Math.min(820, Math.floor(4200 / Math.max(1, t.items.length))));
+  const rowH = Math.max(520, Math.min(780, Math.floor(3900 / Math.max(1, t.items.length))));
   const jobRow = (item, i) => new TableRow({
     cantSplit: true,
     height: { value: rowH, rule: 'atLeast' },
@@ -403,7 +404,8 @@ function tickSheetSection(t, title) {
       foot,
       new Paragraph({ spacing: { after: 120 }, children: [] }),
       grid,
-      new Paragraph({ spacing: { before: 80 }, children: [txt('Tick each box when it is done, and initial the day. Stick this on the fridge or the enclosure.', { size: 18, color: MUTED })] }),
+      // Word needs a paragraph after a table; keep it tiny so it never spills onto a page of its own.
+      new Paragraph({ spacing: { before: 0, after: 0, line: 20, lineRule: 'exact' }, children: [new TextRun({ text: '', size: 2 })] }),
     ],
   };
 }

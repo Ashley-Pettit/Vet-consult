@@ -4,6 +4,12 @@ import { fakeSpeech, noSpeech, withKey, mockApi, watchErrors, openApp, DICTATION
 // These tests cover the vet's clinical notes; the app opens on the carer tools by default.
 test.beforeEach(async ({ page }) => asVet(page));
 
+// The prompt goes as one or more text blocks (the first is cached), so read them as one piece.
+const promptText = (call) => {
+  const c = call.body.messages[0].content;
+  return typeof c === 'string' ? c : c.map((b) => b.text || '').join('\n');
+};
+
 test.describe('dictation', () => {
   test('mic starts, captures speech, and stops', async ({ page }) => {
     const errors = watchErrors(page);
@@ -99,7 +105,7 @@ test.describe('creating a note', () => {
     await expect(page.locator('#view-note')).toBeVisible();
     expect(calls).toHaveLength(1);
     expect(calls[0].headers['x-api-key']).toBeUndefined(); // the key lives on Cloudflare, never in the browser
-    expect(calls[0].body.messages[0].content).toContain('Dr Sam Lee');
+    expect(promptText(calls[0])).toContain('Dr Sam Lee');
     await expect(page.locator('#note')).toContainText('Dr Sam Lee');
   });
 
@@ -114,7 +120,7 @@ test.describe('creating a note', () => {
     await page.locator('#create').click();
     await expect(page.locator('#view-working')).toBeVisible();
     await expect(page.locator('#view-note')).toBeVisible();
-    expect(calls[0].body.messages[0].content).toContain('Work out from the dictation which kind of record this is');
+    expect(promptText(calls[0])).toContain('Work out from the dictation which kind of record this is');
     expect(calls[0].body.model).toBe('claude-sonnet-5-5');
 
     await expect(page.locator('#note-title')).toHaveText('Shelter intake exam');
@@ -241,7 +247,7 @@ test.describe('creating a note', () => {
     await page.locator('#create').click();
     await expect(page.locator('#view-note')).toBeVisible();
     await expect(page.locator('#mic')).toHaveAttribute('aria-pressed', 'false');
-    expect(calls[0].body.messages[0].content).toContain('cephalexin');
+    expect(promptText(calls[0])).toContain('cephalexin');
   });
 
   test('double clicking create sends one request', async ({ page }) => {
