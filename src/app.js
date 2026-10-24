@@ -1677,7 +1677,7 @@ function rehydrationSection(r) {
 // unreliable, and a home-screen app often can't print at all); inside Claude, where there's no printing, it's a Word file.
 function fridgeModel(c) {
   const days = Math.min(c.log_days || 7, 14);
-  return { docType: 'Daily tick sheet', title: els.careTitle.textContent, blocks: [], fridgeOnly: true, tickSheet: { items: c.daily_checks, days, urgent: c.escalate.urgent } };
+  return { docType: 'Daily tick sheet', title: els.careTitle.textContent.replace(/\u00a0/g, ' '), blocks: [], fridgeOnly: true, tickSheet: { items: c.daily_checks, days, urgent: c.escalate.urgent } };
 }
 const NUM_WORDS = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, twelve: 12 };
 const shortLine = (x, n = 150) => (x.length <= n ? x : `${x.slice(0, n).replace(/[\s,;:]+\S*$/, '')}…`);
@@ -1709,7 +1709,7 @@ function feedChartModel(c) {
   help.push(...c.feeding.slice(0, help.length ? 3 : 4).map((x) => shortLine(x)));
   return {
     docType: 'Feeding chart',
-    title: els.careTitle.textContent.replace(/^Care plan:\s*/i, 'Feeding: '),
+    title: els.careTitle.textContent.replace(/\u00a0/g, ' ').replace(/^Care plan:\s*/i, 'Feeding: '),
     blocks: [],
     fridgeOnly: true,
     tickSheet: {
@@ -1920,10 +1920,12 @@ function tickBox(c, r, d, job) {
   return b;
 }
 
+// Headings wrap in balanced lines; keep a short bracketed part together so "(juvenile wombat)" never splits across lines.
+const keepBrackets = (t) => String(t).replace(/\([^()]{1,32}\)/g, (m) => m.replace(/ /g, '\u00a0'));
 function renderCare(c) {
   const sec = (title, items, cls) => (items.length ? el('section', { class: 'care-sec ' + (cls || '') }, [el('h2', { text: title }), list(items)]) : null);
   const name = c.animal || currentNote()?.patient.name || '';
-  els.careTitle.textContent = c.kind === 'wildlife' ? `Care plan: ${name || 'wildlife in care'}` : `Caring for ${name || 'your animal'} at home`;
+  els.careTitle.textContent = keepBrackets(c.kind === 'wildlife' ? `Care plan: ${name || 'wildlife in care'}` : `Caring for ${name || 'your animal'} at home`);
   $('care-back-label').textContent = careFrom === 'note' ? 'Back to note' : 'Back';
   $('care-back-2').textContent = 'Change plan';
   // Tick sheet: one row per daily job, one column per day, big boxes. Printable on its own for the fridge.
@@ -2191,7 +2193,7 @@ $('share-sheet').addEventListener('close', () => {
   finishSend(how);
 });
 els.careCopy.addEventListener('click', () =>
-  shareOrCopy(careSheetText(careSheet, lookupSource), $('care-title').textContent, 'Care plan copied. Paste it into an email, SMS or the discharge sheet.', careModel(careSheet, lookupSource, wordPhotos(), carePlanVideo(careSheet)), { type: 'care', sheet: careSheet }),
+  shareOrCopy(careSheetText(careSheet, lookupSource), $('care-title').textContent.replace(/\u00a0/g, ' '), 'Care plan copied. Paste it into an email, SMS or the discharge sheet.', careModel(careSheet, lookupSource, wordPhotos(), carePlanVideo(careSheet)), { type: 'care', sheet: careSheet }),
 );
 
 /* ---------------- intake record / care log / for the vet ---------------- */
@@ -2222,7 +2224,7 @@ const NUMBERED = /^\d+[.)]\s+/;
 const docList = (items) => (items.length > 1 && items.every((x) => NUMBERED.test(x)) ? el('ol', { class: 'num-list' }, items.map((x) => el('li', { text: x.replace(NUMBERED, '') }))) : list(items));
 function renderDoc(d, kind) {
   document.querySelector('#doc-checks .sum-title').textContent = kind === 'witness' ? 'Review before signing' : 'Review before sending';
-  $('doc-title').textContent = d.title || DOC_KINDS[kind].label;
+  $('doc-title').textContent = keepBrackets(d.title || DOC_KINDS[kind].label);
   $('doc-subtitle').textContent = d.subtitle;
   $('doc-subtitle').hidden = !d.subtitle;
   const checks = $('doc-checks');
@@ -2317,9 +2319,9 @@ $('doc-copy').addEventListener('click', () => {
   if (!currentDoc) return;
   // A media statement copies as it would go out once approved, without the vet's private notes.
   if (currentDoc.kind === 'media') {
-    return shareOrCopy(mediaReleaseText(currentDoc.d), $('doc-title').textContent, 'Statement copied, without the private notes. Send it for review before it goes out.', docModel(currentDoc.d, 'Draft media statement, for review'), { type: 'doc', kind: 'media', d: currentDoc.d });
+    return shareOrCopy(mediaReleaseText(currentDoc.d), $('doc-title').textContent.replace(/\u00a0/g, ' '), 'Statement copied, without the private notes. Send it for review before it goes out.', docModel(currentDoc.d, 'Draft media statement, for review'), { type: 'doc', kind: 'media', d: currentDoc.d });
   }
-  shareOrCopy(docText(currentDoc.d) + (currentDoc.kind === 'mop' ? `${mopVideo(currentDoc.d) ? `\n\n${videoLine(mopVideo(currentDoc.d))}` : ''}\n\n${aiNoteFor(currentDoc.d.title)}` : ''), $('doc-title').textContent, 'Copied. Paste it wherever it needs to go.', docWordModel(), { type: 'doc', kind: currentDoc.kind, d: currentDoc.d });
+  shareOrCopy(docText(currentDoc.d) + (currentDoc.kind === 'mop' ? `${mopVideo(currentDoc.d) ? `\n\n${videoLine(mopVideo(currentDoc.d))}` : ''}\n\n${aiNoteFor(currentDoc.d.title)}` : ''), $('doc-title').textContent.replace(/\u00a0/g, ' '), 'Copied. Paste it wherever it needs to go.', docWordModel(), { type: 'doc', kind: currentDoc.kind, d: currentDoc.d });
 });
 $('doc-new').addEventListener('click', changeDoc);
 $('doc-check-change').addEventListener('click', changeDoc);

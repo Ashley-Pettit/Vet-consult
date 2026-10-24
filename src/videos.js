@@ -42,38 +42,885 @@ export const VIDEOS = {
   'general': {"id": "PVqgAgfDFyk", "title": "How to contain an injured bird or small animal", "channel": "Wildlife Victoria", "date": "2019"},
 };
 
-// Care plans show a video about CARING for the animal (feeding, housing, warmth, handling), picked October 2026 from
-// Australian wildlife groups, hospitals and licensed carers, and checked with YouTube's oEmbed (title, channel, embeddable).
-// "-young" videos are only for joeys, chicks and other young; an animal with no good care video gets none rather
-// than a rescue video. The MOP plan shows the same video.
+// Care videos: how to look after the animal, chosen October 2026 from a researched list of 379 videos (see the
+// "Wildlife care videos" spreadsheet). Expert teaching from any country; Australian wins a tie. Every one was checked
+// with YouTube’s oEmbed (it exists and plays in the app). "-young" is for joeys, chicks and other young.
 export const CARE_VIDEOS = {
-  "koala": {"id": "W6nGpjHsx90", "title": "Providing quality food for koalas in care", "channel": "Queensland Environment", "date": "2025"},
-  "koala-young": {"id": "R5N0LoXGEnY", "title": "Caring for koala joeys at Ipswich Koala Protection Society", "channel": "WWF-Australia", "date": "2021"},
+  "macropod": {"id": "fNQxfvgTvT4", "title": "Assessing and caring for kangaroos and wallabies", "channel": "Wildlife Friendly Vets (FNPW)", "date": "2021"},
   "macropod-young": {"id": "inYW6jisj_4", "title": "Raising a kangaroo joey: from bottle feeds to the mob", "channel": "Australia Zoo", "date": "2022"},
   "wombat-young": {"id": "Cz_N4LX8FkE", "title": "How to give a wombat joey a bottle", "channel": "Sleepy Burrows Wombat Sanctuary", "date": "2017"},
+  "koala": {"id": "W6nGpjHsx90", "title": "Providing quality food for koalas in care", "channel": "Queensland Environment", "date": "2025"},
+  "koala-young": {"id": "VsoKChI7Q3g", "title": "Syringe feeding a koala joey, with a vet nurse", "channel": "Friends of the Koala", "date": "2024"},
   "ringtail": {"id": "3AAfzvOvAmM", "title": "How to build a ringtail possum drey", "channel": "WIRES", "date": "2021"},
-  "ringtail-young": {"id": "5vKL2bjUEQ0", "title": "Ringtail possum joeys in care: twins Jack and Jill", "channel": "Megabattie (licensed wildlife carer)", "date": "2022"},
-  "brushtail-young": {"id": "fp6pxWYgwI4", "title": "Brushtail possum joeys in care: feeding and care", "channel": "Megabattie (licensed wildlife carer)", "date": "2023"},
+  "ringtail-young": {"id": "5vKL2bjUEQ0", "title": "Ringtail possum joeys in care", "channel": "Megabattie (licensed wildlife carer)", "date": "2022"},
+  "brushtail": {"id": "2lWkqZhfT9Y", "title": "How to make a brushtail possum box", "channel": "Warriors 4 Wildlife", "date": "2023"},
+  "brushtail-young": {"id": "fp6pxWYgwI4", "title": "Brushtail possum joeys in care", "channel": "Megabattie (licensed wildlife carer)", "date": "2023"},
   "glider": {"id": "mb8TI-LuoAM", "title": "Feeding an injured sugar glider", "channel": "Rayya The Vet", "date": "2013"},
-  "echidna": {"id": "LgpQdHOboB8", "title": "Echidna care, with NQ Wildlife Care’s echidna coordinator", "channel": "NQ Wildlife Care", "date": "2023"},
+  "glider-young": {"id": "S4QXS1g84a4", "title": "A tiny squirrel glider joey in care", "channel": "Megabattie (licensed wildlife carer)", "date": "2022"},
+  "echidna": {"id": "FuEWBCiMRXY", "title": "Echidna handling", "channel": "Bonorong Wildlife Sanctuary", "date": "2022", "warning": "The second half shows anaesthesia and an X-ray."},
   "echidna-young": {"id": "wvlBuq2kg2k", "title": "Feeding an echidna puggle", "channel": "NQ Wildlife Care", "date": "2023"},
-  "flyingfox": {"id": "GMVCZ52-G0Y", "title": "A young flying-fox in care: the first days", "channel": "Megabattie (licensed wildlife carer)", "date": "2020", "warning": "Never touch a bat. Only trained, vaccinated people handle bats."},
-  "flyingfox-young": {"id": "34o4w-kwejY", "title": "Caring for an orphan flying-fox pup", "channel": "Megabattie (licensed wildlife carer)", "date": "2020", "warning": "The pup was found on her mother, who had died. Never touch a bat. Only trained, vaccinated people handle bats."},
-  "microbat": {"id": "hGnsJNAe6E8", "title": "A microbat in care", "channel": "Megabattie (licensed wildlife carer)", "date": "2022", "warning": "Never touch a bat. Only trained, vaccinated people handle bats."},
+  "platypus": {"id": "fWms8jgovJo", "title": "Meet the platypus doctor", "channel": "Zoos Victoria", "date": "2024"},
+  "bandicoot": {"id": "ApabfEWaISc", "title": "Bandicoots in care", "channel": "Megabattie (licensed wildlife carer)", "date": "2022"},
   "bandicoot-young": {"id": "FmJP_m1GZWE", "title": "A baby bandicoot in care", "channel": "Megabattie (licensed wildlife carer)", "date": "2019"},
+  "flyingfox": {"id": "D9yg0Js4p2Q", "title": "Assessing a newly rescued flying-fox", "channel": "Megabattie (licensed wildlife carer)", "date": "2024", "warning": "Never touch a bat. Only trained, vaccinated people handle bats."},
+  "flyingfox-young": {"id": "34o4w-kwejY", "title": "Caring for an orphan flying-fox pup", "channel": "Megabattie (licensed wildlife carer)", "date": "2020", "warning": "The pup was found on her mother, who had died. Never touch a bat. Only trained, vaccinated people handle bats."},
+  "microbat": {"id": "_b8R2wqMw9U", "title": "A microbat in care, eating mealworms", "channel": "Megabattie (licensed wildlife carer)", "date": "2025", "warning": "Never touch a bat. Only trained, vaccinated people handle bats."},
+  "microbat-young": {"id": "RliRZu31t3g", "title": "Feeding orphaned baby bats", "channel": "Bat World Sanctuary (USA)", "date": "2018", "warning": "Never touch a bat. Only trained, vaccinated people handle bats. From the USA: the care carries over, but follow your state’s rules and your wildlife service."},
   "babybird": {"id": "K9FETK07HvQ", "title": "How to help a baby bird", "channel": "Wildlife Victoria", "date": "2019"},
-  "frogmouth-owl": {"id": "k87V8EHCOMM", "title": "Tawny frogmouths in care", "channel": "WIRES", "date": "2018"},
-  "raptor": {"id": "609kgWiTArQ", "title": "A white-bellied sea eagle in rehabilitation", "channel": "Perth Wildlife Hospital", "date": "2026", "warning": "Wear thick gloves near any bird of prey: the talons cause the injuries."},
-  "penguin": {"id": "XrVFmjszL9s", "title": "Little penguin rehabilitation in the wildlife clinic", "channel": "Phillip Island Nature Parks", "date": "2021"},
-  "lorikeet": {"id": "bg0F486rjWU", "title": "Lorikeet paralysis syndrome", "channel": "RSPCA QLD", "date": "2023"},
-  "pigeon": {"id": "hbyTI8JVSlU", "title": "Rescuing an injured pigeon: avian vet exam and treatment", "channel": "Bird Vet Melbourne", "date": "2023"},
-  "pigeon-young": {"id": "nuVsaqD17sY", "title": "How to safely feed a squeaker (baby pigeon)", "channel": "Palomacy Pigeon & Dove Adoptions (USA)", "date": "2022", "warning": "An American rescue group. Ask your vet or carer before hand-feeding."},
+  "bird": {"id": "PVqgAgfDFyk", "title": "How to contain and care for an injured bird", "channel": "Wildlife Victoria", "date": "2019"},
+  "magpie": {"id": "_A2O31Oo8SY", "title": "An injured magpie: avian vet assessment and treatment", "channel": "Bird Vet Melbourne", "date": "2023"},
+  "lorikeet": {"id": "bg0F486rjWU", "title": "Lorikeet paralysis syndrome", "channel": "RSPCA Queensland", "date": "2023"},
+  "parrot-young": {"id": "FwuNJEQCW2g", "title": "Hand-rearing a baby parrot: crop needle feeding", "channel": "Vetafarm", "date": "2010", "warning": "Made for pet birds. Ask your vet or an experienced carer before hand-feeding a wild chick."},
   "black-cockatoo": {"id": "szjwVRQ9XJQ", "title": "Join us on a cockatoo care round", "channel": "Perth Zoo", "date": "2024"},
+  "pigeon": {"id": "hbyTI8JVSlU", "title": "An injured pigeon: avian vet exam and treatment", "channel": "Bird Vet Melbourne", "date": "2023"},
+  "pigeon-young": {"id": "OY-OZHDjhAc", "title": "A vet nurse raises an orphaned baby pigeon", "channel": "Bird Vet Melbourne", "date": "2022"},
+  "frogmouth-owl": {"id": "k87V8EHCOMM", "title": "Tawny frogmouths in care", "channel": "WIRES", "date": "2018"},
+  "frogmouth-owl-young": {"id": "K0vi5_TNKrQ", "title": "Feeding tawny frogmouth chicks in the nursery", "channel": "Big Beak Wildlife Rescue", "date": "2023"},
+  "raptor": {"id": "609kgWiTArQ", "title": "A white-bellied sea eagle in rehabilitation", "channel": "Perth Wildlife Hospital", "date": "2026", "warning": "Wear thick gloves near any bird of prey: the talons cause the injuries."},
+  "waterbird": {"id": "3ia0z1tz0JM", "title": "Caring for wild ducks and geese in rehab", "channel": "Living Sky Wildlife Rehabilitation (Canada)", "date": "2025", "warning": "From Canada: the care carries over, but follow your state’s rules and your wildlife service."},
+  "waterbird-young": {"id": "Hh_P-EeiYM8", "title": "How to help ducklings", "channel": "Wildlife Victoria", "date": "2019"},
+  "seabird": {"id": "6dDoe2NoeRc", "title": "Assessing and caring for seabirds", "channel": "Wildlife Friendly Vets (FNPW)", "date": "2021"},
+  "penguin": {"id": "XrVFmjszL9s", "title": "Little penguin rehabilitation in the wildlife clinic", "channel": "Phillip Island Nature Parks", "date": "2021"},
+  "curlew": {"id": "7eEiHaNf4rY", "title": "Caring for an injured bush stone-curlew", "channel": "Megabattie (licensed wildlife carer)", "date": "2022"},
   "skink": {"id": "FeaiB0L78Dg", "title": "Blue-tongue lizard care, with a reptile vet", "channel": "Sugarland Animal Hospital (Bundaberg)", "date": "2020"},
   "skink-young": {"id": "M3UwR_x18ZQ", "title": "Baby blue-tongue lizards at Australia Zoo Wildlife Hospital", "channel": "Australia Zoo", "date": "2026"},
-  "dragon": {"id": "POE6PMLML8A", "title": "Dragon returns to its den: treatment and release", "channel": "RSPCA Queensland", "date": "2022"},
+  "reptile": {"id": "RjyJwqH4OGA", "title": "Heat support for reptiles in care", "channel": "atDove (vet nurse training)", "date": "2022", "warning": "From the USA: the care carries over, but follow your state’s rules and your wildlife service."},
+  "python": {"id": "z8rKIfRKQCk", "title": "Assessing and caring for snakes", "channel": "Wildlife Friendly Vets (FNPW)", "date": "2021"},
+  "venomous-snake": {"id": "ipO6DrnsmpE", "title": "What to do if you come across a snake", "channel": "Zoos Victoria", "date": "2023", "warning": "Only licensed snake handlers should handle venomous snakes."},
+  "freshwater-turtle": {"id": "JUp6tivRvlY", "title": "1 Million Turtles: turtle talk for carers (about an hour)", "channel": "Foundation for National Parks & Wildlife", "date": "2022"},
   "sea-turtle": {"id": "8bSR0xS06Ik", "title": "Rehabilitating a stranded loggerhead turtle", "channel": "Australia Zoo Wildlife Warriors", "date": "2023"},
+  "frog": {"id": "QAhU7xFE1WM", "title": "Assessing and caring for frogs", "channel": "Wildlife Friendly Vets (FNPW)", "date": "2021"},
+  "seal": {"id": "2CmPl8nj2WQ", "title": "Zoos Victoria’s Marine Response Unit", "channel": "Zoos Victoria", "date": "2021", "warning": "Keep well back from seals: only the marine response team handles them."},
+  "general": {"id": "_rZl08GIkvE", "title": "General assessment of wildlife patients", "channel": "Bonorong Wildlife Sanctuary", "date": "2022"},
 };
+
+// A video about the animal’s particular problem beats the general care one when the plan names it. Species first;
+// "*" applies to any animal. Words are specific so ordinary mentions ("keep away from cats") don’t trigger them.
+export const CARE_CONDITIONS = [
+ {
+  "groups": [
+   "wombat"
+  ],
+  "words": [
+   "mange",
+   "sarcoptic",
+   "crusting",
+   "crusty skin"
+  ],
+  "video": {
+   "id": "juBHYfLoBHs",
+   "title": "Wombat mange: how to build and install a burrow flap",
+   "channel": "Wombat Rescue",
+   "date": "2022"
+  }
+ },
+ {
+  "groups": [
+   "koala"
+  ],
+  "words": [
+   "chlamydia",
+   "conjunctivitis",
+   "wet bottom",
+   "dirty tail",
+   "cystitis"
+  ],
+  "video": {
+   "id": "jMKMTVfsggo",
+   "title": "Caring for koalas with chlamydia: a vet’s view",
+   "channel": "Koala Hospital Port Macquarie",
+   "date": "2023"
+  }
+ },
+ {
+  "groups": [
+   "koala"
+  ],
+  "words": [
+   "burn",
+   "bushfire",
+   "singed"
+  ],
+  "video": {
+   "id": "XZoDjxpsCz4",
+   "title": "Treating koalas burnt in bushfires",
+   "channel": "Zoos Victoria",
+   "date": "2020",
+   "warning": "Shows burn injuries."
+  }
+ },
+ {
+  "groups": [
+   "glider"
+  ],
+  "words": [
+   "barbed wire",
+   "barbed-wire",
+   "fence",
+   "membrane"
+  ],
+  "video": {
+   "id": "5u-9NImfMT4",
+   "title": "A sugar glider’s membrane after barbed wire",
+   "channel": "Megabattie (licensed wildlife carer)",
+   "date": "2021"
+  }
+ },
+ {
+  "groups": [
+   "flyingfox"
+  ],
+  "words": [
+   "netting",
+   "net ",
+   "tangled in net",
+   "caught in net"
+  ],
+  "video": {
+   "id": "qweykshe8K8",
+   "title": "A flying-fox cut out of fruit tree netting",
+   "channel": "Megabattie (licensed wildlife carer)",
+   "date": "2021",
+   "warning": "Never touch a bat. Only trained, vaccinated people handle bats."
+  }
+ },
+ {
+  "groups": [
+   "flyingfox"
+  ],
+  "words": [
+   "barbed wire",
+   "barbed-wire"
+  ],
+  "video": {
+   "id": "Y0SpFRpSNl4",
+   "title": "Immediate care for a flying-fox off barbed wire",
+   "channel": "Megabattie (licensed wildlife carer)",
+   "date": "2019",
+   "warning": "Never touch a bat. Only trained, vaccinated people handle bats."
+  }
+ },
+ {
+  "groups": [
+   "flyingfox"
+  ],
+  "words": [
+   "caught by a cat",
+   "cat attack",
+   "attacked by a cat",
+   "cat caught",
+   "cat bite",
+   "cat had"
+  ],
+  "video": {
+   "id": "I4s7q7hLwS8",
+   "title": "A young flying-fox attacked by a cat",
+   "channel": "Megabattie (licensed wildlife carer)",
+   "date": "2020",
+   "warning": "Never touch a bat. Only trained, vaccinated people handle bats."
+  }
+ },
+ {
+  "groups": [
+   "flyingfox"
+  ],
+  "words": [
+   "dog attack",
+   "attacked by a dog",
+   "caught by a dog",
+   "dog bite",
+   "dog had"
+  ],
+  "video": {
+   "id": "asY5H74nR44",
+   "title": "A young flying-fox attacked by a dog",
+   "channel": "Megabattie (licensed wildlife carer)",
+   "date": "2019",
+   "warning": "Never touch a bat. Only trained, vaccinated people handle bats."
+  }
+ },
+ {
+  "groups": [
+   "flyingfox"
+  ],
+  "words": [
+   "fish hook",
+   "fishing hook",
+   "fishing line",
+   "hooked"
+  ],
+  "video": {
+   "id": "dWWUNtni31E",
+   "title": "A flying-fox with an embedded fish hook",
+   "channel": "Megabattie (licensed wildlife carer)",
+   "date": "2020",
+   "warning": "Never touch a bat. Only trained, vaccinated people handle bats."
+  }
+ },
+ {
+  "groups": [
+   "flyingfox"
+  ],
+  "words": [
+   "heat stress",
+   "heatwave",
+   "heat wave",
+   "overheat"
+  ],
+  "video": {
+   "id": "tnTejqZkvrM",
+   "title": "Caring for flying-foxes in a heat stress event",
+   "channel": "Megabattie (licensed wildlife carer)",
+   "date": "2013",
+   "warning": "Shows bats that died in a heatwave. Never touch a bat. Only trained, vaccinated people handle bats."
+  }
+ },
+ {
+  "groups": [
+   "microbat"
+  ],
+  "words": [
+   "on the ground",
+   "on the floor",
+   "grounded",
+   "during the day",
+   "in the day",
+   "daytime"
+  ],
+  "video": {
+   "id": "bCYXVGyKM_Q",
+   "title": "A microbat that had fallen to the ground",
+   "channel": "Megabattie (licensed wildlife carer)",
+   "date": "2021",
+   "warning": "Never touch a bat. Only trained, vaccinated people handle bats."
+  }
+ },
+ {
+  "groups": [
+   "microbat"
+  ],
+  "words": [
+   "torpor",
+   "cold and still",
+   "sluggish"
+  ],
+  "video": {
+   "id": "-hUkW8F39F8",
+   "title": "A microbat in torpor: rescue and advice",
+   "channel": "Megabattie (licensed wildlife carer)",
+   "date": "2022",
+   "warning": "Never touch a bat. Only trained, vaccinated people handle bats."
+  }
+ },
+ {
+  "groups": [
+   "lorikeet"
+  ],
+  "words": [
+   "paralysis",
+   "paralysed",
+   "paralyzed",
+   "lps",
+   "can’t perch",
+   "can't perch",
+   "cannot perch"
+  ],
+  "video": {
+   "id": "bg0F486rjWU",
+   "title": "Lorikeet paralysis syndrome",
+   "channel": "RSPCA Queensland",
+   "date": "2023"
+  }
+ },
+ {
+  "groups": [
+   "magpie"
+  ],
+  "words": [
+   "pox"
+  ],
+  "video": {
+   "id": "hSrekgu6EKw",
+   "title": "A magpie with avian pox",
+   "channel": "Dr Ross Perry (avian vet)",
+   "date": "2010"
+  }
+ },
+ {
+  "groups": [
+   "parrot",
+   "black-cockatoo"
+  ],
+  "words": [
+   "beak and feather",
+   "pbfd",
+   "circovirus",
+   "psittacine beak"
+  ],
+  "video": {
+   "id": "E1fYUCYJ8cs",
+   "title": "Treating birds with beak and feather disease",
+   "channel": "Bird Vet Melbourne",
+   "date": "2023"
+  }
+ },
+ {
+  "groups": [
+   "parrot",
+   "black-cockatoo",
+   "lorikeet"
+  ],
+  "words": [
+   "netting",
+   "tangled in net",
+   "caught in net"
+  ],
+  "video": {
+   "id": "5nesdwubk1s",
+   "title": "A wild corella caught in fruit netting",
+   "channel": "Bird Vet Melbourne",
+   "date": "2022"
+  }
+ },
+ {
+  "groups": [
+   "frogmouth-owl"
+  ],
+  "words": [
+   "hit by a car",
+   "hit by car",
+   "car strike",
+   "struck by a car",
+   "on the road"
+  ],
+  "video": {
+   "id": "6ZyL31nVHhM",
+   "title": "An injured tawny frogmouth at the bird vet",
+   "channel": "Bird Vet Melbourne",
+   "date": "2022"
+  }
+ },
+ {
+  "groups": [
+   "raptor"
+  ],
+  "words": [
+   "lead poison",
+   "lead toxic",
+   "lead levels",
+   "lead shot"
+  ],
+  "video": {
+   "id": "y5LFYp6kTEM",
+   "title": "Lead poisoning in birds of prey",
+   "channel": "Wildlife Center of Virginia (USA)",
+   "date": "2019",
+   "warning": "From the USA: the care carries over, but follow your state’s rules and your wildlife service."
+  }
+ },
+ {
+  "groups": [
+   "raptor"
+  ],
+  "words": [
+   "broken wing",
+   "wing fracture",
+   "fractured wing",
+   "wing injury",
+   "drooping wing",
+   "wing droop"
+  ],
+  "video": {
+   "id": "B-DeKA0gRLg",
+   "title": "Bandaging a hawk’s wing",
+   "channel": "Free Again Wildlife (USA)",
+   "date": "2011",
+   "warning": "From the USA: the care carries over, but follow your state’s rules and your wildlife service."
+  }
+ },
+ {
+  "groups": [
+   "seabird"
+  ],
+  "words": [
+   "shearwater",
+   "muttonbird",
+   "mutton bird",
+   "grounded"
+  ],
+  "video": {
+   "id": "mIp3jUGQolc",
+   "title": "Caring for grounded short-tailed shearwaters",
+   "channel": "Phillip Island Nature Parks",
+   "date": "2022"
+  }
+ },
+ {
+  "groups": [
+   "seabird",
+   "penguin",
+   "waterbird",
+   "pelican",
+   "bird"
+  ],
+  "words": [
+   "oiled",
+   "oil spill",
+   " oil on",
+   "covered in oil"
+  ],
+  "video": {
+   "id": "rcd92P6BzCo",
+   "title": "Caring for oiled birds",
+   "channel": "International Bird Rescue (USA)",
+   "date": "2020",
+   "warning": "From the USA: the care carries over, but follow your state’s rules and your wildlife service."
+  }
+ },
+ {
+  "groups": [
+   "pelican"
+  ],
+  "words": [
+   "fishing line",
+   "fish hook",
+   "fishing hook",
+   "hooked",
+   "pouch tear",
+   "pouch laceration"
+  ],
+  "video": {
+   "id": "8H8Se1gPLZY",
+   "title": "Pelicans with pouch tears and fishing injuries",
+   "channel": "International Bird Rescue (USA)",
+   "date": "2021",
+   "warning": "From the USA: the care carries over, but follow your state’s rules and your wildlife service."
+  }
+ },
+ {
+  "groups": [
+   "waterbird"
+  ],
+  "words": [
+   "fishing line",
+   "fish hook",
+   "fishing hook",
+   "hooked",
+   "swallowed a hook"
+  ],
+  "video": {
+   "id": "97ZFqE5GY8g",
+   "title": "A duckling that swallowed a fish hook",
+   "channel": "Toronto Wildlife Centre (Canada)",
+   "date": "2024",
+   "warning": "From Canada: the care carries over, but follow your state’s rules and your wildlife service."
+  }
+ },
+ {
+  "groups": [
+   "seal"
+  ],
+  "words": [
+   "fishing line",
+   "fish hook",
+   "entangled",
+   "tangled"
+  ],
+  "video": {
+   "id": "Lnvmz-T5Bmg",
+   "title": "Freeing a fur seal from fishing line",
+   "channel": "Zoos Victoria",
+   "date": "2023"
+  }
+ },
+ {
+  "groups": [
+   "bird",
+   "passerine",
+   "magpie",
+   "parrot",
+   "black-cockatoo",
+   "lorikeet",
+   "pigeon",
+   "frogmouth-owl",
+   "raptor",
+   "kookaburra",
+   "waterbird",
+   "seabird",
+   "penguin",
+   "shorebird",
+   "lapwing",
+   "curlew",
+   "ibis",
+   "pelican",
+   "cuckoo"
+  ],
+  "words": [
+   "broken wing",
+   "wing fracture",
+   "fractured wing",
+   "wing injury",
+   "drooping wing",
+   "wing droop",
+   "wing wrap"
+  ],
+  "video": {
+   "id": "fJGE9U-nkHw",
+   "title": "How to wrap a bird’s wing",
+   "channel": "Palomacy (USA)",
+   "date": "2020",
+   "warning": "From the USA: the care carries over, but follow your state’s rules and your wildlife service."
+  }
+ },
+ {
+  "groups": [
+   "bird",
+   "passerine",
+   "magpie",
+   "parrot",
+   "black-cockatoo",
+   "lorikeet",
+   "pigeon",
+   "frogmouth-owl",
+   "raptor",
+   "kookaburra",
+   "waterbird",
+   "seabird",
+   "penguin",
+   "shorebird",
+   "lapwing",
+   "curlew",
+   "ibis",
+   "pelican",
+   "cuckoo"
+  ],
+  "words": [
+   "broken leg",
+   "leg fracture",
+   "fractured leg"
+  ],
+  "video": {
+   "id": "m0VkxirUkEE",
+   "title": "How to splint a small bird’s leg",
+   "channel": "Dr Rachel, exotic pet vet (USA)",
+   "date": "2024",
+   "warning": "Splinting is a vet job: show this to your vet. From the USA: the care carries over, but follow your state’s rules and your wildlife service."
+  }
+ },
+ {
+  "groups": [
+   "bird",
+   "passerine",
+   "magpie",
+   "parrot",
+   "black-cockatoo",
+   "lorikeet",
+   "pigeon",
+   "frogmouth-owl",
+   "raptor",
+   "kookaburra",
+   "waterbird",
+   "seabird",
+   "penguin",
+   "shorebird",
+   "lapwing",
+   "curlew",
+   "ibis",
+   "pelican",
+   "cuckoo"
+  ],
+  "words": [
+   "fishing line",
+   "fish hook",
+   "fishing hook",
+   "hooked"
+  ],
+  "video": {
+   "id": "EzAseAWV2ek",
+   "title": "A kingfisher caught in fishing line",
+   "channel": "Toronto Wildlife Centre (Canada)",
+   "date": "2026",
+   "warning": "From Canada: the care carries over, but follow your state’s rules and your wildlife service."
+  }
+ },
+ {
+  "groups": [
+   "skink",
+   "bluetongue",
+   "dragon",
+   "goanna",
+   "python",
+   "venomous-snake",
+   "freshwater-turtle",
+   "turtle",
+   "reptile"
+  ],
+  "words": [
+   "glue trap",
+   "sticky trap",
+   "glue board",
+   "rat glue",
+   "mouse glue"
+  ],
+  "video": {
+   "id": "A_15NEs4eLM",
+   "title": "Freeing a snake from a glue trap",
+   "channel": "Wildlife Center of Virginia (USA)",
+   "date": "2015",
+   "warning": "From the USA: the care carries over, but follow your state’s rules and your wildlife service."
+  }
+ },
+ {
+  "groups": [
+   "skink",
+   "bluetongue"
+  ],
+  "words": [
+   "tick"
+  ],
+  "video": {
+   "id": "WOnEtR0JTnM",
+   "title": "Removing ticks from a blue-tongue lizard",
+   "channel": "Toowoomba Koala & Wildlife Rescue",
+   "date": "2019"
+  }
+ },
+ {
+  "groups": [
+   "python"
+  ],
+  "words": [
+   "netting",
+   "tangled in net",
+   "caught in net",
+   "bird net"
+  ],
+  "video": {
+   "id": "dvKaR9XTzeo",
+   "title": "Snakes tangled in garden netting",
+   "channel": "WildCare (USA)",
+   "date": "2020",
+   "warning": "From the USA: the care carries over, but follow your state’s rules and your wildlife service."
+  }
+ },
+ {
+  "groups": [
+   "venomous-snake"
+  ],
+  "words": [
+   "netting",
+   "tangled in net",
+   "caught in net",
+   "bird net"
+  ],
+  "video": {
+   "id": "55ZD5vqUMRI",
+   "title": "Freeing a snake from netting",
+   "channel": "Wildlife Center of Virginia (USA)",
+   "date": "2025",
+   "warning": "Only licensed snake handlers should handle venomous snakes. From the USA: the care carries over, but follow your state’s rules and your wildlife service."
+  }
+ },
+ {
+  "groups": [
+   "python"
+  ],
+  "words": [
+   "burn",
+   "fire"
+  ],
+  "video": {
+   "id": "Kt6NIpvFhCY",
+   "title": "Treating burnt snakes",
+   "channel": "Snake Discovery (USA)",
+   "date": "2017",
+   "warning": "From the USA: the care carries over, but follow your state’s rules and your wildlife service."
+  }
+ },
+ {
+  "groups": [
+   "freshwater-turtle",
+   "turtle"
+  ],
+  "words": [
+   "egg",
+   "gravid",
+   "nesting",
+   "nest "
+  ],
+  "video": {
+   "id": "AKYpdtWeJ4w",
+   "title": "Saving a mother turtle and her eggs after a car strike",
+   "channel": "Toronto Wildlife Centre (Canada)",
+   "date": "2024",
+   "warning": "From Canada: the care carries over, but follow your state’s rules and your wildlife service."
+  }
+ },
+ {
+  "groups": [
+   "freshwater-turtle",
+   "turtle"
+  ],
+  "words": [
+   "shell fracture",
+   "cracked shell",
+   "broken shell",
+   "shell crack",
+   "shell damage",
+   "hit by a car",
+   "hit by car",
+   "car strike"
+  ],
+  "video": {
+   "id": "pHigsQ5ZMWw",
+   "title": "Fixing a broken turtle shell",
+   "channel": "Hervey Bay Snake Catcher",
+   "date": "2019"
+  }
+ },
+ {
+  "groups": [
+   "sea-turtle"
+  ],
+  "words": [
+   "float",
+   "floating",
+   "debilitat",
+   "barnacle",
+   "buoyancy",
+   "emaciat",
+   "thin"
+  ],
+  "video": {
+   "id": "vcpF4LGWLL0",
+   "title": "Sea turtle hospital: chronic debilitation",
+   "channel": "Loggerhead Marinelife Center (USA)",
+   "date": "2020",
+   "warning": "From the USA: the care carries over, but follow your state’s rules and your wildlife service."
+  }
+ },
+ {
+  "groups": [
+   "sea-turtle"
+  ],
+  "words": [
+   "cold stun",
+   "cold-stun",
+   "hypotherm"
+  ],
+  "video": {
+   "id": "pA-MfU0Dxw8",
+   "title": "Turtle rescue and rehabilitation in Victoria",
+   "channel": "SEA LIFE Melbourne Aquarium",
+   "date": "2012"
+  }
+ },
+ {
+  "groups": [
+   "sea-turtle"
+  ],
+  "words": [
+   "plastic",
+   "marine debris",
+   "rubbish"
+  ],
+  "video": {
+   "id": "6HGxVz5sgo8",
+   "title": "A sea turtle hatchling that swallowed plastic",
+   "channel": "Taronga Zoo Sydney",
+   "date": "2022"
+  }
+ },
+ {
+  "groups": [
+   "sea-turtle"
+  ],
+  "words": [
+   "fish hook",
+   "fishing hook",
+   "fishing line",
+   "hooked"
+  ],
+  "video": {
+   "id": "ENCsAQCHXGc",
+   "title": "Saving a turtle that swallowed fishing hooks",
+   "channel": "Animal Planet (Australia Zoo vets)",
+   "date": "2022"
+  }
+ },
+ {
+  "groups": [
+   "frog"
+  ],
+  "words": [
+   "chytrid"
+  ],
+  "video": {
+   "id": "ogQyEsP8xkA",
+   "title": "A new tool saving native frogs from chytrid",
+   "channel": "Gardening Australia",
+   "date": "2025"
+  }
+ },
+ {
+  "groups": [
+   "*"
+  ],
+  "words": [
+   "heat stress",
+   "heatwave",
+   "heat wave",
+   "overheated",
+   "hyperthermi"
+  ],
+  "video": {
+   "id": "VBzRwrY8D_8",
+   "title": "How to help heat-stressed wildlife",
+   "channel": "Wildlife Victoria",
+   "date": "2019"
+  }
+ },
+ {
+  "groups": [
+   "*"
+  ],
+  "words": [
+   "caught by a cat",
+   "cat attack",
+   "attacked by a cat",
+   "cat caught",
+   "cat bite",
+   "cat brought",
+   "cat had",
+   "cat got"
+  ],
+  "video": {
+   "id": "LrUx_bFK2WE",
+   "title": "Why every animal caught by a cat needs antibiotics",
+   "channel": "Santa Barbara Wildlife Care Network (USA)",
+   "date": "2025",
+   "warning": "From the USA: the care carries over, but follow your state’s rules and your wildlife service."
+  }
+ },
+ {
+  "groups": [
+   "*"
+  ],
+  "words": [
+   "fishing line",
+   "fish hook",
+   "fishing hook",
+   "hooked",
+   "entangled"
+  ],
+  "video": {
+   "id": "WfQi_hG8SDY",
+   "title": "Hooks and entanglements",
+   "channel": "Green Heroes: Wildlife Rescue 101",
+   "date": "2021"
+  }
+ }
+];
 
 // Videos about the animal's particular condition (mange, chlamydia, netting, a window strike...), checked October 2026.
 // When the plan mentions the condition for one of these animals, this video beats the general species one.
@@ -594,21 +1441,34 @@ export const videoFor = (group, context = '', tags = []) => {
   return named.length && named.every((g) => SMALL.has(g)) ? VIDEOS.general : null;
 };
 
-/** The care video for a care plan or MOP plan: how to look after this animal (a joey's or chick's own video when it's young), or none. */
+/** The care video for a care plan or MOP plan: how to look after this animal (a joey's or chick's own video when it's
+ * young), or a video about its particular problem when the plan names one. */
+const LAST = ['parrot', 'waterbird', 'bird', 'reptile']; // a pelican is also a waterbird, a black cockatoo also a parrot
+const REPTILES = new Set(['skink', 'bluetongue', 'dragon', 'goanna', 'python', 'venomous-snake', 'freshwater-turtle', 'turtle', 'sea-turtle', 'reptile']);
+const CARE_BIRDS = new Set([...BIRDS, 'raptor', 'waterbird', 'seabird', 'penguin', 'shorebird', 'lapwing', 'curlew', 'pelican']);
 export const careVideoFor = (group, context = '', tags = []) => {
-  let keys = [...tags, group].filter(Boolean);
-  if (keys.some((k) => k !== 'bird' && k !== 'reptile')) keys = keys.filter((k) => k !== 'bird' && k !== 'reptile');
-  const byCondition = conditionVideo(keys, context, { care: true });
-  if (byCondition) return byCondition;
+  let keys = [...new Set([...tags, group].filter(Boolean))];
+  keys = [...keys.filter((k) => !LAST.includes(k)), ...LAST.filter((k) => keys.includes(k))];
+  if (!keys.length) return null;
+  const t = String(context).toLowerCase();
+  const said = (c) => c.words.some((w) => hasWord(t, w));
+  // The animal's own condition video first, then one for any animal.
+  const own = CARE_CONDITIONS.find((c) => !c.groups.includes('*') && c.groups.some((g) => keys.includes(g)) && said(c));
+  if (own) return own.video;
+  const any = CARE_CONDITIONS.find((c) => c.groups.includes('*') && said(c));
+  if (any) return any.video;
   const young = YOUNG.test(context);
   for (const key of keys) {
-    const k = key in ALIAS ? ALIAS[key] : key;
-    if (!k) continue;
+    const k = key in ALIAS && ALIAS[key] ? ALIAS[key] : key;
     if (young && CARE_VIDEOS[k + '-young']) return CARE_VIDEOS[k + '-young'];
-    if (CARE_VIDEOS[k]) return CARE_VIDEOS[k];
+    // A young land bird with no chick video of its own: nestling or fledgling help, not the adult's video.
     if (young && BIRDS.has(key)) return CARE_VIDEOS.babybird;
+    if (CARE_VIDEOS[k]) return CARE_VIDEOS[k];
   }
-  return null;
+  // Nothing for this animal: the general first care for birds or reptiles, else the general wildlife assessment.
+  if (keys.some((k) => CARE_BIRDS.has(k))) return CARE_VIDEOS.bird;
+  if (keys.some((k) => REPTILES.has(k))) return CARE_VIDEOS.reptile;
+  return CARE_VIDEOS.general;
 };
 
 /** The video for the animals detected in a document's text, or none. */

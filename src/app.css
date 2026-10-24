@@ -591,7 +591,8 @@ body:not([data-view="record"]) .hero-banner { display: none; }
 
 /* Footer: the website's emergency panel and charity line */
 .site-foot { max-width: 760px; margin: 8px auto 0; padding: 8px var(--gutter-r) calc(28px + env(safe-area-inset-bottom, 0px)) var(--gutter-l); text-align: center; }
-body[data-view="about"] .site-foot { display: none; }
+/* The emergency line stays on the main page, but not on the loading screen. */
+body[data-view="about"] .site-foot, body[data-view="working"] .site-foot { display: none; }
 .sos { border-top: 1px solid var(--line); padding-top: 22px; }
 .sos p { margin: 0; }
 .sos-title { font: 700 1.6rem/1.1 var(--display); text-transform: uppercase; letter-spacing: 1px; color: var(--ink); }
