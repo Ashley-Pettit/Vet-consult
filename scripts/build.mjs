@@ -12,7 +12,8 @@ mkdirSync(out, { recursive: true });
 mkdirSync(art, { recursive: true });
 
 const common = { bundle: true, minify: true, target: ['es2020', 'safari14'], legalComments: 'none', logLevel: 'warning' };
-await build({ ...common, entryPoints: [root + 'src/app.js'], outfile: out + 'app.js', format: 'esm' });
+// Code splitting: the Word library becomes its own file, fetched only when someone asks for a Word printout.
+await build({ ...common, entryPoints: [root + 'src/app.js'], outdir: out, format: 'esm', splitting: true, entryNames: '[name]', chunkNames: 'chunks/[name]-[hash]' });
 await build({ ...common, entryPoints: [root + 'src/app.css'], outfile: out + 'app.css' });
 cpSync(root + 'public', out, { recursive: true });
 

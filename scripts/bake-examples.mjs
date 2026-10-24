@@ -111,3 +111,4 @@ srv.kill();
 fs.writeFileSync(OUT, `// Made by scripts/bake-examples.mjs: ready-made replies for the built-in examples, keyed by prompt hash.\nexport default ${JSON.stringify({ replies }, null, 1)};\n`);
 fs.writeFileSync(LOG, JSON.stringify(log, null, 1));
 console.log('saved', Object.keys(replies).length, 'replies');
+console.log(`House-style templates: node scripts/make-templates.mjs ${LOG}`);

@@ -37,7 +37,7 @@ function pause(ms, signal) {
  * Wrap a provider so example prompts are answered from the ready-made replies after a short, realistic wait.
  * With no provider at all (the public demo without a connection), the examples still work.
  */
-export function withBaked(p, makeCancelled) {
+export function withBaked(p, makeCancelled, prepare = (x) => x) {
   const generate = async (prompt, signal, opts = {}) => {
     const baked = bakedReply(prompt, opts.images, opts.documents);
     if (baked != null) {
@@ -49,7 +49,7 @@ export function withBaked(p, makeCancelled) {
       return baked;
     }
     if (!p) throw Object.assign(new Error('No Claude connection'), { code: 'forbidden' });
-    return p.generate(prompt, signal, opts);
+    return p.generate(prepare(prompt), signal, opts);
   };
   if (p) return { ...p, generate };
   return { id: 'examples', label: 'Examples only', images: false, examplesOnly: true, generate };

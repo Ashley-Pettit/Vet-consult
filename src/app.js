@@ -2,6 +2,7 @@ import { CONFIG } from './config.js';
 import { Dictation, speechErrorMessage } from './speech.js';
 import { resolveProvider, friendly, AiError, onUsage } from './ai.js';
 import { withBaked } from './baked.js';
+import { withTemplate } from './templates.js';
 import { readDocument, DocError, MAX_DOCS, DOC_ACCEPT } from './docs.js';
 import { store } from './storage.js';
 import { localChecks } from './clinical.js';
@@ -13,7 +14,16 @@ import { rangesFor } from './species-ranges.js';
 import { videoFor, videoForTags, watchUrl, embedUrl, thumbUrl } from './videos.js';
 import { groupsIn, factsFor, namedAnimal } from './species-vet.js';
 import { SPECIES_CARE } from './species-care.js';
-import { buildWord, docModel, careModel, noteModel, wordFileName, dischargeModel, THEMES } from './word.js';
+import { docModel, careModel, noteModel, wordFileName, dischargeModel, THEMES } from './word.js';
+// The Word library is big: it loads only the first time someone asks for a Word file.
+let wordLib = null;
+const buildWord = async (...args) => {
+  wordLib ||= import('./word-docx.js').catch((e) => {
+    wordLib = null;
+    throw e;
+  });
+  return (await wordLib).buildWord(...args);
+};
 import {
   NOTE_TYPES,
   NOTE_TYPE_ORDER,
@@ -796,7 +806,8 @@ const bakedOff = () => { try { return localStorage.getItem('css.nobake') === '1'
 const stopped = () => new AiError('cancelled', 'Stopped.');
 function withExamples(p) {
   if (bakedOff()) return p;
-  return p || isExampleText() ? withBaked(p, stopped) : null;
+  // Live drafts get Opus's house-style example for that kind of document (templates.js).
+  return p || isExampleText() ? withBaked(p, stopped, (prompt) => withTemplate(prompt, region().code)) : null;
 }
 async function ensureProvider() {
   provider = withExamples(await resolveProvider(settings));
