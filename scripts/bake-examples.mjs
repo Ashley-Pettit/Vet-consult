@@ -5,7 +5,7 @@ import { chromium } from 'playwright';
 import { spawn } from 'child_process';
 import fs from 'fs';
 import { bakeKey } from '../src/baked.js';
-import { CACHE_MARK, plainPrompt } from '../src/ai.js';
+import { CACHE_MARK, plainPrompt, stripSendTail } from '../src/ai.js';
 import * as N from '../src/note.js';
 
 const PROXY = 'https://care-scribe-proxy.ashley-98e.workers.dev';
@@ -54,8 +54,10 @@ async function run(region, [role, mode, ex, extra = {}]) {
       // A cached prompt arrives as two text blocks (the fixed part, then the case): put the marker back between
       // them, as the app hashes the prompt with it. The connection gets the plain prompt.
       const texts = typeof content === 'string' ? [{ text: content }] : content.filter((b) => b.type === 'text');
-      const prompt = texts.length === 2 && texts[0].cache_control ? texts[0].text + CACHE_MARK + texts[1].text : texts.map((b) => b.text).join('');
-      body.messages[0].content = plainPrompt(prompt);
+      const sent = texts.length === 2 && texts[0].cache_control ? texts[0].text + CACHE_MARK + texts[1].text : texts.map((b) => b.text).join('');
+      // The app keys examples on the prompt without the date and speed line it adds as the request goes out.
+      const prompt = stripSendTail(sent);
+      body.messages[0].content = plainPrompt(sent);
       body.model = 'claude-opus-5-5';
       body.stream = false;
       // Two examples can send the same prompt (a vet's care plan also starts the clinical notes in the background).

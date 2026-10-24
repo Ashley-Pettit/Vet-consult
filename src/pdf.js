@@ -184,7 +184,7 @@ export async function buildPdf(model, { preparedBy = '', date = new Date(), temp
   const doc = {
     pageSize: 'A4',
     pageOrientation: model.fridgeOnly ? 'landscape' : 'portrait',
-    pageMargins: [SIDE, 48, SIDE, 52],
+    pageMargins: model.fridgeOnly ? [SIDE, 34, SIDE, 40] : [SIDE, 48, SIDE, 52],
     background,
     footer,
     info: { title: model.title, author: t.creator, creator: t.creator },
@@ -219,19 +219,24 @@ function cleanTitle(title, docType) {
 // The fridge sheet: its own landscape page with a big box per day.
 function tickSheet(ts, title, { OLIVE, TERRA, TINT, t, first }) {
   const days = ts.days;
-  const isWeight = (x) => /\bweigh|weight\b/i.test(x);
+  const rows = sheetRows(ts);
   // Rows shrink a little for longer job lists, so the sheet always fits one landscape page.
-  const rowH = Math.max(24, Math.min(36, Math.floor(200 / Math.max(1, ts.items.length))));
+  const extra = ts.help && ts.help.items.length ? Math.max(0, ts.help.items.length - 3) * 12 : 0;
+  const rowH = Math.max(20, Math.min(36, Math.floor((175 - extra) / Math.max(1, rows.length))));
   const dayW = (A4.h - 2 * SIDE - 150) / days - 8; // usable width of one day's cell
   const box = (fill) => ({ canvas: [{ type: 'rect', x: Math.max(0, (dayW - 12) / 2), y: (rowH - 12) / 2 - 2, w: 12, h: 12, lineWidth: 0.9, lineColor: '#8A938A' }], fillColor: fill });
   const urgent = (ts.urgent || []).slice(0, 3);
+  const help = ts.help && ts.help.items.length ? ts.help : null;
+  const mid = (h) => Math.max(2, (rowH - h) / 2);
+  const write = (label, fill) => ({ text: label, color: MUTED, fontSize: 8.5, alignment: 'center', margin: [0, mid(18), 0, 0], fillColor: fill });
+  const cellFor = (r, fill) => (r.cell === 'g' ? write('_____ g', fill) : r.cell === 'ml' ? write('_____ mL', fill) : r.cell === 'text' ? { text: '', fillColor: fill } : box(fill));
   return [
     { text: '', pageBreak: first ? undefined : 'before', pageOrientation: 'landscape' },
     {
       table: { widths: ['*', 230], body: [[
         { fillColor: OLIVE, margin: [10, 8, 10, 8], stack: [
           ...(t.logo ? [{ image: LOGO, width: 26, margin: [0, 0, 0, 3] }] : []),
-          { text: `DAILY TICK SHEET  ·  ${(t.wordmark || t.name || '').toUpperCase()}`, color: '#FFFFFF', bold: true, fontSize: 7, characterSpacing: 1.5 },
+          { text: `${(ts.kicker || 'Daily tick sheet').toUpperCase()}  ·  ${(t.wordmark || t.name || '').toUpperCase()}`, color: '#FFFFFF', bold: true, fontSize: 7, characterSpacing: 1.5 },
           { text: title, color: '#FFFFFF', bold: true, fontSize: 14 },
         ] },
         { fillColor: OLIVE, margin: [10, 14, 10, 8], stack: [
@@ -244,10 +249,15 @@ function tickSheet(ts, title, { OLIVE, TERRA, TINT, t, first }) {
     },
     {
       table: { widths: ['*', 230], body: [[
-        { fillColor: '#FBEFEB', margin: [8, 6, 8, 6], stack: [
-          { text: 'GET VET HELP STRAIGHT AWAY IF', bold: true, color: TERRA, fontSize: 7.5, margin: [0, 0, 0, 3] },
-          ...(urgent.length ? urgent : ['It is cold, limp, not feeding or breathing with effort']).map((x) => ({ text: `•  ${x}`, fontSize: 8.5 })),
-        ] },
+        help
+          ? { fillColor: TINT, margin: [8, 6, 8, 6], stack: [
+              { text: help.title.toUpperCase(), bold: true, color: OLIVE, fontSize: 7.5, margin: [0, 0, 0, 3] },
+              ...help.items.map((x) => ({ text: `•  ${x}`, fontSize: 8.5, margin: [0, 0, 0, 1] })),
+            ] }
+          : { fillColor: '#FBEFEB', margin: [8, 6, 8, 6], stack: [
+              { text: 'GET VET HELP STRAIGHT AWAY IF', bold: true, color: TERRA, fontSize: 7.5, margin: [0, 0, 0, 3] },
+              ...(urgent.length ? urgent : ['It is cold, limp, not feeding or breathing with effort']).map((x) => ({ text: `•  ${x}`, fontSize: 8.5 })),
+            ] },
         { fillColor: TINT, margin: [8, 6, 8, 6], stack: [
           { text: 'WILDLIFE EMERGENCIES', bold: true, color: OLIVE, fontSize: 7.5, margin: [0, 0, 0, 3] },
           { text: region().hotline, bold: true, fontSize: 9 },
@@ -260,14 +270,14 @@ function tickSheet(ts, title, { OLIVE, TERRA, TINT, t, first }) {
     {
       table: {
         widths: [150, ...Array.from({ length: days }, () => '*')],
-        heights: (i) => (i === 0 ? 28 : i <= ts.items.length ? rowH : i === ts.items.length + 1 ? 20 : 30),
+        heights: (i) => (i === 0 ? 28 : i <= rows.length ? rowH : i === rows.length + 1 ? 20 : 30),
         body: [
           [{ text: 'EACH DAY', bold: true, color: OLIVE, fontSize: 7.5, fillColor: TINT, margin: [4, 9, 0, 0] }, ...Array.from({ length: days }, (_, d) => ({ stack: [{ text: `Day ${d + 1}`, bold: true, fontSize: 9 }, { text: '__ / __', color: MUTED, fontSize: 7 }], alignment: 'center', fillColor: TINT, margin: [0, 3, 0, 0] }))],
-          ...ts.items.map((x, i) => {
+          ...rows.map((r, i) => {
             const fill = i % 2 ? '#F7F8F4' : null;
             return [
-              { text: x, bold: true, fontSize: 9, margin: [4, Math.max(2, (rowH - 22) / 2), 4, 0], fillColor: fill },
-              ...Array.from({ length: days }, () => (isWeight(x) ? { text: '_____ g', color: MUTED, fontSize: 8.5, alignment: 'center', margin: [0, Math.max(2, (rowH - 18) / 2), 0, 0], fillColor: fill } : box(fill))),
+              { stack: [{ text: r.label, bold: true, fontSize: 9 }, ...(r.sub ? [{ text: r.sub, color: MUTED, fontSize: 7.5 }] : [])], margin: [4, mid(r.sub ? 28 : 22), 4, 0], fillColor: fill },
+              ...Array.from({ length: days }, () => cellFor(r, fill)),
             ];
           }),
           [{ text: 'Initials', bold: true, color: MUTED, fontSize: 8, margin: [4, 5, 0, 0] }, ...Array.from({ length: days }, () => ({ text: '' }))],
@@ -276,6 +286,11 @@ function tickSheet(ts, title, { OLIVE, TERRA, TINT, t, first }) {
       },
       layout: { hLineColor: () => '#B9C0B6', vLineColor: () => '#B9C0B6', hLineWidth: () => 0.6, vLineWidth: () => 0.6 },
     },
-    { text: 'Tick each box when it is done, and initial the day. Stick this on the fridge or the enclosure.', color: MUTED, fontSize: 7.5, margin: [0, 4, 0, 0] },
+    { text: ts.hint || 'Tick each box when it is done, and initial the day. Stick this on the fridge or the enclosure.', color: MUTED, fontSize: 7.5, margin: [0, 4, 0, 0] },
   ];
+}
+
+// Each row of a sheet: a job to tick, a weight to write in, or an amount of milk taken.
+function sheetRows(ts) {
+  return ts.items.map((x) => (typeof x === 'string' ? { label: x, cell: /\bweigh|weight\b/i.test(x) ? 'g' : 'box' } : x));
 }

@@ -59,7 +59,7 @@ test('due labels and plain text', () => {
 
 test('intake starts with the Victorian register fields', () => {
   const p = buildDocPrompt('intake', 'x');
-  assert.match(p, /"Case number", "Common name", "Species code", "Date in", "Sex \(M, F or U\)", "Age class", "Main injury", "Cause", "Where found", "Status"/);
+  assert.match(p, /"Case number", "Common name", "Species code", "Date in" \(today's date, given at the end, unless another date was said\), "Sex \(M, F or U\)", "Age class", "Main injury", "Cause", "Where found", "Status"/);
 });
 
 test('funding draft never invents figures', () => {

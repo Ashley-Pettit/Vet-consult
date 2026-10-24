@@ -26,7 +26,7 @@ export function templateKind(prompt) {
   return hit ? hit[0] : null;
 }
 
-const GUIDE = `Here is an example of an excellent reply of this kind, written for a different animal and case. Match its structure, section headings and their order, level of detail, tone and polish. Never copy its facts, names, organisations, places, numbers, doses or phone numbers: use only what this case and the instructions above say, and leave out any section that doesn't apply here. The rules above always win over the example.`;
+const GUIDE = `Here is an example of an excellent reply of this kind, written for a different animal and case. Match its structure, section headings and their order, level of detail, tone and polish. Never copy its facts, names, the animal's sex (he or she), organisations, places, numbers, doses or phone numbers: use only what this case and the instructions above say, and leave out any section that doesn't apply here. The rules above always win over the example.`;
 
 /** The prompt with the house-style example added just before the case itself, or unchanged if there is none. */
 export function withTemplate(prompt, regionCode = 'vic') {

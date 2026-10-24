@@ -1672,46 +1672,94 @@ function rehydrationSection(r) {
   ]);
 }
 
-// Print just the tick sheet, large, for the fridge. Where printing isn't possible (inside Claude), the Word printout has it on its own page.
-// The fridge sheet: branded like the Word printouts (logo, name, blanks for the week and carer, who to call).
+// Sheets for the fridge: the daily tick sheet, and a feeding chart. Each is made only when its button is tapped.
+// The website prints it straight from the page on a computer; phones get a PDF (printing a web page from a phone is
+// unreliable, and a home-screen app often can't print at all); inside Claude, where there's no printing, it's a Word file.
 function fridgeModel(c) {
   const days = Math.min(c.log_days || 7, 14);
   return { docType: 'Daily tick sheet', title: els.careTitle.textContent, blocks: [], fridgeOnly: true, tickSheet: { items: c.daily_checks, days, urgent: c.escalate.urgent } };
 }
-function fridgeSheet(c) {
+const NUM_WORDS = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, twelve: 12 };
+const shortLine = (x, n = 150) => (x.length <= n ? x : `${x.slice(0, n).replace(/[\s,;:]+\S*$/, '')}…`);
+// The feeding chart: one row per feed (with its time when the plan gives them), the amount taken each day, the morning
+// weight, and the plan's own feeding points beside it.
+function feedChartModel(c) {
+  const f = c.feed_calc && c.feed_calc.applies ? c.feed_calc : null;
+  const text = c.feeding.join(' ');
+  const weightIn = $('feed-weight');
+  const w = weightIn && weightIn.value ? weightIn.value : f && f.weight_g;
+  const a = f ? feedAmounts(f, w) : null;
+  const said = text.match(/\b(\d{1,2}|one|two|three|four|five|six|seven|eight|nine|ten|twelve)\s+(?:small\s+|milk\s+|bottle\s+)?feeds?\b/i);
+  const every = text.match(/\bevery\s+(\d{1,2}|two|three|four|five|six|eight|twelve)(?:\s*(?:to|-|–)\s*\d{1,2})?\s+hours?\b/i);
+  const everyN = every ? Number(every[1]) || NUM_WORDS[every[1].toLowerCase()] : 0;
+  const n = Math.min(8, (a && a.feeds) || (f && f.feeds) || (said ? Number(said[1]) || NUM_WORDS[said[1].toLowerCase()] : 0) || (everyN ? Math.round(24 / everyN) : 0) || 0);
+  const times = [...text.matchAll(/\b(\d{1,2}(?::\d{2})?\s?(?:am|pm))\b|\bmidnight\b/gi)].map((m) => m[0].replace(/\s+/g, ' '));
+  const milk = Boolean(f);
+  const rows = [];
+  if (milk) rows.push({ label: 'Weight', sub: 'Before the first feed', cell: 'g' });
+  if (n) {
+    for (let i = 0; i < n; i++) rows.push({ label: `Feed ${i + 1}`, sub: times.length === n ? `About ${times[i]}` : 'Time ________', cell: milk ? 'ml' : 'box' });
+  } else {
+    rows.push({ label: 'Fresh food in', sub: 'Time ________', cell: 'box' }, { label: 'How much was eaten', sub: 'None, some, most or all', cell: 'text' });
+  }
+  if (/toilet|stimulat/i.test(text)) rows.push({ label: 'Toileted after feeds', cell: 'box' });
+  if (/\bwater\b/i.test(text) && !/\b(no|not|never give)\b[^.]{0,20}\bwater\b/i.test(text)) rows.push({ label: 'Fresh water', cell: 'box' });
+  const help = [];
+  if (a && a.perDay) help.push(`About ${a.perFeed} mL each feed, ${a.feeds} feeds a day (${a.perDay} mL a day at ${w} g). Re-work it as the weight goes up.`);
+  help.push(...c.feeding.slice(0, help.length ? 3 : 4).map((x) => shortLine(x)));
+  return {
+    docType: 'Feeding chart',
+    title: els.careTitle.textContent.replace(/^Care plan:\s*/i, 'Feeding: '),
+    blocks: [],
+    fridgeOnly: true,
+    tickSheet: {
+      kicker: 'Feeding chart',
+      items: rows,
+      days: 7,
+      urgent: c.escalate.urgent,
+      help: { title: f && (a?.product || f.what) ? `How to feed: ${a?.product || f.what}` : 'How to feed', items: help },
+      hint: milk ? 'Write how much was taken at each feed. Weigh at the same time each morning, before the first feed.' : 'Tick each feed when it is done, and initial the day. Stick this on the fridge or the enclosure.',
+    },
+  };
+}
+function sheetHtml(m) {
   const t = THEMES[settings.template] && (settings.template !== 'rspca' || store.rspcaUnlocked()) ? THEMES[settings.template] : THEMES.bunurong;
-  const m = fridgeModel(c);
-  const days = m.tickSheet.days;
-  const isWeight = (x) => /\bweigh|weight\b/i.test(x);
+  const ts = m.tickSheet;
+  const days = ts.days;
+  const rows = ts.items.map((x) => (typeof x === 'string' ? { label: x, cell: /\bweigh|weight\b/i.test(x) ? 'g' : 'box' } : x));
+  const cellFor = (r) => (r.cell === 'g' ? el('span', { class: 'fp-g', text: '_____ g' }) : r.cell === 'ml' ? el('span', { class: 'fp-g', text: '_____ mL' }) : r.cell === 'text' ? '' : el('span', { class: 'fp-box' }));
   const logo = document.querySelector('.band .logo');
-  const box = el('div', { id: 'fridge-print', class: `fp-${t === THEMES.rspca ? 'rspca' : t === THEMES.plain ? 'plain' : 'bunurong'}` }, [
+  const help = ts.help && ts.help.items.length ? ts.help : null;
+  return el('div', { id: 'fridge-print', class: `fp-${t === THEMES.rspca ? 'rspca' : t === THEMES.plain ? 'plain' : 'bunurong'}` }, [
     el('header', { class: 'fp-band' }, [
       el('div', { class: 'fp-id' }, [
         t.logo && logo ? el('img', { src: logo.src, alt: '' }) : t.wordmark ? el('strong', { class: 'fp-word', text: t.wordmark }) : null,
         el('div', {}, [
-          el('p', { class: 'fp-kicker', text: `Daily tick sheet${t.name ? ` · ${t.name}` : ''}` }),
+          el('p', { class: 'fp-kicker', text: `${ts.kicker || 'Daily tick sheet'}${t.name ? ` · ${t.name}` : ''}` }),
           el('h1', { text: m.title }),
         ]),
       ]),
       el('div', { class: 'fp-blanks' }, [el('p', { text: 'Week starting  ____ / ____ / ______' }), el('p', { text: 'Carer  ______________________' })]),
     ]),
-    el('table', { class: 'fp-grid' }, [
+    el('table', { class: `fp-grid${rows.length > 7 ? ' fp-tighter' : rows.length > 5 ? ' fp-tight' : ''}` }, [
       el('thead', {}, [el('tr', {}, [
         el('th', { text: 'Each day' }),
         ...Array.from({ length: days }, (_, d) => el('th', {}, [`Day ${d + 1}`, el('span', { text: '__ / __' })])),
       ])]),
       el('tbody', {}, [
-        ...m.tickSheet.items.map((x) => el('tr', {}, [el('th', { text: x }), ...Array.from({ length: days }, () => el('td', {}, isWeight(x) ? el('span', { class: 'fp-g', text: '_____ g' }) : el('span', { class: 'fp-box' })))])),
+        ...rows.map((r) => el('tr', {}, [el('th', {}, [r.label, r.sub ? el('span', { class: 'fp-sub', text: r.sub }) : null]), ...Array.from({ length: days }, () => el('td', {}, cellFor(r)))])),
         el('tr', { class: 'fp-blank' }, [el('th', { text: 'Initials' }), ...Array.from({ length: days }, () => el('td'))]),
         el('tr', { class: 'fp-blank fp-notes' }, [el('th', { text: 'Notes' }), ...Array.from({ length: days }, () => el('td'))]),
       ]),
     ]),
-    el('p', { class: 'fp-hint', text: 'Tick each box when it is done, and initial the day. Stick this on the fridge or the enclosure.' }),
+    el('p', { class: 'fp-hint', text: ts.hint || 'Tick each box when it is done, and initial the day. Stick this on the fridge or the enclosure.' }),
     el('footer', { class: 'fp-foot' }, [
-      el('div', { class: 'fp-urgent' }, [
-        el('p', { class: 'fp-kicker', text: 'Get vet help straight away if' }),
-        el('ul', {}, (m.tickSheet.urgent.length ? m.tickSheet.urgent.slice(0, 3) : ['It is cold, limp, not feeding or breathing with effort']).map((x) => el('li', { text: x }))),
-      ]),
+      help
+        ? el('div', { class: 'fp-help' }, [el('p', { class: 'fp-kicker', text: help.title }), el('ul', {}, help.items.map((x) => el('li', { text: x })))])
+        : el('div', { class: 'fp-urgent' }, [
+            el('p', { class: 'fp-kicker', text: 'Get vet help straight away if' }),
+            el('ul', {}, (ts.urgent.length ? ts.urgent.slice(0, 3) : ['It is cold, limp, not feeding or breathing with effort']).map((x) => el('li', { text: x }))),
+          ]),
       el('div', { class: 'fp-sos' }, [
         el('p', { class: 'fp-kicker', text: 'Wildlife emergencies' }),
         el('p', { text: region().hotline }),
@@ -1719,15 +1767,15 @@ function fridgeSheet(c) {
       ]),
     ]),
   ]);
-  return box;
 }
-function printTickSheet() {
-  const c = careSheet;
-  if (!c || !c.daily_checks.length) return;
+const onPhone = () => /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Mac/.test(navigator.platform));
+const isApple = () => /iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Mac/.test(navigator.platform));
+async function printSheet(m, btn) {
   // Inside Claude there's no printing: hand over the same sheet as a Word file instead.
-  if (inClaude) return saveWord(fridgeModel(c), document.querySelector('.care-sec.ticks .sec-head button'));
+  if (inClaude || !buildPdf) return saveWord(m, btn);
+  if (onPhone()) return phoneSheet(m, btn);
   document.getElementById('fridge-print')?.remove();
-  document.body.append(fridgeSheet(c));
+  document.body.append(sheetHtml(m));
   document.body.dataset.print = 'fridge';
   // Paper is white: print in the light theme, then switch back.
   const theme = document.documentElement.dataset.theme;
@@ -1743,7 +1791,53 @@ function printTickSheet() {
     window.print();
   } catch {
     done();
+    return phoneSheet(m, btn);
   }
+}
+// Phones: a PDF made on the spot (the button says so while it's being made), then the share sheet (iPhone and iPad
+// have Print there) or a download that opens in the phone's PDF viewer, which can print.
+async function phoneSheet(m, btn) {
+  const label = btn ? btn.textContent : '';
+  if (btn) {
+    btn.disabled = true;
+    btn.setAttribute('aria-busy', 'true');
+    btn.textContent = 'Making the sheet…';
+  }
+  try {
+    const blob = await buildPdf(m, { preparedBy: settings.clinician, template: settings.template });
+    const filename = wordFileName(m.title).replace(/\.docx$/i, '.pdf');
+    const file = typeof File === 'function' ? new File([blob], filename, { type: 'application/pdf' }) : null;
+    if (isApple() && file && navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], title: m.title });
+        return;
+      } catch (e) {
+        if (e && e.name === 'AbortError') return;
+      }
+    }
+    await deliverWord(blob, filename, 'Saved. Open the PDF and print it from there.');
+  } catch {
+    toast('Couldn’t make the sheet. Try again.');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.removeAttribute('aria-busy');
+      btn.textContent = label;
+    }
+  }
+}
+function printTickSheet(btn) {
+  const c = careSheet;
+  if (c && c.daily_checks.length) printSheet(fridgeModel(c), btn);
+}
+function feedsSomething(c) {
+  if (c.feed_calc && c.feed_calc.applies) return true;
+  const first = String(c.feeding[0] || '');
+  return !(/\b(no|nothing|not)\b[^.]{0,30}\b(food|feed|feeding|by mouth)\b|\bno feeding\b|\bgive no food\b/i.test(first));
+}
+function printFeedChart(btn) {
+  const c = careSheet;
+  if (c && c.feeding.length) printSheet(feedChartModel(c), btn);
 }
 
 // Feed calculator: Claude gives the species' daily % of body weight and feeds a day; the sums are done here, and
@@ -1837,8 +1931,8 @@ function renderCare(c) {
   const log = c.daily_checks.length
     ? el('section', { class: 'care-sec ticks' }, [
         el('div', { class: 'sec-head' }, [
-          el('h2', { text: `Daily tick sheet (${days} days)` }),
-          el('button', { type: 'button', class: 'btn small ghost', onclick: () => printTickSheet() }, 'Print for the fridge'),
+          el('h2', { text: `Daily tick sheet (${days} ${days === 1 ? 'day' : 'days'})` }),
+          el('button', { type: 'button', class: 'btn small ghost', onclick: (e) => printTickSheet(e.currentTarget) }, 'Print for the fridge'),
         ]),
         el('p', { class: 'tick-hint', text: 'Tap a box to tick it. Swipe sideways for more days.' }),
         el('div', { class: 'tbl tick-wrap', tabindex: '0', role: 'region', 'aria-label': 'Daily tick sheet' }, [
@@ -1894,7 +1988,16 @@ function renderCare(c) {
           ])
         : null,
       sec('Housing', c.housing),
-      sec('Feeding', c.feeding),
+      c.feeding.length
+        ? el('section', { class: 'care-sec feeding' }, [
+            el('div', { class: 'sec-head' }, [
+              el('h2', { text: 'Feeding' }),
+              // No chart when the plan is to give nothing (an animal its parents are still feeding, say).
+              feedsSomething(c) ? el('button', { type: 'button', class: 'btn small ghost', onclick: (e) => printFeedChart(e.currentTarget) }, 'Print feeding chart') : null,
+            ]),
+            list(c.feeding),
+          ])
+        : null,
       feedSection(c),
       sec('Activity and handling', c.activity),
       sec('Other care', c.care),

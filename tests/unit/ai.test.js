@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { resolveProvider, textFromMessage, friendly, AI_MESSAGES } from '../../src/ai.js';
+import { resolveProvider, textFromMessage, friendly, AI_MESSAGES, sendTail } from '../../src/ai.js';
 import { apiReply } from '../fixtures.js';
 import { CONFIG } from '../../src/config.js';
 
@@ -30,7 +30,7 @@ test('API key provider sends the right request and returns text', async () => {
   assert.equal(seen.init.headers['anthropic-dangerous-direct-browser-access'], 'true');
   const body = JSON.parse(seen.init.body);
   assert.equal(body.model, 'claude-haiku-5-5');
-  assert.equal(body.messages[0].content, 'hello');
+  assert.equal(body.messages[0].content, 'hello' + sendTail());
 });
 
 for (const [status, code] of [[401, 'bad_key'], [403, 'forbidden'], [429, 'rate_limited'], [529, 'overloaded'], [500, 'server'], [400, 'bad_request']]) {
@@ -70,7 +70,7 @@ test('Claude runtime provider is preferred and maps errors', async () => {
   const claude = { use: async (n) => (n === 'sample' ? sample : null) };
   const p = await resolveProvider({ apiKey: 'k' }, { claude, fetch: async () => {} });
   assert.equal(p.id, 'claude');
-  assert.equal(await p.generate('hi'), 'reply:hi');
+  assert.equal(await p.generate('hi'), 'reply:hi' + sendTail());
 
   const failing = { use: async () => async () => { throw { code: 'not_granted' }; } };
   const p2 = await resolveProvider({}, { claude: failing });
@@ -113,10 +113,10 @@ test('proxy: sign-in redirects read as sign-in; a dropped connection reads as a 
 
 test('photos go first as image blocks, text last', async () => {
   const { messageContent } = await import('../../src/ai.js');
-  assert.equal(messageContent('hi'), 'hi');
+  assert.equal(messageContent('hi'), 'hi' + sendTail());
   const c = messageContent('hi', [{ mediaType: 'image/jpeg', data: 'AAA' }]);
   assert.deepEqual(c[0], { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: 'AAA' } });
-  assert.deepEqual(c[1], { type: 'text', text: 'hi' });
+  assert.deepEqual(c[1], { type: 'text', text: 'hi' + sendTail() });
   let body;
   const p = await resolveProvider({ apiKey: 'k' }, { claude: null, fetch: async (u, i) => ((body = JSON.parse(i.body)), jsonResponse(200, apiReply())) });
   assert.equal(p.images, true);

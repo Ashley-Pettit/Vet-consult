@@ -311,7 +311,8 @@ function tickSheetSection(t, title) {
   const cell = (children, o = {}) => new TableCell({ verticalAlign: VerticalAlign.CENTER, margins: { left: 120, right: 100, top: 40, bottom: 40 }, children, ...o });
   const fill = (c) => ({ type: ShadingType.CLEAR, color: 'auto', fill: c });
   const centre = (runs) => new Paragraph({ alignment: AlignmentType.CENTER, children: runs });
-  const isWeight = (x) => /\bweigh|weight\b/i.test(x);
+  const rows = t.items.map((x) => (typeof x === 'string' ? { label: x, cell: /\bweigh|weight\b/i.test(x) ? 'g' : 'box' } : x));
+  const help = t.help && t.help.items.length ? t.help : null;
 
   // Header band: what it is and who it's for, with blanks to fill in by hand.
   const band = new Table({
@@ -323,13 +324,13 @@ function tickSheetSection(t, title) {
       cell([
         ...(THEME.logo ? [new Paragraph({ spacing: { after: 60 }, children: [new ImageRun({ type: 'png', data: logoBytes(), transformation: { width: 54, height: 54 } })] })] : []),
         ...(THEME.wordmark ? [new Paragraph({ spacing: { after: 40 }, children: [new TextRun({ text: THEME.wordmark, font: HEAD_FONT, bold: true, size: 40, color: 'FFFFFF', characterSpacing: 40 })] })] : []),
-        new Paragraph({ spacing: { after: 40 }, children: [new TextRun({ text: `DAILY TICK SHEET${THEME.name ? `  ·  ${THEME.name.toUpperCase()}` : ''}`, font: HEAD_FONT, bold: true, size: 18, color: 'FFFFFF', characterSpacing: 30 })] }),
+        new Paragraph({ spacing: { after: 40 }, children: [new TextRun({ text: `${(t.kicker || 'Daily tick sheet').toUpperCase()}${THEME.name ? `  ·  ${THEME.name.toUpperCase()}` : ''}`, font: HEAD_FONT, bold: true, size: 18, color: 'FFFFFF', characterSpacing: 30 })] }),
         new Paragraph({ children: [new TextRun({ text: title, font: HEAD_FONT, bold: true, size: 36, color: 'FFFFFF' })] }),
       ], { shading: fill(OLIVE), margins: { left: 240, right: 120, top: 160, bottom: 160 } }),
       cell([
         new Paragraph({ spacing: { after: 120 }, children: [txt('Week starting  ____ / ____ / ______', { size: 20, color: 'FFFFFF' })] }),
         new Paragraph({ spacing: { after: 120 }, children: [txt('Carer  ______________________________', { size: 20, color: 'FFFFFF' })] }),
-        new Paragraph({ children: [txt('Tick each box when it is done, and initial the day. Stick this on the fridge or the enclosure.', { size: 17, color: 'E8ECE2' })] }),
+        new Paragraph({ children: [txt(t.hint || 'Tick each box when it is done, and initial the day. Stick this on the fridge or the enclosure.', { size: 17, color: 'E8ECE2' })] }),
       ], { shading: fill(OLIVE), margins: { left: 120, right: 240, top: 160, bottom: 160 } }),
     ] })],
   });
@@ -346,14 +347,20 @@ function tickSheetSection(t, title) {
     ],
   });
   // Rows shrink a little when there are many jobs, so the sheet and its emergency box fit on one page.
-  const rowH = Math.max(520, Math.min(780, Math.floor(3900 / Math.max(1, t.items.length))));
-  const jobRow = (item, i) => new TableRow({
+  const rowH = Math.max(520, Math.min(780, Math.floor(3900 / Math.max(1, rows.length))));
+  const jobRow = (r, i) => new TableRow({
     cantSplit: true,
     height: { value: rowH, rule: 'atLeast' },
     children: [
-      cell([new Paragraph({ children: [txt(item, { bold: true })] })], { width: { size: first, type: WidthType.DXA }, shading: i % 2 ? fill('F7F8F4') : undefined }),
+      cell([
+        new Paragraph({ children: [txt(r.label, { bold: true })] }),
+        ...(r.sub ? [new Paragraph({ children: [txt(r.sub, { size: 17, color: MUTED })] })] : []),
+      ], { width: { size: first, type: WidthType.DXA }, shading: i % 2 ? fill('F7F8F4') : undefined }),
       ...Array.from({ length: t.days }, () => cell([
-        isWeight(item) ? centre([txt('_____ g', { size: 20, color: MUTED })]) : centre([txt('☐', { size: 48, color: '8A938A' })]),
+        r.cell === 'g' ? centre([txt('_____ g', { size: 20, color: MUTED })])
+          : r.cell === 'ml' ? centre([txt('_____ mL', { size: 20, color: MUTED })])
+          : r.cell === 'text' ? new Paragraph({ children: [] })
+          : centre([txt('☐', { size: 48, color: '8A938A' })]),
       ], { width: { size: dayW, type: WidthType.DXA }, shading: i % 2 ? fill('F7F8F4') : undefined })),
     ],
   });
@@ -370,7 +377,7 @@ function tickSheetSection(t, title) {
     layout: TableLayoutType.FIXED,
     columnWidths: [first, ...Array.from({ length: t.days }, () => dayW)],
     borders: { top: line, bottom: line, left: line, right: line, insideHorizontal: line, insideVertical: line },
-    rows: [head, ...t.items.map(jobRow), blankRow('Initials', 520), blankRow('Notes', 800)],
+    rows: [head, ...rows.map(jobRow), blankRow('Initials', 520), blankRow('Notes', 800)],
   });
 
   // Foot: when to get help, and the emergency line, so the sheet works on its own.
@@ -381,10 +388,15 @@ function tickSheetSection(t, title) {
     columnWidths: [LAND_W - 5200, 5200],
     borders: { top: none, bottom: none, left: none, right: none, insideHorizontal: none, insideVertical: { style: BorderStyle.SINGLE, size: 6, color: 'FFFFFF' } },
     rows: [new TableRow({ cantSplit: true, children: [
-      cell([
-        new Paragraph({ spacing: { after: 60 }, children: [txt('GET VET HELP STRAIGHT AWAY IF', { bold: true, size: 17, color: TERRA })] }),
-        ...(urgent.length ? urgent : ['It is cold, limp, not feeding or breathing with effort']).map((x) => new Paragraph({ spacing: { after: 20 }, children: [txt(`•  ${x}`, { size: 19 })] })),
-      ], { shading: fill('FBEFEB'), margins: { left: 200, right: 160, top: 120, bottom: 120 } }),
+      help
+        ? cell([
+            new Paragraph({ spacing: { after: 60 }, children: [txt(help.title.toUpperCase(), { bold: true, size: 17, color: OLIVE })] }),
+            ...help.items.map((x) => new Paragraph({ spacing: { after: 20 }, children: [txt(`•  ${x}`, { size: 19 })] })),
+          ], { shading: fill(TINT), margins: { left: 200, right: 160, top: 120, bottom: 120 } })
+        : cell([
+            new Paragraph({ spacing: { after: 60 }, children: [txt('GET VET HELP STRAIGHT AWAY IF', { bold: true, size: 17, color: TERRA })] }),
+            ...(urgent.length ? urgent : ['It is cold, limp, not feeding or breathing with effort']).map((x) => new Paragraph({ spacing: { after: 20 }, children: [txt(`•  ${x}`, { size: 19 })] })),
+          ], { shading: fill('FBEFEB'), margins: { left: 200, right: 160, top: 120, bottom: 120 } }),
       cell([
         new Paragraph({ spacing: { after: 60 }, children: [txt('WILDLIFE EMERGENCIES', { bold: true, size: 17, color: OLIVE })] }),
         new Paragraph({ children: [txt(region().hotline, { bold: true, size: 20 })] }),
