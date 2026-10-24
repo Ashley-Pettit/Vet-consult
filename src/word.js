@@ -94,7 +94,8 @@ export function careModel(c, lookup, photos = []) {
     ...(meds.length ? [{ heading: 'Medications', table: { head: ['Medication', 'How', 'How often', 'How long'], rows: meds, widths: [2600, 2600, 2400, PAGE_W - 7600] }, note: c.medications.map((m) => (m.tip ? `${m.name}: ${m.tip}` : '')).filter(Boolean).join('  ') || undefined }] : []),
     ...rangesBlocks(c.species_group),
     ...rehydrationBlocks(c.rehydration),
-    ...c.plan.map((p) => ({ heading: p.when, items: p.tasks })),
+    // The day-by-day plan as one table, rather than a scatter of small headed sections.
+    ...(c.plan.length ? [{ heading: 'Day-by-day plan', table: { head: ['When', 'What to do'], rows: c.plan.map((p) => [p.when, p.tasks.map((x) => `•  ${x}`).join('\n')]), widths: [2700, PAGE_W - 2700] } }] : []),
     { heading: 'Housing', items: c.housing },
     { heading: 'Feeding', items: c.feeding },
     ...feedBlocks(c.feed_calc),

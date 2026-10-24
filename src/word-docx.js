@@ -103,11 +103,9 @@ function cell(text, { head = false, width, shade } = {}) {
     verticalAlign: VerticalAlign.CENTER,
     margins: { top: 80, bottom: 80, left: 120, right: 120 },
     shading: head ? { type: ShadingType.CLEAR, color: 'auto', fill: OLIVE } : shade ? { type: ShadingType.CLEAR, color: 'auto', fill: shade } : undefined,
-    children: [
-      new Paragraph({
-        children: [head ? new TextRun({ text: String(text).toUpperCase(), font: HEAD_FONT, bold: true, size: 19, color: 'FFFFFF' }) : run(text, { size: 20 })],
-      }),
-    ],
+    children: head
+      ? [new Paragraph({ children: [new TextRun({ text: String(text).toUpperCase(), font: HEAD_FONT, bold: true, size: 19, color: 'FFFFFF' })] })]
+      : String(text ?? '').split('\n').map((line, i, all) => new Paragraph({ spacing: { after: i < all.length - 1 ? 60 : 0 }, children: [run(line, { size: 20 })] })),
   });
 }
 
@@ -297,9 +295,11 @@ function tickSheetSection(t, title) {
       ], { width: { size: dayW, type: WidthType.DXA }, shading: fill(TINT) })),
     ],
   });
+  // Rows shrink a little when there are many jobs, so the sheet and its emergency box fit on one page.
+  const rowH = Math.max(560, Math.min(820, Math.floor(4200 / Math.max(1, t.items.length))));
   const jobRow = (item, i) => new TableRow({
     cantSplit: true,
-    height: { value: 980, rule: 'atLeast' },
+    height: { value: rowH, rule: 'atLeast' },
     children: [
       cell([new Paragraph({ children: [txt(item, { bold: true })] })], { width: { size: first, type: WidthType.DXA }, shading: i % 2 ? fill('F7F8F4') : undefined }),
       ...Array.from({ length: t.days }, () => cell([
@@ -320,7 +320,7 @@ function tickSheetSection(t, title) {
     layout: TableLayoutType.FIXED,
     columnWidths: [first, ...Array.from({ length: t.days }, () => dayW)],
     borders: { top: line, bottom: line, left: line, right: line, insideHorizontal: line, insideVertical: line },
-    rows: [head, ...t.items.map(jobRow), blankRow('Initials', 620), blankRow('Notes', 1100)],
+    rows: [head, ...t.items.map(jobRow), blankRow('Initials', 520), blankRow('Notes', 800)],
   });
 
   // Foot: when to get help, and the emergency line, so the sheet works on its own.
@@ -350,10 +350,11 @@ function tickSheetSection(t, title) {
     footers: { default: new Footer({ children: [new Paragraph({ children: [] })] }) },
     children: [
       band,
-      new Paragraph({ spacing: { after: 160 }, children: [] }),
-      grid,
-      new Paragraph({ spacing: { before: 100, after: 160 }, children: [txt('Tick each box when it is done, and initial the day. Stick this on the fridge or the enclosure.', { size: 18, color: MUTED })] }),
+      new Paragraph({ spacing: { after: 120 }, children: [] }),
       foot,
+      new Paragraph({ spacing: { after: 120 }, children: [] }),
+      grid,
+      new Paragraph({ spacing: { before: 80 }, children: [txt('Tick each box when it is done, and initial the day. Stick this on the fridge or the enclosure.', { size: 18, color: MUTED })] }),
     ],
   };
 }
