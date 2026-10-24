@@ -2,6 +2,7 @@
 // examples, see scripts/bake-examples.mjs). Live drafts on the everyday model get it as a worked example, so they
 // come out with the same structure, depth and polish, and the Word printouts look as good.
 import EXAMPLES from './template-examples.js';
+import { CACHE_SPLIT } from './note.js';
 
 // Which kind of request a prompt is. Order matters: the most specific first. Changes, revisions and Rapid polish
 // get no example (they edit something that already exists, or need speed).
@@ -34,6 +35,9 @@ export function withTemplate(prompt, regionCode = 'vic') {
   if (!ex) return prompt;
   const block = `${GUIDE}\n<example_reply>\n${ex}\n</example_reply>\n`;
   const p = String(prompt);
+  // Inside the part that's the same every time (before the cache marker), so the example is cached with the rules.
+  const mark = p.indexOf(CACHE_SPLIT);
+  if (mark > 0) return `${p.slice(0, mark)}\n\n${block}${p.slice(mark)}`;
   const at = Math.max(p.lastIndexOf('\n<dictation>'), p.lastIndexOf('\n<comments>'), p.lastIndexOf('\n<note>'));
   return at > 0 ? `${p.slice(0, at)}\n${block}${p.slice(at)}` : `${p}\n\n${block}`;
 }

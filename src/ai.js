@@ -64,12 +64,27 @@ function statusToCode(status) {
 }
 
 /** Text alone, or photos first then the text, as Messages API content blocks. */
-export function messageContent(prompt, images = [], documents = []) {
-  if (!images.length && !documents.length) return prompt;
+// Prompt caching: the part of a prompt before the marker is the same on every request of that kind, so it's sent
+// as its own block marked for caching. Claude then reuses it for a few minutes: quicker to start and cheaper.
+export const CACHE_MARK = '\n<<<CACHE_SPLIT>>>\n';
+let cachingOff = false; // set if a connection turns caching down, so the next requests go plain
+export const plainPrompt = (prompt) => String(prompt).split(CACHE_MARK).join('\n');
+function textBlocks(prompt, cache) {
+  const p = String(prompt);
+  const i = p.indexOf(CACHE_MARK);
+  if (i < 0 || !cache) return [{ type: 'text', text: plainPrompt(p) }];
+  return [
+    { type: 'text', text: p.slice(0, i), cache_control: { type: 'ephemeral' } },
+    { type: 'text', text: p.slice(i + CACHE_MARK.length) },
+  ];
+}
+export function messageContent(prompt, images = [], documents = [], cache = !cachingOff) {
+  const text = textBlocks(prompt, cache);
+  if (!images.length && !documents.length && text.length === 1) return text[0].text;
   return [
     ...documents.map((d) => ({ type: 'document', title: d.name, source: { type: 'base64', media_type: d.mediaType || 'application/pdf', data: d.data } })),
     ...images.map((i) => ({ type: 'image', source: { type: 'base64', media_type: i.mediaType || 'image/jpeg', data: i.data } })),
-    { type: 'text', text: prompt },
+    ...text,
   ];
 }
 
@@ -157,6 +172,12 @@ async function callMessages(url, headers, prompt, model, signal, fetchImpl, opts
     try {
       return await callOnce(url, headers, prompt, model, signal, fetchImpl, opts);
     } catch (e) {
+      // A connection that doesn't take cached blocks yet: send it plainly from now on.
+      if (e instanceof AiError && e.code === 'bad_request' && !cachingOff && String(prompt).includes(CACHE_MARK)) {
+        cachingOff = true;
+        attempt -= 1;
+        continue;
+      }
       const retry = e instanceof AiError && RETRY_CODES.has(e.code) && attempt < tries && !(signal && signal.aborted);
       if (!retry) throw e;
       await new Promise((r) => setTimeout(r, opts.retryDelayMs ?? 1500 * attempt));
@@ -263,7 +284,7 @@ export async function resolveProvider(settings = {}, env = {}) {
             const m = CONFIG.models.find((x) => x.id === model) || CONFIG.models[0];
             const opts = { signal, cache: false, model: m.id, modelTier: m.tier || 'default' };
             if (images.length) opts.images = images.map((i) => i.blob);
-            const res = await sample(prompt, opts);
+            const res = await sample(plainPrompt(prompt), opts);
             reportUsage({ model: res.modelApplied || `tier:${res.modelTierApplied || m.tier}`, requests: 1, input: 0, output: 0, account: true });
             return res.text;
           } catch (e) {

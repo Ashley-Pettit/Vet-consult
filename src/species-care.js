@@ -351,6 +351,8 @@ const POINTS = [
 export const SPECIES_CARE = POINTS;
 
 /** Compact list for prompts: species | point | why. */
-export function speciesCareForPrompt() {
-  return SPECIES_CARE.map((w) => `${w.species} | ${w.warning} | ${w.why}`).join('\n');
+const CARE_TAG = { macropod: 'macropod', koala: 'koala', wombat: 'wombat', possum: 'possum', echidna: 'echidna', bat: 'bat', bird: 'bird', seabird: 'bird', reptile: 'reptile' };
+export function speciesCareForPrompt(tags = null) {
+  const pick = tags && tags.size ? SPECIES_CARE.filter((w) => tags.has(CARE_TAG[w.species] || w.species)) : SPECIES_CARE;
+  return (pick.length ? pick : SPECIES_CARE).map((w) => `${w.species} | ${w.warning} | ${w.why}`).join('\n');
 }

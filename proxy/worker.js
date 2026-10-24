@@ -16,14 +16,22 @@ const MAX_IMAGES = 5;
 const MAX_DOCS = 5;
 const IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 
-/** A plain string, or photo and PDF blocks followed by text. Nothing else gets through. */
+/** A plain string, or photo and PDF blocks followed by text (up to two text blocks: the fixed part, marked for
+ * prompt caching, then this case). Nothing else gets through. */
 function validContent(c) {
   if (typeof c === 'string') return c.length > 0;
-  if (!Array.isArray(c) || !c.length || c.length > MAX_IMAGES + MAX_DOCS + 1) return false;
+  if (!Array.isArray(c) || !c.length || c.length > MAX_IMAGES + MAX_DOCS + 2) return false;
   let images = 0;
   let docs = 0;
+  let texts = 0;
   for (const b of c) {
-    if (b && b.type === 'text' && typeof b.text === 'string') continue;
+    if (b && b.type === 'text' && typeof b.text === 'string') {
+      const keys = Object.keys(b).filter((k) => k !== 'type' && k !== 'text');
+      const cacheOk = keys.length === 0 || (keys.length === 1 && b.cache_control && b.cache_control.type === 'ephemeral' && Object.keys(b.cache_control).length === 1);
+      if (!cacheOk) return false;
+      texts++;
+      continue;
+    }
     if (b && b.type === 'image' && b.source && b.source.type === 'base64' && IMAGE_TYPES.has(b.source.media_type) && typeof b.source.data === 'string') {
       images++;
       continue;
@@ -34,7 +42,7 @@ function validContent(c) {
     }
     return false;
   }
-  return images <= MAX_IMAGES && docs <= MAX_DOCS && c[c.length - 1].type === 'text';
+  return images <= MAX_IMAGES && docs <= MAX_DOCS && texts <= 2 && c[c.length - 1].type === 'text';
 }
 
 function cors(origin) {
