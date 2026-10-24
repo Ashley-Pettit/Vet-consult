@@ -5,6 +5,8 @@ import { chartByKey } from './feeding.js';
 import { rangesFor } from './species-ranges.js';
 import { region } from './region.js';
 
+export const PAGE_W = 9638; // A4 minus 2 cm margins, in twentieths of a point
+
 // Handout styles, chosen in Settings. Colours are set per printout from the chosen style.
 export const THEMES = {
   bunurong: { name: 'Bunurong Wildlife Care Inc', sub: 'Wildlife Shelter 15147751  ·  Registered Charity  ·  Inverloch, Victoria', primary: '647C50', accent: 'AB6555', tint: 'EEF2E8', line: 'D9DCCF', logo: true, motto: 'Forever home is best', creator: 'Bunurong Wildlife Care' },

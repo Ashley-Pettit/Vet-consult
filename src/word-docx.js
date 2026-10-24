@@ -9,7 +9,7 @@ import { dueLabel, formatDate, NOT_RECORDED, rehydrationTable, REHYDRATION_NOTE,
 import { chartByKey } from './feeding.js';
 import { rangesFor } from './species-ranges.js';
 import { region } from './region.js';
-import { THEMES } from './word.js';
+import { THEMES, PAGE_W } from './word.js';
 
 
 let THEME = THEMES.bunurong;
@@ -30,7 +30,6 @@ function useTheme(id) {
   TINT = THEME.tint;
   LINE = THEME.line;
 }
-const PAGE_W = 9638; // A4 minus 2 cm margins, in twentieths of a point
 
 const logoBytes = () => Uint8Array.from(atob(LOGO_PNG_BASE64), (c) => c.charCodeAt(0));
 
