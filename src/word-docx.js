@@ -34,13 +34,18 @@ function useTheme(id) {
 const logoBytes = () => Uint8Array.from(atob(LOGO_PNG_BASE64), (c) => c.charCodeAt(0));
 
 const NONE = { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' };
+// The page has no side margins, so the brand band can run edge to edge in every viewer (phones ignore a band that
+// pokes out past the margins). The content is indented by SIDE instead, which gives the same margins on paper.
+const SIDE = 1134;
+const IN = { left: SIDE, right: SIDE };
+const TBL_IN = { size: SIDE, type: WidthType.DXA };
 const run = (text, o = {}) => new TextRun({ text: String(text ?? ''), font: BODY_FONT, size: 21, color: INK, ...o });
 
 function heading(text) {
   return new Paragraph({
     keepNext: true,
     spacing: { before: 300, after: 100 },
-    indent: { left: 140 },
+    indent: { left: SIDE + 140, right: SIDE },
     border: { left: { style: BorderStyle.SINGLE, size: 24, color: TERRA, space: 8 } },
     children: [new TextRun({ text: String(text).toUpperCase(), font: HEAD_FONT, bold: true, size: 23, color: OLIVE, characterSpacing: 24 })],
   });
@@ -77,23 +82,24 @@ function callout(b) {
     new Paragraph({ keepNext: true, spacing: { after: 60 }, children: [new TextRun({ text: String(b.heading).toUpperCase(), font: HEAD_FONT, bold: true, size: 19, color: t.label, characterSpacing: 24 })] }),
     ...(b.text ? String(b.text).split(/\n+/).map((x) => new Paragraph({ spacing: { after: 60, line: 300 }, children: [run(x)] })) : []),
     ...(b.photos && b.photos.length ? [new Paragraph({ spacing: { after: 80 }, children: b.photos.slice(0, 3).map((data) => new ImageRun({ type: 'jpg', data, transformation: photoSize(data, 190) })) })] : []),
-    ...(b.items || []).map((x) => bullet(x)),
+    ...(b.items || []).map((x) => bullet(x, true)),
   ];
   return new Table({
     width: { size: PAGE_W, type: WidthType.DXA },
+    indent: TBL_IN,
     layout: TableLayoutType.FIXED,
     columnWidths: [PAGE_W],
     borders: { top: NONE, bottom: NONE, right: NONE, insideHorizontal: NONE, insideVertical: NONE, left: { style: BorderStyle.SINGLE, size: 36, color: t.bar } },
     rows: [new TableRow({ cantSplit: true, children: [new TableCell({ width: { size: PAGE_W, type: WidthType.DXA }, shading: { type: ShadingType.CLEAR, color: 'auto', fill: t.fill }, margins: { top: 140, bottom: 120, left: 220, right: 200 }, children: kids })] })],
   });
 }
-const para = (text) => new Paragraph({ spacing: { after: 120, line: 312 }, children: [run(text)] });
-const check = (text) => new Paragraph({ spacing: { after: 80, line: 288 }, indent: { left: 120 }, children: [new TextRun({ text: '☐  ', font: 'Segoe UI Symbol', size: 26, color: '7A847A' }), run(text)] });
-const bullet = (text) => new Paragraph({ numbering: { reference: 'dots', level: 0 }, spacing: { after: 70, line: 300 }, children: [run(text)] });
+const para = (text) => new Paragraph({ indent: IN, spacing: { after: 120, line: 312 }, children: [run(text)] });
+const check = (text) => new Paragraph({ spacing: { after: 80, line: 288 }, indent: { left: SIDE + 120, right: SIDE }, children: [new TextRun({ text: '☐  ', font: 'Segoe UI Symbol', size: 26, color: '7A847A' }), run(text)] });
+const bullet = (text, inBox = false) => new Paragraph({ numbering: { reference: inBox ? 'dots-in' : 'dots', level: 0 }, ...(inBox ? {} : { indent: { left: SIDE + 400, hanging: 260, right: SIDE } }), spacing: { after: 70, line: 300 }, children: [run(text)] });
 // An item that already carries its number ("1. In my opinion…") keeps it, with a hanging indent instead of a bullet.
 const numbered = (text) => {
   const m = String(text).match(/^(\d+[.)])\s+([\s\S]*)$/);
-  return new Paragraph({ indent: { left: 400, hanging: 400 }, spacing: { after: 90, line: 300 }, children: [run(`${m[1]}\t`, { bold: true }), run(m[2])], tabStops: [{ type: 'left', position: 400 }] });
+  return new Paragraph({ indent: { left: SIDE + 400, hanging: 400, right: SIDE }, spacing: { after: 90, line: 300 }, children: [run(`${m[1]}\t`, { bold: true }), run(m[2])], tabStops: [{ type: 'left', position: SIDE + 400 }] });
 };
 const itemPara = (text) => (/^\d+[.)]\s+/.test(String(text)) ? numbered(text) : bullet(text));
 
@@ -114,6 +120,7 @@ function table(head, rows, widths) {
   const border = { style: BorderStyle.SINGLE, size: 4, color: LINE };
   return new Table({
     width: { size: PAGE_W, type: WidthType.DXA },
+    indent: TBL_IN,
     layout: TableLayoutType.FIXED,
     columnWidths: w,
     borders: { top: border, bottom: border, left: border, right: border, insideHorizontal: border, insideVertical: border },
@@ -125,7 +132,6 @@ function table(head, rows, widths) {
 }
 
 // The brand band runs the full width of the page, edge to edge, from the top edge.
-const SIDE = 1134; // the side margins
 const FULL_W = PAGE_W + 2 * SIDE;
 
 // Header like the website: a coloured band with the logo (or wordmark) in the middle and the name under it.
@@ -137,7 +143,6 @@ function header() {
     children: [
       new Table({
         width: { size: FULL_W, type: WidthType.DXA },
-        indent: { size: -SIDE, type: WidthType.DXA },
         layout: TableLayoutType.FIXED,
         columnWidths: [FULL_W],
         borders: { top: NONE, bottom: NONE, left: NONE, right: NONE, insideHorizontal: NONE, insideVertical: NONE },
@@ -172,7 +177,6 @@ function slimHeader(label) {
     children: [
       new Table({
         width: { size: FULL_W, type: WidthType.DXA },
-        indent: { size: -SIDE, type: WidthType.DXA },
         layout: TableLayoutType.FIXED,
         columnWidths: [FULL_W],
         borders: { top: NONE, bottom: NONE, left: NONE, right: NONE, insideHorizontal: NONE, insideVertical: NONE },
@@ -192,15 +196,16 @@ function footer(label) {
   return new Footer({
     children: [
       new Paragraph({
+        indent: IN,
         border: { top: { style: BorderStyle.SINGLE, size: 6, color: LINE, space: 4 } },
-        tabStops: [{ type: 'right', position: PAGE_W }],
+        tabStops: [{ type: 'right', position: SIDE + PAGE_W }],
         children: [
           ...(THEME.motto ? [new TextRun({ text: THEME.motto.toUpperCase(), font: HEAD_FONT, bold: true, size: 16, color: TERRA, characterSpacing: 20 }), new TextRun({ text: '   ', font: BODY_FONT, size: 15 })] : []),
           new TextRun({ text: label, font: BODY_FONT, size: 15, color: MUTED }),
           new TextRun({ children: ['\tPage ', PageNumber.CURRENT, ' of ', PageNumber.TOTAL_PAGES], font: BODY_FONT, size: 15, color: MUTED }),
         ],
       }),
-      new Paragraph({ children: [new TextRun({ text: `Wildlife emergencies: ${region().hotline} (${region().hotlineHours}) on ${region().phone}`, font: BODY_FONT, size: 15, color: MUTED })] }),
+      new Paragraph({ indent: IN, children: [new TextRun({ text: `Wildlife emergencies: ${region().hotline} (${region().hotlineHours}) on ${region().phone}`, font: BODY_FONT, size: 15, color: MUTED })] }),
     ],
   });
 }
@@ -215,6 +220,7 @@ function metaTable(meta) {
   const tint = { type: ShadingType.CLEAR, color: 'auto', fill: TINT };
   return new Table({
     width: { size: PAGE_W, type: WidthType.DXA },
+    indent: TBL_IN,
     layout: TableLayoutType.FIXED,
     columnWidths: Array.from({ length: per }, () => [lab, val]).flat(),
     borders: { top: NONE, bottom: NONE, left: NONE, right: NONE, insideHorizontal: { style: BorderStyle.SINGLE, size: 4, color: 'FFFFFF' }, insideVertical: NONE },
@@ -246,15 +252,15 @@ export async function buildWord(model, { preparedBy = '', date = new Date(), tem
   // "Care plan: Ringtail joey" under a CARE PLAN label says it twice: keep just the animal or subject.
   const title = cleanTitle(model.title, model.docType);
   const body = [
-    new Paragraph({ spacing: { before: 120, after: 0 }, children: [new TextRun({ text: String(model.docType).toUpperCase(), font: HEAD_FONT, bold: true, size: 20, color: TERRA, characterSpacing: 40 })] }),
-    new Paragraph({ spacing: { after: model.subtitle ? 40 : 160 }, children: [new TextRun({ text: title, font: HEAD_FONT, bold: true, size: 44, color: INK })] }),
-    ...(model.subtitle ? [new Paragraph({ spacing: { after: 160 }, children: [run(model.subtitle, { color: MUTED, size: 22 })] })] : []),
+    new Paragraph({ indent: IN, spacing: { before: 120, after: 0 }, children: [new TextRun({ text: String(model.docType).toUpperCase(), font: HEAD_FONT, bold: true, size: 20, color: TERRA, characterSpacing: 40 })] }),
+    new Paragraph({ indent: IN, spacing: { after: model.subtitle ? 40 : 160 }, children: [new TextRun({ text: title, font: HEAD_FONT, bold: true, size: 40, color: INK })] }),
+    ...(model.subtitle ? [new Paragraph({ indent: IN, spacing: { after: 160 }, children: [run(model.subtitle, { color: MUTED, size: 22 })] })] : []),
     metaTable(meta),
   ];
   // The AI note sits quietly under the details, not as a section of its own.
-  if (model.aiNote) body.push(new Paragraph({ spacing: { before: 140, after: 40 }, children: [run(`ⓘ  ${model.aiNote}`, { italics: true, color: MUTED, size: 18 })] }));
+  if (model.aiNote) body.push(new Paragraph({ indent: IN, spacing: { before: 140, after: 40 }, children: [run(`ⓘ  ${model.aiNote}`, { italics: true, color: MUTED, size: 18 })] }));
   // A video worth watching, as one short linked line under the details.
-  if (model.watch) body.push(new Paragraph({ spacing: { before: 40, after: 40 }, children: [run('▶  Watch: ', { bold: true, size: 18, color: OLIVE }), new ExternalHyperlink({ link: model.watch.url, children: [run(`${model.watch.title} (${model.watch.channel}${model.watch.date ? `, ${model.watch.date}` : ''})`, { size: 18, color: OLIVE, underline: {} })] })] }));
+  if (model.watch) body.push(new Paragraph({ indent: IN, spacing: { before: 40, after: 40 }, children: [run('▶  Watch: ', { bold: true, size: 18, color: OLIVE }), new ExternalHyperlink({ link: model.watch.url, children: [run(`${model.watch.title} (${model.watch.channel}${model.watch.date ? `, ${model.watch.date}` : ''})`, { size: 18, color: OLIVE, underline: {} })] })] }));
   for (const b of model.blocks) {
     if (!b.heading || (!b.text && !(b.items && b.items.length) && !(b.checks && b.checks.length) && !b.table && !(b.labels && b.labels.length) && !(b.photos && b.photos.length))) continue;
     if (b.tone && TONES[b.tone]) {
@@ -262,19 +268,20 @@ export async function buildWord(model, { preparedBy = '', date = new Date(), tem
       continue;
     }
     body.push(heading(b.heading));
-    if (b.note && b.noteFirst) body.push(new Paragraph({ spacing: { after: 80 }, children: [run(b.note, { italics: true, color: TERRA, size: 19 })] }));
-    if (b.text) String(b.text).split(/\n+/).forEach((t) => body.push(b.table ? new Paragraph({ keepNext: true, keepLines: true, spacing: { after: 120, line: 312 }, children: [run(t)] }) : para(t)));
+    if (b.note && b.noteFirst) body.push(new Paragraph({ indent: IN, spacing: { after: 80 }, children: [run(b.note, { italics: true, color: TERRA, size: 19 })] }));
+    if (b.text) String(b.text).split(/\n+/).forEach((t) => body.push(b.table ? new Paragraph({ indent: IN, keepNext: true, keepLines: true, spacing: { after: 120, line: 312 }, children: [run(t)] }) : para(t)));
     if (b.items) b.items.forEach((t) => body.push(itemPara(t)));
     if (b.checks) b.checks.forEach((t) => body.push(check(t)));
     if (b.table) body.push(table(b.table.head, b.table.rows, b.table.widths), new Paragraph({ spacing: { after: 60 }, children: [] }));
     if (b.labels) b.labels.forEach((l) => body.push(medLabel(l), new Paragraph({ spacing: { after: 120 }, children: [] })));
-    if (b.note && !b.noteFirst) body.push(new Paragraph({ spacing: { before: 60 }, children: [run(b.note, { italics: true, color: MUTED, size: 18 })] }));
+    if (b.note && !b.noteFirst) body.push(new Paragraph({ indent: IN, spacing: { before: 60 }, children: [run(b.note, { italics: true, color: MUTED, size: 18 })] }));
   }
   if (model.sources && model.sources.length) {
     body.push(heading('Based on'));
     model.sources.forEach((s) =>
       body.push(new Paragraph({
         numbering: { reference: 'dots', level: 0 },
+        indent: { left: SIDE + 400, hanging: 260, right: SIDE },
         spacing: { after: 60 },
         children: [s.url ? new ExternalHyperlink({ link: s.url, children: [run(s.title, { size: 18, color: OLIVE, underline: {} })] }) : run(s.title, { size: 18 }), run(` (${s.publisher})`, { size: 18, color: MUTED })],
       })),
@@ -282,7 +289,7 @@ export async function buildWord(model, { preparedBy = '', date = new Date(), tem
   }
   // The fridge sheet on its own is just the tick sheet page.
   const sections = model.fridgeOnly ? [] : [{
-    properties: { titlePage: true, page: { size: { width: 11906, height: 16838 }, margin: { top: 1250, bottom: 1300, left: 1134, right: 1134, header: 0, footer: 450 } } },
+    properties: { titlePage: true, page: { size: { width: 11906, height: 16838 }, margin: { top: 1250, bottom: 1300, left: 0, right: 0, header: 0, footer: 450 } } },
     headers: { first: header(), default: slimHeader(model.docType) },
     footers: { first: footer(model.docType), default: footer(model.docType) },
     children: body,
@@ -293,7 +300,10 @@ export async function buildWord(model, { preparedBy = '', date = new Date(), tem
     title: model.title,
     styles: { default: { document: { run: { font: BODY_FONT, size: 21 } } } },
     numbering: {
-      config: [{ reference: 'dots', levels: [{ level: 0, format: LevelFormat.BULLET, text: '•', alignment: AlignmentType.LEFT, style: { paragraph: { indent: { left: 400, hanging: 260 } }, run: { color: OLIVE } } }] }],
+      config: [
+        { reference: 'dots', levels: [{ level: 0, format: LevelFormat.BULLET, text: '•', alignment: AlignmentType.LEFT, style: { paragraph: { indent: { left: SIDE + 400, hanging: 260, right: SIDE } }, run: { color: OLIVE } } }] },
+        { reference: 'dots-in', levels: [{ level: 0, format: LevelFormat.BULLET, text: '•', alignment: AlignmentType.LEFT, style: { paragraph: { indent: { left: 400, hanging: 260 } }, run: { color: OLIVE } } }] },
+      ],
     },
     sections,
   });
@@ -428,6 +438,7 @@ function medLabel(l) {
   const line = (text, o = {}) => new Paragraph({ spacing: { after: 40 }, children: [run(text, { size: 20, ...o })] });
   return new Table({
     width: { size: 6200, type: WidthType.DXA },
+    indent: TBL_IN,
     layout: TableLayoutType.FIXED,
     columnWidths: [6200],
     borders: { top: border, bottom: border, left: border, right: border, insideHorizontal: NONE, insideVertical: NONE },
