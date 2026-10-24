@@ -45,7 +45,7 @@ export const VIDEOS = {
 // Care plans show a video about CARING for the animal (feeding, housing, warmth, handling), picked October 2026 from
 // Australian wildlife groups, hospitals and licensed carers, and checked with YouTube's oEmbed (title, channel, embeddable).
 // "-young" videos are only for joeys, chicks and other young; an animal with no good care video gets none rather
-// than a rescue video. The rescue videos above stay for the MOP plan, where someone is waiting for a rescuer.
+// than a rescue video. The MOP plan shows the same video.
 export const CARE_VIDEOS = {
   "koala": {"id": "W6nGpjHsx90", "title": "Providing quality food for koalas in care", "channel": "Queensland Environment", "date": "2025"},
   "koala-young": {"id": "R5N0LoXGEnY", "title": "Caring for koala joeys at Ipswich Koala Protection Society", "channel": "WWF-Australia", "date": "2021"},
@@ -594,7 +594,7 @@ export const videoFor = (group, context = '', tags = []) => {
   return named.length && named.every((g) => SMALL.has(g)) ? VIDEOS.general : null;
 };
 
-/** The care video for a care plan: how to look after this animal (a joey's or chick's own video when it's young), or none. */
+/** The care video for a care plan or MOP plan: how to look after this animal (a joey's or chick's own video when it's young), or none. */
 export const careVideoFor = (group, context = '', tags = []) => {
   let keys = [...tags, group].filter(Boolean);
   if (keys.some((k) => k !== 'bird' && k !== 'reptile')) keys = keys.filter((k) => k !== 'bird' && k !== 'reptile');

@@ -11,7 +11,7 @@ import { ABOUT_HTML } from './about.js';
 import { lookupSource, sourcesForPrompt, SOURCE_IDS } from './sources.js';
 import { region, setRegion } from './region.js';
 import { rangesFor } from './species-ranges.js';
-import { careVideoFor, videoForTags, watchUrl, embedUrl, thumbUrl } from './videos.js';
+import { careVideoFor, watchUrl, embedUrl, thumbUrl } from './videos.js';
 import { groupsIn, factsFor, namedAnimal } from './species-vet.js';
 import { SPECIES_CARE } from './species-care.js';
 import { docModel, careModel, noteModel, wordFileName, dischargeModel, THEMES } from './word.js';
@@ -2210,10 +2210,11 @@ function carePlanVideo(c) {
   return ['bird', 'waterbird', ''].includes(c.species_group) ? careVideoFor(c.species_group, context, tags) : careVideoFor(c.species_group, context) || careVideoFor('', context, tags);
 }
 
-// The MOP plan's video is for the animal named in the plan; nothing if no animal with a good video is named.
+// The MOP plan shows the same how-to-look-after video as the care plan, for the animal named; none if there isn't one.
 function mopVideo(d) {
   const text = [d.title, d.subtitle, ...d.sections.map((x) => [x.heading, x.text, ...(x.items || [])].join(' '))].join(' ');
-  return videoForTags(groupsIn(text), text);
+  const tags = groupsIn(text);
+  return tags.length ? careVideoFor('', text, tags) : null;
 }
 
 // Numbered items (the opinions in an expert witness statement) show as a numbered list, not bullets with numbers.
