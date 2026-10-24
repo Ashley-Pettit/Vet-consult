@@ -144,12 +144,24 @@ export const speciesGroupsForPrompt = () => SPECIES_GROUP_IDS.map((id) => `${id}
 /** The figures to show for a group in the chosen state (state-specific warmth where the sources differ). */
 // Rows written for babies (unfurred joeys, puggles, nestlings): an adult's plan leaves them out, so it only shows what applies.
 const YOUNG_CONTEXT = /\b(joeys?|pouch young|puggles?|nestlings?|hatchlings?|fledglings?|chicks?|ducklings?|cygnets?|babies|baby|orphan(ed)?|pups?|pinkies|pinky|squabs?|squeakers?)\b/i;
-const YOUNG_ROW = /unfurred|furless|velvet|fine fur|pouch|puggle|nestling|hatchling|branchling|joey|duckling|chick|squab/i;
+const YOUNG_ROW = /furred|furless|velvet|fine fur|no fur|pouch|puggle|nestling|hatchling|branchling|joey|duckling|chick|squab|newborn|orphan|humidicrib/i;
 export function rangesForAnimal(id, state = 'vic', context = '') {
-  const g = rangesFor(id, state);
-  if (!g || YOUNG_CONTEXT.test(String(context))) return g;
+  const g0 = rangesFor(id, state);
+  if (!g0) return g0;
+  // A table that lists several species (snakes, for example): when one is named, show just its row and the general ones.
+  const ctx = String(context).toLowerCase();
+  const named = (k) => ctx.includes(String(k).toLowerCase().replace(/\s*\(.*\)$/, '').replace(/s$/, ''));
+  const general = (k) => /\b(all|humidity|head injury|sick|adults?|fledglings?|juveniles?|furred|unfurred|velvet|pouch|newborn|orphans?|older orphans|hatchlings?|nestlings?)\b/i.test(k);
+  const g = g0.warmth.some(([k]) => named(k)) ? { ...g0, warmth: g0.warmth.filter(([k]) => named(k) || general(k)) } : g0;
+  if (YOUNG_CONTEXT.test(String(context))) {
+    // A furred joey doesn't need the figures for furless or just-furring young.
+    const furred = /(^|[^n])\bfurred\b|fully furred|\bfur\b/i.test(String(context)) && !/unfurred|furless|no fur|pink/i.test(String(context));
+    if (!furred) return g;
+    const early = ([k]) => !/unfurred|furless|no fur|velvet|fine fur|lightly furred|just coming/i.test(k);
+    return { ...g, warmth: g.warmth.filter(early) };
+  }
   const keep = ([k]) => !YOUNG_ROW.test(k) || /adult|juvenile/i.test(k);
-  return { ...g, warmth: g.warmth.filter(keep), vitals: g.vitals.filter(keep) };
+  return { ...g, warmth: g.warmth.filter(keep), vitals: g.vitals.filter(keep), notes: (g.notes || []).filter((x) => !YOUNG_ROW.test(x) || /adult/i.test(x)) };
 }
 export function rangesFor(id, state = 'vic') {
   const g = SPECIES_RANGES[id];

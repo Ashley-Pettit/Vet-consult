@@ -246,7 +246,7 @@ export function wildlifeSafetyRules() {
 function careRules({ shape = true } = {}) {
   return `${wildlifeSafetyRules()}
 The carer must be able to look after the animal on their own from this plan. Do NOT tell them to report to, update or check in with the vet or shelter. The vet is ONLY an escalation contact, listed in "escalate".
-Write in plain, warm Australian English for someone with no veterinary training. No abbreviations (say "twice a day", not BID; "by mouth", not PO). Never write in the first person (no "I" or "we"): where something is uncertain, say so plainly with what to do (for example "if it looks younger, check the stage with your vet"). Call the animal "it" or by its name unless its sex was stated; never guess the sex.
+Write in plain, warm Australian English for someone with no veterinary training. No abbreviations (say "twice a day", not BID; "by mouth", not PO). Never write in the first person (no "I" or "we"): where something is uncertain, say so plainly with what to do (for example "if it looks younger, check the stage with your vet"). Call the animal "it" or by its name unless its sex was stated; never guess the sex, and never mention that it wasn’t stated.
 Rules:
 - Only include medications, doses and procedures that appear in the input. NEVER invent doses, tablet sizes, products or diagnoses. If the amount per dose is not stated, say "as dispensed by the clinic".
 - General husbandry (housing, warmth, hygiene, feeding principles, handling, release) must follow the reference sources below, which are listed most important first: ${region().primary}. Use Australian (scope au) sources only where no ${region().adj} source covers it. Do not give advice that goes beyond or conflicts with them.
@@ -583,7 +583,7 @@ export function planParts(n) {
 }
 
 const rxLine = (t) =>
-  `${[t.drug, doseOf(t), t.route, t.frequency].filter(Boolean).join(' ')}${t.duration ? ' x ' + t.duration : ''}`.replace(/\s+/g, ' ').trim();
+  `${[t.drug, doseOf(t), t.route, t.frequency].filter(Boolean).join(' ')}${t.duration ? ' x ' + String(t.duration).replace(/^\s*x\s*/i, '') : ''}`.replace(/\s+/g, ' ').trim();
 
 /** Work out a due date from "in 10-14 days", "in 3 weeks", "in 6 months". Uses the earliest day of a range. */
 export function dueDate(text, from = new Date()) {
@@ -1213,7 +1213,7 @@ export function buildDocPrompt(kind, dictation, opts = {}) {
 ${typeof k.rule === 'function' ? k.rule(opts) : k.rule}${k.sources ? '\nThe reference sources for this animal are listed after the reply shape.' : ''}
 General rules:
 - Australian English and metric units. Positive, plain wording: describe what is known; never point out what wasn't said.
-- Call the animal "it" or by its name unless its sex was stated; never guess the sex.
+- Call the animal "it" or by its name unless its sex was stated; never guess the sex, and never mention that it wasn’t stated.
 - NEVER invent findings, values, doses, dates, names or numbers. Leave out what was not said.
 - Speech recognition may mishear drug, species and place names, and typed notes may have typos; work out what was meant, correct obvious mishearings and typos, and add each one that matters to "check".
 - "title": the document title including the animal's name or description. "subtitle": one line with the date or case number if stated.

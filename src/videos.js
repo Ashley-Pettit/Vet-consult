@@ -65,7 +65,7 @@ export const CARE_VIDEOS = {
   "flyingfox": {"id": "D9yg0Js4p2Q", "title": "Assessing a newly rescued flying-fox", "channel": "Megabattie (licensed wildlife carer)", "date": "2024", "warning": "Never touch a bat. Only trained, vaccinated people handle bats."},
   "flyingfox-young": {"id": "34o4w-kwejY", "title": "Caring for an orphan flying-fox pup", "channel": "Megabattie (licensed wildlife carer)", "date": "2020", "warning": "The pup was found on her mother, who had died. Never touch a bat. Only trained, vaccinated people handle bats."},
   "microbat": {"id": "_b8R2wqMw9U", "title": "A microbat in care, eating mealworms", "channel": "Megabattie (licensed wildlife carer)", "date": "2025", "warning": "Never touch a bat. Only trained, vaccinated people handle bats."},
-  "microbat-young": {"id": "RliRZu31t3g", "title": "Feeding orphaned baby bats", "channel": "Bat World Sanctuary (USA)", "date": "2018", "warning": "Never touch a bat. Only trained, vaccinated people handle bats. From the USA: the care carries over, but follow your state’s rules and your wildlife service."},
+  "microbat-young": {"id": "RliRZu31t3g", "title": "Feeding orphaned baby bats", "channel": "Bat World Sanctuary (USA)", "date": "2018", "warning": "Never touch a bat. Only trained, vaccinated people handle bats. From the USA: follow local advice from your vet or wildlife expert."},
   "babybird": {"id": "K9FETK07HvQ", "title": "How to help a baby bird", "channel": "Wildlife Victoria", "date": "2019"},
   "bird": {"id": "PVqgAgfDFyk", "title": "How to contain and care for an injured bird", "channel": "Wildlife Victoria", "date": "2019"},
   "magpie": {"id": "_A2O31Oo8SY", "title": "An injured magpie: avian vet assessment and treatment", "channel": "Bird Vet Melbourne", "date": "2023"},
@@ -77,14 +77,14 @@ export const CARE_VIDEOS = {
   "frogmouth-owl": {"id": "k87V8EHCOMM", "title": "Tawny frogmouths in care", "channel": "WIRES", "date": "2018"},
   "frogmouth-owl-young": {"id": "K0vi5_TNKrQ", "title": "Feeding tawny frogmouth chicks in the nursery", "channel": "Big Beak Wildlife Rescue", "date": "2023"},
   "raptor": {"id": "609kgWiTArQ", "title": "A white-bellied sea eagle in rehabilitation", "channel": "Perth Wildlife Hospital", "date": "2026", "warning": "Wear thick gloves near any bird of prey: the talons cause the injuries."},
-  "waterbird": {"id": "3ia0z1tz0JM", "title": "Caring for wild ducks and geese in rehab", "channel": "Living Sky Wildlife Rehabilitation (Canada)", "date": "2025", "warning": "From Canada: the care carries over, but follow your state’s rules and your wildlife service."},
+  "waterbird": {"id": "3ia0z1tz0JM", "title": "Caring for wild ducks and geese in rehab", "channel": "Living Sky Wildlife Rehabilitation (Canada)", "date": "2025", "warning": "From Canada: follow local advice from your vet or wildlife expert."},
   "waterbird-young": {"id": "Hh_P-EeiYM8", "title": "How to help ducklings", "channel": "Wildlife Victoria", "date": "2019"},
   "seabird": {"id": "6dDoe2NoeRc", "title": "Assessing and caring for seabirds", "channel": "Wildlife Friendly Vets (FNPW)", "date": "2021"},
   "penguin": {"id": "XrVFmjszL9s", "title": "Little penguin rehabilitation in the wildlife clinic", "channel": "Phillip Island Nature Parks", "date": "2021"},
   "curlew": {"id": "7eEiHaNf4rY", "title": "Caring for an injured bush stone-curlew", "channel": "Megabattie (licensed wildlife carer)", "date": "2022"},
   "skink": {"id": "FeaiB0L78Dg", "title": "Blue-tongue lizard care, with a reptile vet", "channel": "Sugarland Animal Hospital (Bundaberg)", "date": "2020"},
   "skink-young": {"id": "M3UwR_x18ZQ", "title": "Baby blue-tongue lizards at Australia Zoo Wildlife Hospital", "channel": "Australia Zoo", "date": "2026"},
-  "reptile": {"id": "RjyJwqH4OGA", "title": "Heat support for reptiles in care", "channel": "atDove (vet nurse training)", "date": "2022", "warning": "From the USA: the care carries over, but follow your state’s rules and your wildlife service."},
+  "reptile": {"id": "RjyJwqH4OGA", "title": "Heat support for reptiles in care", "channel": "atDove (UK vet nurse training)", "date": "2022", "warning": "From the UK: follow local advice from your vet or wildlife expert."},
   "python": {"id": "z8rKIfRKQCk", "title": "Assessing and caring for snakes", "channel": "Wildlife Friendly Vets (FNPW)", "date": "2021"},
   "venomous-snake": {"id": "ipO6DrnsmpE", "title": "What to do if you come across a snake", "channel": "Zoos Victoria", "date": "2023", "warning": "Only licensed snake handlers should handle venomous snakes."},
   "freshwater-turtle": {"id": "JUp6tivRvlY", "title": "1 Million Turtles: turtle talk for carers (about an hour)", "channel": "Foundation for National Parks & Wildlife", "date": "2022"},
@@ -415,7 +415,7 @@ export const CARE_CONDITIONS = [
    "title": "Lead poisoning in birds of prey",
    "channel": "Wildlife Center of Virginia (USA)",
    "date": "2019",
-   "warning": "From the USA: the care carries over, but follow your state’s rules and your wildlife service."
+   "warning": "From the USA: follow local advice from your vet or wildlife expert."
   }
  },
  {
@@ -435,7 +435,7 @@ export const CARE_CONDITIONS = [
    "title": "Bandaging a hawk’s wing",
    "channel": "Free Again Wildlife (USA)",
    "date": "2011",
-   "warning": "From the USA: the care carries over, but follow your state’s rules and your wildlife service."
+   "warning": "From the USA: follow local advice from your vet or wildlife expert."
   }
  },
  {
@@ -474,7 +474,7 @@ export const CARE_CONDITIONS = [
    "title": "Caring for oiled birds",
    "channel": "International Bird Rescue (USA)",
    "date": "2020",
-   "warning": "From the USA: the care carries over, but follow your state’s rules and your wildlife service."
+   "warning": "From the USA: follow local advice from your vet or wildlife expert."
   }
  },
  {
@@ -494,7 +494,7 @@ export const CARE_CONDITIONS = [
    "title": "Pelicans with pouch tears and fishing injuries",
    "channel": "International Bird Rescue (USA)",
    "date": "2021",
-   "warning": "From the USA: the care carries over, but follow your state’s rules and your wildlife service."
+   "warning": "From the USA: follow local advice from your vet or wildlife expert."
   }
  },
  {
@@ -502,18 +502,17 @@ export const CARE_CONDITIONS = [
    "waterbird"
   ],
   "words": [
-   "fishing line",
-   "fish hook",
-   "fishing hook",
-   "hooked",
-   "swallowed a hook"
+   "swallowed a hook",
+   "swallowed a fish hook",
+   "swallowed the hook",
+   "swallowed hook"
   ],
   "video": {
    "id": "97ZFqE5GY8g",
    "title": "A duckling that swallowed a fish hook",
    "channel": "Toronto Wildlife Centre (Canada)",
    "date": "2024",
-   "warning": "From Canada: the care carries over, but follow your state’s rules and your wildlife service."
+   "warning": "From Canada: follow local advice from your vet or wildlife expert."
   }
  },
  {
@@ -569,7 +568,7 @@ export const CARE_CONDITIONS = [
    "title": "How to wrap a bird’s wing",
    "channel": "Palomacy (USA)",
    "date": "2020",
-   "warning": "Let a vet check the wing first: wrap only if the vet says to. From the USA: follow your state’s rules and your wildlife service."
+   "warning": "Let a vet check the wing first: wrap only if the vet says to. From the USA: follow local advice from your vet or wildlife expert."
   }
  },
  {
@@ -604,43 +603,7 @@ export const CARE_CONDITIONS = [
    "title": "How to splint a small bird’s leg",
    "channel": "Dr Rachel, exotic pet vet (USA)",
    "date": "2024",
-   "warning": "Splinting is a vet job: show this to your vet. From the USA: the care carries over, but follow your state’s rules and your wildlife service."
-  }
- },
- {
-  "groups": [
-   "bird",
-   "passerine",
-   "magpie",
-   "parrot",
-   "black-cockatoo",
-   "lorikeet",
-   "pigeon",
-   "frogmouth-owl",
-   "raptor",
-   "kookaburra",
-   "waterbird",
-   "seabird",
-   "penguin",
-   "shorebird",
-   "lapwing",
-   "curlew",
-   "ibis",
-   "pelican",
-   "cuckoo"
-  ],
-  "words": [
-   "fishing line",
-   "fish hook",
-   "fishing hook",
-   "hooked"
-  ],
-  "video": {
-   "id": "EzAseAWV2ek",
-   "title": "A kingfisher caught in fishing line",
-   "channel": "Toronto Wildlife Centre (Canada)",
-   "date": "2026",
-   "warning": "From Canada: the care carries over, but follow your state’s rules and your wildlife service."
+   "warning": "Splinting is a vet job: show this to your vet. From the USA: follow local advice from your vet or wildlife expert."
   }
  },
  {
@@ -667,7 +630,7 @@ export const CARE_CONDITIONS = [
    "title": "Freeing a snake from a glue trap",
    "channel": "Wildlife Center of Virginia (USA)",
    "date": "2015",
-   "warning": "From the USA: the care carries over, but follow your state’s rules and your wildlife service."
+   "warning": "From the USA: follow local advice from your vet or wildlife expert."
   }
  },
  {
@@ -700,7 +663,7 @@ export const CARE_CONDITIONS = [
    "title": "Snakes tangled in garden netting",
    "channel": "WildCare (USA)",
    "date": "2020",
-   "warning": "From the USA: the care carries over, but follow your state’s rules and your wildlife service."
+   "warning": "From the USA: follow local advice from your vet or wildlife expert."
   }
  },
  {
@@ -718,7 +681,7 @@ export const CARE_CONDITIONS = [
    "title": "Freeing a snake from netting",
    "channel": "Wildlife Center of Virginia (USA)",
    "date": "2025",
-   "warning": "Only licensed snake handlers should handle venomous snakes. From the USA: the care carries over, but follow your state’s rules and your wildlife service."
+   "warning": "Only licensed snake handlers should handle venomous snakes. From the USA: follow local advice from your vet or wildlife expert."
   }
  },
  {
@@ -734,7 +697,7 @@ export const CARE_CONDITIONS = [
    "title": "Treating burnt snakes",
    "channel": "Snake Discovery (USA)",
    "date": "2017",
-   "warning": "From the USA: the care carries over, but follow your state’s rules and your wildlife service."
+   "warning": "From the USA: follow local advice from your vet or wildlife expert."
   }
  },
  {
@@ -753,7 +716,7 @@ export const CARE_CONDITIONS = [
    "title": "Saving a mother turtle and her eggs after a car strike",
    "channel": "Toronto Wildlife Centre (Canada)",
    "date": "2024",
-   "warning": "From Canada: the care carries over, but follow your state’s rules and your wildlife service."
+   "warning": "From Canada: follow local advice from your vet or wildlife expert."
   }
  },
  {
@@ -796,7 +759,7 @@ export const CARE_CONDITIONS = [
    "title": "Sea turtle hospital: chronic debilitation",
    "channel": "Loggerhead Marinelife Center (USA)",
    "date": "2020",
-   "warning": "From the USA: the care carries over, but follow your state’s rules and your wildlife service."
+   "warning": "From the USA: follow local advice from your vet or wildlife expert."
   }
  },
  {
@@ -904,7 +867,7 @@ export const CARE_CONDITIONS = [
    "title": "Why every animal caught by a cat needs antibiotics",
    "channel": "Santa Barbara Wildlife Care Network (USA)",
    "date": "2025",
-   "warning": "From the USA: the care carries over, but follow your state’s rules and your wildlife service."
+   "warning": "From the USA: follow local advice from your vet or wildlife expert."
   }
  },
  {
@@ -1454,7 +1417,8 @@ const CARE_BIRDS = new Set([...BIRDS, 'raptor', 'waterbird', 'seabird', 'penguin
 export const careVideoFor = (group, context = '', tags = []) => {
   let keys = [...new Set([...tags, group].filter(Boolean))];
   keys = [...keys.filter((k) => !LAST.includes(k)), ...LAST.filter((k) => keys.includes(k))];
-  if (!keys.length) return null;
+  // Brush-turkey chicks are independent from hatching: the renesting and baby-bird videos would mislead.
+  if (!keys.length || keys.includes('brush-turkey') || /brush[- ]?turkey/i.test(String(context))) return null;
   const t = String(context).toLowerCase();
   const said = (c) => c.words.some((w) => hasWord(t, w));
   // The animal's own condition video first, then one for any animal.

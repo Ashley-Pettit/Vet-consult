@@ -1616,6 +1616,9 @@ let careFrom = 'note'; // where Back goes: the vet note, or the dictation screen
 // One line that reads well in a text message: what the video is, who made it, and the link.
 const videoLine = (v) => `Video: ${v.title} (${v.channel}) ${watchUrl(v)}`;
 
+// A video from overseas says so in bold, so carers know to follow local advice.
+const OVERSEAS = /(From (?:the USA|Canada|the UK|New Zealand|South Africa|[A-Z][a-z]+): follow local advice from your vet or wildlife expert\.)/;
+const warningParts = (w) => String(w).split(OVERSEAS).filter(Boolean).map((x) => (OVERSEAS.test(x) ? el('strong', { text: x }) : x));
 function videoSection(v) {
   if (!v) return null;
   const box = el('div', { class: 'video-box' });
@@ -1634,7 +1637,7 @@ function videoSection(v) {
   return el('section', { class: 'care-sec video' }, [
     el('h2', { text: 'Watch' }),
     row,
-    v.warning ? el('p', { class: 'help', text: v.warning }) : null,
+    v.warning ? el('p', { class: 'help' }, warningParts(v.warning)) : null,
   ]);
 }
 
@@ -1923,6 +1926,8 @@ function tickBox(c, r, d, job) {
 
 // Headings wrap in balanced lines; keep a short bracketed part together so "(juvenile wombat)" never splits across lines.
 const keepBrackets = (t) => String(t).replace(/\([^()]{1,32}\)/g, (m) => m.replace(/ /g, '\u00a0'));
+// A plan to leave the animal where it is (a brush-turkey chick, a fledgling with its parents) needs no ranges or tick sheet.
+const leaveIt = (c) => (Number(c.log_days) || 0) <= 1 && !c.medications.length && !c.plan.length && !(c.feed_calc && c.feed_calc.applies);
 function renderCare(c) {
   const sec = (title, items, cls) => (items.length ? el('section', { class: 'care-sec ' + (cls || '') }, [el('h2', { text: title }), list(items)]) : null);
   const name = c.animal || currentNote()?.patient.name || '';
@@ -1931,7 +1936,7 @@ function renderCare(c) {
   $('care-back-2').textContent = 'Change plan';
   // Tick sheet: one row per daily job, one column per day, big boxes. Printable on its own for the fridge.
   const days = Math.min(c.log_days || 7, 14);
-  const log = c.daily_checks.length
+  const log = c.daily_checks.length && !leaveIt(c)
     ? el('section', { class: 'care-sec ticks' }, [
         el('div', { class: 'sec-head' }, [
           el('h2', { text: `Daily tick sheet (${days} ${days === 1 ? 'day' : 'days'})` }),
@@ -1982,7 +1987,7 @@ function renderCare(c) {
           ])
         : null,
       videoSection(carePlanVideo(c)),
-      rangesSection(c.species_group, [c.animal, c.summary, c.title].filter(Boolean).join(' ')),
+      leaveIt(c) ? null : rangesSection(c.species_group, [c.animal, c.summary, c.title, careFrom === 'note' ? '' : els.transcript.value].filter(Boolean).join(' ')),
       rehydrationSection(c.rehydration),
       c.plan.length
         ? el('section', { class: 'care-sec' }, [
@@ -2214,6 +2219,7 @@ function carePlanVideo(c) {
   const context = [c.title, c.summary, c.animal, els.transcript.value].filter(Boolean).join(' ');
   // The species group Claude picked comes first; the animal's name only refines a general group like "bird".
   const tags = groupsIn(context);
+  if (tags.includes('brush-turkey')) return null;
   return ['bird', 'waterbird', ''].includes(c.species_group) ? careVideoFor(c.species_group, context, tags) : careVideoFor(c.species_group, context) || careVideoFor('', context, tags);
 }
 

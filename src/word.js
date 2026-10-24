@@ -99,7 +99,7 @@ export function careModel(c, lookup, photos = [], video = null) {
   const blocks = [
     { heading: 'Summary', text: c.summary, tone: 'summary' },
     ...(meds.length ? [{ heading: 'Medications', table: { head: ['Medication', 'How', 'How often', 'How long'], rows: meds, widths: [2600, 2600, 2400, PAGE_W - 7600] }, note: c.medications.map((m) => (m.tip ? `${m.name}: ${m.tip}` : '')).filter(Boolean).join('  ') || undefined }] : []),
-    ...rangesBlocks(c.species_group, [c.animal, c.summary].filter(Boolean).join(' ')),
+    ...((Number(c.log_days) || 0) <= 1 && !c.medications.length && !c.plan.length ? [] : rangesBlocks(c.species_group, [c.animal, c.summary].filter(Boolean).join(' '))),
     ...rehydrationBlocks(c.rehydration),
     // The day-by-day plan as one table, rather than a scatter of small headed sections.
     ...(c.plan.length ? [{ heading: 'Day-by-day plan', table: { head: ['When', 'What to do'], rows: c.plan.map((p) => [p.when, p.tasks.length > 1 ? p.tasks.map((x) => `•  ${x}`).join('\n') : p.tasks.join('')]), widths: [2700, PAGE_W - 2700] } }] : []),
@@ -128,7 +128,7 @@ export function careModel(c, lookup, photos = [], video = null) {
     // The care video, as a link on the printout.
     watch: video && video.id ? { ...video, url: `https://www.youtube.com/watch?v=${video.id}` } : null,
     blocks,
-    tickSheet: c.daily_checks.length ? { items: c.daily_checks, days: tickDays, urgent: c.escalate.urgent } : null,
+    tickSheet: c.daily_checks.length && !((Number(c.log_days) || 0) <= 1 && !c.medications.length && !c.plan.length) ? { items: c.daily_checks, days: tickDays, urgent: c.escalate.urgent } : null,
     sources: c.sources.map(lookup).filter(Boolean),
   };
 }
