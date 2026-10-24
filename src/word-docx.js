@@ -124,6 +124,10 @@ function table(head, rows, widths) {
   });
 }
 
+// The brand band runs the full width of the page, edge to edge, from the top edge.
+const SIDE = 1134; // the side margins
+const FULL_W = PAGE_W + 2 * SIDE;
+
 // Header like the website: a coloured band with the logo (or wordmark) in the middle and the name under it.
 function header() {
   const top = THEME.logo
@@ -132,17 +136,18 @@ function header() {
   return new Header({
     children: [
       new Table({
-        width: { size: PAGE_W, type: WidthType.DXA },
+        width: { size: FULL_W, type: WidthType.DXA },
+        indent: { size: -SIDE, type: WidthType.DXA },
         layout: TableLayoutType.FIXED,
-        columnWidths: [PAGE_W],
+        columnWidths: [FULL_W],
         borders: { top: NONE, bottom: NONE, left: NONE, right: NONE, insideHorizontal: NONE, insideVertical: NONE },
         rows: [
           new TableRow({
             children: [
               new TableCell({
-                width: { size: PAGE_W, type: WidthType.DXA },
+                width: { size: FULL_W, type: WidthType.DXA },
                 shading: { type: ShadingType.CLEAR, color: 'auto', fill: OLIVE },
-                margins: { top: 80, bottom: 120, left: 200, right: 200 },
+                margins: { top: 260, bottom: 200, left: SIDE, right: SIDE },
                 children: [
                   top,
                   ...(THEME.logo || THEME.wordmark ? [new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 20 }, children: [new TextRun({ text: THEME.name.toUpperCase(), font: HEAD_FONT, bold: true, size: 24, color: 'FFFFFF', characterSpacing: 40 })] })] : []),
@@ -166,16 +171,17 @@ function slimHeader(label) {
   return new Header({
     children: [
       new Table({
-        width: { size: PAGE_W, type: WidthType.DXA },
+        width: { size: FULL_W, type: WidthType.DXA },
+        indent: { size: -SIDE, type: WidthType.DXA },
         layout: TableLayoutType.FIXED,
-        columnWidths: [PAGE_W],
+        columnWidths: [FULL_W],
         borders: { top: NONE, bottom: NONE, left: NONE, right: NONE, insideHorizontal: NONE, insideVertical: NONE },
         rows: [new TableRow({ children: [new TableCell({
-          width: { size: PAGE_W, type: WidthType.DXA },
+          width: { size: FULL_W, type: WidthType.DXA },
           shading: { type: ShadingType.CLEAR, color: 'auto', fill: OLIVE },
-          margins: { top: 70, bottom: 70, left: 200, right: 200 },
+          margins: { top: 140, bottom: 120, left: SIDE, right: SIDE },
           verticalAlign: VerticalAlign.CENTER,
-          children: [new Paragraph({ tabStops: [{ type: 'right', position: PAGE_W - 400 }], children: [...left, new TextRun({ text: `\t${String(label).toUpperCase()}`, font: HEAD_FONT, size: 15, color: 'FFFFFF', characterSpacing: 20 })] })],
+          children: [new Paragraph({ tabStops: [{ type: 'right', position: PAGE_W }], children: [...left, new TextRun({ text: `\t${String(label).toUpperCase()}`, font: HEAD_FONT, size: 15, color: 'FFFFFF', characterSpacing: 20 })] })],
         })] })],
       }),
     ],
@@ -276,7 +282,7 @@ export async function buildWord(model, { preparedBy = '', date = new Date(), tem
   }
   // The fridge sheet on its own is just the tick sheet page.
   const sections = model.fridgeOnly ? [] : [{
-    properties: { titlePage: true, page: { size: { width: 11906, height: 16838 }, margin: { top: 1350, bottom: 1300, left: 1134, right: 1134, header: 400, footer: 450 } } },
+    properties: { titlePage: true, page: { size: { width: 11906, height: 16838 }, margin: { top: 1250, bottom: 1300, left: 1134, right: 1134, header: 0, footer: 450 } } },
     headers: { first: header(), default: slimHeader(model.docType) },
     footers: { first: footer(model.docType), default: footer(model.docType) },
     children: body,
