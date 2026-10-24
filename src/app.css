@@ -202,7 +202,7 @@ textarea:focus, input:focus, select:focus { border-color: var(--accent); outline
 
 /* Note */
 .note-head { display: flex; flex-direction: column; gap: 4px; }
-.note-head h1 { margin: 0; font-size: 1.55rem; font-weight: 800; letter-spacing: -0.01em; text-wrap: balance; }
+.note-head h1 { margin: 0; font-size: 1.55rem; font-weight: 800; letter-spacing: -0.01em; text-wrap: pretty; min-width: 0; flex: 1 1 auto; }
 .note-head h1:focus { outline: none; }
 .back { display: inline-flex; align-items: center; gap: 4px; align-self: flex-start; text-decoration: none; }
 .back svg { width: 18px; height: 18px; }
