@@ -1253,3 +1253,14 @@ body[data-role="vet"] .mode .adv-tab { order: 2; }
 .polish-soap-sec h2 { margin: 0; font: 700 1.1rem/1.2 var(--display); text-transform: uppercase; letter-spacing: 0.5px; }
 .polish-soap-wait { display: flex; align-items: center; gap: 8px; margin: 0; }
 .polish-soap-wait[hidden] { display: none; }
+
+/* MOP plans: the operator's directions as dropdowns */
+.mop-dir { display: grid; gap: 10px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.mop-dir[hidden] { display: none; }
+.mop-dir h2 { margin: 0; font: 700 1rem/1.2 var(--display); text-transform: uppercase; letter-spacing: 0.5px; }
+.mop-dir .help { margin: 0; font-size: 0.85rem; color: var(--muted); }
+.mop-dir-grid { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.mop-dir-grid .field { display: grid; gap: 4px; margin: 0; }
+.mop-dir-grid label { font-weight: 650; font-size: 0.88rem; }
+.mop-dir-grid select { width: 100%; min-height: 44px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--ink); font: inherit; font-size: 0.92rem; }
+.mop-dir #mop-dir-go { justify-self: start; }

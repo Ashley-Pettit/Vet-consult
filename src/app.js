@@ -1496,6 +1496,69 @@ more.addEventListener('click', (e) => e.target === more && more.close()); // tap
 els.back.addEventListener('click', addMoreInfo);
 $('note-more').addEventListener('click', addMoreInfo);
 
+/* MOP plans: quick directions the hotline operator (or a carer or vet) can set from dropdowns. The first option
+   always leaves the plan as written, which by default means no food or water unless the notes said otherwise. */
+const MOP_DIRECTIONS = [
+  { id: 'food', label: 'Food and water', options: [
+    ['', 'As in the plan (none unless you said so)'],
+    ['No food or water at all until it reaches the rescuer, vet or shelter.', 'No food or water'],
+    ['Put a shallow dish of water in the box, but never force water or drip it into its mouth. No food.', 'Water available, never forced'],
+    ['Leave some of its natural food in the box (for example the leaves, grass or flowers it was found with) and a shallow dish of water. Never force food or water, and no milk, bread or pet food.', 'Natural food and water available'],
+    ['Do not feed it: the rescuer will bring the right food. Water only if it is an adult and drinks on its own from a shallow dish.', 'Rescuer brings food'],
+  ] },
+  { id: 'warmth', label: 'Warmth', options: [
+    ['', 'As in the plan'],
+    ['Give gentle warmth: a hot water bottle filled with warm (not boiling) water, wrapped in a towel, under half the box so it can move away from the heat.', 'Gentle warmth (wrapped hot water bottle)'],
+    ['Keep it cool: shade, airflow and no added heat, as it may be overheated.', 'Keep it cool'],
+    ['Room temperature only, no added heat.', 'Room temperature'],
+  ] },
+  { id: 'handling', label: 'Handling', options: [
+    ['', 'As in the plan'],
+    ['Contain it in a covered box or carrier with air holes, lined with a towel, handling it as little as possible with a thick towel or gloves.', 'Contain in a covered box'],
+    ['Do not touch or move it. Keep people and pets well back and watch from a distance so you know where it is.', 'Do not touch, watch from a distance'],
+    ['Leave it where it is: its parents are likely nearby. Keep pets and people away and watch from a distance.', 'Leave it where it is'],
+    ['Put it back where it was found, somewhere safe and off the ground (for example a low branch or shrub), then watch from a distance for its parents.', 'Put it back for its parents'],
+  ] },
+  { id: 'next', label: 'Where it goes next', options: [
+    ['', 'As in the plan'],
+    ['A rescuer will come and collect it.', 'A rescuer will collect it'],
+    ['Take it to the nearest vet as soon as possible. Vets treat injured wildlife for free.', 'Take it to a vet'],
+    ['Take it to the wildlife shelter or carer we arranged.', 'Take it to a shelter or carer'],
+    ['Keep it as described and wait for us to call back with where it goes.', 'Wait for a call back'],
+  ] },
+  { id: 'checks', label: 'Checking on it', options: [
+    ['', 'As in the plan'],
+    ['Leave it covered and quiet. Check on it once an hour by listening, without opening the box.', 'Check hourly without opening'],
+    ['Leave it covered and quiet, and don’t check on it until help arrives unless something changes.', 'Leave it alone until help arrives'],
+  ] },
+];
+let mopPicks = {};
+function renderMopDirections(kind) {
+  const box = $('mop-dir');
+  box.hidden = kind !== 'mop';
+  if (kind !== 'mop') return;
+  $('mop-dir-grid').replaceChildren(...MOP_DIRECTIONS.map((d) => {
+    const sel = el('select', { id: `mop-dir-${d.id}` }, d.options.map(([v, text], i) => el('option', { value: String(i), text })));
+    sel.value = String(mopPicks[d.id] || 0);
+    sel.addEventListener('change', () => ($('mop-dir-go').disabled = false));
+    return el('div', { class: 'field' }, [el('label', { for: `mop-dir-${d.id}`, text: d.label }), sel]);
+  }));
+  $('mop-dir-go').disabled = true;
+}
+$('mop-dir-go').addEventListener('click', () => {
+  const picks = {};
+  const lines = [];
+  for (const d of MOP_DIRECTIONS) {
+    const i = Number($(`mop-dir-${d.id}`).value) || 0;
+    picks[d.id] = i;
+    if (i && i !== (mopPicks[d.id] || 0)) lines.push(`${d.label}: ${d.options[i][0]}`);
+  }
+  mopPicks = picks;
+  $('mop-dir-go').disabled = true;
+  if (!lines.length) return;
+  amend({ type: 'doc' }, `The operator's directions. Follow them exactly: they replace anything in the plan they contradict, including the text to send and the "Food and water" section, unless one is unsafe for this species, in which case keep the safe advice and add a check.\n${lines.join('\n')}`);
+});
+
 /** Apply a spoken or typed change to the plan or document on screen. */
 async function amend(target, change) {
   if (busy) return;
@@ -2057,6 +2120,7 @@ function showDoc(d, kind, info = '') {
   remember('doc', { d, kind }, d.title);
   currentDoc = { d, kind };
   renderMakeNext($('make-next-doc'), kind);
+  renderMopDirections(kind);
   // "For the vet" and the MOP plan lead with a ready-to-send text message.
   const textSec = TEXT_HEADING[kind] ? d.sections.find((x) => TEXT_HEADING[kind].test(x.heading)) : null;
   $('text-vet').hidden = !textSec;
@@ -2074,6 +2138,7 @@ function showDoc(d, kind, info = '') {
 }
 
 async function createDoc(kind, text) {
+  if (kind === 'mop') mopPicks = {};
   if (!(await ensureProvider())) {
     banner(NO_CLAUDE, 'info');
     return;
