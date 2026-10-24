@@ -95,7 +95,7 @@ export function careModel(c, lookup, photos = []) {
     ...rangesBlocks(c.species_group),
     ...rehydrationBlocks(c.rehydration),
     // The day-by-day plan as one table, rather than a scatter of small headed sections.
-    ...(c.plan.length ? [{ heading: 'Day-by-day plan', table: { head: ['When', 'What to do'], rows: c.plan.map((p) => [p.when, p.tasks.map((x) => `•  ${x}`).join('\n')]), widths: [2700, PAGE_W - 2700] } }] : []),
+    ...(c.plan.length ? [{ heading: 'Day-by-day plan', table: { head: ['When', 'What to do'], rows: c.plan.map((p) => [p.when, p.tasks.length > 1 ? p.tasks.map((x) => `•  ${x}`).join('\n') : p.tasks.join('')]), widths: [2700, PAGE_W - 2700] } }] : []),
     { heading: 'Housing', items: c.housing },
     { heading: 'Feeding', items: c.feeding },
     ...feedBlocks(c.feed_calc),

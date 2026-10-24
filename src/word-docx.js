@@ -157,6 +157,31 @@ function header() {
   });
 }
 
+// Pages after the first: a slim band, so the brand stays but the page is for the content.
+function slimHeader(label) {
+  const left = [
+    ...(THEME.logo ? [new ImageRun({ type: 'png', data: logoBytes(), transformation: { width: 30, height: 30 } }), new TextRun({ text: '   ', size: 16 })] : []),
+    new TextRun({ text: (THEME.wordmark || THEME.name || '').toUpperCase(), font: HEAD_FONT, bold: true, size: 17, color: 'FFFFFF', characterSpacing: 30 }),
+  ];
+  return new Header({
+    children: [
+      new Table({
+        width: { size: PAGE_W, type: WidthType.DXA },
+        layout: TableLayoutType.FIXED,
+        columnWidths: [PAGE_W],
+        borders: { top: NONE, bottom: NONE, left: NONE, right: NONE, insideHorizontal: NONE, insideVertical: NONE },
+        rows: [new TableRow({ children: [new TableCell({
+          width: { size: PAGE_W, type: WidthType.DXA },
+          shading: { type: ShadingType.CLEAR, color: 'auto', fill: OLIVE },
+          margins: { top: 70, bottom: 70, left: 200, right: 200 },
+          verticalAlign: VerticalAlign.CENTER,
+          children: [new Paragraph({ tabStops: [{ type: 'right', position: PAGE_W - 400 }], children: [...left, new TextRun({ text: `\t${String(label).toUpperCase()}`, font: HEAD_FONT, size: 15, color: 'FFFFFF', characterSpacing: 20 })] })],
+        })] })],
+      }),
+    ],
+  });
+}
+
 function footer(label) {
   return new Footer({
     children: [
@@ -174,6 +199,37 @@ function footer(label) {
   });
 }
 
+// The details (date, prepared by, case) side by side on one tinted line, up to three pairs a row.
+function metaTable(meta) {
+  const per = Math.min(3, Math.max(1, meta.length));
+  const lab = 1300;
+  const val = Math.floor(PAGE_W / per) - lab;
+  const rows = [];
+  for (let i = 0; i < meta.length; i += per) rows.push(meta.slice(i, i + per));
+  const tint = { type: ShadingType.CLEAR, color: 'auto', fill: TINT };
+  return new Table({
+    width: { size: PAGE_W, type: WidthType.DXA },
+    layout: TableLayoutType.FIXED,
+    columnWidths: Array.from({ length: per }, () => [lab, val]).flat(),
+    borders: { top: NONE, bottom: NONE, left: NONE, right: NONE, insideHorizontal: { style: BorderStyle.SINGLE, size: 4, color: 'FFFFFF' }, insideVertical: NONE },
+    rows: rows.map((r) => new TableRow({
+      children: Array.from({ length: per }, (_, i) => r[i] || ['', '']).flatMap(([k, v]) => [
+        new TableCell({ shading: tint, margins: { top: 60, bottom: 60, left: 160, right: 60 }, children: [new Paragraph({ children: [new TextRun({ text: String(k).toUpperCase(), font: HEAD_FONT, bold: true, size: 16, color: OLIVE })] })] }),
+        new TableCell({ shading: tint, margins: { top: 60, bottom: 60, left: 60, right: 120 }, children: [new Paragraph({ children: [run(v, { size: 19 })] })] }),
+      ]),
+    })),
+  });
+}
+
+function cleanTitle(title, docType) {
+  const t = String(title || '');
+  const m = t.match(/^([^:]{3,45}):\s+(.+)$/);
+  if (!m) return t;
+  const words = (x) => x.toLowerCase().replace(/[^a-z ]/g, '').trim();
+  if (!words(String(docType)).includes(words(m[1]))) return t;
+  return m[2].charAt(0).toUpperCase() + m[2].slice(1);
+}
+
 /**
  * model: { docType, title, subtitle, meta: [[label, value]], blocks: [{ heading, text?, items?, table?: { head, rows, widths? }, note? }], sources?: [{ title, publisher, url }] }
  */
@@ -181,26 +237,13 @@ export async function buildWord(model, { preparedBy = '', date = new Date(), tem
   useTheme(template);
   // The document type is already the coloured line above the title, so it isn't repeated here.
   const meta = [['Date', formatDate(date)], ...(preparedBy ? [['Prepared by', preparedBy]] : []), ...(model.meta || []).filter((m) => !(m[0] === 'Vet' && m[1] === preparedBy))].filter((m) => m[1]);
+  // "Care plan: Ringtail joey" under a CARE PLAN label says it twice: keep just the animal or subject.
+  const title = cleanTitle(model.title, model.docType);
   const body = [
     new Paragraph({ spacing: { before: 120, after: 0 }, children: [new TextRun({ text: String(model.docType).toUpperCase(), font: HEAD_FONT, bold: true, size: 20, color: TERRA, characterSpacing: 40 })] }),
-    new Paragraph({ spacing: { after: model.subtitle ? 40 : 160 }, children: [new TextRun({ text: model.title, font: HEAD_FONT, bold: true, size: 48, color: INK })] }),
+    new Paragraph({ spacing: { after: model.subtitle ? 40 : 160 }, children: [new TextRun({ text: title, font: HEAD_FONT, bold: true, size: 44, color: INK })] }),
     ...(model.subtitle ? [new Paragraph({ spacing: { after: 160 }, children: [run(model.subtitle, { color: MUTED, size: 22 })] })] : []),
-    new Table({
-      width: { size: PAGE_W, type: WidthType.DXA },
-      layout: TableLayoutType.FIXED,
-      columnWidths: [2200, PAGE_W - 2200],
-      borders: {
-        top: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' }, bottom: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
-        left: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' }, right: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
-        insideHorizontal: { style: BorderStyle.SINGLE, size: 4, color: 'FFFFFF' }, insideVertical: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
-      },
-      rows: meta.map(([k, v]) => new TableRow({
-        children: [
-          new TableCell({ shading: { type: ShadingType.CLEAR, color: 'auto', fill: TINT }, margins: { top: 50, bottom: 50, left: 160, right: 80 }, children: [new Paragraph({ children: [new TextRun({ text: String(k).toUpperCase(), font: HEAD_FONT, bold: true, size: 17, color: OLIVE })] })] }),
-          new TableCell({ shading: { type: ShadingType.CLEAR, color: 'auto', fill: TINT }, margins: { top: 50, bottom: 50, left: 80, right: 120 }, children: [new Paragraph({ children: [run(v, { size: 20 })] })] }),
-        ],
-      })),
-    }),
+    metaTable(meta),
   ];
   // The AI note sits quietly under the details, not as a section of its own.
   if (model.aiNote) body.push(new Paragraph({ spacing: { before: 140, after: 40 }, children: [run(`ⓘ  ${model.aiNote}`, { italics: true, color: MUTED, size: 18 })] }));
@@ -214,7 +257,7 @@ export async function buildWord(model, { preparedBy = '', date = new Date(), tem
     }
     body.push(heading(b.heading));
     if (b.note && b.noteFirst) body.push(new Paragraph({ spacing: { after: 80 }, children: [run(b.note, { italics: true, color: TERRA, size: 19 })] }));
-    if (b.text) String(b.text).split(/\n+/).forEach((t) => body.push(para(t)));
+    if (b.text) String(b.text).split(/\n+/).forEach((t) => body.push(b.table ? new Paragraph({ keepNext: true, keepLines: true, spacing: { after: 120, line: 312 }, children: [run(t)] }) : para(t)));
     if (b.items) b.items.forEach((t) => body.push(itemPara(t)));
     if (b.checks) b.checks.forEach((t) => body.push(check(t)));
     if (b.table) body.push(table(b.table.head, b.table.rows, b.table.widths), new Paragraph({ spacing: { after: 60 }, children: [] }));
@@ -227,15 +270,15 @@ export async function buildWord(model, { preparedBy = '', date = new Date(), tem
       body.push(new Paragraph({
         numbering: { reference: 'dots', level: 0 },
         spacing: { after: 60 },
-        children: [run(`${s.title} (${s.publisher}). `, { size: 18 }), new ExternalHyperlink({ link: s.url, children: [run(s.url, { size: 18, color: OLIVE, underline: {} })] })],
+        children: [s.url ? new ExternalHyperlink({ link: s.url, children: [run(s.title, { size: 18, color: OLIVE, underline: {} })] }) : run(s.title, { size: 18 }), run(` (${s.publisher})`, { size: 18, color: MUTED })],
       })),
     );
   }
   // The fridge sheet on its own is just the tick sheet page.
   const sections = model.fridgeOnly ? [] : [{
-    properties: { page: { size: { width: 11906, height: 16838 }, margin: { top: 2900, bottom: 1300, left: 1134, right: 1134, header: 400, footer: 450 } } },
-    headers: { default: header() },
-    footers: { default: footer(model.docType) },
+    properties: { titlePage: true, page: { size: { width: 11906, height: 16838 }, margin: { top: 1350, bottom: 1300, left: 1134, right: 1134, header: 400, footer: 450 } } },
+    headers: { first: header(), default: slimHeader(model.docType) },
+    footers: { first: footer(model.docType), default: footer(model.docType) },
     children: body,
   }];
   if (model.tickSheet && model.tickSheet.items.length) sections.push(tickSheetSection(model.tickSheet, model.title));
