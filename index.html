@@ -264,6 +264,7 @@
     <button type="button" class="btn ghost word-btn" id="word-note"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 11v6M9 14l3 3 3-3"/></svg>Word printout</button>
     <div class="actions">
       <button type="button" class="btn primary" id="care">Carer plan</button>
+      <button type="button" class="btn ghost" id="push-soap">Push to SOAP system</button>
     </div>
   </section>
 
@@ -681,35 +682,37 @@
 <dialog id="more" class="more" aria-labelledby="more-title">
   <form method="dialog" id="more-form">
     <div class="more-head">
-      <h2 id="more-title" tabindex="-1" autofocus>Add more info</h2>
+      <h2 id="more-title" tabindex="-1" autofocus>Update the notes</h2>
       <button type="button" class="icon-btn" id="more-cancel" aria-label="Close" title="Close"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </div>
     <div class="more-body">
-      <details class="more-qs" id="more-qs" hidden>
-        <summary><span class="more-qs-title" id="more-qs-title">To check</span> <span class="count" id="more-qs-count"></span><span class="more-qs-toggle" aria-hidden="true"></span></summary>
+      <!-- The same box as the front page: say it or type it -->
+      <div class="composer more-box">
+        <label for="more-text" class="sr-only">What to add or change</label>
+        <textarea id="more-text" rows="3" spellcheck="true" placeholder="Say or type what to add or change."></textarea>
+        <p id="more-interim" class="interim" aria-live="polite"></p>
+        <div class="composer-bar">
+          <p class="more-help" id="more-help" aria-live="polite"></p>
+          <button type="button" class="mic more-mic" id="more-mic" aria-pressed="false" aria-label="Speak what you missed"> <svg class="i-mic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2.5" width="6" height="12" rx="3"/><path d="M5 10.5a7 7 0 0 0 14 0"/><path d="M12 17.5v4"/></svg> </button>
+        </div>
+      </div>
+      <section class="more-sugg" id="more-qs" hidden aria-label="Suggestions">
         <div class="qs-group" id="qs-check">
-          <ol class="more-questions" id="more-questions"></ol>
+          <h3 class="qs-label">Worth checking</h3>
+          <ul class="sugg-list" id="more-questions"></ul>
         </div>
         <div class="qs-group" id="qs-nice" hidden>
-          <h3 class="qs-label">Nice to add, if you have them</h3>
+          <h3 class="qs-label">You might also add</h3>
           <ul class="nice-chips" id="more-nice"></ul>
         </div>
-      </details>
+        <p class="help sugg-hint">Tap one to add it to the box, or just say it.</p>
+      </section>
       <section class="mop-dir" id="mop-dir" hidden aria-labelledby="mop-dir-title">
         <h3 id="mop-dir-title">Or pick your directions</h3>
         <div class="mop-dir-grid" id="mop-dir-grid"></div>
       </section>
     </div>
     <div class="more-composer">
-      <p class="help" id="more-help" aria-live="polite"></p>
-      <div class="more-input">
-        <button type="button" class="mic more-mic" id="more-mic" aria-pressed="false" aria-label="Speak what you missed">
-          <svg class="i-mic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2.5" width="6" height="12" rx="3"/><path d="M5 10.5a7 7 0 0 0 14 0"/><path d="M12 17.5v4"/></svg>
-        </button>
-        <label for="more-text" class="sr-only">What to add or change</label>
-        <textarea id="more-text" rows="2" spellcheck="true" placeholder="e.g. She weighed 24.6 kilos, and the case number is 26-04417."></textarea>
-      </div>
-      <p id="more-interim" class="interim" aria-live="polite"></p>
       <button type="submit" class="btn primary" id="more-go" value="go">Update</button>
     </div>
   </form>

@@ -199,7 +199,7 @@ test.describe('creating a note', () => {
     await expect(page.locator('#note .meds li')).toHaveCount(3);
     // Gaps aren't shown in the note; they're in the optional "Ideally also include" list.
     await expect(page.locator('#note')).not.toContainText('Not recorded');
-    await expect(page.locator('#gap-list')).toContainText('Vet name');
+    await expect(page.locator('#gap-list')).not.toContainText('Vet name'); // already asked as "Clinician name?"
 
     const plain = await page.locator('#plain').inputValue();
     expect(plain).toMatch(/^SHELTER INTAKE EXAM - \d\d\/\d\d\/\d{4} \d\d:\d\d/);

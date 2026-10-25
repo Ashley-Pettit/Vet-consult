@@ -1494,3 +1494,59 @@ dialog.more[data-mic="listening"] .more-composer #more-help { color: var(--rec);
 .more-questions { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; counter-reset: q; }
 .more-questions li { counter-increment: q; display: grid; grid-template-columns: 26px 1fr; gap: 10px; align-items: start; padding: 10px 12px; border-radius: 10px; background: var(--warn-soft); border: 1px solid var(--warn-line); font-size: 0.95rem; line-height: 1.4; }
 .more-questions li::before { content: counter(q); display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--warn); color: var(--bg); font-weight: 800; font-size: 0.82rem; }
+
+/* Tick sheet on a phone: day buttons, then that day's jobs as a tick list. The table shows on bigger screens and in print. */
+.tick-mobile { display: none; }
+@media (max-width: 600px) {
+  .tick-mobile { display: grid; gap: 10px; }
+  .care-sec.ticks .tick-wrap { display: none; }
+}
+@media print { .tick-mobile { display: none !important; } .care-sec.ticks .tick-wrap { display: block !important; } }
+.day-label { margin: 0; font: 700 0.74rem/1.2 var(--display); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.day-pills { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+.day-pill { display: grid; justify-items: center; gap: 1px; min-height: 52px; padding: 6px 2px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+.day-pill .dp-day { font-weight: 800; font-size: 1rem; line-height: 1.1; }
+.day-pill .dp-count { font-size: 0.7rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.day-pill.done { border-color: var(--accent); }
+.day-pill.done .dp-count { color: var(--accent); font-weight: 800; }
+.day-pill.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.day-pill.on .dp-count { color: var(--accent-ink); opacity: 0.85; }
+.day-pill:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.day-title { margin: 4px 0 0; font-weight: 700; }
+.day-jobs { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.tick-row { width: 100%; display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 10px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); text-align: left; cursor: pointer; font-size: 1rem; }
+.tick-row .box { flex: none; width: 26px; height: 26px; border-radius: 8px; border: 2px solid var(--muted); display: grid; place-items: center; }
+.tick-row.on { border-color: var(--accent); background: var(--accent-soft); }
+.tick-row.on .box { background: var(--accent); border-color: var(--accent); }
+.tick-row.on .box::after { content: ""; width: 7px; height: 12px; border: solid var(--accent-ink); border-width: 0 3px 3px 0; transform: translateY(-1px) rotate(45deg); }
+.tick-row.on .tick-job { text-decoration: line-through; text-decoration-color: var(--muted); }
+.tick-row:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+/* Update sheet, front-page style: the same say-or-type box, suggestions underneath, Update pinned at the bottom */
+.more-box { border-radius: 14px; }
+.more-box textarea#more-text { width: 100%; min-height: 96px; max-height: 34dvh; border: 0; border-radius: 14px 14px 0 0; background: transparent; box-shadow: none; padding: 12px 14px 6px; resize: none; }
+.more-box textarea#more-text:focus { box-shadow: none; outline: none; }
+.more-box .composer-bar { gap: 8px; }
+.more-help { margin: 0 0 0 8px; flex: 1; min-width: 0; font-size: 0.82rem; color: var(--muted); line-height: 1.3; }
+.more-box .mic { margin-left: auto; width: 48px; height: 48px; flex: none; border: 0; border-radius: 999px; box-shadow: none; background: var(--accent); color: var(--accent-ink); }
+.more-box .mic svg { width: 22px; height: 22px; }
+dialog.more[data-mic="listening"] .more-box, dialog.more[data-mic="starting"] .more-box { border-color: var(--rec); box-shadow: 0 0 0 3px var(--rec-soft); }
+dialog.more[data-mic="listening"] .more-box .mic, dialog.more[data-mic="starting"] .more-box .mic { background: var(--rec); color: #fff; box-shadow: 0 0 0 4px var(--rec-soft); }
+dialog.more[data-mic="listening"] .more-help { color: var(--rec); font-weight: 650; }
+.more-box #more-interim { padding: 0 14px 4px; margin: 0; }
+.more-sugg { display: grid; gap: 12px; }
+.sugg-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.sugg { width: 100%; display: grid; grid-template-columns: 26px 1fr; gap: 10px; align-items: start; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--warn-line); background: var(--warn-soft); color: var(--ink); text-align: left; font-size: 0.95rem; line-height: 1.4; cursor: pointer; }
+.sugg:hover { border-color: var(--warn); }
+.sugg:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.sugg-num { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--warn); color: var(--bg); font-weight: 800; font-size: 0.82rem; }
+.nice-chips .chip-btn { padding: 8px 12px; min-height: 40px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font-size: 0.9rem; font-weight: 600; cursor: pointer; }
+.nice-chips .chip-btn:hover { border-color: var(--accent); }
+.nice-chips .chip-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.sugg-hint { margin: -2px 0 0; font-size: 0.82rem; }
+.more-composer { padding-top: 10px; }
+/* Notes actions: Carer plan and Push to SOAP side by side */
+#view-note .actions { grid-template-columns: 1fr 1fr; }
+.care-sec.ticks .day-jobs li { padding-left: 0; }
+.care-sec.ticks .day-jobs li::before, .care-sec.ticks .day-jobs li::after { content: none; }
+.nice-chips li:has(.chip-btn) { padding: 0; border: 0; background: none; }

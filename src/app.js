@@ -1304,7 +1304,7 @@ function noteGaps(n) {
   ].filter(([missing]) => missing).map(([, label]) => label);
 }
 function renderGaps(n) {
-  gapItems = noteGaps(n);
+  gapItems = withoutRepeats(checkItems, noteGaps(n)); // nothing a question already asks about
   $('gap-list').replaceChildren(...gapItems.map((g) => el('li', { text: g })));
   renderReview(els.checks, 'review-open', checkItems, gapItems, ['Review before saving'], true);
 }
@@ -1461,8 +1461,8 @@ const MORE_HELP = 'It’s added to what you already said and the record is rewri
 // "Change": a finished care plan or document is edited in place, by voice or typing; the rest stays as it was.
 let amendTarget = null;
 const MORE_TEXT = {
-  answer: { title: 'Review and update', placeholder: 'e.g. 1. Yes. 2. 6.2 kilos.', go: 'Update' },
-  add: { title: 'Add more info', placeholder: 'e.g. She weighed 24.6 kilos, and the case number is 26-04417.', go: 'Update' },
+  answer: { title: 'Update', placeholder: 'Say or type what to add or change. Answer a suggestion by its number.', go: 'Update' },
+  add: { title: 'Update the notes', placeholder: 'Say or type what to add or change.', go: 'Update notes' },
   amend: { title: 'Answer or change', placeholder: 'e.g. Feeds every 3 hours, not 4. She weighs 130 grams now.', go: 'Make change' },
 };
 const AMEND_HELP = 'Say or type what to change or add. Everything else stays as it is.';
@@ -1472,18 +1472,53 @@ const ANSWER_HELP = 'Answer them in order. Skip any you don’t know.';
 let answerQs = null; // the questions on show
 let answerNice = []; // optional things that would be nice to add (clinical notes)
 let answerMode = false; // came from the review card to answer them
+// What a suggestion is about, so "Clinician name?" and "Vet name" don't both show.
+const SUGG_TOPICS = [
+  ['vet', /clinician|vet name|veterinarian|\bvet\b.*name/i],
+  ['weight', /\bweigh|\bweight|\bkg\b/i],
+  ['temp', /\btemp/i],
+  ['hr', /heart rate|\bhr\b|pulse/i],
+  ['rr', /resp|breath|\brr\b/i],
+  ['hydration', /hydrat/i],
+  ['bcs', /body condition|\bbcs\b/i],
+  ['mm', /mucous|\bcrt\b|capillary/i],
+  ['sex', /\bsex\b/i],
+  ['age', /\bage\b|life stage/i],
+  ['species', /species/i],
+  ['id', /animal id|\bname or\b/i],
+  ['follow', /follow-up|recheck/i],
+];
+const topicsOf = (t) => SUGG_TOPICS.filter(([, re]) => re.test(t)).map(([k]) => k);
+/** Optional extras with anything a question already covers taken out. */
+function withoutRepeats(qs, nice) {
+  const covered = new Set((qs || []).flatMap(topicsOf));
+  return [...new Set(nice)].filter((g) => !topicsOf(g).some((k) => covered.has(k)));
+}
+// Tapping a suggestion puts a starter for it in the box, ready to finish by typing (or the person just says it).
+function addToBox(starter) {
+  stopMoreToEdit();
+  const v = moreText.value.replace(/\s+$/, '');
+  moreText.value = v ? `${v}\n${starter}` : starter;
+  moreText.focus();
+  moreText.setSelectionRange(moreText.value.length, moreText.value.length);
+  $('more-go').disabled = false;
+}
+const starterFor = (label) => `${label.replace(/\s*\(.*?\)\s*/g, ' ').replace(/[?.]\s*$/, '').trim()}: `;
 function showQuestions(qs, open = false, nice = []) {
-  answerQs = qs && qs.length ? qs : null;
-  answerNice = nice && nice.length ? nice : [];
+  answerQs = qs && qs.length ? [...new Set(qs)] : null;
+  answerNice = withoutRepeats(answerQs, nice || []);
   const any = Boolean(answerQs || answerNice.length);
   $('more-qs').hidden = !any;
-  $('more-qs').open = any && open;
-  $('more-qs-title').textContent = answerQs ? (answerNice.length ? 'To check, and nice to add' : 'To check') : 'Nice to add';
-  $('more-qs-count').textContent = String((answerQs || []).length + answerNice.length);
   $('qs-check').hidden = !answerQs;
   $('qs-nice').hidden = !answerNice.length;
-  $('more-questions').replaceChildren(...(answerQs || []).map((q) => el('li', { text: q })));
-  $('more-nice').replaceChildren(...answerNice.map((g) => el('li', { text: g })));
+  $('more-questions').replaceChildren(
+    ...(answerQs || []).map((q, i) =>
+      el('li', {}, [
+        el('button', { type: 'button', class: 'sugg', onclick: () => addToBox(`${i + 1}. `) }, [el('span', { class: 'sugg-num', text: String(i + 1) }), el('span', { class: 'sugg-text', text: q })]),
+      ]),
+    ),
+  );
+  $('more-nice').replaceChildren(...answerNice.map((g) => el('li', {}, [el('button', { type: 'button', class: 'chip-btn', onclick: () => addToBox(starterFor(g)) }, `+ ${g}`)])));
 }
 const numbered = (qs) => qs.map((q, i) => `${i + 1}. ${q}`).join('\n');
 /** Answer every review question at once: the questions on show, the mic already listening, one tap to fix. */
@@ -1496,16 +1531,19 @@ function openAnswers(target, qs, nice = []) {
   const t = MORE_TEXT.answer;
   $('more-title').textContent = t.title;
   moreText.placeholder = qs.length ? t.placeholder : 'Say what you have, for example: weighs 6.2 kilos, temp 38.4.';
+  $('more-title').textContent = updateTitle(target);
   $('more-go').textContent = target.type === 'notes' ? 'Update notes' : target.type === 'care' ? 'Update plan' : 'Update';
   addMoreInfo(true);
 }
+const updateTitle = (target) =>
+  !target || target.type === 'notes' ? 'Update the notes' : target.type === 'care' ? 'Update the plan' : currentDoc ? `Update the ${DOC_KINDS[currentDoc.kind].label.toLowerCase()}` : 'Update';
 function openMore(target) {
   answerMode = false;
   showQuestions(target && target.type === 'doc' && currentDoc ? currentDoc.d.check : null);
   amendTarget = target;
   renderMopDirections(Boolean(target && target.type === 'doc' && currentDoc && currentDoc.kind === 'mop'));
   const t = MORE_TEXT[target ? 'amend' : 'add'];
-  $('more-title').textContent = t.title;
+  $('more-title').textContent = updateTitle(target);
   moreText.placeholder = answerQs ? 'Say a change, or answer by number.' : t.placeholder;
   $('more-go').textContent = t.go;
   addMoreInfo(true);
@@ -1524,7 +1562,7 @@ function addMoreInfo(keepTarget) {
     answerMode = false;
     // From the clinical note: its review questions, ready to answer if wanted.
     showQuestions(!$('view-note').hidden ? checkItems : null, false, !$('view-note').hidden ? gapItems : []);
-    if (answerQs || answerNice.length) $('more-title').textContent = 'Review and update';
+    $('more-title').textContent = 'Update the notes';
     renderMopDirections(false);
     $('more-title').textContent = MORE_TEXT.add.title;
     moreText.placeholder = MORE_TEXT.add.placeholder;
@@ -1533,7 +1571,7 @@ function addMoreInfo(keepTarget) {
   moreText.value = '';
   $('more-go').disabled = true;
   const helpText = answerMode ? ANSWER_HELP : amendTarget ? AMEND_HELP : MORE_HELP;
-  moreHelp.textContent = keyboardVoice ? `${keyboardTip()} ${helpText}` : answerMode ? `Say your answers. ${ANSWER_HELP}` : amendTarget ? `Tap the mic and say the change. ${AMEND_HELP}` : `Tap the mic and say what you missed. ${MORE_HELP}`;
+  moreHelp.textContent = keyboardVoice ? `${keyboardTip()} ${helpText}` : 'Tap the mic to talk, or type.';
   more.showModal();
   if (keyboardVoice) moreText.focus(); // inside the tap, so the phone keyboard (and its mic key) opens straight away
   else startMoreVoice();
@@ -1554,7 +1592,7 @@ function startMoreVoice() {
   moreVoice.onstate = (st) => {
     moreMic.setAttribute('aria-pressed', String(st !== 'idle'));
     more.dataset.mic = st;
-    moreHelp.textContent = st === 'starting' ? 'One moment…' : st === 'listening' ? (answerMode ? `Listening. Answer them in order, then tap ${$('more-go').textContent}.` : `Listening. Talk now, then tap ${$('more-go').textContent}.`) : answerMode ? `Tap the mic to say more, or type. ${ANSWER_HELP}` : amendTarget ? `Tap the mic to say more, or type. ${AMEND_HELP}` : `Tap the mic to add more, or type. ${MORE_HELP}`;
+    moreHelp.textContent = st === 'starting' ? 'One moment…' : st === 'listening' ? 'Listening… tap the box to type instead.' : 'Tap the mic to talk, or type.';
     if (st === 'listening') cueListening();
   };
   moreVoice.onerror = (c) => (moreHelp.textContent = speechErrorMessage(c));
@@ -1618,6 +1656,8 @@ more.addEventListener('close', async () => {
   else await createNote();
 });
 more.addEventListener('click', (e) => e.target === more && more.close()); // tap outside to cancel
+// Sending notes straight into the practice system is on the way.
+$('push-soap').addEventListener('click', () => toast('Coming soon: send these notes straight into your practice’s SOAP system.'));
 // Back to the dictation, words kept. Adding more now happens from the review card.
 els.back.addEventListener('click', () => (busy ? null : showView('record')));
 
@@ -2232,24 +2272,68 @@ function loadTicks(c) {
     return new Set();
   }
 }
+function setTick(c, id, now) {
+  const set = loadTicks(c);
+  if (now) set.add(id);
+  else set.delete(id);
+  try {
+    localStorage.setItem(tickKey(c), JSON.stringify([...set]));
+  } catch {
+    /* ticks still show for now */
+  }
+  document.querySelectorAll(`[data-tick="${id}"]`).forEach((b) => {
+    b.classList.toggle('on', now);
+    b.setAttribute('aria-pressed', String(now));
+  });
+}
 function tickBox(c, r, d, job) {
   const id = `${r}-${d}`;
   const on = loadTicks(c).has(id);
-  const b = el('button', { type: 'button', class: `box${on ? ' on' : ''}`, 'aria-pressed': String(on), 'aria-label': `${job}, day ${d + 1}` });
-  b.addEventListener('click', () => {
-    const set = loadTicks(c);
-    const now = !set.has(id);
-    if (now) set.add(id);
-    else set.delete(id);
-    b.classList.toggle('on', now);
-    b.setAttribute('aria-pressed', String(now));
-    try {
-      localStorage.setItem(tickKey(c), JSON.stringify([...set]));
-    } catch {
-      /* ticks still show for now */
-    }
-  });
+  const b = el('button', { type: 'button', class: `box${on ? ' on' : ''}`, 'aria-pressed': String(on), 'aria-label': `${job}, day ${d + 1}`, 'data-tick': id });
+  b.addEventListener('click', () => setTick(c, id, !loadTicks(c).has(id)));
   return b;
+}
+// On a phone: pick a day, then tick that day's jobs in a plain list (no sideways swiping). The table is for bigger
+// screens and the fridge printout.
+function tickDays(c, days) {
+  const jobs = c.daily_checks;
+  const count = (d) => jobs.filter((_, r) => loadTicks(c).has(`${r}-${d}`)).length;
+  let cur = Array.from({ length: days }, (_, d) => d).find((d) => count(d) < jobs.length);
+  if (cur === undefined) cur = days - 1;
+  const pills = el('div', { class: 'day-pills', role: 'group', 'aria-label': 'Choose a day' });
+  const title = el('p', { class: 'day-title' });
+  const list = el('ul', { class: 'day-jobs' });
+  const draw = () => {
+    pills.replaceChildren(
+      ...Array.from({ length: days }, (_, d) => {
+        const n = count(d);
+        const b = el('button', { type: 'button', class: `day-pill${d === cur ? ' on' : ''}${n === jobs.length ? ' done' : ''}`, 'aria-pressed': String(d === cur), 'aria-label': `Day ${d + 1}, ${n} of ${jobs.length} done` }, [
+          el('span', { class: 'dp-day', text: String(d + 1) }),
+          el('span', { class: 'dp-count', text: n === jobs.length ? '✓' : `${n}/${jobs.length}` }),
+        ]);
+        b.addEventListener('click', () => {
+          cur = d;
+          draw();
+        });
+        return b;
+      }),
+    );
+    title.textContent = `Day ${cur + 1}: ${count(cur)} of ${jobs.length} done`;
+    list.replaceChildren(
+      ...jobs.map((job, r) => {
+        const id = `${r}-${cur}`;
+        const on = loadTicks(c).has(id);
+        const b = el('button', { type: 'button', class: `tick-row${on ? ' on' : ''}`, 'aria-pressed': String(on), 'data-tick': id }, [el('span', { class: 'box', 'aria-hidden': 'true' }), el('span', { class: 'tick-job', text: job })]);
+        b.addEventListener('click', () => {
+          setTick(c, id, !loadTicks(c).has(id));
+          draw();
+        });
+        return el('li', {}, b);
+      }),
+    );
+  };
+  draw();
+  return el('div', { class: 'tick-mobile' }, [el('p', { class: 'day-label', text: 'Day' }), pills, title, list]);
 }
 
 // Headings wrap in balanced lines; keep a short bracketed part together so "(juvenile wombat)" never splits across lines.
@@ -2270,7 +2354,7 @@ function renderCare(c) {
           el('h2', { text: `Daily tick sheet (${days} ${days === 1 ? 'day' : 'days'})` }),
           el('button', { type: 'button', class: 'btn small ghost', onclick: (e) => printTickSheet(e.currentTarget) }, 'Print for the fridge'),
         ]),
-        el('p', { class: 'tick-hint', text: 'Tap a box to tick it. Swipe sideways for more days.' }),
+        tickDays(c, days),
         el('div', { class: 'tbl tick-wrap', tabindex: '0', role: 'region', 'aria-label': 'Daily tick sheet' }, [
           el('table', { class: 'ticksheet' }, [
             el('thead', {}, [el('tr', {}, [
