@@ -25,7 +25,7 @@ test('vet: plan first, notes second, copy at the top, quick notes look finished'
   await expect(page.locator('#plain')).not.toHaveValue(/Not recorded/);
   // What would be nice to add sits in the same review card as what to check.
   await expect(page.locator('#review-open')).toBeVisible();
-  await expect(page.locator('#review-open-sub')).toContainText(/to add/);
+  await expect(page.locator('#review-open-title')).toHaveText('Review before saving');
   await expect(page.locator('#gap-list')).toContainText('Heart rate');
 
   // Back to the plan: already made, no new call.

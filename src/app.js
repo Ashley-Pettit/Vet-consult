@@ -1229,9 +1229,9 @@ function renderReview(box, prefix, checks, nice, titles, always = false) {
   box.hidden = none && !always;
   const card = $(prefix);
   card.dataset.tone = checks.length ? 'warn' : 'calm';
-  const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
-  $(`${prefix}-title`).textContent = checks.length ? titles[0] : 'Looking good';
-  $(`${prefix}-sub`).textContent = none ? 'Add or change anything you like' : [checks.length ? plural(checks.length, 'quick check', 'quick checks') : '', nice.length ? plural(nice.length, 'idea to add', 'ideas to add') : ''].filter(Boolean).join(' · ');
+  // A slim bar, as on Live: the title and a count. Tapping it opens the update sheet.
+  $(`${prefix}-title`).textContent = checks.length || nice.length ? titles[0] : 'Add or change anything';
+  $(`${prefix}-sub`).textContent = checks.length + nice.length ? String(checks.length + nice.length) : '';
   card.setAttribute('aria-label', `${$(`${prefix}-title`).textContent}: ${$(`${prefix}-sub`).textContent}. Update`);
 }
 function renderChecks(n, local) {
@@ -1312,7 +1312,7 @@ function noteGaps(n) {
 function renderGaps(n) {
   gapItems = withoutRepeats(checkItems, noteGaps(n)); // nothing a question already asks about
   $('gap-list').replaceChildren(...gapItems.map((g) => el('li', { text: g })));
-  renderReview(els.checks, 'review-open', checkItems, gapItems, ['Nearly ready'], true);
+  renderReview(els.checks, 'review-open', checkItems, gapItems, ['Review before saving'], true);
 }
 
 function renderNote() {
@@ -1468,7 +1468,7 @@ const MORE_HELP = 'It’s added to what you already said and the record is rewri
 let amendTarget = null;
 const MORE_TEXT = {
   answer: { title: 'Update', placeholder: 'What would you like to add or change?', go: 'Update' },
-  add: { title: 'Update the notes', placeholder: 'What would you like to add or change?', go: 'Update notes' },
+  add: { title: 'Review before saving', placeholder: 'What would you like to add or change?', go: 'Update notes' },
   amend: { title: 'Answer or change', placeholder: 'e.g. Feeds every 3 hours, not 4. She weighs 130 grams now.', go: 'Make change' },
 };
 const AMEND_HELP = 'Say or type what to change or add. Everything else stays as it is.';
@@ -1542,7 +1542,13 @@ function openAnswers(target, qs, nice = []) {
   addMoreInfo(true);
 }
 const updateTitle = (target) =>
-  !target || target.type === 'notes' ? 'Update the notes' : target.type === 'care' ? 'Update the plan' : currentDoc ? `Update the ${DOC_KINDS[currentDoc.kind].label.toLowerCase()}` : 'Update';
+  !target || target.type === 'notes'
+    ? 'Review before saving'
+    : target.type === 'care'
+      ? 'Change the plan'
+      : currentDoc && (currentDoc.kind === 'witness' || currentDoc.kind === 'opinion')
+        ? 'Review before signing'
+        : 'Review before sending';
 function openMore(target) {
   answerMode = false;
   showQuestions(target && target.type === 'doc' && currentDoc ? currentDoc.d.check : null);
@@ -1568,7 +1574,7 @@ function addMoreInfo(keepTarget) {
     answerMode = false;
     // From the clinical note: its review questions, ready to answer if wanted.
     showQuestions(!$('view-note').hidden ? checkItems : null, false, !$('view-note').hidden ? gapItems : []);
-    $('more-title').textContent = 'Update the notes';
+    $('more-title').textContent = 'Review before saving';
     renderMopDirections(false);
     $('more-title').textContent = MORE_TEXT.add.title;
     moreText.placeholder = MORE_TEXT.add.placeholder;
@@ -2685,7 +2691,7 @@ function renderDoc(d, kind) {
   $('doc-title').textContent = keepBrackets(d.title || DOC_KINDS[kind].label);
   $('doc-subtitle').textContent = d.subtitle;
   $('doc-subtitle').hidden = !d.subtitle;
-  renderReview($('doc-checks'), 'doc-review-open', d.check, [], [kind === 'witness' || kind === 'opinion' ? 'Nearly ready to sign' : 'Nearly ready']);
+  renderReview($('doc-checks'), 'doc-review-open', d.check, [], [kind === 'witness' || kind === 'opinion' ? 'Review before signing' : 'Review before sending']);
   $('doc-check-list').replaceChildren(...d.check.map((c) => el('li', { text: c })));
   $('doc').replaceChildren(
     ...(kind === 'mop' ? [el('p', { class: 'ai-disclaimer', text: aiNoteFor(d.title) })] : []),
