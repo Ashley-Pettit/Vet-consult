@@ -1576,3 +1576,9 @@ html { touch-action: manipulation; }
 @supports (-webkit-touch-callout: none) {
   input, select, textarea, .plain-sec textarea, details.edit textarea, .mop-dir-grid select { font-size: max(16px, 1em) !important; }
 }
+/* Tick list on a phone: two columns, so a day's jobs fit at a glance */
+.day-jobs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.tick-row { gap: 10px; padding: 10px; font-size: 0.92rem; line-height: 1.3; height: 100%; }
+.tick-row .box { width: 24px; height: 24px; }
+.tick-job { min-width: 0; overflow-wrap: anywhere; }
+.care-sec.ticks ul.day-jobs { padding: 0; margin: 0; }
