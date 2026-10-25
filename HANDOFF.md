@@ -117,6 +117,11 @@ Last updated 25 October 2026. For the next Claude Code session.
   - The feed calculator says when the chart's milk stage differs from the vet's.
   - Findings that only repeat a vital are dropped; vets on phones don't get the photo banner.
 - **Vet QA, 25 October (prompt changes, queued in `BACKLOG.md`):** they change bake keys, so do them where the proxy is reachable and re-bake.
+- **AI cost and speed, 25 October:**
+  - Background drafts (the care plan an intake starts, a vet's clinical notes after a plan) are full AI calls. They now stop on a device after three unused in a row and come back once one is opened (`maybeExtra` in `src/app.js`, `wantsExtra` in `src/storage.js`). Built-in examples always get them; plans reopened from Recent never start them.
+  - The website preconnects to the proxy while it loads.
+  - **To check:** commit e59d1e3 said the proxy that accepts cached prompt blocks was "not yet deployed". If the live worker is older, the first call in every session is refused, retried without caching, and nothing is cached. Deploy `proxy/` with `npx wrangler deploy` (needs Ash's Cloudflare login) to be sure.
+  - Looked at and left alone, for accuracy: the feeding rows and source key points (most of a care plan's prompt) are per animal and needed; trimming them by stage risks losing the row that applies.
 - **Known and accepted:**
   - Koala MOP shows a koala feeding video (his choice).
   - Roof-possum MOP has no legal removal advice (no checked source).

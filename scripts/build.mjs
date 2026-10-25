@@ -23,6 +23,9 @@ const version = createHash('sha256').update(js + css).digest('hex').slice(0, 10)
 const { CONFIG } = await import(root + 'src/config.js');
 const connect = ['https://api.anthropic.com', CONFIG.proxyUrl ? new URL(CONFIG.proxyUrl).origin : ''].filter(Boolean).join(' ');
 let html = readFileSync(root + 'index.html', 'utf8').replace("connect-src 'self' https:", `connect-src 'self' ${connect}`);
+// Open the connection to the proxy while the page loads, so the first AI call skips the DNS and TLS set-up.
+// use-credentials matches the app's requests (they send the organisation's sign-in cookie).
+if (CONFIG.proxyUrl) html = html.replace('</head>', `<link rel="preconnect" href="${new URL(CONFIG.proxyUrl).origin}" crossorigin="use-credentials">\n</head>`);
 // The tiny theme script in <head> runs before the page draws (no flash of the wrong theme); allow exactly it by hash.
 const headScript = (html.match(/<head>[\s\S]*?<script>([\s\S]*?)<\/script>/) || [])[1];
 if (headScript) html = html.replace("script-src 'self'", `script-src 'self' 'sha256-${createHash('sha256').update(headScript).digest('base64')}'`);

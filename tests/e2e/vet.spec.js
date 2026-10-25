@@ -52,6 +52,24 @@ test('vet: clinical notes start in the background after the plan; discharge pack
   expect(calls.filter((c) => c.prompt.includes('<dictation>')).length).toBe(1); // reused, not asked twice
 });
 
+test('vet: background notes stop after three unused plans and come back once the notes are wanted', async ({ page }) => {
+  await page.addInitScript(() => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('css.extras', JSON.stringify({ 'care-notes': [0, 0, 0] })); sessionStorage.setItem('seeded', '1'); } });
+  await withKey(page, { role: 'vet', mode: 'carer' });
+  const calls = await mockApi(page, { body: (p) => (p.includes('<dictation>') ? textReply({ animals: [quick] }) : textReply(EXAMPLE_CARER_PLAN)) });
+  const notesCalls = () => calls.filter((c) => c.prompt.includes('<dictation>')).length;
+  await openApp(page);
+  await page.locator('#transcript').fill('Wombat, mange, recheck in a week.');
+  await page.locator('#create').click();
+  await expect(page.locator('#view-care')).toBeVisible();
+  await page.waitForTimeout(1500);
+  expect(notesCalls()).toBe(0); // not wanted lately, so not made in the background
+  // Asking for them still works, and counts as wanted.
+  await page.locator('#make-next-care button', { hasText: 'Clinical notes' }).click();
+  await expect(page.locator('#view-note')).toBeVisible();
+  expect(notesCalls()).toBe(1);
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('css.extras'))['care-notes'].slice(-1)[0])).toBe(1);
+});
+
 test('vets see a kind word about pigeons, only for pigeons and only for vets', async ({ page }) => {
   await withKey(page, { role: 'vet', mode: 'carer' });
   await mockApi(page, { body: (p) => textReply({ ...EXAMPLE_CARER_PLAN, animal: 'Crested pigeon', species: 'Crested pigeon', summary: 'A crested pigeon with a sore wing.' }) });

@@ -106,6 +106,7 @@ let provider = null;
 let notes = [];
 let current = 0;
 let isExample = false;
+let reopening = false; // a saved plan is being shown again: no new background drafts for it
 let careSheet = null;
 let photos = [];
 let documents = []; // attached to an expert witness statement
@@ -2049,9 +2050,10 @@ function renderCare(c) {
 
 function showCare(sheet, from, info = '') {
   resetFeedback();
-  // Vets get a discharge pack; its clinical summary starts quietly in the background once the plan is on screen.
+  // Vets get a discharge pack; its clinical summary starts quietly in the background once the plan is on screen
+  // (not for a plan reopened from Recent, and only while this vet uses the notes it makes).
   $('discharge-pack').hidden = settings.role !== 'vet';
-  if (settings.role === 'vet') setTimeout(startVetNotes, 400);
+  if (settings.role === 'vet' && !reopening) setTimeout(() => maybeExtra('care-notes', () => startVetNotes()), 400);
   remember('care', { sheet, from }, sheet.animal);
   careSheet = sheet;
   careFrom = from;
@@ -2315,7 +2317,7 @@ async function createDoc(kind, text) {
   const pdfs = docs.filter((x) => x.kind === 'pdf');
   // An intake starts its care plan at the same moment, in a second call, so "Need advice right now?" is ready
   // (or nearly) by the time the record is read. Two shorter replies, so neither gets cut off.
-  if (kind === 'intake') startIntakeCare();
+  if (kind === 'intake') maybeExtra('intake-care', startIntakeCare);
   const reply = await runWorking(`Writing the ${DOC_KINDS[kind].label.replace(/^[A-Z](?=[a-z])/, (x) => x.toLowerCase())}`, docs.length ? `Reading ${docs.length === 1 ? 'your document' : `${docs.length} documents`} with your notes.` : DOC_KINDS[kind].working, (signal) =>
     askJson(buildDocPrompt(kind, text, opts), signal, { images: sendPhotos(), documents: pdfs }).catch((e) => {
       // A connection that doesn't take PDFs yet rejects the whole request: say that, not "check the model".
@@ -2396,6 +2398,24 @@ function renderMakeNext(box, current) {
 }
 // "Need advice right now?" on an intake record opens the care plan, already written in the same call.
 $('advice-btn').addEventListener('click', () => makeNext('carer'));
+
+// Background drafts cost a full AI call each, so they only start while this device uses them (store.wantsExtra).
+// One offer per kind and set of words. The built-in examples answer from stored replies, so they always get theirs.
+let extraOffer = null; // { kind, text, on }
+function maybeExtra(kind, start) {
+  const text = els.transcript.value;
+  if (!text.trim()) return;
+  if (isExampleText()) return start();
+  if (!extraOffer || extraOffer.kind !== kind || extraOffer.text !== text) {
+    extraOffer = { kind, text, on: store.wantsExtra(kind) };
+    store.offerExtra(kind);
+  }
+  if (extraOffer.on) start();
+}
+// The person opened what that draft was for: keep making them.
+function extraWanted(kind) {
+  if (extraOffer && extraOffer.kind === kind && extraOffer.text === els.transcript.value && !isExampleText()) store.usedExtra(kind);
+}
 
 // The care plan an intake starts in the background: { text, promise } resolving to a sheet, or null if it failed.
 let pendingCare = null;
@@ -2580,6 +2600,7 @@ $('media-from-change').addEventListener('click', () => openSettings());
 
 $('discharge-pack').addEventListener('click', async (e) => {
   if (!careSheet) return;
+  extraWanted('care-notes');
   const btn = e.currentTarget;
   const text = els.transcript.value;
   let list = madeFrom.vet && madeFrom.vet.text === text ? madeFrom.vet.notes : null;
@@ -2595,6 +2616,8 @@ $('discharge-pack').addEventListener('click', async (e) => {
 
 async function makeNext(m) {
   if (busy || !els.transcript.value.trim()) return;
+  if (m === 'vet') extraWanted('care-notes');
+  if (m === 'carer') extraWanted('intake-care');
   document.querySelector(`input[name="mode"][value="${m}"]`).checked = true;
   applyMode();
   settings.mode = m;
@@ -2842,7 +2865,14 @@ function renderResume() {
 function openSaved(last) {
   if (!last) return;
   if (last.text && !els.transcript.value.trim()) setTranscript(last.text);
-  if (last.type === 'care') showCare(normaliseCareSheet(last.data.sheet, null), last.data.from === 'note' ? 'record' : last.data.from);
+  if (last.type === 'care') {
+    reopening = true;
+    try {
+      showCare(normaliseCareSheet(last.data.sheet, null), last.data.from === 'note' ? 'record' : last.data.from);
+    } finally {
+      reopening = false;
+    }
+  }
   else if (last.type === 'doc') showDoc(normaliseDoc(last.data.d), last.data.kind);
   else if (last.type === 'notes') showNotes(last.data.map(normaliseNote), false);
   else if (last.type === 'polish') showPolish(String(last.data.text || ''));
