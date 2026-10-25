@@ -48,7 +48,7 @@ Last updated 25 October 2026. Highest value first within each group.
 
 ## Next re-bake
 
-- Move `CARER_TONE`, `CARE_DOSES` and `DOSE_CHECK` (in `src/templates.js`, added to live calls only) into the prompts in `src/note.js`, then re-bake. `withLiveRules` also swaps the first-person "I'm not certain" example in `careRules`: fix it there too.
+- Move `CARER_TONE` and `CARE_DOSES` (in `src/templates.js`, added to live calls only) into the prompts in `src/note.js`, then re-bake. `withLiveRules` also swaps the first-person "I'm not certain" example in `careRules`: fix it there too.
 
 ## Expert opinion (Advanced, vets)
 

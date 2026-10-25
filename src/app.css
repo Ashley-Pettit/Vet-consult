@@ -1647,3 +1647,5 @@ input[type="number"], input[type="search"], input[type="tel"], input[type="email
 /* Tap targets at least 44px. */
 .seg span { min-height: 44px; padding-top: 11px; padding-bottom: 11px; }
 .fb-btn { width: 44px; height: 44px; }
+/* The Auto label on review checks keeps its original look. */
+.check-item .tag { padding: 1px 7px; border-radius: 6px; background: var(--accent-soft); color: var(--chip-ink, var(--accent)); }

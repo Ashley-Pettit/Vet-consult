@@ -194,6 +194,7 @@ test.describe('creating a note', () => {
     await expect(page.locator('#checks')).toBeVisible();
     // Claude's 2 checks plus 1 worked out on the device: a high temp for a dog.
     await expect(page.locator('#check-list > li')).toHaveCount(3);
+    await expect(page.locator('#check-list .tag')).toHaveCount(1);
     await expect(page.locator('.pname strong')).toHaveText('Rusty');
     await expect(page.locator('#note')).toContainText('39.4 °C');
     await expect(page.locator('#note .meds li')).toHaveCount(3);

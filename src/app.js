@@ -6,7 +6,7 @@ import { withTemplate, withLiveRules, loadTemplates } from './templates.js';
 import { readDocument, DocError, MAX_DOCS, DOC_ACCEPT } from './docs.js';
 import { store } from './storage.js';
 import { localChecks } from './clinical.js';
-import { dropUnsaidBrands, COMMON_DRUGS } from './drugs.js';
+import { dropUnsaidBrands } from './drugs.js';
 import { lostNote } from './factcheck.js';
 import { preparePhoto, MAX_PHOTOS } from './photos.js';
 import { ABOUT_HTML } from './about.js';
@@ -170,7 +170,7 @@ function toast(text, action) {
   els.toast.hidden = false;
   clearTimeout(toastTimer);
   // Toasts with an Undo stay until the next action, so nobody is rushed (WCAG 2.2.1).
-  if (!action) toastTimer = setTimeout(() => (els.toast.hidden = true), Math.max(2500, text.length * 70));
+  if (!action) toastTimer = setTimeout(() => (els.toast.hidden = true), 1750);
 }
 
 function banner(text, tone = 'warn') {
@@ -868,12 +868,7 @@ let overriding = 0; // a one-off model (Fast for a quick update, Opus for a retr
 const QUICK_MODEL = 'claude-haiku-5-5';
 const BEST_MODEL = 'claude-opus-5-5';
 // A short, simple update goes to the fast model; anything long or with drugs and doses keeps the chosen model.
-// Drug names from the clinic list (brand and active ingredient), so a dictated drug always counts as dose talk.
-const DRUG_NAMES = [...new Set(COMMON_DRUGS.flatMap((d) => d.toLowerCase().split(/[()/,]/)).map((w) => w.trim()).filter((w) => w.length > 4))];
-const DOSE_RE = /\b(mg|mls?|mils?|cc|mcg|µg|ug|units?|iu|drops?|sachets?|doses?|dosing|tablets?|tabs?|capsules?|inject\w*|antibiotics?|\d+(\.\d+)?\s*(mg|ml|mils?|kg|g))\b/i;
-const hasDoseTalk = (t) => DOSE_RE.test(t) || DRUG_NAMES.some((d) => t.toLowerCase().includes(d));
-// The fast model only rewrites a vet's notes, and only when nothing in them is about drugs or doses.
-const isQuickUpdate = (t) => t.length <= 180 && t.split(/\s+/).length <= 32 && mode() === 'vet' && !hasDoseTalk(t) && !hasDoseTalk(els.transcript.value);
+const isQuickUpdate = (t) => t.length <= 180 && t.split(/\s+/).length <= 32 && !/\b(mg|ml|mL|dose|tablet|inject|antibiotic|meloxicam|metacam|\d+\s*(mg|ml|kg))\b/i.test(t);
 
 // The built-in examples answer from ready-made replies (see baked.js), even with no Claude connection.
 const bakedOff = () => { try { return localStorage.getItem('css.nobake') === '1'; } catch { return false; } };
@@ -1239,7 +1234,7 @@ function renderReview(box, prefix, checks, nice, titles, always = false) {
   box.hidden = none && !always;
   box.dataset.tone = checks.length ? 'warn' : 'calm';
   $(`${prefix}-title`).textContent = none ? 'Add or change anything' : titles[0];
-  const count = checks.length ? `${checks.length} to check` : nice.length ? `${nice.length} idea${nice.length === 1 ? '' : 's'} to add` : '';
+  const count = [checks.length && `${checks.length} to check`, nice.length && `${nice.length} idea${nice.length === 1 ? '' : 's'}`].filter(Boolean).join(' · ');
   $(`${prefix}-sub`).textContent = count;
   $(`${prefix}-label`).textContent = none ? 'Add or change' : titles[1] || 'Edit';
   const ideas = $('gap-wrap');
@@ -1249,12 +1244,13 @@ function renderChecks(n, local) {
   const items = [...n.check.map((t) => ({ t, auto: false })), ...local.checks.map((t) => ({ t, auto: true }))];
   checkItems = items.map((x) => x.t);
   els.checkList.replaceChildren(
-    ...items.map(({ t }) => el('li', { class: 'check-item' }, [el('span', { class: 'check-text' }, [t])])),
+    ...items.map(({ t, auto }) => el('li', { class: 'check-item' }, [el('span', { class: 'check-text' }, [auto ? el('span', { class: 'tag', title: 'Worked out on this device', text: 'Auto' }) : null, t])])),
   );
 }
 
 // Answer all the questions at once: one tap opens them with the mic already listening, then one quick AI call fixes
 // the notes. Notes the vet has edited by hand are fixed as text, so their edits stay.
+const DOSE_WORDS = /\b(mg|ml|mL|dose|tablet|inject|antibiotic|meloxicam|metacam|\d+\s*(mg|ml|kg))\b/i;
 async function fixNotes(questions, answers) {
   if (busy) return;
   if (!(await ensureProvider())) return toast(NO_CLAUDE);
@@ -1267,7 +1263,7 @@ async function fixNotes(questions, answers) {
       edited ? provider.generate(buildNotesAnswerPrompt(before, questions, answers), signal) : askJson(buildRevisionPrompt(notes[idx], questions, answers), signal);
     const run = () => runWorking('Updating the notes', 'Putting what you said in the right places.', job, 'Usually under 15 seconds');
     // Quick, unless an answer mentions a drug or dose: those keep the chosen model.
-    const reply = hasDoseTalk(answers) ? await run() : await withModel(QUICK_MODEL, async () => (await ensureProvider(), run()));
+    const reply = DOSE_WORDS.test(answers) ? await run() : await withModel(QUICK_MODEL, async () => (await ensureProvider(), run()));
     // The words it was made from now include the answers, so the carer plan and anything else made next has them too.
     setTranscript(appendSegment(els.transcript.value, `Answers: ${answers}`));
     if (edited) {
@@ -2444,9 +2440,6 @@ function renderCare(c) {
             )),
           ])
         : null,
-      // When to get vet help sits near the top, where it's found in a hurry; the most urgent first.
-      sec('Get vet help straight away (or an after-hours emergency vet) if', c.escalate.urgent, 'urgent'),
-      sec('Contact the vet within a day if', c.escalate.vet, 'watch'),
       leaveIt(c) ? null : rangesSection(c.species_group, [c.animal, c.summary, c.title, careFrom === 'note' || careFrom === 'saved' ? '' : careFrom === 'library' ? (libraryPlan ? libraryPlan.text : '') : els.transcript.value].filter(Boolean).join(' ')),
       rehydrationSection(c.rehydration),
       c.plan.length
@@ -2480,6 +2473,8 @@ function renderCare(c) {
         : null,
       log,
       release,
+      sec('Contact the vet within a day if', c.escalate.vet, 'watch'),
+      sec('Get vet help straight away (or an after-hours emergency vet) if', c.escalate.urgent, 'urgent'),
       c.next_visit ? el('section', { class: 'care-sec next' }, [el('h2', { text: 'Next visit' }), el('p', { text: c.next_visit })]) : null,
       videoSection(carePlanVideo(c)), // well down the plan: the care comes first
       refs.length
