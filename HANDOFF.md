@@ -48,6 +48,7 @@ Both copies share the same site, so settings, sign-in and drafts carry across wh
 
 ## Ash's standing preferences
 
+- **Pet birds in Queensland are the only non-wildlife topic,** and only for expert opinions. Their sources live in `src/sources-petbirds-qld.js` and are added to the opinion prompt only when it's about pet, aviary or backyard birds in Queensland. Never add them to the main library, care plans or other documents.
 - **Expert opinions: never learn from them.** The documents a vet attaches and what they say are for that one opinion only. Never use real opinion inputs or outputs for baked examples, house-style examples (`template-examples.js`), QA scenarios, the plan library or memory. The app doesn't keep opinions in Recent, doesn't reuse their words for other documents, and clears their attachments when the vet changes tab. The proxy stores nothing.
 - **Writing style:** Australian English, no em dashes, short ADHD-friendly bullets, plain and not AI-sounding. Fix first, explain briefly.
 - **Updates:** give updates as you go (SendUserMessage) on long jobs.

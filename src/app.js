@@ -11,6 +11,7 @@ import { preparePhoto, MAX_PHOTOS } from './photos.js';
 import { ABOUT_HTML } from './about.js';
 import { lookupSource, sourcesForPrompt, SOURCE_IDS } from './sources.js';
 import { region, setRegion } from './region.js';
+import { petBirdSourcesForPrompt } from './sources-petbirds-qld.js';
 import { rangesFor, rangesForAnimal } from './species-ranges.js';
 import { careVideoFor, watchUrl, videoHost, embedUrl, thumbUrl } from './videos.js';
 import { groupsIn, factsFor, namedAnimal } from './species-vet.js';
@@ -2503,6 +2504,8 @@ async function createDoc(kind, text) {
   }
   banner('');
   const opts = { clinician: settings.clinician, photoCount: sendPhotos().length, sourceList: sourcesFor(text) };
+  // Pet birds in Queensland: the one non-wildlife topic, and only expert opinions get these sources.
+  if (kind === 'opinion') opts.sourceList = [opts.sourceList, petBirdSourcesForPrompt(text, region().code)].filter(Boolean).join('\n');
   // A media statement is from the organisation chosen in Settings (an RSPCA template makes it an RSPCA statement).
   if (kind === 'media') opts.org = mediaOrg();
   // An expert witness statement or opinion can rely on attached documents: Word and text go in the prompt, PDFs as files.
