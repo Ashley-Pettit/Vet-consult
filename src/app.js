@@ -325,10 +325,8 @@ function alertStopped() {
 }
 
 function idleStatus() {
-  if (['intake', 'log', 'tovet', 'mop', 'funding'].includes(document.body.dataset.mode)) return els.transcript.value.trim() ? 'Tap the mic to add more' : 'Tap the mic and talk it through';
-  if (document.body.dataset.mode === 'carer') return els.transcript.value.trim() ? 'Tap the mic to add more' : 'Tap the mic and describe the animal’s care';
-  if (keyboardVoice) return els.transcript.value.trim() ? 'Tap the mic to add more by voice' : 'Tap the mic, then talk through the consult';
-  return els.transcript.value.trim() ? 'Tap the mic to add more' : 'Tap the mic and talk through the consult';
+  // Short and the same everywhere: the box below says what to put in it.
+  return els.transcript.value.trim() ? 'Tap to add more' : 'Tap to talk, or type below';
 }
 
 // A short soft tone and buzz the moment the mic is really listening, so people know to start talking.
