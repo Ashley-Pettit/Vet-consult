@@ -1,0 +1,8 @@
+[
+ {"id":"a-duckling","role":"carer","mode":"carer","text":"wood duckling alone in a drain in wonthaggi about a week old, no mum around"},
+ {"id":"b-witness","role":"vet","mode":"witness","text":"dog seized by inspector from a property in cowes on 3 october 2026, I examined it 4 october. body condition 1 out of 9, multiple pressure sores over hips, overgrown nails, flea burden heavy. weight 14kg. in my opinion it had been without adequate food for several weeks"},
+ {"id":"c-nestling","role":"carer","mode":"carer","text":"baby noisy miner nestling, pink with a few pin feathers, fell out of nest in a storm in san remo, nest destroyed, eyes closed"},
+ {"id":"d-blue-tongue","role":"carer","mode":"carer","text":"blue tongue lizard attacked by a dog in a garden in phillip island, small cuts on the side, moving ok, 400g"},
+ {"id":"e-media","role":"vet","mode":"media","text":"we released 3 ringtail possums back into inverloch bushland today after they were orphaned in the january heatwave, raised by our carers for 4 months, all healthy, Dr Jane Wu our vet said they were in great condition"},
+ {"id":"f-polish","role":"vet","mode":"polish","text":"wombat m adult hbc, alert, lame LH, rads no fx, soft tissue injury LH stifle, meloxicam 0.2mg/kg sc today then 0.1 po sid 5d, cage rest 7d, recheck 1 wk"}
+]
