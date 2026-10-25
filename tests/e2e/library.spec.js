@@ -61,3 +61,30 @@ test('vet tabs read Notes, Rapid, Care plan, Advanced', async ({ page }) => {
   const tabs = await page.$$eval('#mode > label, #mode > .adv-tab', (ls) => ls.filter((l) => l.offsetParent).map((l) => ({ x: l.getBoundingClientRect().x, v: (l.querySelector('input') || {}).value || 'advanced' })).sort((a, b) => a.x - b.x).map((t) => t.v));
   expect(tabs).toEqual(['vet', 'polish', 'carer', 'advanced']);
 });
+
+test('favourites: save a plan with the star, find it at the top of Plans, rename, reopen and remove it', async ({ page }) => {
+  await withKey(page, { role: 'carer' });
+  const calls = await mockApi(page);
+  await openApp(page);
+  await page.locator('#open-library').click();
+  await expect(page.locator('#saved-plans')).toBeHidden(); // nothing saved yet
+  await page.locator('.lib-animal', { hasText: 'Koala' }).locator('.lib-plan').first().click();
+  await expect(page.locator('#care-save')).toHaveAttribute('aria-pressed', 'false');
+  await page.locator('#care-save').click();
+  await expect(page.locator('#care-save')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('#care-save')).toHaveText('Saved');
+  await page.locator('#care-back').click();
+  await expect(page.locator('#saved-list li')).toHaveCount(1);
+  await page.locator('#saved-list').getByRole('button', { name: /^Rename/ }).click();
+  await page.locator('.saved-name').fill('Our koala joey plan');
+  await page.locator('.saved-name').press('Enter');
+  await expect(page.locator('#saved-list')).toContainText('Our koala joey plan');
+  await page.locator('#saved-list .saved-open').click();
+  await expect(page.locator('#view-care')).toBeVisible();
+  await expect(page.locator('#care-sheet')).toContainText('Koala');
+  await expect(page.locator('#care-save')).toHaveText('Saved');
+  await page.locator('#care-back').click();
+  await page.locator('#saved-list').getByRole('button', { name: /^Remove/ }).click();
+  await expect(page.locator('#saved-plans')).toBeHidden();
+  expect(calls.length).toBe(0); // saving and opening never call the AI
+});

@@ -40,6 +40,8 @@ const SESSION_KEY = 'css.key';
 
 const USAGE = 'css.usage';
 const LIBRARY = 'css.library';
+const SAVED = 'css.saved';
+const SAVED_MAX = 60;
 const monthKey = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 
 export const store = {
@@ -158,7 +160,25 @@ export const store = {
     delete all[id];
     write(local, LIBRARY, all);
   },
+  /** Favourite plans the person saved, newest first: [{ id, name, sheet, savedAt }]. Kept until they remove them. */
+  loadSaved() {
+    const v = read(local, SAVED, []);
+    return Array.isArray(v) ? v.filter((x) => x && typeof x === 'object' && x.id && x.sheet) : [];
+  },
+  /** Add or update a saved plan. False if the phone is out of space. */
+  savePlan(entry) {
+    const list = [entry, ...this.loadSaved().filter((x) => x.id !== entry.id)].slice(0, SAVED_MAX);
+    return write(local, SAVED, list);
+  },
+  updateSaved(id, changes) {
+    const list = this.loadSaved().map((x) => (x.id === id ? { ...x, ...changes } : x));
+    return write(local, SAVED, list);
+  },
+  removeSaved(id) {
+    write(local, SAVED, this.loadSaved().filter((x) => x.id !== id));
+  },
   clearAll() {
+    write(local, SAVED, null);
     write(local, SETTINGS, null);
     write(session, SESSION_KEY, null);
     write(session, DRAFT, null);

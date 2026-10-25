@@ -1666,14 +1666,16 @@ async function amend(target, change) {
     // Always the chosen model (Detailed by default): a change has to reach every place it applies, which the fast model can miss.
     const reply = await run();
     const fromLibrary = isCare && careFrom === 'library';
+    const fromSaved = isCare && careFrom === 'saved';
     // The words it was made from now include the change, so "Use the same notes for" picks it up too.
     // (A ready-made plan wasn't made from the dictation, so that stays as it is.)
-    if (!fromLibrary) setTranscript(appendSegment(els.transcript.value, `Change: ${change}`));
+    if (!fromLibrary && !fromSaved) setTranscript(appendSegment(els.transcript.value, `Change: ${change}`));
     // Only the changed parts come back: merge them into what's on screen.
     if (isCare) {
       const sheet = normaliseCareSheet(mergeAmend(current, reply), fromLibrary ? null : SOURCE_IDS());
-      showCare(sheet, careFrom, els.careBanner.hidden ? '' : els.careBanner.textContent);
+      showCare(sheet, careFrom, els.careBanner.hidden ? '' : els.careBanner.textContent, true);
       if (fromLibrary) return libraryChanged(sheet);
+      if (savedId && updateSavedPlan(sheet)) return toast('Updated your saved plan.');
     } else {
       const d = normaliseDoc(mergeAmend(current, reply));
       if (!d.sections.length) throw new AiError('empty', '');
@@ -1732,6 +1734,7 @@ async function openLibrary() {
       ]),
     ),
   );
+  renderSaved();
   showView('library');
   $('library-title').focus();
 }
@@ -1755,6 +1758,92 @@ function libraryChanged(sheet) {
   }
 }
 $('open-library').addEventListener('click', openLibrary);
+
+/* ---------------- saved plans (favourites) ---------------- */
+
+// A plan worth keeping is one tap away: the star on any care plan saves it on this device, under Plans in the
+// header. Saved plans open instantly with no AI call, and a change made to one updates the saved copy.
+let savedId = null; // the saved plan on screen, if it is one
+const STAR_ON = '<path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z" fill="currentColor"/>';
+const STAR_OFF = '<path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/>';
+function refreshSaveBtn() {
+  const on = Boolean(savedId && store.loadSaved().some((x) => x.id === savedId));
+  if (!on) savedId = null;
+  const btn = $('care-save');
+  btn.setAttribute('aria-pressed', String(on));
+  btn.querySelector('svg').innerHTML = on ? STAR_ON : STAR_OFF;
+  btn.querySelector('span').textContent = on ? 'Saved' : 'Save';
+}
+const planName = () => els.careTitle.textContent.replace(/\u00a0/g, ' ').replace(/^(Care plan|Care at home):\s*/i, '').trim() || 'Care plan';
+function updateSavedPlan(sheet) {
+  return savedId ? store.updateSaved(savedId, { sheet, savedAt: Date.now() }) : false;
+}
+$('care-save').addEventListener('click', () => {
+  if (!careSheet) return;
+  if (savedId) {
+    const entry = store.loadSaved().find((x) => x.id === savedId);
+    store.removeSaved(savedId);
+    savedId = null;
+    refreshSaveBtn();
+    toast('Removed from your saved plans.', entry ? { label: 'Undo', run: () => { store.savePlan(entry); savedId = entry.id; refreshSaveBtn(); } } : undefined);
+    return;
+  }
+  const entry = { id: `p${Date.now().toString(36)}`, name: planName().slice(0, 80), sheet: careSheet, savedAt: Date.now() };
+  if (!store.savePlan(entry)) return toast('This device is out of space. Remove a saved plan and try again.');
+  savedId = entry.id;
+  refreshSaveBtn();
+  toast('Saved. Find it under Plans, the book at the top.');
+});
+function openSavedPlan(id) {
+  const entry = store.loadSaved().find((x) => x.id === id);
+  if (!entry) return;
+  savedId = id;
+  libraryPlan = null;
+  showCare(normaliseCareSheet(entry.sheet, null), 'saved', '');
+}
+const savedDate = (t) => new Date(t).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
+function renderSaved() {
+  const list = store.loadSaved();
+  $('saved-plans').hidden = !list.length;
+  $('ready-title').hidden = !list.length;
+  $('saved-list').replaceChildren(
+    ...list.map((p) => {
+      const li = el('li', { class: 'saved-item' });
+      const open = el('button', { type: 'button', class: 'lib-plan saved-open', onclick: () => openSavedPlan(p.id) }, [
+        el('span', { class: 'lib-stage', text: p.name }),
+        el('span', { class: 'lib-weight', text: `Saved ${savedDate(p.savedAt)}` }),
+      ]);
+      const rename = el('button', { type: 'button', class: 'icon-btn small', 'aria-label': `Rename ${p.name}`, title: 'Rename' });
+      rename.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4l10-10-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>';
+      rename.addEventListener('click', () => {
+        const input = el('input', { type: 'text', class: 'saved-name', 'aria-label': 'Plan name', maxlength: '80' });
+        input.value = p.name;
+        const done = () => {
+          const name = input.value.trim();
+          if (name && name !== p.name) store.updateSaved(p.id, { name });
+          renderSaved();
+        };
+        input.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') { e.preventDefault(); done(); }
+          if (e.key === 'Escape') renderSaved();
+        });
+        input.addEventListener('blur', done);
+        li.replaceChildren(input);
+        input.focus();
+        input.select();
+      });
+      const remove = el('button', { type: 'button', class: 'icon-btn small', 'aria-label': `Remove ${p.name}`, title: 'Remove' });
+      remove.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+      remove.addEventListener('click', () => {
+        store.removeSaved(p.id);
+        renderSaved();
+        toast(`Removed ${p.name}.`, { label: 'Undo', run: () => { store.savePlan(p); renderSaved(); } });
+      });
+      li.append(open, rename, remove);
+      return li;
+    }),
+  );
+}
 $('library-back').addEventListener('click', () => showView('record'));
 $('care-reset').addEventListener('click', () => {
   if (!libraryPlan) return;
@@ -1787,9 +1876,9 @@ $('edit-save').addEventListener('click', () => {
   if (!careSheet) return;
   const text = Object.fromEntries([...$('edit-form').querySelectorAll('textarea')].map((t) => [t.name, t.value]));
   const sheet = normaliseCareSheet(textToPlan(careSheet, text), null);
-  showCare(sheet, careFrom, els.careBanner.hidden ? '' : els.careBanner.textContent);
+  showCare(sheet, careFrom, els.careBanner.hidden ? '' : els.careBanner.textContent, true);
   if (careFrom === 'library') libraryChanged(sheet);
-  else toast('Saved.');
+  else toast(savedId && updateSavedPlan(sheet) ? 'Updated your saved plan.' : 'Saved.');
 });
 
 /* ---------------- care plan ---------------- */
@@ -2130,7 +2219,7 @@ function renderCare(c) {
   const sec = (title, items, cls) => (items.length ? el('section', { class: 'care-sec ' + (cls || '') }, [el('h2', { text: title }), list(items)]) : null);
   const name = c.animal || currentNote()?.patient.name || '';
   els.careTitle.textContent = keepBrackets(c.kind === 'wildlife' ? `Care plan: ${name || 'wildlife in care'}` : `Caring for ${name || 'your animal'} at home`);
-  $('care-back-label').textContent = careFrom === 'note' ? 'Back to note' : careFrom === 'library' ? 'Back to plans' : 'Back';
+  $('care-back-label').textContent = careFrom === 'note' ? 'Back to note' : careFrom === 'library' || careFrom === 'saved' ? 'Back to plans' : 'Back';
   $('care-back-2').textContent = 'Change plan';
   // Tick sheet: one row per daily job, one column per day, big boxes. Printable on its own for the fridge.
   const days = Math.min(c.log_days || 7, 14);
@@ -2184,7 +2273,7 @@ function renderCare(c) {
             )),
           ])
         : null,
-      leaveIt(c) ? null : rangesSection(c.species_group, [c.animal, c.summary, c.title, careFrom === 'note' ? '' : careFrom === 'library' ? (libraryPlan ? libraryPlan.text : '') : els.transcript.value].filter(Boolean).join(' ')),
+      leaveIt(c) ? null : rangesSection(c.species_group, [c.animal, c.summary, c.title, careFrom === 'note' || careFrom === 'saved' ? '' : careFrom === 'library' ? (libraryPlan ? libraryPlan.text : '') : els.transcript.value].filter(Boolean).join(' ')),
       rehydrationSection(c.rehydration),
       c.plan.length
         ? el('section', { class: 'care-sec' }, [
@@ -2236,18 +2325,19 @@ function renderCare(c) {
   );
 }
 
-function showCare(sheet, from, info = '') {
+function showCare(sheet, from, info = '', keepSaved = false) {
   resetFeedback();
+  // The Save star belongs to this plan: a new plan starts unsaved (a saved one opened from Plans sets it first).
+  if (from !== 'saved' && !keepSaved) savedId = null;
   // Vets get a discharge pack; its clinical summary is written when the pack is asked for (examples: straight away).
   $('discharge-pack').hidden = settings.role !== 'vet';
   if (settings.role === 'vet') setTimeout(() => exampleExtra(() => startVetNotes()), 400);
   // Browsing ready-made plans doesn't fill Recent; a changed one is kept (see libraryChanged).
-  if (from !== 'library') {
-    remember('care', { sheet, from }, sheet.animal);
-    libraryPlan = null;
-  }
+  if (from !== 'library' && from !== 'saved') remember('care', { sheet, from }, sheet.animal);
+  if (from !== 'library') libraryPlan = null;
   careSheet = sheet;
   careFrom = from;
+  refreshSaveBtn();
   $('library-admin').hidden = !(from === 'library' && libraryPlan && libraryAdmin());
   $('care-reset').hidden = !(libraryPlan && store.loadLibraryEdits()[libraryPlan.id]);
   renderMakeNext($('make-next-care'), from === 'record' ? 'carer' : null);
@@ -2301,7 +2391,7 @@ els.care.addEventListener('click', openCare);
 $('discharge-btn').addEventListener('click', openCare);
 // Copy sits top right too, so a busy vet never has to scroll for it.
 $('copy-top').addEventListener('click', () => els.copy.click());
-$('care-back').addEventListener('click', () => (careFrom === 'library' ? openLibrary() : showView(careFrom === 'note' ? 'note' : 'record')));
+$('care-back').addEventListener('click', () => (careFrom === 'library' || careFrom === 'saved' ? openLibrary() : showView(careFrom === 'note' ? 'note' : 'record')));
 // A plan made straight from the carer's words can take more info in place; one made from a vet note goes back to it.
 $('care-back-2').addEventListener('click', changePlan);
 // Copy offers Share (the phone's share sheet) or Copy as text. Without sharing (some computers), it just copies.
@@ -3027,7 +3117,22 @@ els.settings.addEventListener('close', async () => {
   else toast('Settings saved.');
 });
 
+// Clearing everything needs a second tap, so a slip of the thumb near Save can't wipe a device.
+let forgetTimer = null;
 els.forget.addEventListener('click', () => {
+  if (els.forget.dataset.armed !== 'true') {
+    els.forget.dataset.armed = 'true';
+    els.forget.textContent = 'Tap again to clear';
+    clearTimeout(forgetTimer);
+    forgetTimer = setTimeout(() => {
+      els.forget.dataset.armed = 'false';
+      els.forget.textContent = 'Clear saved data';
+    }, 4000);
+    return;
+  }
+  clearTimeout(forgetTimer);
+  els.forget.dataset.armed = 'false';
+  els.forget.textContent = 'Clear saved data';
   store.clearAll();
   settings = store.loadSettings();
   els.clinician.value = '';

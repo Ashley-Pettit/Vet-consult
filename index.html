@@ -56,7 +56,7 @@
       <span class="beta-chip" id="beta-chip" aria-hidden="true" hidden>Beta</span>
     </button>
     <div class="bar-right">
-    <button class="icon-btn" id="open-library" type="button" aria-label="Ready-made plans" title="Ready-made plans">
+    <button class="icon-btn" id="open-library" type="button" aria-label="Plans" title="Plans: saved and ready-made">
       <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V5a2 2 0 0 1 2-2h14v14H6.5A2.5 2.5 0 0 0 4 19.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/><path d="M8 7h8M8 11h6"/></svg>
     </button>
     <button class="icon-btn" id="open-recent" type="button" aria-label="Recent" title="Recent" hidden>
@@ -282,6 +282,7 @@
       </div>
       <div class="note-title-row">
         <h1 id="care-title" tabindex="-1">Care at home</h1>
+        <button type="button" class="btn small ghost save-plan" id="care-save" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/></svg><span>Save</span></button>
       </div>
       <p class="muted vet-only">Everything the carer needs to look after the animal on their own. Check it, then copy it into an email, SMS or the discharge sheet.</p>
       <p class="muted carer-only">Everything you need to look after the animal. Check it, then share it or print it for the fridge.</p>
@@ -315,10 +316,15 @@
           <span>Back</span>
         </button>
       </div>
-      <h1 id="library-title" tabindex="-1">Ready-made plans</h1>
-      <p class="muted">Standard care plans for common native animals, by stage and weight. Open one, check it suits your animal, then change anything to fit.</p>
+      <h1 id="library-title" tabindex="-1">Plans</h1>
+      <p class="muted">Your saved plans, then standard care plans for common native animals by stage and weight. Open one, check it suits your animal, then change anything to fit.</p>
     </div>
     <p id="library-note" class="banner" hidden></p>
+    <section id="saved-plans" class="lib-saved" aria-labelledby="saved-title" hidden>
+      <h2 id="saved-title">Your saved plans</h2>
+      <ul id="saved-list" class="saved-list"></ul>
+    </section>
+    <h2 class="lib-group" id="ready-title">Ready-made plans</h2>
     <div id="library-list" class="library"></div>
   </section>
 
@@ -443,78 +449,91 @@
 
     <p class="conn" id="conn-status" role="status"></p>
 
-    <div class="field">
-      <label for="clinician">Your name (added to every record)</label>
-      <input id="clinician" type="text" autocomplete="name" placeholder="e.g. Sam Lee">
-    </div>
-
-    <div class="field">
-      <label for="drugs">Drugs and products you use</label>
-      <textarea id="drugs" rows="4" spellcheck="false" placeholder="One per line, e.g.&#10;Metacam 1.5 mg/mL oral&#10;Cydectin pour-on&#10;Our in-house mange wash"></textarea>
-      <p class="help">So misheard names are corrected to your spelling. Common vet and wildlife drugs are already known.</p>
-    </div>
-
-    <div class="field check-field">
-      <label class="switch-row" for="photos-on"><input type="checkbox" id="photos-on"> <span>Allow photos</span></label>
-      <p class="help">Photos help Claude identify the animal and injuries, but each photo adds to AI costs. Turn off to hide the photo buttons.</p>
-    </div>
-
-    <div class="field check-field">
-      <label class="switch-row" for="library-admin-on"><input type="checkbox" id="library-admin-on"> <span>Plan library admin</span></label>
-      <p class="help">Edit the ready-made plans with Change plan or by typing. Edits are kept on this device only.</p>
-    </div>
-
-    <div class="field" id="channel-field" hidden>
-      <p class="field-label" id="channel-label">App version</p>
-      <div class="channel-pick" role="group" aria-labelledby="channel-label">
-        <a class="channel-opt" id="channel-live" href="../care/">Live</a>
-        <a class="channel-opt" id="channel-beta" href="../care-beta/">Beta</a>
+    <section class="set-group" aria-labelledby="set-you">
+      <h3 class="set-title" id="set-you">About you</h3>
+      <div class="field">
+        <label for="clinician">Your name (added to every record)</label>
+        <input id="clinician" type="text" autocomplete="name" placeholder="e.g. Sam Lee">
       </div>
-      <p class="help" id="channel-help"></p>
-    </div>
 
-    <div class="field">
-      <label for="template">Handout style (Word printouts)</label>
-      <select id="template">
-        <option value="bunurong">Bunurong Wildlife Care</option>
-        <option value="plain">Plain (no branding)</option>
-        <option value="rspca" hidden>RSPCA</option>
-      </select>
-      <label for="unlock" class="sub-label">Have an access code?</label>
-      <input id="unlock" type="text" autocomplete="off" spellcheck="false" placeholder="Enter code">
-      <p class="help" id="unlock-msg" aria-live="polite"></p>
-    </div>
-
-    <div class="field">
-      <label for="model">AI model</label>
-      <select id="model"></select>
-      <p class="help">Detailed (Sonnet) is the default. Fast (Haiku) is quicker for simple cases; Opus is for tricky ones and takes longer. You can also switch while a plan is being written.</p>
-    </div>
-
-    <section class="field usage" aria-labelledby="usage-title">
-      <h3 class="field-label" id="usage-title">AI usage</h3>
-      <div id="usage-body"></div>
-      <p class="help" id="usage-balance"></p>
-      <button type="button" class="link" id="usage-reset">Reset this count</button>
+      <div class="field">
+        <label for="drugs">Drugs and products you use</label>
+        <textarea id="drugs" rows="4" spellcheck="false" placeholder="One per line, e.g.&#10;Metacam 1.5 mg/mL oral&#10;Cydectin pour-on&#10;Our in-house mange wash"></textarea>
+        <p class="help">Misheard names are corrected to your spelling. Common drugs are already known.</p>
+      </div>
     </section>
 
-    <div class="field">
-      <span class="field-label">Funding</span>
-      <button type="button" class="btn ghost" id="open-funding">Write a funding submission</button>
-      <p class="help">Talk through what you need and why. You get a draft grant submission to polish.</p>
+    <section class="set-group" aria-labelledby="set-app">
+      <h3 class="set-title" id="set-app">App</h3>
+      <div class="field check-field">
+        <label class="switch-row" for="photos-on"><input type="checkbox" id="photos-on"> <span>Allow photos</span></label>
+        <p class="help">Photos help identify the animal and injuries. Each one adds to AI costs.</p>
+      </div>
+
+      <div class="field" id="channel-field" hidden>
+        <p class="field-label" id="channel-label">App version</p>
+        <div class="channel-pick" role="group" aria-labelledby="channel-label">
+          <a class="channel-opt" id="channel-live" href="../care/">Live</a>
+          <a class="channel-opt" id="channel-beta" href="../care-beta/">Beta</a>
+        </div>
+
+      <div class="field">
+        <label for="template">Handout style (Word printouts)</label>
+        <select id="template">
+          <option value="bunurong">Bunurong Wildlife Care</option>
+          <option value="plain">Plain (no branding)</option>
+          <option value="rspca" hidden>RSPCA</option>
+        </select>
+        <label for="unlock" class="sub-label">Have an access code?</label>
+        <input id="unlock" type="text" autocomplete="off" spellcheck="false" placeholder="Enter code">
+        <p class="help" id="unlock-msg" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <section class="set-group" aria-labelledby="set-ai">
+      <h3 class="set-title" id="set-ai">AI</h3>
+      <div class="field">
+        <label for="model">AI model</label>
+        <select id="model"></select>
+        <p class="help">Detailed suits most cases. Fast is quickest for simple ones; Most thorough is for tricky cases and takes longer.</p>
+      </div>
+
+      <section class="field usage" aria-labelledby="usage-title">
+        <h3 class="field-label" id="usage-title">AI usage</h3>
+        <div id="usage-body"></div>
+        <p class="help" id="usage-balance"></p>
+        <button type="button" class="link" id="usage-reset">Reset this count</button>
+      </section>
+
+      <details class="field advanced" id="key-field">
+        <summary>Advanced: use an API key instead</summary>
+        <label for="api-key">Anthropic API key</label>
+        <input id="api-key" type="password" autocomplete="off" spellcheck="false" placeholder="sk-ant-…">
+        <label class="check"><input type="checkbox" id="remember-key"> Remember on this device</label>
+        <p class="help">Get a key from <a href="https://platform.claude.com/" target="_blank" rel="noopener">the Claude Console</a>. Only use your own key on a device you control. Not needed in the Claude app.</p>
+      </details>
+    </section>
+
+    <section class="set-group" aria-labelledby="set-more">
+      <h3 class="set-title" id="set-more">More</h3>
+      <div class="field">
+        <span class="field-label">Funding</span>
+        <button type="button" class="btn ghost" id="open-funding">Write a funding submission</button>
+        <p class="help">Talk through what you need and why. You get a draft grant submission to polish.</p>
+      </div>
+
+      <div class="field check-field">
+        <label class="switch-row" for="library-admin-on"><input type="checkbox" id="library-admin-on"> <span>Plan library admin</span></label>
+        <p class="help">Change the ready-made plans. Edits stay on this device.</p>
+      </div>
+    </section>
+
+    <div class="set-danger">
+      <button type="button" class="btn ghost danger" id="forget">Clear saved data</button>
+      <p class="help" id="forget-help">Removes your name, settings, saved plans and recent work from this device.</p>
     </div>
 
-    <details class="field advanced" id="key-field">
-      <summary>Advanced: use an API key instead</summary>
-      <label for="api-key">Anthropic API key</label>
-      <input id="api-key" type="password" autocomplete="off" spellcheck="false" placeholder="sk-ant-…">
-      <label class="check"><input type="checkbox" id="remember-key"> Remember on this device</label>
-      <p class="help">Get a key from <a href="https://platform.claude.com/" target="_blank" rel="noopener">the Claude Console</a>. Only use your own key on a device you control. Not needed in the Claude app.</p>
-    </details>
-
-
     <div class="dlg-actions">
-      <button type="button" class="btn ghost danger" id="forget">Clear saved data</button>
       <button type="submit" class="btn primary" value="save" id="save-settings">Save</button>
     </div>
   </form>

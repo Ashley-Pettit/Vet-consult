@@ -353,6 +353,9 @@ test.describe('settings', () => {
     await page.locator('#open-settings').click();
     await expect(page.locator('#clinician')).toHaveValue('Dr A');
     await page.locator('#forget').click();
+    await expect(page.locator('#forget')).toHaveText('Tap again to clear'); // a second tap is needed
+    expect(await page.evaluate(() => localStorage.getItem('css.settings'))).not.toBeNull();
+    await page.locator('#forget').click();
     await expect(page.locator('#conn-status')).toContainText('Connected');
     const stored = await page.evaluate(() => localStorage.getItem('css.settings'));
     expect(stored).toBeNull();
