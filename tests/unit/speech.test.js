@@ -204,3 +204,20 @@ test('stopping during the restart gap goes idle straight away', async () => {
   assert.equal(d.state, 'idle');
   assert.equal(fake.instances.length, 1, 'no restart after stop');
 });
+
+test('a recogniser that never starts is retried once, then stops with a clear message', async () => {
+  const { Dictation } = await import('../../src/speech.js');
+  let made = 0;
+  class Stuck { constructor() { made += 1; } start() {} stop() {} abort() {} }
+  const d = new Dictation({ win: { SpeechRecognition: Stuck, navigator: { userAgent: '' } }, startTimeoutMs: 20 });
+  const states = [];
+  let err = null;
+  d.onstate = (s) => states.push(s);
+  d.onerror = (c) => (err = c);
+  d.start();
+  await new Promise((r) => setTimeout(r, 80));
+  assert.equal(made, 2); // the first, then one fresh try
+  assert.equal(d.state, 'idle');
+  assert.equal(err, 'start-timeout');
+  assert.deepEqual(states, ['starting', 'idle']);
+});

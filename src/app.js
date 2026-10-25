@@ -1590,6 +1590,8 @@ function addMoreInfo(keepTarget) {
 }
 function startMoreVoice() {
   if (moreVoice && moreVoice.state !== 'idle') return moreVoice.stop();
+  // Only one recogniser can hold the mic: let go of the front page's first.
+  if (dictation.state !== 'idle') dictation.cancel();
   moreVoice = new Dictation({ lang: CONFIG.speechLang });
   moreVoice.onfinal = (t) => {
     setValueKeepCaret(moreText, appendSegment(moreText.value, t));

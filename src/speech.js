@@ -11,8 +11,9 @@ const QUICK_END_MS = 2000; // a session shorter than this counts as a failed res
 const MAX_QUICK_FAILS = 5;
 
 export class Dictation {
-  constructor({ lang = 'en-AU', win = globalThis, now = () => Date.now() } = {}) {
+  constructor({ lang = 'en-AU', win = globalThis, now = () => Date.now(), startTimeoutMs = 3500 } = {}) {
     this.win = win;
+    this.startTimeoutMs = startTimeoutMs;
     this.lang = lang;
     this.now = now;
     this.rec = null;
@@ -48,6 +49,7 @@ export class Dictation {
     this.wanted = true;
     this.quickFails = 0;
     this.hadSession = false;
+    this.startRetried = false;
     this._open();
     return true;
   }
@@ -85,6 +87,8 @@ export class Dictation {
     const mine = () => this.rec === rec;
     rec.onstart = () => {
       if (!mine()) return;
+      this._clearStartWatch();
+      this.startRetried = false;
       started = true;
       this.hadSession = true;
       this._set('listening');
@@ -139,9 +143,32 @@ export class Dictation {
       this._set('idle');
       if (failed) this.onerror(failed);
     };
+    // Watchdog: a recogniser that never starts (on iPhone, when the mic is still busy from a moment ago) would leave the
+    // mic on "One moment…" for ever. Try a fresh one once, then stop and say so.
+    this._clearStartWatch();
+    this.startWatch = setTimeout(() => {
+      this.startWatch = null;
+      if (!mine() || started || !this.wanted) return;
+      this.rec = null;
+      try {
+        rec.abort();
+      } catch {
+        /* ignore */
+      }
+      if (!this.startRetried) {
+        this.startRetried = true;
+        this._open();
+        return;
+      }
+      this.wanted = false;
+      this.oninterim('');
+      this._set('idle');
+      this.onerror('start-timeout');
+    }, this.startTimeoutMs);
     try {
       rec.start();
     } catch {
+      this._clearStartWatch();
       this.wanted = false;
       this.rec = null;
       this._set('idle');
@@ -154,10 +181,16 @@ export class Dictation {
     this.restartTimer = null;
   }
 
+  _clearStartWatch() {
+    if (this.startWatch) clearTimeout(this.startWatch);
+    this.startWatch = null;
+  }
+
   /** Stop listening but keep any words still being processed. */
   stop() {
     this.wanted = false;
     this._clearRestart();
+    this._clearStartWatch();
     const rec = this.rec;
     if (!rec) {
       this._set('idle');
@@ -189,6 +222,7 @@ export class Dictation {
   cancel() {
     this.wanted = false;
     this._clearRestart();
+    this._clearStartWatch();
     const rec = this.rec;
     this.rec = null;
     if (rec) {
@@ -216,6 +250,8 @@ export function speechErrorMessage(code) {
       return 'Dictation needs an internet connection. Check the connection, then tap the mic again.';
     case 'interrupted':
       return 'Dictation paused. Tap the mic to carry on.';
+    case 'start-timeout':
+      return 'The mic didn’t start. Tap it to try again.';
     case 'language-not-supported':
       return 'This browser can’t dictate in Australian English. Try Chrome, Edge or Safari.';
     case 'start-failed':
