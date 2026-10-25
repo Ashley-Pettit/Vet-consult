@@ -12,7 +12,7 @@ import { ABOUT_HTML } from './about.js';
 import { lookupSource, sourcesForPrompt, SOURCE_IDS } from './sources.js';
 import { region, setRegion } from './region.js';
 import { rangesFor, rangesForAnimal } from './species-ranges.js';
-import { careVideoFor, watchUrl, embedUrl, thumbUrl } from './videos.js';
+import { careVideoFor, watchUrl } from './videos.js';
 import { groupsIn, factsFor, namedAnimal } from './species-vet.js';
 import { SPECIES_CARE } from './species-care.js';
 import { docModel, careModel, noteModel, wordFileName, dischargeModel, THEMES } from './word.js';
@@ -1804,22 +1804,16 @@ const OVERSEAS = /(From (?:the USA|Canada|the UK|New Zealand|South Africa|[A-Z][
 const warningParts = (w) => String(w).split(OVERSEAS).filter(Boolean).map((x) => (OVERSEAS.test(x) ? el('strong', { text: x }) : x));
 function videoSection(v) {
   if (!v) return null;
-  const box = el('div', { class: 'video-box' });
-  // The thumbnail with a play button; if the thumbnail can't load here, the button still works on its own.
-  const thumb = el('img', { src: thumbUrl(v), alt: '', loading: 'lazy', class: 'video-thumb' });
-  thumb.addEventListener('error', () => thumb.remove());
-  const play = el('button', { type: 'button', class: 'video-play', 'aria-label': `Play video: ${v.title}` }, [el('span', { class: 'video-play-icon', 'aria-hidden': 'true' })]);
-  // A small thumbnail beside the title, so the care comes first; tapping play opens the full-width player.
-  const row = el('div', { class: 'video-row' });
-  play.addEventListener('click', () => {
-    row.classList.add('playing');
-    box.replaceChildren(el('iframe', { src: embedUrl(v), title: v.title, allow: 'autoplay; encrypted-media; picture-in-picture', allowfullscreen: '', loading: 'lazy', referrerpolicy: 'strict-origin-when-cross-origin' }));
-  });
-  box.append(thumb, play);
-  row.append(box, el('div', { class: 'video-info' }, [el('strong', { text: v.title }), el('span', { class: 'help', text: `${v.channel}${v.date ? `, ${v.date}` : ''}` })]));
+  // One small row: a play mark, the title and who made it. A single tap opens the full video on YouTube.
   return el('section', { class: 'care-sec video' }, [
     el('h2', { text: 'Watch' }),
-    row,
+    el('a', { class: 'video-link', href: watchUrl(v), target: '_blank', rel: 'noopener' }, [
+      el('span', { class: 'video-play-icon', 'aria-hidden': 'true' }),
+      el('span', { class: 'video-info' }, [
+        el('strong', { text: v.title }),
+        el('span', { class: 'help', text: `${v.channel}${v.date ? `, ${v.date}` : ''} · opens YouTube` }),
+      ]),
+    ]),
     v.warning ? el('p', { class: 'help' }, warningParts(v.warning)) : null,
   ]);
 }
@@ -2177,7 +2171,6 @@ function renderCare(c) {
             )),
           ])
         : null,
-      videoSection(carePlanVideo(c)),
       leaveIt(c) ? null : rangesSection(c.species_group, [c.animal, c.summary, c.title, careFrom === 'note' ? '' : careFrom === 'library' ? (libraryPlan ? libraryPlan.text : '') : els.transcript.value].filter(Boolean).join(' ')),
       rehydrationSection(c.rehydration),
       c.plan.length
@@ -2214,6 +2207,7 @@ function renderCare(c) {
       sec('Contact the vet within a day if', c.escalate.vet, 'watch'),
       sec('Get vet help straight away (or an after-hours emergency vet) if', c.escalate.urgent, 'urgent'),
       c.next_visit ? el('section', { class: 'care-sec next' }, [el('h2', { text: 'Next visit' }), el('p', { text: c.next_visit })]) : null,
+      videoSection(carePlanVideo(c)), // well down the plan: the care comes first
       refs.length
         ? el('section', { class: 'care-sec' }, [
             el('h2', { text: 'Based on' }),

@@ -771,23 +771,17 @@ dialog.confirm form { display: flex; flex-direction: column; gap: 12px; padding:
 dialog.confirm h2 { margin: 0; font-size: 1.15rem; }
 dialog.confirm p { margin: 0; }
 
-/* Species video: tap to load */
-.video-row { display: grid; grid-template-columns: 128px 1fr; gap: 12px; align-items: center; }
-.video-row.playing { grid-template-columns: 1fr; }
+/* Species video: one small row; a single tap opens it on YouTube */
+.video-link { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); color: var(--ink); text-decoration: none; min-height: 56px; }
+.video-link:hover { border-color: var(--accent); }
+.video-link:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.video-play-icon { flex: none; width: 40px; height: 40px; border-radius: 50%; background: var(--accent); position: relative; }
+.video-play-icon::after { content: ""; position: absolute; left: 15px; top: 12px; border-style: solid; border-width: 8px 0 8px 13px; border-color: transparent transparent transparent var(--accent-ink); }
 .video-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .video-info strong { line-height: 1.3; }
 .video-info .help { margin: 0; }
-.video-row:not(.playing) .video-play { width: 40px; height: 40px; }
-.video-row:not(.playing) .video-play-icon { margin-left: 4px; border-width: 8px 0 8px 14px; }
-.video-box { position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: 12px; overflow: hidden; background: var(--bg); box-shadow: inset 0 0 0 1px var(--line); display: grid; place-items: center; }
-.video-box iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
 .care-sec.video p { margin: 0; }
 
-.video-thumb { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.video-play { position: relative; width: 72px; height: 72px; border-radius: 50%; border: 0; cursor: pointer; background: rgba(0, 0, 0, 0.65); display: grid; place-items: center; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3); }
-.video-play:hover { background: rgba(0, 0, 0, 0.8); }
-.video-play:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
-.video-play-icon { width: 0; height: 0; margin-left: 6px; border-style: solid; border-width: 14px 0 14px 24px; border-color: transparent transparent transparent #fff; }
 
 .share-actions { display: flex; flex-direction: column; gap: 8px; }
 .share-actions .link { align-self: center; padding: 8px; }
