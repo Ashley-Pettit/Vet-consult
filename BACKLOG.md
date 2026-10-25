@@ -48,7 +48,7 @@ Last updated 25 October 2026. Highest value first within each group.
 
 ## Next re-bake
 
-- Move `CARER_TONE` (in `src/templates.js`, added to live care plan calls only) into the care plan prompts in `src/note.js`, then re-bake.
+- Move `CARER_TONE`, `CARE_DOSES` and `DOSE_CHECK` (in `src/templates.js`, added to live calls only) into the prompts in `src/note.js`, then re-bake. `withLiveRules` also swaps the first-person "I'm not certain" example in `careRules`: fix it there too.
 
 ## Expert opinion (Advanced, vets)
 
@@ -61,3 +61,20 @@ Last updated 25 October 2026. Highest value first within each group.
 - Media statements: "report mange" doesn't say to whom. Name a checked reporting route, or leave the instruction out.
 - Carer plans from vet notes: the day-by-day plan can be one line. List each due dose date (weekly treatments) there.
 - Clinical notes: exam findings for one problem can be split across bullets in an odd order (mange over three lines, then repeated in A).
+
+## From the 25 October 2026 AI review (not done yet)
+- Care plans have no "check" list, so questions Claude is told to ask (unclear doses, photo conflicts, unsafe changes) are dropped. Add `check` to `CARE_SHAPE`, show it in the review strip, keep it out of printouts. Needs a re-bake.
+- Opus runs at its default (medium) effort. Send `output_config.effort: 'high'` for the most thorough model; the proxy must allow it. Ash's call. Consider Opus for witness statements too.
+- Opinion references: collect the URLs from the web search results and flag any reference link not among them.
+- Structured outputs (`output_config.format` json_schema) for the JSON replies, so a format slip never costs a second call. Proxy change.
+- Caching: report cache reads and writes separately; only switch caching off on a content-shape 400; move the drug list and general sources into a second cached block at the next re-bake.
+- Use an idle timeout for streams (reset on each chunk) instead of one 120 s limit on the whole call.
+- Proxy redeploy needed for the 16,000 output-token room (`MAX_TOKENS` in `proxy/worker.js`).
+
+## From the 25 October 2026 UI sweep (not done yet)
+- One-tap "Correct" on each review question in the update sheet (adds "N: correct.").
+- Search box on the Plans list (about 2,900 px long on a phone).
+- Intake: the "Need advice right now?" box sits at the bottom and repeats the Care plan button; move it up under the record.
+- Clinical note: the "Make carer plan" card repeats the bottom Carer plan button.
+- Decorative icons in the mode tabs make them twice as tall (hide them for a slimmer row).
+- About 150 px of empty space under the Word printout button on result screens.

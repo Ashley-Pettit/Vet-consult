@@ -54,10 +54,10 @@ export const ABOUT_HTML = `
 <section class="about-sec">
   <h2>Four tools for carers</h2>
   <div class="feats">
-    ${feature(I.pin, 'Intake record', 'Just picked one up? Talk through where, when and what you saw. The exact rescue spot is kept word for word, so release goes back to the right place, and anything missing for your register is flagged. A care plan for right now starts at the same time: tap <b>Need advice right now?</b> to open it.')}
-    ${feature(I.cal, 'Daily care log', 'Weight, feeds, meds, toileting and behaviour in one tidy entry. If something sounds worrying, like weight loss or going off food, it suggests a vet check.')}
     ${feature(I.heart, 'Care plan', 'Handing an animal to another carer? Get a complete plan: medications, a day-by-day routine, housing, feeding and release, based on your state’s wildlife guidance (Victoria or Queensland), with the species-specific points right where you need them.')}
+    ${feature(I.cal, 'Daily care log', 'Weight, feeds, meds, toileting and behaviour in one tidy entry. If something sounds worrying, like weight loss or going off food, it suggests a vet check.')}
     ${feature(I.steth, 'For the vet', 'Before a vet visit, talk through what’s been happening. You get a one-minute summary with your questions written out, so nothing gets forgotten in the room.')}
+    ${feature(I.ask, 'MOP plan', 'A member of the public is holding an animal until help arrives? Get a short, plain plan they can follow right now: keeping it warm, dark and quiet, what not to feed, and when to call back straight away.')}
   </div>
 </section>
 

@@ -170,7 +170,7 @@ function toast(text, action) {
   els.toast.hidden = false;
   clearTimeout(toastTimer);
   // Toasts with an Undo stay until the next action, so nobody is rushed (WCAG 2.2.1).
-  if (!action) toastTimer = setTimeout(() => (els.toast.hidden = true), 1750);
+  if (!action) toastTimer = setTimeout(() => (els.toast.hidden = true), Math.max(2500, text.length * 70));
 }
 
 function banner(text, tone = 'warn') {
@@ -686,7 +686,7 @@ confirmNew.addEventListener('close', () => {
   renderDocs();
   banner('');
   showView('record');
-  els.mic.focus();
+  els.mic.focus({ preventScroll: true });
 });
 
 /* ---------------- documents (expert witness statements and opinions) ---------------- */
@@ -1059,7 +1059,7 @@ $('open-funding').addEventListener('click', () => {
   els.settings.close();
   chooseMode('funding');
   showView('record');
-  els.mic.focus();
+  els.mic.focus({ preventScroll: true });
 });
 
 // Media tab: who the statement will be from (the template in Settings), with a quick way to change it.
@@ -1239,7 +1239,7 @@ function renderReview(box, prefix, checks, nice, titles, always = false) {
   box.hidden = none && !always;
   box.dataset.tone = checks.length ? 'warn' : 'calm';
   $(`${prefix}-title`).textContent = none ? 'Add or change anything' : titles[0];
-  const count = [checks.length && `${checks.length} to check`, nice.length && `${nice.length} idea${nice.length === 1 ? '' : 's'}`].filter(Boolean).join(' · ');
+  const count = checks.length ? `${checks.length} to check` : nice.length ? `${nice.length} idea${nice.length === 1 ? '' : 's'} to add` : '';
   $(`${prefix}-sub`).textContent = count;
   $(`${prefix}-label`).textContent = none ? 'Add or change' : titles[1] || 'Edit';
   const ideas = $('gap-wrap');
@@ -1249,7 +1249,7 @@ function renderChecks(n, local) {
   const items = [...n.check.map((t) => ({ t, auto: false })), ...local.checks.map((t) => ({ t, auto: true }))];
   checkItems = items.map((x) => x.t);
   els.checkList.replaceChildren(
-    ...items.map(({ t, auto }) => el('li', { class: 'check-item' }, [el('span', { class: 'check-text' }, [auto ? el('span', { class: 'tag', title: 'Worked out on this device', text: 'Auto' }) : null, t])])),
+    ...items.map(({ t }) => el('li', { class: 'check-item' }, [el('span', { class: 'check-text' }, [t])])),
   );
 }
 
@@ -1808,7 +1808,7 @@ $('home').addEventListener('click', () => {
   if (busy) return;
   if (els.settings.open) els.settings.close();
   showView('record');
-  els.mic.focus();
+  els.mic.focus({ preventScroll: true });
 });
 
 
@@ -2383,7 +2383,7 @@ function tickDays(c, days) {
 }
 
 // Headings wrap in balanced lines; keep a short bracketed part together so "(juvenile wombat)" never splits across lines.
-const keepBrackets = (t) => String(t).replace(/\([^()]{1,32}\)/g, (m) => m.replace(/ /g, '\u00a0'));
+const keepBrackets = (t) => String(t).replace(/\([^()]{1,14}\)/g, (m) => m.replace(/ /g, '\u00a0'));
 // A plan to leave the animal where it is (a brush-turkey chick, a fledgling with its parents) needs no ranges or tick sheet.
 const leaveIt = (c) => (Number(c.log_days) || 0) <= 1 && !c.medications.length && !c.plan.length && !(c.feed_calc && c.feed_calc.applies);
 function renderCare(c) {
@@ -2444,6 +2444,9 @@ function renderCare(c) {
             )),
           ])
         : null,
+      // When to get vet help sits near the top, where it's found in a hurry; the most urgent first.
+      sec('Get vet help straight away (or an after-hours emergency vet) if', c.escalate.urgent, 'urgent'),
+      sec('Contact the vet within a day if', c.escalate.vet, 'watch'),
       leaveIt(c) ? null : rangesSection(c.species_group, [c.animal, c.summary, c.title, careFrom === 'note' || careFrom === 'saved' ? '' : careFrom === 'library' ? (libraryPlan ? libraryPlan.text : '') : els.transcript.value].filter(Boolean).join(' ')),
       rehydrationSection(c.rehydration),
       c.plan.length
@@ -2477,8 +2480,6 @@ function renderCare(c) {
         : null,
       log,
       release,
-      sec('Contact the vet within a day if', c.escalate.vet, 'watch'),
-      sec('Get vet help straight away (or an after-hours emergency vet) if', c.escalate.urgent, 'urgent'),
       c.next_visit ? el('section', { class: 'care-sec next' }, [el('h2', { text: 'Next visit' }), el('p', { text: c.next_visit })]) : null,
       videoSection(carePlanVideo(c)), // well down the plan: the care comes first
       refs.length
@@ -3157,7 +3158,7 @@ els.about.addEventListener('click', (e) => {
   if (!t) return;
   if (t.dataset.action === 'start') {
     showView('record');
-    els.mic.focus();
+    els.mic.focus({ preventScroll: true });
   }
   if (t.dataset.action === 'example') {
     showView('record');
@@ -3237,7 +3238,7 @@ async function refreshConnection() {
   els.keyField.hidden = keyless;
   els.conn.dataset.ok = String(Boolean(p));
   els.conn.textContent = p
-    ? `Connected: ${p.label}`
+    ? 'Connected.'
     : inClaude
       ? 'Claude isn’t available right now.'
       : 'Public demo. The examples work here. Open Animal Welfare Companion in the Claude app to write notes with your Claude account.';
@@ -3273,9 +3274,12 @@ els.openSettings.addEventListener('click', () => openSettings());
 $('close-settings').addEventListener('click', () => els.settings.close('close'));
 
 els.settings.addEventListener('close', async () => {
-  if (els.settings.returnValue !== 'save') return;
+  // Whatever way it's closed (Save, ✕, Escape, a tap outside), changes are kept: nothing typed is lost.
   const key = els.apiKey.value.trim();
-  settings = { ...settings, photosOn: $('photos-on').checked, libraryAdmin: $('library-admin-on').checked, template: $('template').value, drugs: $('drugs').value.slice(0, 3000), clinician: els.clinician.value.trim().slice(0, 80), model: els.model.value, apiKey: key, rememberKey: els.rememberKey.checked };
+  const next = { ...settings, photosOn: $('photos-on').checked, libraryAdmin: $('library-admin-on').checked, template: $('template').value, drugs: $('drugs').value.slice(0, 3000), clinician: els.clinician.value.trim().slice(0, 80), model: els.model.value, apiKey: key, rememberKey: els.rememberKey.checked };
+  const changed = JSON.stringify(next) !== JSON.stringify(settings);
+  if (!changed && els.settings.returnValue !== 'save') return;
+  settings = next;
   store.saveSettings(settings);
   provider = null;
   renderPhotos();

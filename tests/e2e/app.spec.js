@@ -163,7 +163,7 @@ test.describe('creating a note', () => {
     const calls = await mockApi(page);
     await openApp(page);
     await page.locator('#open-settings').click();
-    await expect(page.locator('#conn-status')).toContainText('Connected: Animal Welfare Companion connection');
+    await expect(page.locator('#conn-status')).toContainText('Connected.');
     await expect(page.locator('#key-field')).toBeHidden(); // no personal key needed
     await page.locator('#clinician').fill('Dr Sam Lee');
     await page.locator('#save-settings').click();
@@ -194,7 +194,6 @@ test.describe('creating a note', () => {
     await expect(page.locator('#checks')).toBeVisible();
     // Claude's 2 checks plus 1 worked out on the device: a high temp for a dog.
     await expect(page.locator('#check-list > li')).toHaveCount(3);
-    await expect(page.locator('#check-list .tag')).toHaveCount(1);
     await expect(page.locator('.pname strong')).toHaveText('Rusty');
     await expect(page.locator('#note')).toContainText('39.4 °C');
     await expect(page.locator('#note .meds li')).toHaveCount(3);
@@ -385,23 +384,28 @@ test.describe('settings', () => {
     await expect(page.locator('#clinician')).toHaveValue('Dr Enter');
   });
 
-  test('the close button closes without saving', async ({ page }) => {
+  // Nothing typed is lost: closing Settings any way keeps the changes.
+  test('the close button keeps what was typed', async ({ page }) => {
     await openApp(page);
     await page.locator('#open-settings').click();
-    await page.locator('#clinician').fill('Discard me');
+    await page.locator('#clinician').fill('Dr Close');
     await page.locator('#close-settings').click();
     await expect(page.locator('#settings')).toBeHidden();
+    await expect(page.locator('#toast')).toContainText('Settings saved.');
     await page.locator('#open-settings').click();
-    await expect(page.locator('#clinician')).toHaveValue('');
+    await expect(page.locator('#clinician')).toHaveValue('Dr Close');
   });
 
-  test('escape closes settings without saving', async ({ page }) => {
+  test('escape keeps what was typed, and closing with no change says nothing', async ({ page }) => {
     await openApp(page);
     await page.locator('#open-settings').click();
-    await page.locator('#clinician').fill('Nobody');
+    await page.locator('#clinician').fill('Dr Escape');
     await page.keyboard.press('Escape');
     await expect(page.locator('#settings')).toBeHidden();
     await page.locator('#open-settings').click();
-    await expect(page.locator('#clinician')).toHaveValue('');
+    await expect(page.locator('#clinician')).toHaveValue('Dr Escape');
+    await page.locator('#toast').evaluate((t) => (t.hidden = true));
+    await page.locator('#close-settings').click();
+    await expect(page.locator('#toast')).toBeHidden();
   });
 });

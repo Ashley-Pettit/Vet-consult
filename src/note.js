@@ -837,7 +837,7 @@ export function normaliseCareSheet(raw, knownSources = null) {
       .filter((m) => m.name)
       .slice(0, 20),
     plan: (Array.isArray(r.plan) ? r.plan : [])
-      .map((p) => ({ when: str(obj(p).when, 60), tasks: arr(obj(p).tasks, 8) }))
+      .map((p) => ({ when: str(obj(p).when, 120), tasks: arr(obj(p).tasks, 8) }))
       .filter((p) => p.when && p.tasks.length)
       .slice(0, 8),
     housing: arr(r.housing, 10),
@@ -898,7 +898,7 @@ export function textToPlan(c, text) {
       v = [];
       for (const l of lines(text[key])) {
         const task = l.replace(/^[-•*]\s*/, '');
-        if (!/^[-•*]/.test(l) && /:$/.test(l) && l.length <= 61) v.push({ when: l.slice(0, -1).trim(), tasks: [] });
+        if (!/^[-•*]/.test(l) && /:$/.test(l) && l.length <= 121) v.push({ when: l.slice(0, -1).trim(), tasks: [] });
         else if (v.length) v[v.length - 1].tasks.push(task);
         else v.push({ when: 'Day 1', tasks: [task] });
       }

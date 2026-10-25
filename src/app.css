@@ -1624,3 +1624,26 @@ details.review .review-sub { min-width: 0; font-size: 0.85rem; font-weight: 500;
 details.review .review-sub:not(:empty) { display: block; min-width: 0; height: auto; padding: 0; border-radius: 0; background: none; color: var(--muted); font-size: 0.85rem; font-weight: 500; }
 details.review > summary::after { margin-left: 4px; }
 @media (max-width: 420px) { details.review > summary::after { margin-left: auto; } }
+
+/* UI sweep, October 2026 */
+/* Number and other text-like boxes look like every other box (the feed calculator's weight). */
+input[type="number"], input[type="search"], input[type="tel"], input[type="email"] {
+  font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; min-height: 44px;
+}
+/* Long titles wrap instead of pushing the page sideways. */
+.note-head h1 { overflow-wrap: break-word; }
+/* Back: a full-size target, easier one-handed. */
+.back { min-height: 44px; padding: 0 16px 0 0; margin-left: -6px; }
+/* Header: three icons fit each side and the logo stays centred. */
+.bar { grid-template-columns: 1fr auto 1fr; column-gap: 4px; }
+.bar-right, .bar-left { gap: 0; }
+/* Labels like Calculated, Edited and VIC / AU are quiet text, not coloured badges. */
+.tag, .scope { background: none; padding: 0; border-radius: 0; color: var(--muted); }
+.scope { margin-left: 0; margin-right: 6px; }
+/* The release checklist isn't indented twice. */
+.care-sec .checklist { padding: 0; }
+/* On a phone the clinical notes use the full width: no box around the box. */
+@media (max-width: 600px) { .plain-sec { padding: 0; background: none; box-shadow: none; } }
+/* Tap targets at least 44px. */
+.seg span { min-height: 44px; padding-top: 11px; padding-bottom: 11px; }
+.fb-btn { width: 44px; height: 44px; }
