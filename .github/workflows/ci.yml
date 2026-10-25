@@ -36,17 +36,21 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 7
-      # Care Scribe (Bunurong Wildlife Care) lives on its own branch and is published at /care/.
-      - name: Build Care Scribe into /care/
+      # Animal Welfare Companion (Bunurong Wildlife Care) is published twice:
+      #   /care/       live, from the care-prod branch
+      #   /care-beta/  beta, from the bunurong-wildlife branch (where new changes land first)
+      # Promote beta to live by moving care-prod up to bunurong-wildlife, then re-running this workflow.
+      - name: Build Animal Welfare Companion into /care/ and /care-beta/
         if: github.ref == 'refs/heads/main'
         run: |
-          git fetch --depth 1 origin bunurong-wildlife
-          git worktree add ../care-scribe FETCH_HEAD
-          cd ../care-scribe
-          npm ci
-          npm run test:unit
-          npm run build
-          cp -r dist "$GITHUB_WORKSPACE/dist/care"
+          build_care() {
+            git fetch --depth 1 origin "$1"
+            git worktree add "../$2" FETCH_HEAD
+            (cd "../$2" && npm ci && npm run test:unit && CHANNEL="$3" npm run build)
+            cp -r "../$2/dist" "$GITHUB_WORKSPACE/dist/$2"
+          }
+          build_care care-prod care live
+          build_care bunurong-wildlife care-beta beta
       - uses: actions/upload-pages-artifact@v3
         if: github.ref == 'refs/heads/main'
         with:
