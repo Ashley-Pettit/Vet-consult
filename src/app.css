@@ -1361,3 +1361,9 @@ body[data-mic="listening"] .composer .mic, body[data-mic="starting"] .composer .
 /* The status beside "Dictation" stays on one line, so a change of words never pushes the box down */
 .mic-line { white-space: nowrap; overflow: hidden; }
 .mic-line .mic-status { overflow: hidden; text-overflow: ellipsis; }
+
+/* Text cursor: a bright, high-contrast colour so the | is easy to find (the default blue is faint on dark) */
+:root { --caret: #c2410c; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --caret: #ffd166; } }
+:root[data-theme="dark"] { --caret: #ffd166; }
+textarea, input { caret-color: var(--caret); }
