@@ -4,7 +4,7 @@ import { CONFIG } from './config.js';
 import { region } from './region.js';
 import { speciesGroupsForPrompt, SPECIES_GROUP_IDS, rangesFor } from './species-ranges.js';
 import { careVideoFor, watchUrl } from './videos.js';
-import { drugsForPrompt } from './drugs.js';
+import { drugsForPrompt, dropUnsaidBrands } from './drugs.js';
 import { shorthandForPrompt } from './shorthand.js';
 import { vetCareForPrompt, groupsIn, namedAnimal } from './species-vet.js';
 import { feedingForPrompt, feedFigureChecked, chartFor, chartByKey, chartAmount } from './feeding.js';
@@ -315,6 +315,10 @@ POLISHED NOTES (between the <polished> tags): the vet's own notes, tidied into c
     .replace(CACHE_SPLIT, `\n${polish}${CACHE_SPLIT}`)}`;
 }
 
+// Prompts carry each drug name as Claude first wrote it, so a plan made from a note asks the same question as before
+// and the examples' ready-made replies still match.
+const asWritten = (k, v) => (v && typeof v === 'object' && 'asSaid' in v ? { ...v, drug: v.asSaid } : v);
+
 /** Carer plan from a finished vet note. */
 export function buildCareSheetPrompt(note, sourceList = '') {
   const about = JSON.stringify(note.patient || note);
@@ -324,7 +328,7 @@ ${careRules()}${CACHE_SPLIT}${feedingForPrompt(about)}
 ${careRefs(sourceList, about)}
 
 <note>
-${JSON.stringify(note)}
+${JSON.stringify(note, asWritten)}
 </note>`;
 }
 
@@ -457,6 +461,9 @@ export function normaliseNote(raw) {
     .slice(0, 30);
   const unit = (v, re) => str(v, 40).replace(re, '').trim();
   const weight = unit(p.weight_kg, /\s*(kg|kgs|kilos?)$/i);
+  // A finding that only repeats a vital already shown ("BCS 2/5." beside BCS 2/5, "Dehydrated." beside Hydration) is said once.
+  const bare = (s) => String(s).toLowerCase().replace(/[^a-z0-9/.%]+/g, '').replace(/\.+$/, '');
+  const echoes = new Set([vt.bcs && `bcs${bare(vt.bcs)}`, vt.hydration && bare(vt.hydration), vt.hydration && `hydration${bare(vt.hydration)}`].filter(Boolean));
   return {
     patient: {
       name: str(p.name, 80),
@@ -480,7 +487,7 @@ export function normaliseNote(raw) {
         mm_crt: str(vt.mm_crt, 80),
         hydration: str(vt.hydration, 60),
       },
-      findings: arr(o.findings),
+      findings: arr(o.findings).filter((x) => !echoes.has(bare(x))),
       photo_findings: arr(o.photo_findings, 20),
     },
     // The app numbers the problem list itself, so drop any numbering Claude added ("1. Mange").
@@ -499,10 +506,21 @@ export function normaliseNote(raw) {
 }
 
 /** One note, or {animals:[...]} for several, always as a list of normalised notes. */
-export function normaliseResult(raw) {
+// With the vet's words, drug names drop any brand in brackets that wasn't said.
+export function normaliseResult(raw, said = null) {
   const r = obj(raw);
   const list = Array.isArray(r.animals) ? r.animals : Array.isArray(raw) ? raw : [raw];
   const notes = list.slice(0, 40).map(normaliseNote).filter((n) => !isEmptyNote(n));
+  if (said !== null) {
+    for (const n of notes) {
+      for (const t of n.plan.treatments) {
+        const shown = dropUnsaidBrands(t.drug, said);
+        // The name as Claude wrote it stays on the treatment, hidden from the screen and copies (see asWritten).
+        if (shown !== t.drug) Object.defineProperty(t, 'asSaid', { value: t.drug });
+        t.drug = shown;
+      }
+    }
+  }
   return notes;
 }
 
@@ -541,7 +559,7 @@ export function toPlainText(n, date = new Date()) {
     vt.temp_c && `T ${vt.temp_c}${/°/.test(vt.temp_c) ? '' : ' °C'}`,
     vt.hr_bpm && `HR ${vt.hr_bpm}${/^\d+$/.test(vt.hr_bpm) ? ' bpm' : ''}`,
     vt.rr_bpm && `RR ${vt.rr_bpm}${/^\d+$/.test(vt.rr_bpm) ? ' bpm' : ''}`,
-    vt.bcs && `BCS ${vt.bcs}`, vt.mm_crt && `MM/CRT ${vt.mm_crt}`, vt.hydration && `Hydration ${vt.hydration}`,
+    vt.bcs && `BCS ${vt.bcs}`, vt.mm_crt && `MM/CRT ${vt.mm_crt}`, vt.hydration && `Hydration: ${vt.hydration}`,
   ]);
   const obs = [...n.objective.findings, ...n.objective.photo_findings];
   if (vitals || obs.length) {
@@ -567,7 +585,14 @@ export function toPlainText(n, date = new Date()) {
 
 // A dose already spelled out in the drug name ("Mange treatment per protocol" + "Per protocol") is said once.
 const doseOf = (t) => (t.dose && t.drug.toLowerCase().includes(t.dose.toLowerCase()) ? '' : t.dose);
-const givenLine = (t) => [t.drug, doseOf(t), t.route].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
+// Shorthand stays compact ("0.2 mg/kg SC SID"); a part with its own words or commas gets a semicolon after it,
+// so "0.8 mL/kg (19.4 mL stated), per permit" and "Topical" don't run together.
+const wordy = (x) => /[,(]/.test(x) || x.trim().split(/\s+/).length > 2;
+const joinParts = (drug, parts) => {
+  const p = parts.filter(Boolean);
+  return [drug, p.join(p.some(wordy) ? '; ' : ' ')].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
+};
+const givenLine = (t) => joinParts(t.drug, [doseOf(t), t.route]);
 
 /** The plan as [heading, lines] pairs, in the order vets write P. Empty parts are left out. */
 export function planParts(n) {
@@ -584,7 +609,7 @@ export function planParts(n) {
 }
 
 const rxLine = (t) =>
-  `${[t.drug, doseOf(t), t.route, t.frequency].filter(Boolean).join(' ')}${t.duration ? ' x ' + String(t.duration).replace(/^\s*x\s*/i, '') : ''}`.replace(/\s+/g, ' ').trim();
+  `${joinParts(t.drug, [doseOf(t), t.route, t.frequency])}${t.duration ? ' x ' + String(t.duration).replace(/^\s*x\s*/i, '') : ''}`.replace(/\s+/g, ' ').trim();
 
 /** Work out a due date from "in 10-14 days", "in 3 weeks", "in 6 months". Uses the earliest day of a range. */
 export function dueDate(text, from = new Date()) {

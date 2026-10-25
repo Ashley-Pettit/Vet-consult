@@ -20,11 +20,28 @@ test('vitals outside the species range are flagged with a readable check', () =>
   assert.deepEqual(vitalFlags(unknown).flags, {});
 });
 
+test('adult wildlife vitals are checked against the sourced ranges; young are left alone', () => {
+  const wombat = normaliseNote({ patient: { species: 'Bare-nosed (common) wombat', age: 'Adult' }, objective: { vitals: { temp_c: '36.1', hr_bpm: '82', rr_bpm: '22' } } });
+  const { flags, checks } = vitalFlags(wombat);
+  assert.deepEqual(flags, { temp_c: 'high', rr_bpm: 'high' });
+  assert.match(checks[0], /Temp 36\.1 °C is high for an adult common \(bare-nosed\) wombat \(34 to 35\)\. Correct\?/);
+  const koala = normaliseNote({ patient: { species: 'Koala', age: 'Adult' }, objective: { vitals: { temp_c: '36.0', hr_bpm: '120' } } });
+  assert.deepEqual(vitalFlags(koala).flags, { hr_bpm: 'high' });
+  const joey = normaliseNote({ patient: { species: 'Wombat', age: 'Furred joey' }, objective: { vitals: { temp_c: '36.5' } } });
+  assert.deepEqual(vitalFlags(joey).flags, {});
+  // A single average is not a range, so nothing is flagged for a ringtail.
+  const ringtail = normaliseNote({ patient: { species: 'Common ringtail possum', age: 'Adult' }, objective: { vitals: { temp_c: '39' } } });
+  assert.deepEqual(vitalFlags(ringtail).flags, {});
+});
+
 test('per-kg doses parse in common spoken forms', () => {
   assert.deepEqual(parsePerKg('22 mg/kg'), { lo: 22, hi: null, unit: 'mg' });
   assert.deepEqual(parsePerKg('0.1-0.2 mg / kg'), { lo: 0.1, hi: 0.2, unit: 'mg' });
   assert.deepEqual(parsePerKg('5 µg/kg'), { lo: 5, hi: null, unit: 'mcg' });
   assert.deepEqual(parsePerKg('10 mL/kg/h'), { lo: 10, hi: null, unit: 'mL' });
+  assert.deepEqual(parsePerKg('0.2 mg per kg'), { lo: 0.2, hi: null, unit: 'mg' });
+  assert.deepEqual(parsePerKg('1 mL per 10 kg (about 2.2 mL stated)'), { lo: 0.1, hi: null, unit: 'mL' });
+  assert.deepEqual(parsePerKg('8 mL/10 kg'), { lo: 0.8, hi: null, unit: 'mL' });
   assert.equal(parsePerKg('Per label'), null);
   assert.equal(parsePerKg('300 mL'), null);
 });
@@ -52,4 +69,14 @@ test('local checks combine flags and doses', () => {
 
 test('kitten examples sit inside the cat range', () => {
   for (const k of EXAMPLE_BATCH_NOTES) assert.deepEqual(vitalFlags(normaliseNote(k)).flags, {});
+});
+
+test('a finding that only repeats a vital is said once', () => {
+  const n = normaliseNote({ patient: { species: 'Black flying-fox' }, objective: { vitals: { bcs: '2/5', hydration: 'Dehydrated' }, findings: ['BCS 2/5.', 'Dehydrated.', 'Left wing: 4 cm tear.', 'BCS 2/5 with marked muscle loss'] } });
+  assert.deepEqual(n.objective.findings, ['Left wing: 4 cm tear.', 'BCS 2/5 with marked muscle loss']);
+});
+
+test('wildlife vitals are only flagged when the note says the animal is grown', () => {
+  const noAge = normaliseNote({ patient: { species: 'Wombat' }, objective: { vitals: { temp_c: '36.5' } } });
+  assert.deepEqual(vitalFlags(noAge).flags, {});
 });

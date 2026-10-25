@@ -53,6 +53,38 @@ export const DRUG_GROUPS = {
 
 export const COMMON_DRUGS = Object.values(DRUG_GROUPS).flat();
 
+// [brand, active ingredient] pairs from the list ("Metacam (meloxicam)", "propofol (PropoFlo)"); generic pairs are skipped.
+const isBrand = (s) => /^[A-Z]/.test(s);
+const BRANDS = COMMON_DRUGS.map((d) => d.match(/^([^()]+?) \(([^()]+)\)$/))
+  .filter(Boolean)
+  .map(([, a, b]) => (isBrand(a) && !isBrand(b) ? [a, b] : isBrand(b) && !isBrand(a) ? [b, a] : null))
+  .filter(Boolean);
+const letters = (s) => String(s).toLowerCase().replace(/[^a-z]/g, '');
+const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/** Was the brand said, even misheard ("meta cam", "side ectin" for Cydectin)? */
+function brandSaid(brand, said) {
+  const b = letters(brand);
+  return said.includes(b) || (b.length >= 6 && said.includes(b.slice(-5)));
+}
+
+/**
+ * Take out brand names the vet never said, keeping the active ingredient:
+ * "meloxicam (Metacam)" and "Metacam (meloxicam)" both become "meloxicam" unless Metacam was said.
+ */
+export function dropUnsaidBrands(text, saidText) {
+  let out = String(text || '');
+  if (!out) return out;
+  const said = letters(saidText);
+  for (const [brand, generic] of BRANDS) {
+    if (!out.toLowerCase().includes(brand.toLowerCase()) || brandSaid(brand, said)) continue;
+    out = out.replace(new RegExp(`\\b(${esc(generic)})\\s*\\(${esc(brand)}\\)`, 'gi'), '$1');
+    // A brand that opened a sentence or line hands its capital letter to the active ingredient.
+    out = out.replace(new RegExp(`\\b${esc(brand)}\\s*\\((${esc(generic)})\\)`, 'gi'), (m, g, i, s) => (i === 0 || /[.:\n]\s*$/.test(s.slice(0, i)) ? g[0].toUpperCase() + g.slice(1) : g));
+  }
+  return out;
+}
+
 /** The block for prompts: the vet's own names first, then the Australian list. */
 export function drugsForPrompt(own = '') {
   const mine = String(own || '').split(/\n|;/).map((x) => x.trim()).filter(Boolean).slice(0, 80);

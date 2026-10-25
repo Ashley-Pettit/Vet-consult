@@ -155,7 +155,8 @@ export function rangesForAnimal(id, state = 'vic', context = '') {
   const g = g0.warmth.some(([k]) => named(k)) ? { ...g0, warmth: g0.warmth.filter(([k]) => named(k) || general(k)) } : g0;
   if (YOUNG_CONTEXT.test(String(context))) {
     // A furred joey doesn't need the figures for furless or just-furring young.
-    const furred = /(^|[^n])\bfurred\b|fully furred|\bfur\b/i.test(String(context)) && !/unfurred|furless|no fur|pink/i.test(String(context));
+    // "Early fur just coming through", "velvet" or "lightly furred" is not furred yet: those rows still apply.
+    const furred = /(^|[^n])\bfurred\b|fully furred|\bfur\b/i.test(String(context)) && !/unfurred|furless|no fur|pink|early fur|fur (is )?(just )?(coming|starting|appearing)|coming through|velvet|fine fur|light(ly)? fur|furring|partly furred|partially furred/i.test(String(context));
     if (!furred) return g;
     const early = ([k]) => !/unfurred|furless|no fur|velvet|fine fur|lightly furred|just coming/i.test(k);
     return { ...g, warmth: g.warmth.filter(early) };

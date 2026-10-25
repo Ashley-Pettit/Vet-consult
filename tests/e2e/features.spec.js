@@ -51,7 +51,8 @@ test('vital flags, dose totals and PMS field copy', async ({ page, context }) =>
   await expect(rows.nth(0).locator('.pms-full')).toContainText('Meloxicam 0.1 mg/kg PO SID x 5 days');
   await rows.nth(0).getByRole('button').click();
   expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
-    'Cephalexin 22 mg/kg PO BID x 7 days\nMeloxicam 0.1 mg/kg PO SID x 5 days\nFluralaner (Bravecto) Per label PO Once',
+    // Bravecto was never said in the dictation, so the brand the reply added in brackets comes out.
+    'Cephalexin 22 mg/kg PO BID x 7 days\nMeloxicam 0.1 mg/kg PO SID x 5 days\nFluralaner Per label PO Once',
   );
   await rows.nth(1).getByRole('button').click();
   expect(await page.evaluate(() => navigator.clipboard.readText())).toMatch(/Recheck and suture removal in 10-14 days \(due \d\d\/\d\d\/\d{4}\)/);

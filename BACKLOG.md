@@ -1,6 +1,6 @@
 # Animal Welfare Companion: backlog
 
-Last updated 23 October 2026. Highest value first within each group.
+Last updated 25 October 2026. Highest value first within each group.
 
 ## Next up
 
@@ -39,3 +39,10 @@ Last updated 23 October 2026. Highest value first within each group.
 - Full source reads: the Wombaroo bird booklet (pages 42 to 77: waterbirds, seabirds, raptors, owls) and the DEECA Part B bird chapters couldn't be read online. Local PDF copies would let us add checked bird feeding amounts and frequencies.
 - Bird and small-mammal feed charts: the calculator uses Wombaroo growth charts for kangaroos, wallabies, wombats, koalas, possums, gliders, flying-foxes and echidnas. Dasyurids, bandicoots, microbats and all birds still have no checked chart, so their figures show as unsure.
 - Re-run the 32-case review (scratchpad eval harness) after big prompt changes.
+
+## From the 25 October 2026 vet QA (prompt changes: re-bake after)
+- Carer plans invent detail about the find site ("recorded with GPS coordinates"). Release wording should only say the location was recorded if it was said.
+- Witness statements: when an opinion has no stated basis ("obvious to anyone", "needed a vet a week earlier"), add a check asking the vet for the reason.
+- Media statements: "report mange" doesn't say to whom. Name a checked reporting route, or leave the instruction out.
+- Carer plans from vet notes: the day-by-day plan can be one line. List each due dose date (weekly treatments) there.
+- Clinical notes: exam findings for one problem can be split across bullets in an odd order (mange over three lines, then repeated in A).

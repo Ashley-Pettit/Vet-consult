@@ -6,6 +6,7 @@ import { withTemplate } from './templates.js';
 import { readDocument, DocError, MAX_DOCS, DOC_ACCEPT } from './docs.js';
 import { store } from './storage.js';
 import { localChecks } from './clinical.js';
+import { dropUnsaidBrands } from './drugs.js';
 import { preparePhoto, MAX_PHOTOS } from './photos.js';
 import { ABOUT_HTML } from './about.js';
 import { lookupSource, sourcesForPrompt, SOURCE_IDS } from './sources.js';
@@ -1038,7 +1039,7 @@ async function createNote() {
       'Turning your words into SOAP notes.',
       (signal) => askJson(prompt, signal, { images: sendPhotos() }),
     );
-    const list = normaliseResult(extractJson(result));
+    const list = normaliseResult(extractJson(result), finalText);
     if (!list.length) throw new AiError('empty', '');
     for (const n of list) if (!n.visit.type) n.visit.type = NOTE_TYPES.consult.title;
     madeFrom.vet = { text: els.transcript.value, notes: list };
@@ -1203,7 +1204,7 @@ async function applyAnswer(item, answer) {
       askJson(buildRevisionPrompt(notes[idx], item, answer), signal),
     );
     const reply = isQuickUpdate(answer) ? await withModel(QUICK_MODEL, async () => (await ensureProvider(), run())) : await run();
-    const [updated] = normaliseResult(extractJson(reply));
+    const [updated] = normaliseResult(extractJson(reply), `${els.transcript.value}\n${answer}`);
     if (!updated) throw new AiError('empty', '');
     notes[idx] = updated;
     careSheet = null;
@@ -1855,9 +1856,16 @@ function feedSection(c) {
   const milk = el('strong', { text: f.what || 'Milk' });
   const unsure = el('p', { class: 'unsure', text: 'Not sure of this figure for this species and age. Check it with your vet or the feeding guide first.' });
   const input = el('input', { id, type: 'number', inputmode: 'decimal', min: '1', step: '1', placeholder: 'grams', value: f.weight_g ? String(f.weight_g) : '' });
+  // The vet's milk ("0.4") wins in the plan; if the chart puts this weight on another stage, say so instead of switching quietly.
+  const stage = (s) => (String(s || '').match(/>\s*0\.\d|\b0\.\d\b/) || [''])[0].replace(/\s+/g, '');
+  const differ = el('p', { class: 'unsure', hidden: true });
   const draw = () => {
     const a = feedAmounts(f, input.value);
     if (a && a.product) milk.textContent = a.product;
+    const planned = stage(f.what);
+    const charted = a && a.product ? stage(a.product) : '';
+    differ.hidden = !(planned && charted && planned !== charted);
+    if (!differ.hidden) differ.textContent = `The plan says ${planned} milk, but the Wombaroo chart puts ${input.value} g on ${charted}, and these amounts are for ${charted}. Check with your vet which milk to use.`;
     out.replaceChildren(
       ...(a && a.perDay
         ? [
@@ -1878,6 +1886,7 @@ function feedSection(c) {
     el('p', {}, [milk, !chart && f.stage ? ` · ${f.stage}` : '']),
     el('div', { class: 'feed-in' }, [el('label', { for: id, text: 'Weight today (g)' }), input]),
     out,
+    differ,
     el('p', { class: 'help', text: chart
       ? `From the Wombaroo growth chart for the ${chart.label}, in ${f.feeds} feeds a day. Weigh daily: the amount and the milk change as the weight goes up.`
       : `${f.pct}% of body weight a day, in ${f.feeds} feeds. Weigh daily and re-work it as the weight changes.${f.basis ? ` Based on: ${f.basis}.` : ''}` }),
@@ -2446,7 +2455,7 @@ function startVetNotes(via = provider) {
   const prompt = buildPrompt(text.trim(), { clinician: settings.clinician, photoCount: sendPhotos().length, drugs: settings.drugs });
   const promise = askJson(prompt, undefined, { images: sendPhotos(), via })
     .then((r) => {
-      const list = normaliseResult(r);
+      const list = normaliseResult(r, text);
       for (const n of list) if (!n.visit.type) n.visit.type = NOTE_TYPES.consult.title;
       if (list.length && els.transcript.value === text) madeFrom.vet = { text, notes: list };
       return list.length ? list : null;
@@ -2489,10 +2498,10 @@ async function createPolish(text) {
     r = null;
   }
   if (!polished && r && typeof r.polished === 'string') polished = r.polished;
-  polished = polished.replace(/^```[a-z]*\n?|```$/g, '').trim();
+  polished = dropUnsaidBrands(polished.replace(/^```[a-z]*\n?|```$/g, '').trim(), text);
   if (!polished) throw new AiError('empty', '');
   // The SOAP notes came back in the same reply: keep them so "SOAP notes" opens straight away.
-  const list = r ? normaliseResult(r) : [];
+  const list = r ? normaliseResult(r, text) : [];
   for (const n of list) if (!n.visit.type) n.visit.type = NOTE_TYPES.consult.title;
   if (list.length && els.transcript.value === source) madeFrom.vet = { text: source, notes: list };
   showPolish(polished);

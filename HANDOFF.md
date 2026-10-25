@@ -94,6 +94,10 @@ Last updated 25 October 2026. For the next Claude Code session.
     - `change` also tests the Change plan step.
   - `ONLY=id1,id2` runs a subset.
 - **`replay.mjs`** checks that the baked examples answer without an AI call.
+- **`sim.mjs`** is for when the proxy is blocked (cloud containers): it runs the scenarios through the built app and saves each prompt it sends to `qa-out/sim/prompts/`.
+  - Answer each prompt with Claude on the model the app asked for (one subagent per prompt, reply saved to `qa-out/sim/replies/<key>.txt`), then run it again. Repeat until nothing is pending (a plan made from a note, or a Change, sends follow-up prompts).
+  - `npm run build && SCEN=scenarios.vet.json node scripts/qa/sim.mjs`; results land in `qa-out/sim/out/`.
+  - The replies come from Claude but not through the app's own settings, so treat them as close to live, not identical.
 - **What to review in each output:**
   - accuracy against best practice;
   - nothing repeated across sections;
@@ -104,8 +108,15 @@ Last updated 25 October 2026. For the next Claude Code session.
 ## Open items
 
 - **Small things seen in loop 10, not fixed:**
-  - Polish adds a brand name in brackets ("Meloxicam (Metacam)").
   - In the witness statement, the plain-words gloss of "pressure sores" still mentions a hard surface (a generic definition, so it was left).
+- **Vet QA, 25 October (fixed in code, no re-bake needed):**
+  - Brands the vet never said come out of notes and polish (`dropUnsaidBrands` in `src/drugs.js`). Prompts still carry the name as Claude wrote it (`asWritten` in `src/note.js`), so baked replies keep matching.
+  - Adult wildlife vitals are flagged against `species-ranges.js` (`wildlifeRanges` in `src/clinical.js`).
+  - "1 mL per 10 kg" doses get a total; the sum shows the rate only; wordy dose parts are split with semicolons in copied text.
+  - "Early fur just coming through" keeps the lightly furred pouch rows.
+  - The feed calculator says when the chart's milk stage differs from the vet's.
+  - Findings that only repeat a vital are dropped; vets on phones don't get the photo banner.
+- **Vet QA, 25 October (prompt changes, queued in `BACKLOG.md`):** they change bake keys, so do them where the proxy is reachable and re-bake.
 - **Known and accepted:**
   - Koala MOP shows a koala feeding video (his choice).
   - Roof-possum MOP has no legal removal advice (no checked source).

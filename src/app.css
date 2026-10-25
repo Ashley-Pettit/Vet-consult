@@ -1299,3 +1299,5 @@ body[data-mic="listening"] .mic-zone .mic::after { top: -5px; right: -5px; botto
 .mic-zone { column-gap: 14px; }
 .mic-zone .mic-status { font-size: 1.02rem; }
 @media (min-width: 720px) { .mic-zone .mic { width: 64px; height: 64px; } }
+/* Vets use it many times a day on a phone: drop the photo banner (the logo stays) so Create sits on the first screen. */
+@media (max-width: 719px) { body[data-role="vet"] .hero-banner { display: none; } }

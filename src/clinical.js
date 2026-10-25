@@ -1,5 +1,6 @@
 // Local clinical helpers that run on the device: dose totals and species reference ranges.
 // These only produce prompts for the vet to confirm. Nothing here is written into the record.
+import { rangesForAnimal } from './species-ranges.js';
 
 /** Typical resting adult reference ranges. A prompt to look again, not a diagnosis. */
 export const SPECIES_RANGES = {
@@ -31,21 +32,50 @@ const VITALS = [
   { key: 'rr_bpm', range: 'rr', label: 'RR', unit: 'bpm' },
 ];
 
+// Wildlife: the checked source ranges in species-ranges.js, adults only (young vary too much to flag safely).
+const WILDLIFE = [
+  [/wombat/, 'wombat'],
+  [/koala/, 'koala'],
+  [/echidna/, 'echidna'],
+  [/flying[- ]?fox|fruit ?bat/, 'flyingfox'],
+  [/kangaroo|wallaby|wallaroo|pademelon|macropod/, 'macropod'],
+];
+const YOUNG = /joey|pouch|puggle|\bpups?\b|nestling|fledgling|chick|hatchling|juvenile|baby|orphan|neonat|infant|sub-?adult|weeks? old|months? old/i;
+const ADULT = /\badult\b|\bmature\b|\d+\s*(y|yo|yrs?|years?)\b/i; // only flag when the note says it's grown
+const ROW_KEY = { 'Body temperature': 'temp', 'Heart rate': 'hr', Breathing: 'rr' };
+
+/** Adult reference ranges for a wildlife patient, as { label, temp: [lo, hi], ... }, or null. */
+export function wildlifeRanges(patient) {
+  const s = String(patient.species || '').toLowerCase();
+  const hit = WILDLIFE.find(([re]) => re.test(s));
+  const age = `${patient.age || ''} ${patient.species || ''}`;
+  if (!hit || YOUNG.test(age) || !ADULT.test(age)) return null;
+  const g = rangesForAnimal(hit[1], 'vic', 'adult');
+  if (!g) return null;
+  const ref = { label: `adult ${g.label.toLowerCase()}` };
+  for (const [k, v] of g.vitals) {
+    // Only a real span ("34-35°C"), never a single average ("about 36.1°C").
+    const m = !/\babout\b/i.test(v) && String(v).match(/(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)/);
+    if (ROW_KEY[k] && m) ref[ROW_KEY[k]] = [Number(m[1]), Number(m[2])];
+  }
+  return ref.temp || ref.hr || ref.rr ? ref : null;
+}
+
 /** { temp_c: 'high', ... } plus readable check items for anything outside the species range. */
 export function vitalFlags(note) {
   const key = speciesKey(note.patient.species);
   const flags = {};
   const checks = [];
-  if (!key) return { flags, checks, species: null };
-  const ref = SPECIES_RANGES[key];
+  const ref = key ? SPECIES_RANGES[key] : wildlifeRanges(note.patient);
+  if (!ref) return { flags, checks, species: null };
   for (const v of VITALS) {
     const n = firstNumber(note.objective.vitals[v.key]);
-    if (n === null) continue;
+    if (n === null || !ref[v.range]) continue;
     const [lo, hi] = ref[v.range];
     if (n < lo || n > hi) {
       const dir = n < lo ? 'low' : 'high';
       flags[v.key] = dir;
-      checks.push(`${v.label} ${n} ${v.unit} is ${dir} for a ${ref.label} (${lo} to ${hi}). Correct?`);
+      checks.push(`${v.label} ${n} ${v.unit} is ${dir} for ${/^[aeiou]/i.test(ref.label) ? 'an' : 'a'} ${ref.label} (${lo} to ${hi}). Correct?`);
     }
   }
   return { flags, checks, species: key };
@@ -57,13 +87,15 @@ const round = (n) => {
   return Math.round(n * 100) / 100;
 };
 
-/** Parse "22 mg/kg", "0.1-0.2 mg/kg", "50 mcg/kg", "2 mL/kg" into a per-kg dose. */
+/** Parse "22 mg/kg", "0.1-0.2 mg/kg", "50 mcg/kg", "2 mL/kg", "0.2 mg per kg" or "1 mL per 10 kg" into a per-kg dose. */
 export function parsePerKg(dose) {
   const s = String(dose || '').replace(/,/g, '.').replace(/µg|ug/gi, 'mcg');
-  const m = s.match(/(\d+(?:\.\d+)?)(?:\s*(?:-|to|–)\s*(\d+(?:\.\d+)?))?\s*(mg|mcg|ml|iu|units?)\s*\/\s*kg/i);
+  const m = s.match(/(\d+(?:\.\d+)?)(?:\s*(?:-|to|–)\s*(\d+(?:\.\d+)?))?\s*(mg|mcg|ml|iu|units?)\s*(?:\/|per)\s*(\d+(?:\.\d+)?)?\s*kg\b/i);
   if (!m) return null;
   const unit = m[3].toLowerCase() === 'ml' ? 'mL' : m[3].toLowerCase().startsWith('unit') ? 'units' : m[3].toLowerCase() === 'iu' ? 'IU' : m[3].toLowerCase();
-  return { lo: Number(m[1]), hi: m[2] ? Number(m[2]) : null, unit };
+  const per = m[4] ? Number(m[4]) : 1;
+  if (!per) return null;
+  return { lo: Number(m[1]) / per, hi: m[2] ? Number(m[2]) / per : null, unit };
 }
 
 /** Total dose per administration from per-kg doses and the recorded weight. */
@@ -77,12 +109,14 @@ export function doseTotals(note) {
     const lo = round(per.lo * kg);
     const hi = per.hi !== null ? round(per.hi * kg) : null;
     const total = hi !== null ? `${lo} to ${hi} ${per.unit}` : `${lo} ${per.unit}`;
+    // The sum shows just the rate: "0.8 mL/kg (19.4 mL stated), per permit" reads "0.8 mL/kg × 24.3 kg".
+    const rate = t.dose.replace(/\s*\([^)]*\)/g, '').split(/,\s/)[0].trim() || t.dose.trim();
     out.push({
       index: i,
       drug: t.drug,
       total,
-      working: `${t.dose.trim()} × ${kg} kg`,
-      check: `${t.drug || 'Dose'}: ${t.dose.trim()} × ${kg} kg = ${total} per dose. Confirm before dispensing.`,
+      working: `${rate} × ${kg} kg`,
+      check: `${t.drug || 'Dose'}: ${rate} × ${kg} kg = ${total} per dose. Confirm before dispensing.`,
     });
   });
   return out;
