@@ -1,4 +1,4 @@
-# Handoff: Animal Welfare Companion (Bunurong Wildlife Care)
+# Handoff: Wildlife Welfare Companion (Bunurong Wildlife Care)
 
 Last updated 25 October 2026. For the next Claude Code session.
 

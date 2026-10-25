@@ -158,7 +158,7 @@ test('an expert opinion stays with itself: not kept in Recent, no follow-on docu
 });
 
 test.describe('creating a note', () => {
-  test('the website uses the Animal Welfare Companion connection: no key needed, and the vet name is added', async ({ page }) => {
+  test('the website uses the Wildlife Welfare Companion connection: no key needed, and the vet name is added', async ({ page }) => {
     await fakeSpeech(page);
     const calls = await mockApi(page);
     await openApp(page);
@@ -363,7 +363,7 @@ test.describe('settings', () => {
   });
 
 
-  test('saved settings stay on this device under Animal Welfare Companion’s own name', async ({ page }) => {
+  test('saved settings stay on this device under Wildlife Welfare Companion’s own name', async ({ page }) => {
     await openApp(page);
     await page.locator('#open-settings').click();
     await page.locator('#clinician').fill('Dr Temp');

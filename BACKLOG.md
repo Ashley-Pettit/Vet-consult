@@ -1,4 +1,4 @@
-# Animal Welfare Companion: backlog
+# Wildlife Welfare Companion: backlog
 
 Last updated 25 October 2026. Highest value first within each group.
 

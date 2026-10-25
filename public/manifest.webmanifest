@@ -1,6 +1,6 @@
 {
-  "name": "Animal Welfare Companion",
-  "short_name": "AW Companion",
+  "name": "Wildlife Welfare Companion",
+  "short_name": "WW Companion",
   "description": "Dictate a vet consult and get a formal SOAP clinical note.",
   "start_url": "./",
   "scope": "./",

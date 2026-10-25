@@ -36,11 +36,11 @@ writeFileSync(out + 'index.html', html.replace('app.js"', `app.js?v=${version}"`
 // The beta copy (CHANNEL=beta, published at /care-beta/) installs under its own name, so it never looks like the live app.
 if (process.env.CHANNEL === 'beta') {
   const mf = JSON.parse(readFileSync(out + 'manifest.webmanifest', 'utf8'));
-  writeFileSync(out + 'manifest.webmanifest', JSON.stringify({ ...mf, name: `${mf.name} Beta`, short_name: 'AWC Beta' }, null, 2));
+  writeFileSync(out + 'manifest.webmanifest', JSON.stringify({ ...mf, name: `${mf.name} Beta`, short_name: 'WWC Beta' }, null, 2));
 }
 writeFileSync(out + 'sw.js', readFileSync(out + 'sw.js', 'utf8').replace('__VERSION__', version));
 writeFileSync(out + '.nojekyll', '');
-writeFileSync(out + '404.html', html.replace(/<main[\s\S]*<\/main>/, '<main><p>Page not found. <a href="./">Open Animal Welfare Companion</a></p></main>').replace(/<script[\s\S]*?<\/script>/g, ''));
+writeFileSync(out + '404.html', html.replace(/<main[\s\S]*<\/main>/, '<main><p>Page not found. <a href="./">Open Wildlife Welfare Companion</a></p></main>').replace(/<script[\s\S]*?<\/script>/g, ''));
 
 // Raw control characters (the zip library behind Word printouts has some inside its strings) can upset the
 // Claude artifact viewer. They only ever sit inside string literals, where a \xNN escape means the same thing.
@@ -53,7 +53,7 @@ const safeJs = (code) =>
 const iife = await build({ ...common, entryPoints: [root + 'src/app.js'], format: 'iife', write: false, define: { __NO_PDF__: 'true' } });
 const body = html.match(/<body>([\s\S]*)<\/body>/)[1].replace(/<script[\s\S]*?<\/script>/, '');
 const artifact =
-  `<title>Animal Welfare Companion</title>\n<meta name="claude:viewport-fit-sides" content="cover">\n<style>${css}` +
+  `<title>Wildlife Welfare Companion</title>\n<meta name="claude:viewport-fit-sides" content="cover">\n<style>${css}` +
   // Inside Claude the page already sits below the status bar, so the header must not add that space again.
   `.band{padding-top:0}.bar{padding-top:8px;padding-bottom:8px}</style>\n` +
   // Same opening splash as the web app: flag it before the body draws.

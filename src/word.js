@@ -11,7 +11,7 @@ export const PAGE_W = 9638; // A4 minus 2 cm margins, in twentieths of a point
 // Handout styles, chosen in Settings. Colours are set per printout from the chosen style.
 export const THEMES = {
   bunurong: { name: 'Bunurong Wildlife Care Inc', sub: 'Wildlife Shelter 15147751  ·  Registered Charity  ·  Inverloch, Victoria', primary: '647C50', accent: 'AB6555', tint: 'EEF2E8', line: 'D9DCCF', logo: true, motto: 'Forever home is best', creator: 'Bunurong Wildlife Care' },
-  plain: { name: 'Animal Welfare Companion', sub: 'Wildlife care record', primary: '2F3B45', accent: '2F3B45', tint: 'F1F3F5', line: 'D8DCE0', logo: false, motto: '', creator: 'Animal Welfare Companion' },
+  plain: { name: 'Wildlife Welfare Companion', sub: 'Wildlife care record', primary: '2F3B45', accent: '2F3B45', tint: 'F1F3F5', line: 'D8DCE0', logo: false, motto: '', creator: 'Wildlife Welfare Companion' },
   rspca: { name: '', sub: 'Wildlife care handout', primary: '0B4F8A', accent: '0B4F8A', tint: 'E8F1F9', line: 'CFDDEA', logo: false, wordmark: 'RSPCA', motto: '', creator: 'RSPCA' },
 };
 

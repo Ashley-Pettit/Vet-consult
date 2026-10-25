@@ -335,7 +335,7 @@ export async function resolveProvider(settings = {}, env = {}) {
   if (CONFIG.proxyUrl) {
     return {
       id: 'proxy',
-      label: 'Animal Welfare Companion connection',
+      label: 'Wildlife Welfare Companion connection',
       images: true,
       generate: (prompt, signal, { images = [], documents = [], webSearch = false } = {}) => callMessages(CONFIG.proxyUrl, {}, prompt, model, signal, fetchImpl, { viaProxy: true, images, documents, webSearch }),
     };

@@ -890,7 +890,7 @@ async function ensureProvider() {
 
 const NO_CLAUDE = inClaude
   ? 'Claude isn’t available right now. Check you are signed in, then try again.'
-  : 'This public demo can’t write notes from your own dictation. Open Animal Welfare Companion in the Claude app to use it with your Claude account. The examples work here.';
+  : 'This public demo can’t write notes from your own dictation. Open Wildlife Welfare Companion in the Claude app to use it with your Claude account. The examples work here.';
 
 function waitForIdle(ms = 2500) {
   return new Promise((resolve) => {
@@ -1185,7 +1185,7 @@ function showNotes(list, example) {
   els.noteBanner.textContent = example
     ? inClaude
       ? 'This is the example note. Dictate your own consult to see Claude write one.'
-      : 'This is the example note. In the Claude app, Animal Welfare Companion writes notes like this from your own dictation.'
+      : 'This is the example note. In the Claude app, Wildlife Welfare Companion writes notes like this from your own dictation.'
     : '';
   els.noteBanner.hidden = !example;
   showView('note');
@@ -3237,7 +3237,7 @@ async function refreshConnection() {
     ? 'Connected.'
     : inClaude
       ? 'Claude isn’t available right now.'
-      : 'Public demo. The examples work here. Open Animal Welfare Companion in the Claude app to write notes with your Claude account.';
+      : 'Public demo. The examples work here. Open Wildlife Welfare Companion in the Claude app to write notes with your Claude account.';
   return p;
 }
 
@@ -3721,7 +3721,7 @@ function maybeShowHomeTip() {
   };
   save({ last: Date.now() });
   const box = el('div', { class: 'home-tip', role: 'note' }, [
-    el('p', {}, [el('strong', { text: 'Keep it handy. ' }), `Add Animal Welfare Companion to your home screen. ${tip}`]),
+    el('p', {}, [el('strong', { text: 'Keep it handy. ' }), `Add Wildlife Welfare Companion to your home screen. ${tip}`]),
     el('div', { class: 'home-tip-actions' }, [
       installEvent && /Android|Chrome|Edg/.test(navigator.userAgent)
         ? el('button', { type: 'button', class: 'btn small primary', onclick: async () => { box.remove(); installEvent.prompt(); installEvent = null; } }, 'Add')
