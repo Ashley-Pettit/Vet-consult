@@ -1566,3 +1566,13 @@ dialog.more h2 { font-size: 1.05rem; letter-spacing: 0.06em; }
 .sugg { grid-template-columns: 24px 1fr; }
 .qs-label { color: var(--muted); }
 .more-composer { box-shadow: 0 -8px 16px -12px rgba(0, 0, 0, 0.35); }
+
+/* Save sits in the Back row, on the right */
+#view-care .head-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+#view-care .head-row .save-plan { margin-left: auto; }
+/* iPhones zoom in when a text box under 16px is tapped: keep every field at 16px there, and no double-tap zoom.
+   Pinch to zoom still works. */
+html { touch-action: manipulation; }
+@supports (-webkit-touch-callout: none) {
+  input, select, textarea, .plain-sec textarea, details.edit textarea, .mop-dir-grid select { font-size: max(16px, 1em) !important; }
+}

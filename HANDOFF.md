@@ -48,6 +48,8 @@ Both copies share the same site, so settings, sign-in and drafts carry across wh
 
 ## Ash's standing preferences
 
+- **Videos:** a wide preview (thumbnail and play button) that plays in place, in the app, with one tap. Never YouTube's own player up front (it sends people out to YouTube) and never a small link row on the website.
+
 - **Testing:** run unit tests and the examples replay before shipping; skip the full Playwright end-to-end suite unless Ash asks for it (a quick targeted browser check is fine).
 
 - **Pet birds in Queensland are the only non-wildlife topic,** and only for expert opinions. Their sources live in `src/sources-petbirds-qld.js` and are added to the opinion prompt only when it's about pet, aviary or backyard birds in Queensland. Never add them to the main library, care plans or other documents.

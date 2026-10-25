@@ -13,7 +13,7 @@ import { lookupSource, sourcesForPrompt, SOURCE_IDS } from './sources.js';
 import { region, setRegion } from './region.js';
 import { petBirdSourcesForPrompt } from './sources-petbirds-qld.js';
 import { rangesFor, rangesForAnimal } from './species-ranges.js';
-import { careVideoFor, watchUrl, videoHost, embedUrl } from './videos.js';
+import { careVideoFor, watchUrl, videoHost, embedUrl, thumbUrl } from './videos.js';
 import { groupsIn, factsFor, namedAnimal } from './species-vet.js';
 import { SPECIES_CARE } from './species-care.js';
 import { docModel, careModel, noteModel, wordFileName, dischargeModel, THEMES } from './word.js';
@@ -2002,11 +2002,16 @@ function videoSection(v) {
       warn,
     ]);
   }
-  // The real player, full width from the start: one tap on its play button and it plays right here. It only loads
-  // as it scrolls near (it sits at the end of the plan), so opening a plan stays quick.
-  const box = el('div', { class: 'video-box' }, [
-    el('iframe', { src: embed, title: v.title, loading: 'lazy', allow: 'encrypted-media; picture-in-picture; fullscreen', allowfullscreen: '', referrerpolicy: 'strict-origin-when-cross-origin' }),
-  ]);
+  // A wide preview; one tap anywhere on it plays the video right here, in the same wide box (Ash's preferred way).
+  // Nothing loads from YouTube until it's tapped.
+  const box = el('div', { class: 'video-box' });
+  const thumb = thumbUrl(v) ? el('img', { src: thumbUrl(v), alt: '', loading: 'lazy', class: 'video-thumb' }) : null;
+  if (thumb) thumb.addEventListener('error', () => thumb.remove());
+  const play = el('button', { type: 'button', class: 'video-play', 'aria-label': `Play video: ${v.title}` }, [el('span', { class: 'video-play-icon', 'aria-hidden': 'true' })]);
+  play.addEventListener('click', () => {
+    box.replaceChildren(el('iframe', { src: embed, title: v.title, allow: 'autoplay; encrypted-media; picture-in-picture; fullscreen', allowfullscreen: '', referrerpolicy: 'strict-origin-when-cross-origin' }));
+  });
+  box.append(...[thumb, play].filter(Boolean));
   return el('section', { class: 'care-sec video' }, [el('h2', { text: 'Watch' }), info, warn, box]);
 }
 
