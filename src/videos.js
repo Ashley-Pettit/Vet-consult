@@ -1160,5 +1160,10 @@ export function videoForTags(tags = [], context = '') {
 export const watchUrl = (v) => v.url || `https://www.youtube.com/watch?v=${v.id}`;
 /** Where tapping the video takes you, for the small line under its title. */
 export const videoHost = (v) => (!v.url ? 'YouTube' : /vimeo\.com/.test(v.url) ? 'Vimeo' : new URL(v.url).hostname.replace(/^www\./, ''));
-export const embedUrl = (v) => `https://www.youtube-nocookie.com/embed/${v.id}?rel=0&modestbranding=1&autoplay=1`;
-export const thumbUrl = (v) => `https://i.ytimg.com/vi/${v.id}/hqdefault.jpg`;
+/** The in-app player for a video, or null when it can only be opened on its own site. */
+export const embedUrl = (v) => {
+  if (v.id) return `https://www.youtube-nocookie.com/embed/${v.id}?rel=0&modestbranding=1&autoplay=1`;
+  const vimeo = /vimeo\.com\/(\d+)/.exec(v.url || '');
+  return vimeo ? `https://player.vimeo.com/video/${vimeo[1]}?autoplay=1` : null;
+};
+export const thumbUrl = (v) => (v.id ? `https://i.ytimg.com/vi/${v.id}/hqdefault.jpg` : null);
