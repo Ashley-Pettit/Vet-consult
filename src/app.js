@@ -6,7 +6,8 @@ import { withTemplate, withLiveRules, loadTemplates } from './templates.js';
 import { readDocument, DocError, MAX_DOCS, DOC_ACCEPT } from './docs.js';
 import { store } from './storage.js';
 import { localChecks } from './clinical.js';
-import { dropUnsaidBrands } from './drugs.js';
+import { dropUnsaidBrands, COMMON_DRUGS } from './drugs.js';
+import { lostNote } from './factcheck.js';
 import { preparePhoto, MAX_PHOTOS } from './photos.js';
 import { ABOUT_HTML } from './about.js';
 import { lookupSource, sourcesForPrompt, SOURCE_IDS } from './sources.js';
@@ -867,7 +868,12 @@ let overriding = 0; // a one-off model (Fast for a quick update, Opus for a retr
 const QUICK_MODEL = 'claude-haiku-5-5';
 const BEST_MODEL = 'claude-opus-5-5';
 // A short, simple update goes to the fast model; anything long or with drugs and doses keeps the chosen model.
-const isQuickUpdate = (t) => t.length <= 180 && t.split(/\s+/).length <= 32 && !/\b(mg|ml|mL|dose|tablet|inject|antibiotic|meloxicam|metacam|\d+\s*(mg|ml|kg))\b/i.test(t);
+// Drug names from the clinic list (brand and active ingredient), so a dictated drug always counts as dose talk.
+const DRUG_NAMES = [...new Set(COMMON_DRUGS.flatMap((d) => d.toLowerCase().split(/[()/,]/)).map((w) => w.trim()).filter((w) => w.length > 4))];
+const DOSE_RE = /\b(mg|mls?|mils?|cc|mcg|µg|ug|units?|iu|drops?|sachets?|doses?|dosing|tablets?|tabs?|capsules?|inject\w*|antibiotics?|\d+(\.\d+)?\s*(mg|ml|mils?|kg|g))\b/i;
+const hasDoseTalk = (t) => DOSE_RE.test(t) || DRUG_NAMES.some((d) => t.toLowerCase().includes(d));
+// The fast model only rewrites a vet's notes, and only when nothing in them is about drugs or doses.
+const isQuickUpdate = (t) => t.length <= 180 && t.split(/\s+/).length <= 32 && mode() === 'vet' && !hasDoseTalk(t) && !hasDoseTalk(els.transcript.value);
 
 // The built-in examples answer from ready-made replies (see baked.js), even with no Claude connection.
 const bakedOff = () => { try { return localStorage.getItem('css.nobake') === '1'; } catch { return false; } };
@@ -965,7 +971,7 @@ async function runWorking(title, sub, job, usual = 'Usually 10 to 40 seconds') {
 
 // Ask Claude for JSON. If the reply can't be read (cut off, or stray text), ask once more for a tighter reply
 // before showing an error, so a long answer doesn't cost the vet or carer a retry.
-const RETRY_NOTE = '\n\nImportant: your last reply could not be read. Reply with ONLY the JSON object, no other text, and keep every list short so the whole reply fits.';
+const RETRY_NOTE = '\n\nImportant: your last reply could not be read. Reply with ONLY the JSON object, no other text.';
 // Extra instruction for a retry after a thumbs down; cleared when the retry ends.
 let promptExtra = '';
 async function askJson(prompt0, signal, opts = {}) {
@@ -1249,7 +1255,6 @@ function renderChecks(n, local) {
 
 // Answer all the questions at once: one tap opens them with the mic already listening, then one quick AI call fixes
 // the notes. Notes the vet has edited by hand are fixed as text, so their edits stay.
-const DOSE_WORDS = /\b(mg|ml|mL|dose|tablet|inject|antibiotic|meloxicam|metacam|\d+\s*(mg|ml|kg))\b/i;
 async function fixNotes(questions, answers) {
   if (busy) return;
   if (!(await ensureProvider())) return toast(NO_CLAUDE);
@@ -1262,7 +1267,7 @@ async function fixNotes(questions, answers) {
       edited ? provider.generate(buildNotesAnswerPrompt(before, questions, answers), signal) : askJson(buildRevisionPrompt(notes[idx], questions, answers), signal);
     const run = () => runWorking('Updating the notes', 'Putting what you said in the right places.', job, 'Usually under 15 seconds');
     // Quick, unless an answer mentions a drug or dose: those keep the chosen model.
-    const reply = DOSE_WORDS.test(answers) ? await run() : await withModel(QUICK_MODEL, async () => (await ensureProvider(), run()));
+    const reply = hasDoseTalk(answers) ? await run() : await withModel(QUICK_MODEL, async () => (await ensureProvider(), run()));
     // The words it was made from now include the answers, so the carer plan and anything else made next has them too.
     setTranscript(appendSegment(els.transcript.value, `Answers: ${answers}`));
     if (edited) {
@@ -1281,7 +1286,7 @@ async function fixNotes(questions, answers) {
       renderNote();
       showView('note');
     }
-    toast('Notes updated.', edited ? { label: 'Undo', run: () => { els.plain.value = before; fitPlain(); } } : undefined);
+    toast(`Notes updated.${edited ? lostNote(before, els.plain.value) : ''}`, edited ? { label: 'Undo', run: () => { els.plain.value = before; fitPlain(); } } : undefined);
   } catch (e) {
     showView('note');
     toast(e && e.code === 'cancelled' ? 'Stopped. The notes haven’t changed.' : friendly(e));
@@ -2970,6 +2975,8 @@ async function createPolish(text) {
   for (const n of list) if (!n.visit.type) n.visit.type = NOTE_TYPES.consult.title;
   if (list.length && els.transcript.value === source) madeFrom.vet = { text: source, notes: list };
   showPolish(polished);
+  const lost = lostNote(text, polished);
+  if (lost) toast(`Polished.${lost}`, { label: 'OK', run: () => {} });
   // Only if the SOAP part was missing: make it in the background as before.
   if (!list.length) startVetNotes(via);
   watchSoap();
@@ -3540,13 +3547,27 @@ $('retry-dlg').addEventListener('close', async () => {
   $('retry-dlg').returnValue = '';
   if (how !== 'retry') return;
   const why = $('retry-note').value.trim();
-  promptExtra = `This is a second attempt. The person was not happy with the first version${why ? `. Their feedback: "${why.slice(0, 600)}"` : ''}. Take extra care: follow every rule, include everything they said, keep it accurate, clear and complete, and fix what they mentioned.`;
   const view = document.body.dataset.view;
   const text = els.transcript.value.trim();
+  // A ready-made or saved plan has no words behind it to write again from: Change is the way to adjust it.
+  if (view === 'care' && (careFrom === 'library' || careFrom === 'saved')) return toast('Tap Change to adjust this plan: say what should be different.');
+  // Claude sees the first version too, so it keeps what was right and fixes what wasn't.
+  const first = view === 'doc' ? currentDoc && currentDoc.d : view === 'care' ? careSheet : notes[current];
+  promptExtra = `This is a second attempt. The person was not happy with the first version${why ? `. Their feedback: "${why.slice(0, 600)}"` : ''}. Take extra care: follow every rule, include everything they said, keep it accurate, clear and complete, and fix what they mentioned.${first ? `\n<first_version>\n${JSON.stringify(first).slice(0, 30000)}\n</first_version>\nKeep what was right in it; fix what they mentioned.` : ''}`;
+  const keep = { careSheet, carer: madeFrom.carer };
   try {
     await withModel(BEST_MODEL, async () => {
       if (view === 'doc' && currentDoc) await createDoc(currentDoc.kind, text);
-      else if (view === 'care') await createCarePlan(madeFrom.carer?.text?.trim() || text);
+      else if (view === 'care' && careFrom === 'note') {
+        // Written from the vet's notes: write it again from them, not from the dictation.
+        careSheet = null;
+        madeFrom.carer = null;
+        await openCare();
+        if (!careSheet) {
+          careSheet = keep.careSheet;
+          madeFrom.carer = keep.carer;
+        }
+      } else if (view === 'care') await createCarePlan(madeFrom.carer?.text?.trim() || text);
       else await createNote();
     });
   } catch (e) {
@@ -3582,7 +3603,7 @@ ${before.slice(0, 20000)}
     plainAtRender = text;
     fitPlain();
     polishBtn.hidden = true;
-    toast('Polished.', { label: 'Undo', run: () => { els.plain.value = before; fitPlain(); polishBtn.hidden = false; } });
+    toast(`Polished.${lostNote(before, text)}`, { label: 'Undo', run: () => { els.plain.value = before; fitPlain(); polishBtn.hidden = false; } });
   } catch (e) {
     toast(friendly(e));
   } finally {

@@ -14,7 +14,7 @@ export const CONFIG = {
     { id: 'claude-haiku-5-5', label: 'Fast (Haiku 5.5)', tier: 'quick', price: [0.1, 0.5] },
   ],
   defaultModel: 'claude-sonnet-5-5',
-  maxTokens: 8000, // intake plus care plan in one reply
+  maxTokens: 16000, // intake plus care plan in one reply
   timeoutMs: 120000,
   speechLang: 'en-AU',
 };

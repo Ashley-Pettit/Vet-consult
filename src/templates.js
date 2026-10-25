@@ -50,12 +50,24 @@ export function withTemplate(prompt, regionCode = 'vic') {
 // up, so their stored replies still match; move it into the care plan prompts themselves at the next re-bake.
 const CARE_PLAN_KINDS = new Set(['caresheet', 'carer-vet', 'carer-carer']);
 export const CARER_TONE = `Tone about people: speak positively and respectfully about the vet, the carer and anyone who has helped the animal. Never criticise, second-guess or point out what someone should, ideally would or could have done (for example no "ideally the vet would have", "this should have been done sooner" or "unfortunately it wasn't given"). Treat what has been done as the starting point and say plainly what to do next.`;
+// Dose safety (October 2026 review), live calls only like the tone rule; fold both into note.js at the next re-bake.
+// Clinical notes: a dose far off the usual range (a decimal slip, a misheard number) is asked about first.
+export const DOSE_CHECK = `- Dose check: if a stated dose is far outside the usual range for that drug in this species (for example a likely decimal slip or misheard number: meloxicam 2 mg/kg where about 0.2 is usual), keep it exactly as said and put it FIRST in "check" (for example "Meloxicam 2 mg/kg: meant 0.2?"). It doesn't count toward the 3-item limit. It is a question, not a warning, so the drug safety caution below doesn't apply. Never change a dose yourself.`;
+// Care plans: amounts only as given, never worked out for the carer.
+export const CARE_DOSES = `Never work out an amount from a dose per kilogram, a weight or a concentration: give amounts only as they were said (for example "19.4 mL"). If only a per-kilogram dose was given, write "the amount the vet dispensed".`;
+const CHECK_LINE = '- "check" lists only what the vet must verify';
 /** The prompt with any live-only rules for its kind added (in the fixed, cached part). */
 export function withLiveRules(prompt) {
-  const p = String(prompt);
+  let p = String(prompt);
+  const at = p.indexOf(CHECK_LINE);
+  if (at >= 0) {
+    const end = p.indexOf('\n', at);
+    if (end > 0) p = `${p.slice(0, end)}\n${DOSE_CHECK}${p.slice(end)}`;
+  }
   const carePlan = CARE_PLAN_KINDS.has(templateKind(p)) || /^You are updating a finished care plan/.test(p);
   if (!carePlan) return p;
-  const rule = `\n- ${CARER_TONE}\n`;
+  p = p.replace('(for example "I\'m not certain of this, check with your vet")', '(for example "this figure isn\'t certain: check it with your vet")');
+  const rule = `\n- ${CARER_TONE}\n- ${CARE_DOSES}\n`;
   const mark = p.indexOf(CACHE_SPLIT);
   return mark > 0 ? `${p.slice(0, mark)}${rule}${p.slice(mark)}` : `${rule}${p}`;
 }

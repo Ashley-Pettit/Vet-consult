@@ -10,7 +10,7 @@
 // In Access, allow OPTIONS preflight requests through (CORS settings: "Bypass options requests to origin").
 
 const MODELS = new Set(['claude-sonnet-5-5', 'claude-opus-5-5', 'claude-haiku-5-5']);
-const MAX_TOKENS = 8000;
+const MAX_TOKENS = 16000;
 const MAX_BODY_BYTES = 30_000_000; // up to 5 resized photos and 5 PDFs (expert witness statements)
 const MAX_IMAGES = 5;
 const MAX_DOCS = 5;

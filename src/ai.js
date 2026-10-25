@@ -35,13 +35,14 @@ export const AI_MESSAGES = {
   rate_limited: 'Claude is busy or the usage limit was reached. Wait a minute, then try again.',
   overloaded: 'Claude is overloaded right now. Try again in a minute.',
   offline: 'You’re offline. Your dictation is kept. Reconnect, then try again.',
-  timeout: 'Claude took too long to answer. Try again, or switch to the Fast model in Settings.',
+  timeout: 'Claude took too long to answer. Try again: your words are kept.',
   network: 'Couldn’t reach Claude. Check the connection, then try again.',
   server: 'Claude had a problem writing the note. Try again.',
   bad_request: 'The request was rejected. Check the model in Settings, then try again.',
   invalid_json: 'The note came back in an unexpected format. Try again.',
-  empty: 'Claude didn’t find a clinical note in that dictation. Add the exam and plan, then try again.',
-  refused: 'Claude declined to write this note. Reword the dictation and try again.',
+  empty: 'Nothing usable came back. Add a little more detail, then try again.',
+  refused: 'Claude’s safety check stopped this one (it sometimes trips on disease topics). Try again, or reword it slightly.',
+  cut_off: 'The reply was cut off before it finished, so none of it was used. Try again.',
   cancelled: 'Stopped.',
   photos: 'The photos couldn’t be sent. Remove them and try again, or try smaller photos.',
   pdf_connection: 'This connection can’t take PDFs yet. Attach the document as Word (.docx) or text, or add a photo of each page.',
@@ -129,6 +130,9 @@ const SEARCH_BLOCKS = new Set(['server_tool_use', 'web_search_tool_result']);
 export function textFromMessage(body) {
   if (!body || !Array.isArray(body.content)) return '';
   if (body.stop_reason === 'refusal') throw new AiError('refused', AI_MESSAGES.refused);
+  // A reply that ran out of room, or a stream that stopped part way, is never used as if it were complete.
+  if (body.stop_reason === 'max_tokens') throw new AiError('cut_off', AI_MESSAGES.cut_off);
+  if (body.stop_reason === 'incomplete') throw new AiError('network', AI_MESSAGES.network);
   // With web search, the answer is the text after the last search (any notes between searches are dropped).
   let from = 0;
   body.content.forEach((b, i) => b && SEARCH_BLOCKS.has(b.type) && (from = i + 1));
@@ -146,6 +150,7 @@ export async function readStream(res) {
   let buffer = '';
   let text = '';
   let stopReason = null;
+  let sawStop = false;
   const usage = { input_tokens: 0, output_tokens: 0 };
   const addUsage = (u) => {
     if (!u) return;
@@ -166,6 +171,7 @@ export async function readStream(res) {
     // A web search starting or returning: the answer comes after it, so drop any notes written before it.
     else if (ev.type === 'content_block_start' && ev.content_block && SEARCH_BLOCKS.has(ev.content_block.type)) text = '';
     else if (ev.type === 'message_start' && ev.message) addUsage(ev.message.usage);
+    else if (ev.type === 'message_stop') sawStop = true;
     else if (ev.type === 'message_delta') {
       if (ev.delta && ev.delta.stop_reason) stopReason = ev.delta.stop_reason;
       addUsage(ev.usage);
@@ -187,7 +193,8 @@ export async function readStream(res) {
     }
   }
   if (buffer.trim()) handle(buffer);
-  return { content: [{ type: 'text', text }], stop_reason: stopReason, usage };
+  // No stop reason and no end of message: the connection dropped part way (a phone losing signal).
+  return { content: [{ type: 'text', text }], stop_reason: stopReason || (sawStop ? null : 'incomplete'), usage };
 }
 
 // A dropped connection or a busy moment usually clears in a second or two: try twice more, quietly, before showing an error.
