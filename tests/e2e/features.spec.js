@@ -42,7 +42,7 @@ test('vital flags, dose totals and PMS field copy', async ({ page, context }) =>
   await expect(temp).toHaveCount(1);
   await expect(temp).toContainText('High');
   await expect(page.locator('.meds .calc').first()).toContainText('312.4 mg per dose');
-  await expect(page.locator('#review-open-sub')).toHaveText('3');
+  await expect(page.locator('#review-open-sub')).toContainText('3 to check');
   await expect(page.locator('#check-list')).toContainText('high for a dog');
 
   // Prescriptions and reminders each show in full, with Copy top right.
@@ -72,6 +72,7 @@ test('one tap opens every review question with the mic on; one call updates the 
   // Straight to the notes to edit and copy: no formatted card on top.
   await expect(page.locator('#note')).toBeHidden();
   await expect(page.locator('#plain')).toBeVisible();
+  await page.locator('#review-open-toggle').click();
   await page.locator('#review-open').click();
   await expect(page.locator('#more')).toBeVisible();
   await expect(page.locator('#more-questions li').first()).toContainText('Clinician name?');

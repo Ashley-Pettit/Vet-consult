@@ -1592,3 +1592,35 @@ html { touch-action: manipulation; }
 .review-card[data-tone="calm"] .review-sub:not(:empty) { background: var(--accent-soft); color: var(--accent); }
 .review-go { font-size: 0.82rem; font-weight: 600; color: var(--muted); gap: 4px; }
 .review-go svg { width: 16px; height: 16px; }
+
+/* Review strip, as on Live: one slim line that opens in place to show what to check, with Edit for the update sheet */
+details.review { padding: 0; }
+details.review[data-tone="calm"] { background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); }
+details.review > summary { gap: 10px; min-height: 48px; padding: 10px 16px; }
+details.review .sum-title { flex: none; }
+details.review[data-tone="calm"] .sum-title { color: var(--ink); }
+details.review .review-sub { min-width: 0; font-size: 0.85rem; font-weight: 500; color: var(--muted); text-transform: none; letter-spacing: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.review-body { display: grid; gap: 12px; padding: 0 16px 14px; }
+.review-list { margin: 0; padding: 0 0 0 1.4em !important; display: grid; gap: 8px; list-style: decimal; }
+.review-list:empty { display: none; }
+.review-list > li { padding: 0; border: 0; line-height: 1.4; }
+.review-list > li::marker { color: var(--muted); font-weight: 600; }
+.review-list .check-item { display: list-item; }
+.review-ideas { display: grid; gap: 6px; }
+.review-ideas-label { font-size: 0.8rem; font-weight: 700; color: var(--muted); }
+.review-ideas ul { list-style: none; margin: 0; padding: 0 !important; display: flex; flex-wrap: wrap; gap: 6px !important; }
+.review-ideas li { padding: 0; border: 0; }
+.review-edit { justify-self: start; display: inline-flex; align-items: center; gap: 6px; }
+.review-edit svg { width: 16px; height: 16px; }
+@media (max-width: 420px) { details.review .sum-hint { display: none; } }
+
+/* Numbered checks in the update sheet: plain numbers, lined up with the first line of each */
+.sugg { grid-template-columns: 1.4em 1fr; align-items: baseline; }
+.sugg-num { width: auto; height: auto; display: block; background: none; border: 0; border-radius: 0; color: var(--muted); font-weight: 700; font-size: 0.93rem; text-align: right; }
+.sugg-num::after { content: "."; }
+.review-ideas .chip-btn { padding: 6px 12px; min-height: 36px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font-size: 0.88rem; font-weight: 600; cursor: pointer; }
+.review-ideas .chip-btn:hover { border-color: var(--accent); }
+.review-ideas .chip-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+details.review .review-sub:not(:empty) { display: block; min-width: 0; height: auto; padding: 0; border-radius: 0; background: none; color: var(--muted); font-size: 0.85rem; font-weight: 500; }
+details.review > summary::after { margin-left: 4px; }
+@media (max-width: 420px) { details.review > summary::after { margin-left: auto; } }

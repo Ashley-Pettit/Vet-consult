@@ -70,7 +70,8 @@ test.describe('dictation', () => {
     await page.locator('#transcript').fill(DICTATION);
     await page.locator('#create').click();
     await expect(page.locator('#view-note')).toBeVisible();
-    await page.locator('#review-open').click(); // the review card: answer or add, mic on
+    await page.locator('#review-open-toggle').click(); // open the review strip
+    await page.locator('#review-open').click(); // Edit: answer or add, mic on
     await expect(page.locator('#more')).toHaveAttribute('data-mic', 'listening');
     await page.evaluate(() => window.__fakeSay('weight 14 kilos'));
     await page.evaluate(() => window.__fakeSay('left ear crusty', { final: false }));

@@ -226,15 +226,14 @@
 
     <p id="note-banner" class="banner" data-tone="info" hidden></p>
 
-    <div class="review" id="checks" hidden>
-      <button type="button" class="review-card" id="review-open">
-        <span class="review-icon"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4h6v3H9z"/><path d="M9 13l2 2 4-4"/></svg></span>
-        <span class="review-text"><span class="review-title" id="review-open-title">Review before saving</span><span class="review-sub" id="review-open-sub"></span></span>
-        <span class="review-go">Tap to review<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>
-      </button>
-      <ul id="check-list" hidden></ul>
-      <ul id="gap-list" hidden></ul>
-    </div>
+    <details class="checks review" id="checks" hidden>
+      <summary id="review-open-toggle"><span class="sum-title" id="review-open-title">Review before saving</span><span class="review-sub" id="review-open-sub"></span><span class="sum-hint">Tap to open</span></summary>
+      <div class="review-body">
+        <ol id="check-list" class="review-list"></ol>
+        <div class="review-ideas" id="gap-wrap" hidden><span class="review-ideas-label">Ideas to add</span><ul id="gap-list"></ul></div>
+        <button type="button" class="btn small primary review-edit" id="review-open"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg><span id="review-open-label">Edit notes</span></button>
+      </div>
+    </details>
 
     <section class="plain-sec" aria-labelledby="plain-title">
       <div class="sec-head" hidden>
@@ -388,14 +387,13 @@
       <p class="muted" id="doc-subtitle"></p>
     </div>
     <p id="doc-banner" class="banner" data-tone="info" hidden></p>
-    <div class="review" id="doc-checks" hidden>
-      <button type="button" class="review-card" id="doc-review-open">
-        <span class="review-icon"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4h6v3H9z"/><path d="M9 13l2 2 4-4"/></svg></span>
-        <span class="review-text"><span class="review-title" id="doc-review-open-title">Review before sending</span><span class="review-sub" id="doc-review-open-sub"></span></span>
-        <span class="review-go">Tap to review<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>
-      </button>
-      <ul id="doc-check-list" hidden></ul>
-    </div>
+    <details class="checks review" id="doc-checks" hidden>
+      <summary id="doc-review-open-toggle"><span class="sum-title" id="doc-review-open-title">Review before sending</span><span class="review-sub" id="doc-review-open-sub"></span><span class="sum-hint">Tap to open</span></summary>
+      <div class="review-body">
+        <ol id="doc-check-list" class="review-list"></ol>
+        <button type="button" class="btn small primary review-edit" id="doc-review-open"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg><span id="doc-review-open-label">Edit</span></button>
+      </div>
+    </details>
     <section class="text-vet" id="text-vet" hidden>
       <h2 id="text-vet-title">Text to your vet</h2>
       <p id="text-vet-body"></p>

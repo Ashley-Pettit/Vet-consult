@@ -1223,16 +1223,17 @@ function renderAnimals() {
 
 let checkItems = []; // the questions on the clinical note now on screen
 let gapItems = []; // what a full record would ideally also have (optional)
-/** One review card: what to check (must) and what would be nice to add (optional), one tap to update. */
+/** One review strip, as on Live: slim until tapped, then what to check and what would be nice to add, with Edit to update. */
 function renderReview(box, prefix, checks, nice, titles, always = false) {
   const none = !checks.length && !nice.length;
   box.hidden = none && !always;
-  const card = $(prefix);
-  card.dataset.tone = checks.length ? 'warn' : 'calm';
-  // A slim bar, as on Live: the title and a count. Tapping it opens the update sheet.
-  $(`${prefix}-title`).textContent = checks.length || nice.length ? titles[0] : 'Add or change anything';
-  $(`${prefix}-sub`).textContent = checks.length + nice.length ? String(checks.length + nice.length) : '';
-  card.setAttribute('aria-label', `${$(`${prefix}-title`).textContent}: ${$(`${prefix}-sub`).textContent}. Update`);
+  box.dataset.tone = checks.length ? 'warn' : 'calm';
+  $(`${prefix}-title`).textContent = none ? 'Add or change anything' : titles[0];
+  const count = [checks.length && `${checks.length} to check`, nice.length && `${nice.length} idea${nice.length === 1 ? '' : 's'}`].filter(Boolean).join(' · ');
+  $(`${prefix}-sub`).textContent = count;
+  $(`${prefix}-label`).textContent = none ? 'Add or change' : titles[1] || 'Edit';
+  const ideas = $('gap-wrap');
+  if (prefix === 'review-open' && ideas) ideas.hidden = !nice.length;
 }
 function renderChecks(n, local) {
   const items = [...n.check.map((t) => ({ t, auto: false })), ...local.checks.map((t) => ({ t, auto: true }))];
@@ -1311,8 +1312,9 @@ function noteGaps(n) {
 }
 function renderGaps(n) {
   gapItems = withoutRepeats(checkItems, noteGaps(n)); // nothing a question already asks about
-  $('gap-list').replaceChildren(...gapItems.map((g) => el('li', { text: g })));
-  renderReview(els.checks, 'review-open', checkItems, gapItems, ['Review before saving'], true);
+  // Tapping an idea opens Edit with it started in the box.
+  $('gap-list').replaceChildren(...gapItems.map((g) => el('li', {}, [el('button', { type: 'button', class: 'chip-btn', onclick: () => { openAnswers({ type: 'notes' }, checkItems, gapItems); addToBox(starterFor(g)); } }, `+ ${g}`)])));
+  renderReview(els.checks, 'review-open', checkItems, gapItems, ['Review before saving', 'Edit notes'], true);
 }
 
 function renderNote() {
