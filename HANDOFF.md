@@ -118,8 +118,11 @@ Last updated 25 October 2026. For the next Claude Code session.
   - Findings that only repeat a vital are dropped; vets on phones don't get the photo banner.
 - **Vet QA, 25 October (prompt changes, queued in `BACKLOG.md`):** they change bake keys, so do them where the proxy is reachable and re-bake.
 - **AI cost and speed, 25 October:**
-  - Background drafts (the care plan an intake starts, a vet's clinical notes after a plan) are full AI calls. They now stop on a device after three unused in a row and come back once one is opened (`maybeExtra` in `src/app.js`, `wantsExtra` in `src/storage.js`). Built-in examples always get them; plans reopened from Recent never start them.
+  - Follow-on drafts (the care plan after an intake, a vet's clinical notes for the discharge pack) are made only when asked for, with a loader, like Word and PDF (`exampleExtra` in `src/app.js`). Built-in examples still start theirs straight away (free).
+  - Change plan / Change returns only the parts that changed; `mergeAmend` in `src/note.js` merges them (sections by heading). About 60% fewer output tokens per change in testing.
+  - Sources in care plan and document prompts are trimmed to the general ones plus those for the animal named (`sourcesFor` in `src/app.js`): about 6,000 down to about 3,300 tokens. An animal it can't recognise still gets them all. **The built-in examples keep the full list so their baked replies match: remove that exception at the next re-bake.**
   - The website preconnects to the proxy while it loads.
+  - Next re-bake, also move the fixed Australian drug list (about 4,500 tokens) before the cache split in `buildPrompt` and `buildCarerPlanPrompt`, keeping the vet's own drugs after it. It's the biggest fixed block still outside the cache.
   - **To check:** commit e59d1e3 said the proxy that accepts cached prompt blocks was "not yet deployed". If the live worker is older, the first call in every session is refused, retried without caching, and nothing is cached. Deploy `proxy/` with `npx wrangler deploy` (needs Ash's Cloudflare login) to be sure.
   - Looked at and left alone, for accuracy: the feeding rows and source key points (most of a care plan's prompt) are per animal and needed; trimming them by stage risks losing the row that applies.
 - **Known and accepted:**

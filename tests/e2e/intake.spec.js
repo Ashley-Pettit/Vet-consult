@@ -2,14 +2,14 @@ import { test, expect } from '@playwright/test';
 import { withKey, mockApi, openApp, textReply } from './helpers.js';
 import { EXAMPLE_CARER_PLAN, aiNoteFor } from '../../src/note.js';
 
-test('intake starts the care plan alongside the record, and "Need advice right now?" opens it instantly', async ({ page }) => {
+test('intake makes just the record; "Need advice right now?" then writes the just-taken-in care plan', async ({ page }) => {
   await withKey(page, { role: 'carer', mode: 'intake' });
   const intake = {
     title: 'Intake record: bare-nosed wombat', subtitle: 'Case 26-04417',
     sections: [{ heading: 'Where it was found', text: 'Gravel pull-over, south side of the Bass Highway, east of the Kilcunda bridge.', items: [] }],
     due: [], check: [],
   };
-  // Two calls start together: the record, and the care plan in the background.
+  // Only the record is written; the care plan waits until it's asked for.
   const calls = await mockApi(page, { body: (p) => (p.includes('just taken this animal in') ? textReply(EXAMPLE_CARER_PLAN) : textReply(intake)) });
   await openApp(page);
   await page.locator('#transcript').fill('Intake. Adult wombat, car strike, Kilcunda.');
@@ -20,11 +20,13 @@ test('intake starts the care plan alongside the record, and "Need advice right n
   await expect(cta).toBeVisible();
   const [docBox, ctaBox] = [await page.locator('#doc').boundingBox(), await cta.boundingBox()];
   expect(ctaBox.y).toBeGreaterThan(docBox.y + docBox.height);
+  expect(calls.length).toBe(1);
   await page.locator('#advice-btn').click();
   await expect(page.locator('#view-care')).toBeVisible();
   await expect(page.locator('#care-sheet')).not.toContainText('Never give or do');
   await expect(page.locator('#care-sheet')).not.toContainText('reach a vet');
-  expect(calls.length).toBe(2); // no extra call when the plan is opened
+  expect(calls.length).toBe(2);
+  expect(calls[1].prompt).toContain('just taken this animal in'); // what to do right now, not a general plan
 });
 
 test('a reply that comes back unreadable is retried once, quietly', async ({ page }) => {

@@ -64,6 +64,7 @@ import {
   buildPolishPrompt,
   buildRevisionPrompt,
   buildAmendPrompt,
+  mergeAmend,
   buildCareSheetPrompt,
   extractJson,
   normaliseNote,
@@ -106,7 +107,6 @@ let provider = null;
 let notes = [];
 let current = 0;
 let isExample = false;
-let reopening = false; // a saved plan is being shown again: no new background drafts for it
 let careSheet = null;
 let photos = [];
 let documents = []; // attached to an expert witness statement
@@ -550,6 +550,10 @@ confirmClear.addEventListener('close', () => {
 
 // Example words are shown as an example, not as the user's own: a note above the box and a tinted box,
 // until they edit or replace them.
+// Reference sources for a prompt: the general ones and those for the animals named, not the whole library (a koala
+// plan doesn't need the bird or reptile sources). The built-in examples keep the full list so their stored replies
+// still match; drop that exception at the next re-bake.
+const sourcesFor = (text) => sourcesForPrompt(isExampleText() ? '' : text);
 function isExampleText() {
   return [EXAMPLE_DICTATION, EXAMPLE_BATCH_DICTATION, EXAMPLE_CARER_DICTATION, EXAMPLE_FOSTER_DICTATION, EXAMPLE_INTAKE_DICTATION, EXAMPLE_LOG_DICTATION, EXAMPLE_TOVET_DICTATION, EXAMPLE_MOP_DICTATION, EXAMPLE_JOEY_CARER_DICTATION, EXAMPLE_WOMBAT_VET_DICTATION, EXAMPLE_VET_PLAN_DICTATION, EXAMPLE_FUNDING_DICTATION, EXAMPLE_POLISH_DICTATION, EXAMPLE_MEDIA_DICTATION, EXAMPLE_WITNESS_DICTATION].some((x) => x.trim() === els.transcript.value.trim());
 }
@@ -1585,11 +1589,12 @@ async function amend(target, change) {
     const reply = await run();
     // The words it was made from now include the change, so "Use the same notes for" picks it up too.
     setTranscript(appendSegment(els.transcript.value, `Change: ${change}`));
+    // Only the changed parts come back: merge them into what's on screen.
     if (isCare) {
-      const sheet = normaliseCareSheet(reply, SOURCE_IDS());
+      const sheet = normaliseCareSheet(mergeAmend(current, reply), SOURCE_IDS());
       showCare(sheet, careFrom, els.careBanner.hidden ? '' : els.careBanner.textContent);
     } else {
-      const d = normaliseDoc(reply);
+      const d = normaliseDoc(mergeAmend(current, reply));
       if (!d.sections.length) throw new AiError('empty', '');
       showDoc(d, currentDoc.kind);
     }
@@ -2050,10 +2055,9 @@ function renderCare(c) {
 
 function showCare(sheet, from, info = '') {
   resetFeedback();
-  // Vets get a discharge pack; its clinical summary starts quietly in the background once the plan is on screen
-  // (not for a plan reopened from Recent, and only while this vet uses the notes it makes).
+  // Vets get a discharge pack; its clinical summary is written when the pack is asked for (examples: straight away).
   $('discharge-pack').hidden = settings.role !== 'vet';
-  if (settings.role === 'vet' && !reopening) setTimeout(() => maybeExtra('care-notes', () => startVetNotes()), 400);
+  if (settings.role === 'vet') setTimeout(() => exampleExtra(() => startVetNotes()), 400);
   remember('care', { sheet, from }, sheet.animal);
   careSheet = sheet;
   careFrom = from;
@@ -2079,7 +2083,7 @@ async function openCare() {
   }
   try {
     const reply = await runWorking('Writing the care plan', 'A plan the carer can follow on their own.', (signal) =>
-      askJson(buildCareSheetPrompt(n, sourcesForPrompt()), signal),
+      askJson(buildCareSheetPrompt(n, sourcesFor(`${els.transcript.value} ${n.patient.species}`)), signal),
     );
     showCare(normaliseCareSheet(extractJson(reply), SOURCE_IDS()), 'note');
   } catch (e) {
@@ -2098,7 +2102,7 @@ async function createCarePlan(text) {
   }
   banner('');
   const reply = await runWorking('Writing the care plan', 'A plan the carer can follow on their own.', (signal) =>
-    askJson(buildCarerPlanPrompt(text, sourcesForPrompt(), { fromVet: settings.role === 'vet', drugs: settings.drugs, photoCount: sendPhotos().length }), signal, { images: sendPhotos() }),
+    askJson(buildCarerPlanPrompt(text, sourcesFor(text), { fromVet: settings.role === 'vet', drugs: settings.drugs, photoCount: sendPhotos().length }), signal, { images: sendPhotos() }),
   );
   notes = [];
   showCare(normaliseCareSheet(extractJson(reply), SOURCE_IDS()), 'record');
@@ -2308,7 +2312,7 @@ async function createDoc(kind, text) {
     return;
   }
   banner('');
-  const opts = { clinician: settings.clinician, photoCount: sendPhotos().length, sourceList: sourcesForPrompt() };
+  const opts = { clinician: settings.clinician, photoCount: sendPhotos().length, sourceList: sourcesFor(text) };
   // A media statement is from the organisation chosen in Settings (an RSPCA template makes it an RSPCA statement).
   if (kind === 'media') opts.org = mediaOrg();
   // An expert witness statement can rely on attached documents: Word and text go in the prompt, PDFs as files.
@@ -2317,7 +2321,7 @@ async function createDoc(kind, text) {
   const pdfs = docs.filter((x) => x.kind === 'pdf');
   // An intake starts its care plan at the same moment, in a second call, so "Need advice right now?" is ready
   // (or nearly) by the time the record is read. Two shorter replies, so neither gets cut off.
-  if (kind === 'intake') maybeExtra('intake-care', startIntakeCare);
+  if (kind === 'intake') exampleExtra(startIntakeCare);
   const reply = await runWorking(`Writing the ${DOC_KINDS[kind].label.replace(/^[A-Z](?=[a-z])/, (x) => x.toLowerCase())}`, docs.length ? `Reading ${docs.length === 1 ? 'your document' : `${docs.length} documents`} with your notes.` : DOC_KINDS[kind].working, (signal) =>
     askJson(buildDocPrompt(kind, text, opts), signal, { images: sendPhotos(), documents: pdfs }).catch((e) => {
       // A connection that doesn't take PDFs yet rejects the whole request: say that, not "check the model".
@@ -2399,29 +2403,18 @@ function renderMakeNext(box, current) {
 // "Need advice right now?" on an intake record opens the care plan, already written in the same call.
 $('advice-btn').addEventListener('click', () => makeNext('carer'));
 
-// Background drafts cost a full AI call each, so they only start while this device uses them (store.wantsExtra).
-// One offer per kind and set of words. The built-in examples answer from stored replies, so they always get theirs.
-let extraOffer = null; // { kind, text, on }
-function maybeExtra(kind, start) {
-  const text = els.transcript.value;
-  if (!text.trim()) return;
-  if (isExampleText()) return start();
-  if (!extraOffer || extraOffer.kind !== kind || extraOffer.text !== text) {
-    extraOffer = { kind, text, on: store.wantsExtra(kind) };
-    store.offerExtra(kind);
-  }
-  if (extraOffer.on) start();
-}
-// The person opened what that draft was for: keep making them.
-function extraWanted(kind) {
-  if (extraOffer && extraOffer.kind === kind && extraOffer.text === els.transcript.value && !isExampleText()) store.usedExtra(kind);
+// Follow-on drafts (the care plan after an intake, a vet's clinical notes after a plan) are full AI calls, so they're
+// made when asked for, with a loader, like Word and PDF. The built-in examples answer from stored replies at no cost,
+// so theirs still start straight away.
+function exampleExtra(start) {
+  if (isExampleText()) start();
 }
 
-// The care plan an intake starts in the background: { text, promise } resolving to a sheet, or null if it failed.
+// The care plan for an intake ("just taken in": what to do right now): { text, promise } resolving to a sheet, or null.
 let pendingCare = null;
 function startIntakeCare() {
   const text = els.transcript.value;
-  const promise = askJson(buildCarerPlanPrompt(text.trim(), sourcesForPrompt(), { justIn: true, drugs: settings.drugs, photoCount: sendPhotos().length }), undefined, { images: sendPhotos() })
+  const promise = askJson(buildCarerPlanPrompt(text.trim(), sourcesFor(text), { justIn: true, drugs: settings.drugs, photoCount: sendPhotos().length }), undefined, { images: sendPhotos() })
     .then((r) => {
       const sheet = normaliseCareSheet(r, SOURCE_IDS());
       if (!(sheet.summary || sheet.plan.length || sheet.housing.length)) return null;
@@ -2431,13 +2424,14 @@ function startIntakeCare() {
     .catch(() => null);
   pendingCare = { text, promise };
 }
-// Wait for that background plan (Stop still works). Null means make one the normal way.
-async function waitForIntakeCare() {
+// Wait for that plan (Stop still works). Null means make one the normal way.
+async function waitForIntakeCare(fresh = false) {
   if (!pendingCare || pendingCare.text !== els.transcript.value) return null;
   const { promise } = pendingCare;
   busy = true;
   try {
-    return await runWorking('Finishing the care plan', 'It started earlier, so it’s nearly done.', (signal) =>
+    const [title, sub] = fresh ? ['Writing the care plan', 'What to do right now, then day by day.'] : ['Finishing the care plan', 'It started earlier, so it’s nearly done.'];
+    return await runWorking(title, sub, (signal) =>
       Promise.race([promise, new Promise((_, reject) => signal.addEventListener('abort', () => reject(new AiError('cancelled', '')), { once: true }))]),
     );
   } catch {
@@ -2600,13 +2594,15 @@ $('media-from-change').addEventListener('click', () => openSettings());
 
 $('discharge-pack').addEventListener('click', async (e) => {
   if (!careSheet) return;
-  extraWanted('care-notes');
   const btn = e.currentTarget;
   const text = els.transcript.value;
   let list = madeFrom.vet && madeFrom.vet.text === text ? madeFrom.vet.notes : null;
+  // The clinical summary is written now that the pack is wanted.
+  const fresh = !list && !(pendingVetNotes && pendingVetNotes.text === text);
+  if (fresh) startVetNotes();
   if (!list && pendingVetNotes && pendingVetNotes.text === text) {
     btn.disabled = true;
-    btn.lastChild.textContent = 'Finishing the clinical summary…';
+    btn.lastChild.textContent = fresh ? 'Writing the clinical summary…' : 'Finishing the clinical summary…';
     list = await pendingVetNotes.promise;
     btn.disabled = false;
     btn.lastChild.textContent = 'Discharge pack';
@@ -2616,8 +2612,6 @@ $('discharge-pack').addEventListener('click', async (e) => {
 
 async function makeNext(m) {
   if (busy || !els.transcript.value.trim()) return;
-  if (m === 'vet') extraWanted('care-notes');
-  if (m === 'carer') extraWanted('intake-care');
   document.querySelector(`input[name="mode"][value="${m}"]`).checked = true;
   applyMode();
   settings.mode = m;
@@ -2632,7 +2626,10 @@ async function makeNext(m) {
     return m === 'carer' ? showCare(prev.sheet, 'record', prev.info) : showDoc(prev.d, m, prev.info);
   }
   if (m === 'carer') {
-    const sheet = await waitForIntakeCare();
+    // After an intake, the plan is the "just taken in" one (what to do right now), started now that it's asked for.
+    const fresh = Boolean(currentDoc && currentDoc.kind === 'intake' && !(pendingCare && pendingCare.text === els.transcript.value));
+    if (fresh) startIntakeCare();
+    const sheet = await waitForIntakeCare(fresh);
     if (sheet === false) return; // stopped
     if (sheet) return showCare(sheet, 'record');
   }
@@ -2865,14 +2862,7 @@ function renderResume() {
 function openSaved(last) {
   if (!last) return;
   if (last.text && !els.transcript.value.trim()) setTranscript(last.text);
-  if (last.type === 'care') {
-    reopening = true;
-    try {
-      showCare(normaliseCareSheet(last.data.sheet, null), last.data.from === 'note' ? 'record' : last.data.from);
-    } finally {
-      reopening = false;
-    }
-  }
+  if (last.type === 'care') showCare(normaliseCareSheet(last.data.sheet, null), last.data.from === 'note' ? 'record' : last.data.from);
   else if (last.type === 'doc') showDoc(normaliseDoc(last.data.d), last.data.kind);
   else if (last.type === 'notes') showNotes(last.data.map(normaliseNote), false);
   else if (last.type === 'polish') showPolish(String(last.data.text || ''));

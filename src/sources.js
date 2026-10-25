@@ -30,6 +30,7 @@ const SOURCE_TAGS = [
   ['reptile', /reptile|amphibian/i],
   ['domestic', /kitten|\bpets?\b|post-surgery/i],
   ['joey', /milk replacer|pouch check/i],
+  ['mange', /mange/i], // mange guides also reach a koala, possum or fox with mange, not just a wombat
 ];
 const tagsOf = (s) => SOURCE_TAGS.filter(([, re]) => re.test(s.title)).map(([t]) => t);
 const ANIMAL_TAG = {
@@ -43,6 +44,7 @@ export function animalTags(text = '') {
   const tags = new Set(groupsIn(t).map((g) => ANIMAL_TAG[g]).filter(Boolean));
   if (/\b(dogs?|pupp(y|ies)|cats?|kittens?|rabbits?|guinea pigs?)\b/.test(t)) tags.add('domestic');
   if ([...tags].some((x) => MILK_FED.has(x))) tags.add('joey');
+  if (/\b(mange|mangy|sarcopt\w*|scabies)\b/.test(t)) tags.add('mange');
   return tags;
 }
 

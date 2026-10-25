@@ -39,12 +39,6 @@ const RECENT_MAX = 12;
 const SESSION_KEY = 'css.key';
 
 const USAGE = 'css.usage';
-const EXTRAS = 'css.extras';
-const extras = () => {
-  const v = read(local, EXTRAS, {});
-  return v && typeof v === 'object' && !Array.isArray(v) ? v : {};
-};
-const history = (all, kind) => (Array.isArray(all[kind]) ? all[kind] : []);
 const monthKey = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 
 export const store = {
@@ -148,27 +142,6 @@ export const store = {
     write(local, RECENT, null);
     write(local, LAST, null);
   },
-  /**
-   * Background drafts (the care plan an intake starts, a vet's clinical notes after a plan) each cost a full AI call.
-   * They keep coming while this device opens them; after three unused in a row they stop until one is wanted again.
-   */
-  wantsExtra(kind) {
-    const h = history(extras(), kind);
-    return h.length < 3 || h.slice(-3).some(Boolean);
-  },
-  offerExtra(kind) {
-    const all = extras();
-    all[kind] = [...history(all, kind), 0].slice(-6);
-    write(local, EXTRAS, all);
-  },
-  usedExtra(kind) {
-    const all = extras();
-    const h = history(all, kind);
-    if (h.length) h[h.length - 1] = 1;
-    else h.push(1);
-    all[kind] = h.slice(-6);
-    write(local, EXTRAS, all);
-  },
   clearAll() {
     write(local, SETTINGS, null);
     write(session, SESSION_KEY, null);
@@ -176,6 +149,5 @@ export const store = {
     write(local, DRAFT, null);
     write(local, LAST, null);
     write(local, RECENT, null);
-    write(local, EXTRAS, null);
   },
 };
