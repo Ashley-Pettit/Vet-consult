@@ -1318,3 +1318,39 @@ body[data-mic="listening"] .mic-zone .mic::after { top: -5px; right: -5px; botto
 .library-admin { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
 .edit-form { display: flex; flex-direction: column; gap: 14px; }
 .edit-form textarea { min-height: 64px; line-height: 1.5; resize: vertical; }
+
+/* Composer: the words, then a row of tools inside the same box (photos and Clear on the left, the mic on the right) */
+.composer {
+  display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 12px; background: var(--surface, var(--bg));
+  scroll-margin-bottom: 96px; transition: border-color 120ms ease-out, box-shadow 120ms ease-out;
+}
+.composer:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.composer #transcript { width: 100%; min-height: 120px; border: 0; border-radius: 12px 12px 0 0; background: transparent; box-shadow: none; padding: 12px 14px 6px; resize: none; }
+.composer #transcript:focus { box-shadow: none; outline: none; }
+.composer #transcript[readonly] { background: transparent; }
+.composer:has(#transcript.is-example) { border-style: dashed; border-color: var(--warn-line); background: var(--warn-soft); }
+body[data-mic="listening"] .composer, body[data-mic="starting"] .composer { border-color: var(--rec); box-shadow: 0 0 0 3px var(--rec-soft); }
+.composer .interim { padding: 0 14px 4px; font-size: 0.92rem; }
+.composer-bar { display: flex; align-items: center; gap: 2px; padding: 4px 6px 6px 4px; border-top: 1px solid var(--line); }
+.composer-tools { display: flex; gap: 2px; }
+.composer-tools[hidden] { display: none; }
+.tool-btn { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 999px; color: var(--muted); cursor: pointer; }
+.tool-btn:hover, .tool-btn:focus-within { color: var(--ink); background: var(--accent-soft); }
+.tool-btn:focus-within { outline: 3px solid var(--accent); outline-offset: -3px; }
+.tool-btn svg { width: 22px; height: 22px; }
+.composer .tx-clear { align-self: center; margin: 0 0 0 4px; }
+.composer .mic { margin-left: auto; width: 48px; height: 48px; flex: none; border: 0; border-radius: 999px; box-shadow: none; }
+.composer .mic svg { width: 22px; height: 22px; }
+.composer .mic .i-stop { width: 18px; height: 18px; }
+body[data-mic] .composer .mic { box-shadow: none; }
+body[data-mic="listening"] .composer .mic, body[data-mic="starting"] .composer .mic, body[data-mic="keyboard"] .composer .mic { box-shadow: 0 0 0 4px var(--rec-soft); }
+body[data-mic="listening"] .composer .mic::after { top: -4px; right: -4px; bottom: -4px; left: -4px; }
+/* Status beside the label: short, and red while listening */
+.field-head { align-items: baseline; }
+.mic-line { margin: 0; display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+.mic-line .mic-status { margin: 0 !important; font-size: 0.88rem; font-weight: 600; text-align: right; color: var(--muted); }
+body[data-mic="listening"] .mic-line .mic-status, body[data-mic="starting"] .mic-line .mic-status, body[data-mic="keyboard"] .mic-line .mic-status { color: var(--rec); }
+.mic-line .timer { font-size: 0.88rem; }
+/* The composer mic: the brand green when idle, red only while listening (beats the older per-mode mic colours) */
+body .composer .mic { background: var(--accent); color: var(--accent-ink); }
+body[data-mic="listening"] .composer .mic, body[data-mic="starting"] .composer .mic, body[data-mic="keyboard"] .composer .mic { background: var(--rec); color: #fff; }

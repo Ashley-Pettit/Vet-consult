@@ -60,6 +60,23 @@ test.describe('dictation', () => {
     await expect(page.locator('#transcript')).toHaveValue('Wombat with mange, left ear');
   });
 
+  test('the Add more info box listens straight away; tapping into it stops the mic and keeps the words', async ({ page }) => {
+    await fakeSpeech(page);
+    await withKey(page);
+    await mockApi(page);
+    await openApp(page);
+    await page.locator('#transcript').fill(DICTATION);
+    await page.locator('#create').click();
+    await expect(page.locator('#view-note')).toBeVisible();
+    await page.locator('#back').click(); // "Add more info"
+    await expect(page.locator('#more')).toHaveAttribute('data-mic', 'listening');
+    await page.evaluate(() => window.__fakeSay('weight 14 kilos'));
+    await page.evaluate(() => window.__fakeSay('left ear crusty', { final: false }));
+    await page.locator('#more-text').click();
+    await expect(page.locator('#more')).toHaveAttribute('data-mic', 'idle');
+    await expect(page.locator('#more-text')).toHaveValue(/weight 14 kilos.*left ear crusty/i);
+  });
+
   test('blocked microphone explains how to fix it', async ({ page }) => {
     await fakeSpeech(page, { denied: true });
     await openApp(page);

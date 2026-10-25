@@ -339,7 +339,7 @@ function alertStopped() {
 
 function idleStatus() {
   // Short and the same everywhere: the box below says what to put in it.
-  return els.transcript.value.trim() ? 'Tap to add more' : 'Tap to talk, or type below';
+  return els.transcript.value.trim() ? 'Tap the mic to add more' : 'Tap the mic to talk, or type';
 }
 
 // A short soft tone and buzz the moment the mic is really listening, so people know to start talking.
@@ -372,7 +372,7 @@ dictation.onstate = (state) => {
   const on = state !== 'idle';
   document.body.dataset.mic = state;
   els.mic.setAttribute('aria-pressed', String(on));
-  els.micStatus.textContent = state === 'starting' ? 'One moment…' : state === 'listening' ? 'Listening. Talk now, tap to stop' : idleStatus();
+  els.micStatus.textContent = state === 'starting' ? 'One moment…' : state === 'listening' ? 'Listening. Tap the mic to stop' : idleStatus();
   els.transcript.readOnly = on;
   clearInterval(timerId);
   if (on) {
@@ -421,7 +421,7 @@ function startKeyboardVoice() {
   els.coach.hidden = false;
   document.body.dataset.mic = 'keyboard';
   els.mic.setAttribute('aria-pressed', 'true');
-  els.micStatus.textContent = `Voice typing. Talk, then tap ${els.create.textContent}`;
+  els.micStatus.textContent = 'Voice typing on';
   const ta = els.transcript;
   ta.focus();
   const end = ta.value.length;
@@ -538,12 +538,31 @@ function dictationIntoView() {
 }
 // Tapping into the box to fix something stops the live mic, so the words stay put while you edit. It unlocks on the
 // press itself (before the focus), so the same tap brings up the keyboard instead of needing a second tap.
+// Words still being heard land in the box when the mic stops (if the browser doesn't finish them itself).
+function landPending(voice, pending, box, after = () => {}) {
+  if (!pending) return;
+  const t0 = Date.now();
+  const land = () => {
+    if (voice.state !== 'idle' && Date.now() - t0 < 1800) return setTimeout(land, 60);
+    if (!box.value.includes(pending)) box.value = appendSegment(box.value, pending);
+    after();
+  };
+  land();
+}
 function stopMicToEdit() {
   if (keyboardVoice || dictation.state === 'idle') return;
   els.transcript.readOnly = false;
+  const pending = els.interim.textContent.trim();
   dictation.stop();
+  landPending(dictation, pending, els.transcript, () => setTranscript(els.transcript.value));
 }
-els.transcript.addEventListener('pointerdown', stopMicToEdit);
+// Any touch in the composer counts, except on its own buttons (the mic, photos, Clear). Phones differ in which of
+// these they send for a tap on a read-only box, so all of them are listened for.
+const editTap = (e) => {
+  if (e.target && e.target.closest && e.target.closest('#mic, .tool-btn, .tx-clear')) return;
+  stopMicToEdit();
+};
+for (const ev of ['pointerdown', 'touchstart', 'mousedown']) $('composer').addEventListener(ev, editTap, { capture: true, passive: true });
 els.transcript.addEventListener('focus', () => {
   stopMicToEdit();
   // Lift the box once, as the keyboard opens. No delayed second scroll, and none if the person has already moved
@@ -1516,6 +1535,14 @@ function startMoreVoice() {
   unlockAudio();
   moreVoice.start();
 }
+// The change box listens as soon as it opens; tapping into it to fix something stops the mic, keeping the words.
+function stopMoreToEdit() {
+  if (!moreVoice || moreVoice.state === 'idle') return;
+  const pending = $('more-interim').textContent.trim();
+  moreVoice.stop();
+  landPending(moreVoice, pending, moreText, () => ($('more-go').disabled = !moreText.value.trim()));
+}
+for (const ev of ['pointerdown', 'touchstart', 'mousedown', 'focus']) moreText.addEventListener(ev, stopMoreToEdit, { passive: true });
 moreMic.addEventListener('click', () => {
   if (keyboardVoice) {
     moreText.focus();

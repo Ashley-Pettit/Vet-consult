@@ -164,11 +164,14 @@ test('Clear sits in the dictation box and asks first', async ({ page }) => {
   await page.locator('#confirm-clear').getByRole('button', { name: 'Clear' }).click();
   await expect(page.locator('#transcript')).toHaveValue('');
   await expect(page.locator('#clear-text')).toBeHidden();
-  const box = await page.locator('#transcript').boundingBox();
+  // Clear sits in the composer's tool row, under the words and inside the same box.
   await page.locator('#transcript').fill('x');
+  const box = await page.locator('#composer').boundingBox();
+  const words = await page.locator('#transcript').boundingBox();
   const btn = await page.locator('#clear-text').boundingBox();
-  expect(btn.x + btn.width).toBeGreaterThan(box.x + box.width - 30); // bottom right
-  expect(btn.y + btn.height).toBeGreaterThan(box.y + box.height - 30);
+  expect(btn.y).toBeGreaterThanOrEqual(words.y + words.height - 1);
+  expect(btn.y + btn.height).toBeLessThanOrEqual(box.y + box.height + 1);
+  expect(btn.x).toBeGreaterThanOrEqual(box.x);
 });
 
 test('the care plan is easy to forward: Share plan, with the video link in the text', async ({ page }) => {

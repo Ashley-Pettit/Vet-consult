@@ -65,7 +65,7 @@ test('keyboard only: tab order reaches the mic, text box and create button', asy
   await mockApi(page);
   await openApp(page);
   const order = [];
-  for (let i = 0; i < 12; i++) {
+  for (let i = 0; i < 20; i++) {
     await page.keyboard.press('Tab');
     order.push(await page.evaluate(() => document.activeElement.id || document.activeElement.className || document.activeElement.tagName));
   }
