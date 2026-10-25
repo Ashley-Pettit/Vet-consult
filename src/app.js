@@ -245,12 +245,20 @@ function showCoach() {
     box.append(el('span', { text: ANDROID_TIP }), ' ', more);
   } else box.textContent = keyboardTip();
 }
-// Keep the help and the text box in view above the on-screen keyboard as it opens.
+// Keep the help and the text box in view above the on-screen keyboard as it opens: one scroll, when the keyboard
+// is up (or straight away if it already is, or there's no on-screen keyboard), not one before and another after.
 function keepTypingInView() {
   const show = () => document.body.dataset.mic === 'keyboard' && els.coach.scrollIntoView({ block: 'start', behavior: 'smooth' });
-  show();
   const vv = window.visualViewport;
-  if (vv) vv.addEventListener('resize', show, { once: true });
+  if (!vv || document.body.dataset.kb === 'open' || window.matchMedia('(pointer: fine)').matches) return show();
+  let done = false;
+  const once = () => {
+    if (done) return;
+    done = true;
+    show();
+  };
+  vv.addEventListener('resize', once, { once: true });
+  setTimeout(once, 700); // a keyboard that doesn't resize the page
 }
 function keyboardTip() {
   const ua = navigator.userAgent;
@@ -484,20 +492,43 @@ els.mic.addEventListener('click', () => {
 (() => {
   const vv = window.visualViewport;
   if (!vv) return;
-  const update = () => {
+  let lastOpen = null;
+  let lastHeight = 0;
+  let settle = null;
+  const place = () => {
     const offset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
-    const open = offset > 80;
-    document.body.dataset.kb = open ? 'open' : '';
-    document.documentElement.style.setProperty('--kb-offset', open ? `${Math.round(offset)}px` : '0px');
-    autoGrow(els.transcript); // the box shrinks to fit above the keyboard, and grows back after
+    document.documentElement.style.setProperty('--kb-offset', offset > 80 ? `${Math.round(offset)}px` : '0px');
+    return offset > 80;
+  };
+  const update = (e) => {
+    const open = Math.max(0, window.innerHeight - vv.height - vv.offsetTop) > 80;
+    // The keyboard opened, closed or changed height: the box shrinks to fit above it, and grows back after.
+    if (open !== lastOpen || Math.abs(vv.height - lastHeight) > 1) {
+      lastOpen = open;
+      lastHeight = vv.height;
+      document.body.dataset.kb = open ? 'open' : '';
+      autoGrow(els.transcript);
+    }
+    // Scrolling with the keyboard up: the bar would chase the moving viewport and jitter. It steps out of the way
+    // until the scroll settles, then comes back in place.
+    if (e && e.type === 'scroll' && open) {
+      document.body.dataset.kbScroll = 'on';
+      clearTimeout(settle);
+      settle = setTimeout(() => {
+        place();
+        delete document.body.dataset.kbScroll;
+      }, 140);
+      return;
+    }
+    place();
   };
   vv.addEventListener('resize', update);
   vv.addEventListener('scroll', update);
 })();
-// Tapping the dictation box: once the keyboard is up, show the whole box (label to last line) above the Create bar,
+// Tapping the dictation box: as the keyboard comes up, show the whole box (label to last line) above the Create bar,
 // instead of leaving the line being typed hidden under the bar.
 function dictationIntoView() {
-  // Only when the keyboard is up and the box is hidden behind the Create bar: lift it just enough, smoothly.
+  // Only when the keyboard is up and the box is hidden behind the Create bar: lift it just enough.
   if (document.activeElement !== els.transcript || document.body.dataset.kb !== 'open' || document.body.dataset.mic === 'keyboard') return;
   const vv = window.visualViewport;
   const bar = document.querySelector('#view-record .actions');
@@ -505,12 +536,27 @@ function dictationIntoView() {
   const box = els.transcript.getBoundingClientRect();
   if (box.bottom > limit) window.scrollBy({ top: box.bottom - limit, behavior: 'smooth' });
 }
+// Tapping into the box to fix something stops the live mic, so the words stay put while you edit. It unlocks on the
+// press itself (before the focus), so the same tap brings up the keyboard instead of needing a second tap.
+function stopMicToEdit() {
+  if (keyboardVoice || dictation.state === 'idle') return;
+  els.transcript.readOnly = false;
+  dictation.stop();
+}
+els.transcript.addEventListener('pointerdown', stopMicToEdit);
 els.transcript.addEventListener('focus', () => {
+  stopMicToEdit();
+  // Lift the box once, as the keyboard opens. No delayed second scroll, and none if the person has already moved
+  // the page themselves (that felt like the page jumping on its own).
   const vv = window.visualViewport;
-  let done = false;
-  const go = () => { if (!done) { done = true; dictationIntoView(); } };
-  if (vv) vv.addEventListener('resize', () => setTimeout(go, 60), { once: true });
-  setTimeout(go, 450);
+  if (!vv) return;
+  let moved = false;
+  const touched = () => (moved = true);
+  window.addEventListener('touchmove', touched, { once: true, passive: true });
+  vv.addEventListener('resize', () => {
+    window.removeEventListener('touchmove', touched);
+    if (!moved) requestAnimationFrame(dictationIntoView);
+  }, { once: true });
 });
 // Keep the coach mark only while the keyboard is up.
 els.transcript.addEventListener('blur', () => setTimeout(() => document.activeElement !== els.transcript && endKeyboardVoice(), 150));

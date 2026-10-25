@@ -44,6 +44,22 @@ test.describe('dictation', () => {
     expect(errors).toEqual([]);
   });
 
+  test('tapping into the text box while listening stops the mic and lets you edit', async ({ page }) => {
+    await fakeSpeech(page);
+    await openApp(page);
+    await page.locator('#mic').click();
+    await expect(page.locator('#mic')).toHaveAttribute('aria-pressed', 'true');
+    await page.evaluate(() => window.__fakeSay('wombat with mange'));
+    await expect(page.locator('#transcript')).toHaveValue('Wombat with mange');
+    await page.locator('#transcript').click();
+    await expect(page.locator('#mic')).toHaveAttribute('aria-pressed', 'false');
+    await expect(page.locator('#transcript')).toHaveJSProperty('readOnly', false);
+    await expect(page.locator('#transcript')).toBeFocused();
+    await page.keyboard.press('End');
+    await page.keyboard.type(', left ear');
+    await expect(page.locator('#transcript')).toHaveValue('Wombat with mange, left ear');
+  });
+
   test('blocked microphone explains how to fix it', async ({ page }) => {
     await fakeSpeech(page, { denied: true });
     await openApp(page);
