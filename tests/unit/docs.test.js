@@ -153,4 +153,5 @@ test('expert opinion: plain words, welfare impacts, real references only, and at
   assert.match(p, /Possum care guidelines/);
   assert.match(p, /<document title="Council report">/);
   assert.match(p, /The vet is Dr Sam Lee/);
+  assert.match(p, /confidential material for this one opinion/);
 });

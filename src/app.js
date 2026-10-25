@@ -1058,9 +1058,16 @@ $('adv-tab').addEventListener('click', () => {
   document.querySelector(`input[name="mode"][value="${m}"]`).checked = true;
   document.querySelector(`input[name="mode"][value="${m}"]`).dispatchEvent(new Event('change'));
 });
+// Documents attached for an expert opinion are used for that opinion only: they never carry into another tab.
+let lastMode = null;
 function applyMode() {
   updateMediaFrom();
   const m = mode();
+  if (lastMode && lastMode !== m && (lastMode === 'opinion' || m === 'opinion') && documents.length) {
+    documents = [];
+    renderDocs();
+  }
+  lastMode = m;
   document.body.dataset.mode = m;
   els.create.textContent = MODE_TEXT[m].button;
   els.transcript.placeholder = MODE_TEXT[m].placeholder + TYPO_NOTE;
@@ -2475,7 +2482,8 @@ function renderDoc(d, kind) {
 
 function showDoc(d, kind, info = '') {
   resetFeedback();
-  remember('doc', { d, kind }, d.title);
+  // An expert opinion isn't kept in Recent: its documents and the vet's words stay with this one opinion.
+  if (kind !== 'opinion') remember('doc', { d, kind }, d.title);
   currentDoc = { d, kind };
   renderMakeNext($('make-next-doc'), kind);
   // "For the vet" and the MOP plan lead with a ready-to-send text message.
@@ -2582,7 +2590,8 @@ function renderMakeNext(box, current) {
   // A vet flicks between the carer plan and clinical notes from the same words, to copy either into their system.
   const pool = settings.role === 'vet' ? [['carer', 'Carer plan'], ['vet', 'Clinical notes'], ['media', 'Media statement'], ['witness', 'Expert witness statement'], ['opinion', 'Expert opinion']] : MAKE_NEXT;
   // A statement for a prosecution and a media statement don't mix: neither offers the other.
-  const options = current && current !== 'funding' ? pool.filter(([m]) => m !== current && !(current === 'witness' && m === 'media') && !(current === 'media' && m === 'witness')) : [];
+  // Nothing is made from an expert opinion's words or documents except the opinion itself.
+  const options = current && current !== 'funding' && current !== 'opinion' ? pool.filter(([m]) => m !== current && !(current === 'witness' && m === 'media') && !(current === 'media' && m === 'witness')) : [];
   box.hidden = !options.length;
   if (!options.length) return box.replaceChildren();
   box.replaceChildren(

@@ -138,6 +138,24 @@ test('Advanced has a third choice, Expert opinion, with document uploads and its
   await expect(page.locator('.mode-intro[data-modes="opinion"]')).toBeVisible();
 });
 
+test('an expert opinion stays with itself: not kept in Recent, no follow-on documents, attachments cleared on leaving', async ({ page }) => {
+  await withKey(page);
+  await mockApi(page, { body: apiReply({ title: 'Veterinary opinion: test', subtitle: '', sections: [{ heading: 'Summary', text: 'In my opinion it is harmful.' }], due: [], check: [] }) });
+  await openApp(page);
+  await page.locator('#adv-tab').click();
+  await page.getByRole('radio', { name: 'Expert opinion' }).check({ force: true });
+  await page.locator('#add-doc').setInputFiles({ name: 'report.txt', mimeType: 'text/plain', buffer: Buffer.from('Council report text') });
+  await expect(page.locator('#doc-list li')).toHaveCount(1);
+  await page.locator('#transcript').fill('Is moving possums in winter acceptable? I think not.');
+  await page.locator('#create').click();
+  await expect(page.locator('#view-doc')).toBeVisible();
+  await expect(page.locator('#make-next-doc')).toBeHidden();
+  expect(await page.evaluate(() => (localStorage.getItem('css.recent') || '') + (localStorage.getItem('css.last') || ''))).not.toContain('Veterinary opinion');
+  await page.locator('#doc-back').click();
+  await page.getByRole('radio', { name: 'Expert witness statement' }).check({ force: true });
+  await expect(page.locator('#doc-list li')).toHaveCount(0);
+});
+
 test.describe('creating a note', () => {
   test('the website uses the Animal Welfare Companion connection: no key needed, and the vet name is added', async ({ page }) => {
     await fakeSpeech(page);
