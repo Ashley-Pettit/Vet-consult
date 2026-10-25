@@ -12,7 +12,7 @@ test('care and condition videos are instructional, not showcases', () => {
 
 test('an animal without its own how-to video falls back to a general one', () => {
   assert.equal(careVideoFor('ringtail', 'ringtail possum joey').title, CARE_VIDEOS.ringtail.title);
-  assert.equal(careVideoFor('raptor', 'adult wedge-tailed eagle').title, CARE_VIDEOS.bird.title);
+  assert.equal(careVideoFor('shorebird', 'adult hooded plover').title, CARE_VIDEOS.bird.title);
   assert.equal(careVideoFor('platypus', 'adult platypus').title, CARE_VIDEOS.general.title);
   assert.equal(careVideoFor('flyingfox', 'grey-headed flying-fox, cat attack').title, 'Why every animal caught by a cat needs antibiotics');
 });

@@ -58,7 +58,7 @@ export const CARE_VIDEOS = {
   "echidna": {"id": "FuEWBCiMRXY", "title": "Echidna handling", "channel": "Bonorong Wildlife Sanctuary", "date": "2022", "warning": "The second half shows anaesthesia and an X-ray."},
   "echidna-young": {"id": "wvlBuq2kg2k", "title": "Feeding an echidna puggle", "channel": "NQ Wildlife Care", "date": "2023"},
   "flyingfox": {"id": "D9yg0Js4p2Q", "title": "Assessing a newly rescued flying-fox", "channel": "Megabattie (licensed wildlife carer)", "date": "2024", "warning": "Never touch a bat. Only trained, vaccinated people handle bats."},
-  "flyingfox-young": {"id": "34o4w-kwejY", "title": "Caring for an orphan flying-fox pup", "channel": "Megabattie (licensed wildlife carer)", "date": "2020", "warning": "In the video, the pup is found on her mother, who has died. Never touch a bat. Only trained, vaccinated people handle bats."},
+  "flyingfox-young": {"id": "Lz2az8Us6KI", "title": "Bat Wraps, episode 1: raising an orphaned baby flying-fox", "channel": "Sydney Wildlife", "date": "", "warning": "Never touch a bat. Only trained, vaccinated people handle bats."},
   "microbat-young": {"id": "RliRZu31t3g", "title": "Feeding orphaned baby bats", "channel": "Bat World Sanctuary (USA)", "date": "2018", "warning": "Never touch a bat. Only trained, vaccinated people handle bats. From the USA: follow local advice from your vet or wildlife expert."},
   "babybird": {"id": "K9FETK07HvQ", "title": "How to help a baby bird", "channel": "Wildlife Victoria", "date": "2019"},
   "bird": {"id": "PVqgAgfDFyk", "title": "How to contain and care for an injured bird", "channel": "Wildlife Victoria", "date": "2019"},
@@ -66,7 +66,9 @@ export const CARE_VIDEOS = {
   "lorikeet": {"id": "bg0F486rjWU", "title": "Lorikeet paralysis syndrome", "channel": "RSPCA Queensland", "date": "2023"},
   "parrot-young": {"id": "FwuNJEQCW2g", "title": "Hand-rearing a baby parrot: crop needle feeding", "channel": "Vetafarm", "date": "2010", "warning": "Made for pet birds. Ask your vet or an experienced carer before hand-feeding a wild chick."},
   "pigeon": {"id": "hbyTI8JVSlU", "title": "An injured pigeon: avian vet exam and treatment", "channel": "Bird Vet Melbourne", "date": "2023"},
+  "frogmouth-owl": {"id": "k87V8EHCOMM", "title": "WIRES Virtual Carer: teaching tawny frogmouths to hunt before release", "channel": "WIRES", "date": "2018"},
   "frogmouth-owl-young": {"id": "K0vi5_TNKrQ", "title": "Feeding tawny frogmouth chicks in the nursery", "channel": "Big Beak Wildlife Rescue", "date": "2023"},
+  "raptor": {"id": "J913FAea7C8", "title": "How to catch an injured raptor", "channel": "Carolina Raptor Center (USA)", "date": "2018", "warning": "From the USA: follow local advice from your vet or wildlife expert. Wear thick gloves: the talons cause the injuries."},
   "waterbird": {"id": "3ia0z1tz0JM", "title": "Caring for wild ducks and geese in rehab", "channel": "Living Sky Wildlife Rehabilitation (Canada)", "date": "2025", "warning": "From Canada: follow local advice from your vet or wildlife expert."},
   "waterbird-young": {"id": "Hh_P-EeiYM8", "title": "How to help ducklings", "channel": "Wildlife Victoria", "date": "2019"},
   "seabird": {"id": "6dDoe2NoeRc", "title": "Assessing and caring for seabirds", "channel": "Wildlife Friendly Vets (FNPW)", "date": "2021"},
@@ -507,10 +509,10 @@ export const CARE_CONDITIONS = [
    "car strike"
   ],
   "video": {
-   "id": "pHigsQ5ZMWw",
-   "title": "Fixing a broken turtle shell",
-   "channel": "Hervey Bay Snake Catcher",
-   "date": "2019"
+   "url": "https://vimeo.com/1167189875",
+   "title": "Treating turtle shell injuries: the dos and don’ts",
+   "channel": "NSW Environment and Heritage (Dr Robert Johnson, reptile vet)",
+   "date": ""
   }
  },
  {
