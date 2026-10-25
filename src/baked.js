@@ -3,7 +3,7 @@
 // Anything that changes the prompt (your name or drugs in Settings, photos, an edited example) gets a real call.
 import BAKED from './baked-examples.js';
 
-export const BAKED_DELAY_MS = 5000;
+export const BAKED_DELAY_MS = 1500; // long enough to feel like it's working, short enough not to wait
 
 // cyrb53: a small, fast string hash. Plenty for telling a few dozen prompts apart.
 export function bakeKey(prompt) {

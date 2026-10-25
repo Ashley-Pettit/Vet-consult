@@ -2,7 +2,7 @@ import { CONFIG } from './config.js';
 import { Dictation, speechErrorMessage } from './speech.js';
 import { resolveProvider, friendly, AiError, onUsage } from './ai.js';
 import { withBaked } from './baked.js';
-import { withTemplate } from './templates.js';
+import { withTemplate, withLiveRules } from './templates.js';
 import { readDocument, DocError, MAX_DOCS, DOC_ACCEPT } from './docs.js';
 import { store } from './storage.js';
 import { localChecks } from './clinical.js';
@@ -871,7 +871,7 @@ const stopped = () => new AiError('cancelled', 'Stopped.');
 function withExamples(p) {
   if (bakedOff()) return p;
   // Live drafts get Opus's house-style example for that kind of document (templates.js).
-  return p || isExampleText() ? withBaked(p, stopped, (prompt) => withTemplate(prompt, region().code)) : null;
+  return p || isExampleText() ? withBaked(p, stopped, (prompt) => withTemplate(withLiveRules(prompt), region().code)) : null;
 }
 async function ensureProvider() {
   provider = withExamples(await resolveProvider(settings));

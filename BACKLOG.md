@@ -46,6 +46,10 @@ Last updated 25 October 2026. Highest value first within each group.
 - An experienced carer to read the 30 plans, especially the week numbers in each day-by-day plan.
 - More animals: sugar glider, swamp wallaby, rainbow lorikeet, crimson rosella, kookaburra, microbats, frogs.
 
+## Next re-bake
+
+- Move `CARER_TONE` (in `src/templates.js`, added to live care plan calls only) into the care plan prompts in `src/note.js`, then re-bake.
+
 ## Expert opinion (Advanced, vets)
 
 - Web search only works once the proxy is redeployed (`cd proxy && npx wrangler deploy`). Until then the old proxy drops the search tool and opinions are written from the app's checked sources and attachments only.

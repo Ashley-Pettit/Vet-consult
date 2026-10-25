@@ -42,3 +42,17 @@ export function withTemplate(prompt, regionCode = 'vic') {
   const at = Math.max(p.lastIndexOf('\n<dictation>'), p.lastIndexOf('\n<comments>'), p.lastIndexOf('\n<note>'));
   return at > 0 ? `${p.slice(0, at)}\n${block}${p.slice(at)}` : `${p}\n\n${block}`;
 }
+
+// Tone about people in care plans (Ash, October 2026). Added to live calls only, after the built-in examples are looked
+// up, so their stored replies still match; move it into the care plan prompts themselves at the next re-bake.
+const CARE_PLAN_KINDS = new Set(['caresheet', 'carer-vet', 'carer-carer']);
+export const CARER_TONE = `Tone about people: speak positively and respectfully about the vet, the carer and anyone who has helped the animal. Never criticise, second-guess or point out what someone should, ideally would or could have done (for example no "ideally the vet would have", "this should have been done sooner" or "unfortunately it wasn't given"). Treat what has been done as the starting point and say plainly what to do next.`;
+/** The prompt with any live-only rules for its kind added (in the fixed, cached part). */
+export function withLiveRules(prompt) {
+  const p = String(prompt);
+  const carePlan = CARE_PLAN_KINDS.has(templateKind(p)) || /^You are updating a finished care plan/.test(p);
+  if (!carePlan) return p;
+  const rule = `\n- ${CARER_TONE}\n`;
+  const mark = p.indexOf(CACHE_SPLIT);
+  return mark > 0 ? `${p.slice(0, mark)}${rule}${p.slice(mark)}` : `${rule}${p}`;
+}
