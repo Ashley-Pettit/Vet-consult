@@ -8,16 +8,23 @@ Last updated 25 October 2026. For the next Claude Code session.
 - **What users do:** a vet or carer types or talks, sometimes leaving details out. The app writes a best-practice guide that other carers can follow, filling the gaps from checked sources. The user reviews it, then shares it.
 - **Owner:** Ash (Ashley Pettit). His mum is a Bunurong carer.
 - **Live site:** https://ashley-pettit.github.io/Vet-consult/care/
+- **Beta site:** https://ashley-pettit.github.io/Vet-consult/care-beta/ (Settings has a Live/Beta switch; beta shows a Beta chip on the logo)
 - **Claude artifact (single-file build):** https://claude.ai/artifact/Uusjv2zy1ZUN5KQGs3WyW2
 - **Repo:** `Ashley-Pettit/Vet-consult`.
   - `main` is the older RSPCA "Consult Scribe" app, served at the site root.
-  - `bunurong-wildlife` is this app, served at `/care/`.
+  - `care-prod` is this app's live version, served at `/care/`.
+  - `bunurong-wildlife` is this app's beta, served at `/care-beta/`. **All new changes go here.**
 
 ## Branches right now
 
 | Branch | State |
 |---|---|
-| `bunurong-wildlife` | **Live.** Includes the simpler mic and QA loops 1 to 10 (prompt fixes, ranges filtering, video tweaks), with examples baked. |
+| `care-prod` | **Live** (`/care/`). Only moves when Ash asks to promote beta. |
+| `bunurong-wildlife` | **Beta** (`/care-beta/`). Day-to-day work lands here. |
+
+**Promote beta to live (only when Ash asks):** `git push origin bunurong-wildlife:care-prod` (fast-forward), then run the workflow. A hotfix for live only: commit on `care-prod`, then cherry-pick it onto `bunurong-wildlife`.
+
+Both copies share the same site, so settings, sign-in and drafts carry across when switching.
 
 ## How to ship (standing workflow after every change)
 
@@ -26,12 +33,12 @@ Last updated 25 October 2026. For the next Claude Code session.
    - `FRESH=1 PAR=8 BAKE_LOG=/tmp/bake-log.json npm run bake` (about 15 to 20 minutes; real AI calls through the proxy)
    - `npm run build && node scripts/qa/replay.mjs`: expect every line to start with `OK`. There are 82 lines, covering Vic and Qld.
    - If replay already shows 82 `OK` lines with `calls=0`, the bake matches the prompts and doesn't need re-running.
-3. Commit with the attribution lines. Push `bunurong-wildlife`.
-4. Deploy. Pushing the branch doesn't deploy: the workflow on `main` builds the branch into `/care/`.
+3. Commit with the attribution lines. Push `bunurong-wildlife` (beta).
+4. Deploy. Pushing the branch doesn't deploy: the workflow on `main` builds `care-prod` into `/care/` and `bunurong-wildlife` into `/care-beta/` (with `CHANNEL=beta`).
    - `gh workflow run "Test and deploy" -R Ashley-Pettit/Vet-consult --ref main`
    - Then `gh run watch <id> -R Ashley-Pettit/Vet-consult --exit-status`
 5. Publish the artifact. Use the Artifact tool with `url` = the artifact link above and `file_path` = `dist-artifact/care-scribe.html`.
-6. **End the update message with the website link.**
+6. **End the update message with the beta link** (and the live link after a promotion).
 
 ### In a Claude Code cloud container
 
