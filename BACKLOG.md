@@ -46,6 +46,10 @@ Last updated 25 October 2026. Highest value first within each group.
 - An experienced carer to read the 30 plans, especially the week numbers in each day-by-day plan.
 - More animals: sugar glider, swamp wallaby, rainbow lorikeet, crimson rosella, kookaburra, microbats, frogs.
 
+## Expert opinion (Advanced, vets)
+
+- The "Possums moved in winter" example isn't baked yet, so tapping it makes a live AI call. Bake it at the next re-bake, and add a house-style example for `opinion` to `template-examples.js`.
+
 ## From the 25 October 2026 vet QA (prompt changes: re-bake after)
 - Carer plans invent detail about the find site ("recorded with GPS coordinates"). Release wording should only say the location was recorded if it was said.
 - Witness statements: when an opinion has no stated basis ("obvious to anyone", "needed a vet a week earlier"), add a check asking the vet for the reason.

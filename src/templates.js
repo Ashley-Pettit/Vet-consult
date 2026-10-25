@@ -17,6 +17,7 @@ const KINDS = [
   ['tovet', /into this document: Summary for the vet visit/],
   ['media', /into this document: Draft media statement/],
   ['witness', /into this document: Draft expert witness statement/],
+  ['opinion', /into this document: Veterinary expert opinion/],
   ['funding', /into this document: Draft funding or grant submission/],
 ];
 

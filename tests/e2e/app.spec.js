@@ -128,6 +128,16 @@ test.describe('dictation', () => {
   });
 });
 
+test('Advanced has a third choice, Expert opinion, with document uploads and its own button', async ({ page }) => {
+  await openApp(page);
+  await page.locator('#adv-tab').click();
+  await page.getByRole('radio', { name: 'Expert opinion' }).check({ force: true });
+  await expect(page.locator('#create')).toHaveText('Draft opinion');
+  await expect(page.locator('.doc-attach')).toBeVisible();
+  await expect(page.locator('#adv-seg')).toHaveAttribute('data-pick', 'opinion');
+  await expect(page.locator('.mode-intro[data-modes="opinion"]')).toBeVisible();
+});
+
 test.describe('creating a note', () => {
   test('the website uses the Animal Welfare Companion connection: no key needed, and the vet name is added', async ({ page }) => {
     await fakeSpeech(page);

@@ -59,6 +59,7 @@ import {
   EXAMPLE_POLISH_DICTATION,
   EXAMPLE_MEDIA_DICTATION,
   EXAMPLE_WITNESS_DICTATION,
+  EXAMPLE_OPINION_DICTATION,
   appendSegment,
   buildPrompt,
   buildPolishPrompt,
@@ -112,7 +113,7 @@ let current = 0;
 let isExample = false;
 let careSheet = null;
 let photos = [];
-let documents = []; // attached to an expert witness statement
+let documents = []; // attached to an expert witness statement or expert opinion
 let plainAtRender = ''; // the clinical notes as Claude wrote them, to spot hand edits
 // Photos can be switched off in Settings to keep AI costs down.
 const sendPhotos = () => (settings.photosOn === false ? [] : photos);
@@ -633,7 +634,7 @@ confirmClear.addEventListener('close', () => {
 // still match; drop that exception at the next re-bake.
 const sourcesFor = (text) => sourcesForPrompt(isExampleText() ? '' : text);
 function isExampleText() {
-  return [EXAMPLE_DICTATION, EXAMPLE_BATCH_DICTATION, EXAMPLE_CARER_DICTATION, EXAMPLE_FOSTER_DICTATION, EXAMPLE_INTAKE_DICTATION, EXAMPLE_LOG_DICTATION, EXAMPLE_TOVET_DICTATION, EXAMPLE_MOP_DICTATION, EXAMPLE_JOEY_CARER_DICTATION, EXAMPLE_WOMBAT_VET_DICTATION, EXAMPLE_VET_PLAN_DICTATION, EXAMPLE_FUNDING_DICTATION, EXAMPLE_POLISH_DICTATION, EXAMPLE_MEDIA_DICTATION, EXAMPLE_WITNESS_DICTATION].some((x) => x.trim() === els.transcript.value.trim());
+  return [EXAMPLE_DICTATION, EXAMPLE_BATCH_DICTATION, EXAMPLE_CARER_DICTATION, EXAMPLE_FOSTER_DICTATION, EXAMPLE_INTAKE_DICTATION, EXAMPLE_LOG_DICTATION, EXAMPLE_TOVET_DICTATION, EXAMPLE_MOP_DICTATION, EXAMPLE_JOEY_CARER_DICTATION, EXAMPLE_WOMBAT_VET_DICTATION, EXAMPLE_VET_PLAN_DICTATION, EXAMPLE_FUNDING_DICTATION, EXAMPLE_POLISH_DICTATION, EXAMPLE_MEDIA_DICTATION, EXAMPLE_WITNESS_DICTATION, EXAMPLE_OPINION_DICTATION].some((x) => x.trim() === els.transcript.value.trim());
 }
 function updateExampleNote() {
   const on = isExampleText();
@@ -658,6 +659,7 @@ $('load-funding-example').addEventListener('click', () => loadExample(EXAMPLE_FU
 $('load-polish-example').addEventListener('click', () => loadExample(EXAMPLE_POLISH_DICTATION));
 $('load-media-example').addEventListener('click', () => loadExample(EXAMPLE_MEDIA_DICTATION));
 $('load-witness-example').addEventListener('click', () => loadExample(EXAMPLE_WITNESS_DICTATION));
+$('load-opinion-example').addEventListener('click', () => loadExample(EXAMPLE_OPINION_DICTATION));
 
 // "New" on any result: asks first, then a clean start. The result stays under "Last made".
 const confirmNew = $('confirm-new');
@@ -680,7 +682,7 @@ confirmNew.addEventListener('close', () => {
   els.mic.focus();
 });
 
-/* ---------------- documents (expert witness statements) ---------------- */
+/* ---------------- documents (expert witness statements and opinions) ---------------- */
 
 $('add-doc').accept = DOC_ACCEPT;
 const kb = (n) => (n >= 1048576 ? `${(n / 1048576).toFixed(1)} MB` : `${Math.max(1, Math.round(n / 1024))} KB`);
@@ -969,13 +971,14 @@ async function askJson(prompt0, signal, opts = {}) {
 }
 
 const mode = () => document.querySelector('input[name="mode"]:checked')?.value || 'vet';
-const MODES = ['intake', 'log', 'carer', 'tovet', 'mop', 'funding', 'vet', 'polish', 'media', 'witness'];
-const ROLE_MODES = { carer: ['carer', 'intake', 'log', 'tovet', 'mop', 'funding'], vet: ['carer', 'vet', 'polish', 'media', 'witness'] };
+const MODES = ['intake', 'log', 'carer', 'tovet', 'mop', 'funding', 'vet', 'polish', 'media', 'witness', 'opinion'];
+const ROLE_MODES = { carer: ['carer', 'intake', 'log', 'tovet', 'mop', 'funding'], vet: ['carer', 'vet', 'polish', 'media', 'witness', 'opinion'] };
 
 // Every dictation box ends with the reassurance about typos (in the placeholder, so it adds nothing to the screen).
 const TYPO_NOTE = ' Typos are fine.';
 const MODE_TEXT = {
   witness: { button: 'Draft witness statement', placeholder: 'Your exam, findings and opinion, plus your name and qualifications.' },
+  opinion: { button: 'Draft opinion', placeholder: 'The questions you were asked, what you know, and your view.' },
   media: { button: 'Draft statement', placeholder: 'The story, how the animal is doing, and what the public should do.' },
   polish: { button: 'Polish notes', placeholder: 'Jot your notes. Shorthand is fine.' },
   vet: { button: 'Create notes', placeholder: 'Talk or type the consult.' },
@@ -1048,7 +1051,7 @@ function updateMediaFrom() {
   const org = mediaOrg();
   $('media-from-text').textContent = `Statement from: ${org ? org.split(',')[0] : 'your organisation (choose it in Settings, or say it)'}`;
 }
-const ADVANCED = ['media', 'witness'];
+const ADVANCED = ['media', 'witness', 'opinion'];
 $('adv-tab').addEventListener('click', () => {
   if (ADVANCED.includes(mode())) return;
   const m = ADVANCED.includes(settings.advMode) ? settings.advMode : 'media';
@@ -1062,7 +1065,7 @@ function applyMode() {
   els.create.textContent = MODE_TEXT[m].button;
   els.transcript.placeholder = MODE_TEXT[m].placeholder + TYPO_NOTE;
   document.querySelectorAll('[data-modes]').forEach((n) => (n.hidden = !n.dataset.modes.split(' ').includes(m)));
-  // Media and expert witness statements sit together under Advanced, with a slider to pick one.
+  // Media statements, expert witness statements and expert opinions sit together under Advanced, with a slider to pick one.
   const adv = ADVANCED.includes(m);
   $('adv-tab').setAttribute('aria-pressed', String(adv));
   $('adv-seg').hidden = !adv || settings.role !== 'vet';
@@ -1095,6 +1098,8 @@ async function createNote() {
     if (mode() === 'carer') return await createCarePlan(finalText);
     // Media statements go out in public: always the most thorough model.
     if (mode() === 'media') return await withModel(BEST_MODEL, () => createDoc('media', finalText));
+    // An expert opinion goes out under the vet's name, often to people who will act on it: the most thorough model too.
+    if (mode() === 'opinion') return await withModel(BEST_MODEL, () => createDoc('opinion', finalText));
     if (DOC_KINDS[mode()]) return await createDoc(mode(), finalText);
     if (!(await ensureProvider())) {
       if (finalText === EXAMPLE_DICTATION.trim()) return showNotes([normaliseNote(EXAMPLE_NOTE)], true);
@@ -2440,7 +2445,7 @@ function mopVideo(d) {
 const NUMBERED = /^\d+[.)]\s+/;
 const docList = (items) => (items.length > 1 && items.every((x) => NUMBERED.test(x)) ? el('ol', { class: 'num-list' }, items.map((x) => el('li', { text: x.replace(NUMBERED, '') }))) : list(items));
 function renderDoc(d, kind) {
-  document.querySelector('#doc-checks .sum-title').textContent = kind === 'witness' ? 'Review before signing' : 'Review before sending';
+  document.querySelector('#doc-checks .sum-title').textContent = kind === 'witness' || kind === 'opinion' ? 'Review before signing' : 'Review before sending';
   $('doc-title').textContent = keepBrackets(d.title || DOC_KINDS[kind].label);
   $('doc-subtitle').textContent = d.subtitle;
   $('doc-subtitle').hidden = !d.subtitle;
@@ -2483,6 +2488,7 @@ function showDoc(d, kind, info = '') {
   renderDoc(d, kind);
   if (kind === 'media' && !info) info = 'Draft for review. Nothing here is public until it has been checked and approved.';
   if (kind === 'witness' && !info) info = 'Draft only. Check every fact and opinion against your records before you sign it.';
+  if (kind === 'opinion' && !info) info = 'Draft only. Check every fact, opinion and reference before it goes out under your name.';
   $('doc-banner').textContent = info;
   $('doc-banner').hidden = !info;
   showView('doc');
@@ -2503,8 +2509,8 @@ async function createDoc(kind, text) {
   const opts = { clinician: settings.clinician, photoCount: sendPhotos().length, sourceList: sourcesFor(text) };
   // A media statement is from the organisation chosen in Settings (an RSPCA template makes it an RSPCA statement).
   if (kind === 'media') opts.org = mediaOrg();
-  // An expert witness statement can rely on attached documents: Word and text go in the prompt, PDFs as files.
-  const docs = kind === 'witness' ? documents : [];
+  // An expert witness statement or opinion can rely on attached documents: Word and text go in the prompt, PDFs as files.
+  const docs = kind === 'witness' || kind === 'opinion' ? documents : [];
   if (docs.length) opts.documents = docs;
   const pdfs = docs.filter((x) => x.kind === 'pdf');
   // An intake starts its care plan at the same moment, in a second call, so "Need advice right now?" is ready
@@ -2529,7 +2535,7 @@ function docWordModel() {
     const v = mopVideo(d);
     return docModel(d, 'Care instructions until help arrives', aiNoteFor(d.title), { forPublic: true, video: v ? { ...v, url: watchUrl(v) } : null });
   }
-  return docModel(d, kind === 'media' ? 'Draft media statement, for review' : kind === 'witness' ? 'Draft expert witness statement' : DOC_KINDS[kind].label, '');
+  return docModel(d, kind === 'media' ? 'Draft media statement, for review' : kind === 'witness' ? 'Draft expert witness statement' : kind === 'opinion' ? 'Draft veterinary opinion' : DOC_KINDS[kind].label, '');
 }
 $('doc-back').addEventListener('click', () => showView('record'));
 $('doc-copy').addEventListener('click', () => {
@@ -2565,6 +2571,7 @@ const MAKE_ICONS = {
   mop: '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/>',
   media: '<path d="M3 10v4h3l6 4V6L6 10z"/><path d="M16 9a4 4 0 0 1 0 6M19 6a8 8 0 0 1 0 12"/>',
   witness: '<path d="M12 3v18M8 21h8M5 7h14"/><path d="M5 7l-3 7a3 3 0 0 0 6 0zM19 7l-3 7a3 3 0 0 0 6 0z"/>',
+  opinion: '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M8.5 12h7M8.5 9h7M8.5 15h4"/>',
 };
 const svgIcon = (inner) => {
   const t = document.createElement('template');
@@ -2573,7 +2580,7 @@ const svgIcon = (inner) => {
 };
 function renderMakeNext(box, current) {
   // A vet flicks between the carer plan and clinical notes from the same words, to copy either into their system.
-  const pool = settings.role === 'vet' ? [['carer', 'Carer plan'], ['vet', 'Clinical notes'], ['media', 'Media statement'], ['witness', 'Expert witness statement']] : MAKE_NEXT;
+  const pool = settings.role === 'vet' ? [['carer', 'Carer plan'], ['vet', 'Clinical notes'], ['media', 'Media statement'], ['witness', 'Expert witness statement'], ['opinion', 'Expert opinion']] : MAKE_NEXT;
   // A statement for a prosecution and a media statement don't mix: neither offers the other.
   const options = current && current !== 'funding' ? pool.filter(([m]) => m !== current && !(current === 'witness' && m === 'media') && !(current === 'media' && m === 'witness')) : [];
   box.hidden = !options.length;

@@ -2,8 +2,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { DOC_KINDS, buildDocPrompt, buildCarerPlanPrompt, normaliseDoc, docText, dueLabel } from '../../src/note.js';
 
-test('document kinds, in picker order (the media and expert witness statements are for vets)', () => {
-  assert.deepEqual(Object.keys(DOC_KINDS), ['intake', 'log', 'mop', 'tovet', 'media', 'witness', 'funding']);
+test('document kinds, in picker order (media, expert witness and expert opinion are for vets)', () => {
+  assert.deepEqual(Object.keys(DOC_KINDS), ['intake', 'log', 'mop', 'tovet', 'media', 'witness', 'opinion', 'funding']);
   for (const k of Object.values(DOC_KINDS)) assert.ok(k.label && k.copy && k.working && k.rule);
 });
 
@@ -136,4 +136,21 @@ test('media statement: no RSPCA unless the vet says it', async () => {
   assert.match(p, /just say to call a local wildlife rescue group or vet/);
   setRegion('vic');
   assert.doesNotMatch(buildDocPrompt('media', 'Wombat warning'), /run by the RSPCA/);
+});
+
+test('expert opinion: plain words, welfare impacts, real references only, and attached documents', () => {
+  const p = buildDocPrompt('opinion', 'Is relocating possums in winter acceptable? I think not.', {
+    clinician: 'Dr Sam Lee',
+    sourceList: 'possum-1 | vic | Possum care guidelines | Keep possums within 50 m of where found',
+    documents: [{ name: 'Council report', kind: 'text', text: 'Possums moved 2 km.' }],
+  });
+  assert.match(p, /Veterinary expert opinion on animal welfare, written for non-vets/);
+  assert.match(p, /plain Australian English/);
+  assert.match(p, /"Welfare impacts"/);
+  assert.match(p, /"References"/);
+  assert.match(p, /Never invent, alter or guess a reference/);
+  assert.match(p, /\[Draft for you to confirm\]/);
+  assert.match(p, /Possum care guidelines/);
+  assert.match(p, /<document title="Council report">/);
+  assert.match(p, /The vet is Dr Sam Lee/);
 });
