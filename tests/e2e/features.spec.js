@@ -42,7 +42,7 @@ test('vital flags, dose totals and PMS field copy', async ({ page, context }) =>
   await expect(temp).toHaveCount(1);
   await expect(temp).toContainText('High');
   await expect(page.locator('.meds .calc').first()).toContainText('312.4 mg per dose');
-  await expect(page.locator('#check-count')).toHaveText('3');
+  await expect(page.locator('#review-open-sub')).toContainText('3 to check');
   await expect(page.locator('#check-list')).toContainText('high for a dog');
 
   // Prescriptions and reminders each show in full, with Copy top right.
@@ -60,7 +60,7 @@ test('vital flags, dose totals and PMS field copy', async ({ page, context }) =>
   expect(await page.locator('#plain').inputValue()).not.toContain('312.4');
 });
 
-test('one tap opens every review question with the mic on; one call fixes the notes', async ({ page }) => {
+test('one tap opens every review question with the mic on; one call updates the notes', async ({ page }) => {
   const errors = watchErrors(page);
   await fakeSpeech(page);
   await withKey(page);
@@ -72,14 +72,14 @@ test('one tap opens every review question with the mic on; one call fixes the no
   // Straight to the notes to edit and copy: no formatted card on top.
   await expect(page.locator('#note')).toBeHidden();
   await expect(page.locator('#plain')).toBeVisible();
-  await page.locator('#checks summary').click();
+  await page.locator('#review-open').click();
   await expect(page.locator('#more')).toBeVisible();
   await expect(page.locator('#more-questions li').first()).toContainText('Clinician name?');
   await expect(page.locator('#more-mic')).toHaveAttribute('aria-pressed', 'true'); // listening straight away
   await page.evaluate(() => window.__fakeSay('doctor sam lee'));
   await expect(page.locator('#more-text')).toHaveValue(/sam lee/i);
   await page.locator('#more-go').click();
-  await expect(page.locator('#toast-text')).toHaveText('Notes fixed.');
+  await expect(page.locator('#toast-text')).toHaveText('Notes updated.');
   await expect(page.locator('#plain')).toHaveValue(/sam lee/i);
   await expect(page.locator('#check-list')).not.toContainText('Clinician name?');
   const fix = calls.find((c) => c.prompt.includes('<check_items>'));

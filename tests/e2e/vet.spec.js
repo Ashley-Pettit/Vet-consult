@@ -23,9 +23,9 @@ test('vet: plan first, notes second, copy at the top, quick notes look finished'
   await expect(page.locator('#copy-top')).toBeVisible();
   await expect(page.locator('#note')).not.toContainText('Not recorded');
   await expect(page.locator('#plain')).not.toHaveValue(/Not recorded/);
-  await expect(page.locator('#gaps')).toBeVisible();
-  await expect(page.locator('#gaps')).not.toHaveAttribute('open', '');
-  await page.locator('#gaps summary').click();
+  // What would be nice to add sits in the same review card as what to check.
+  await expect(page.locator('#review-open')).toBeVisible();
+  await expect(page.locator('#review-open-sub')).toContainText('nice to add');
   await expect(page.locator('#gap-list')).toContainText('Heart rate');
 
   // Back to the plan: already made, no new call.

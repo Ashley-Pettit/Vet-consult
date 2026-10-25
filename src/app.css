@@ -1439,3 +1439,28 @@ textarea, input { caret-color: var(--caret); }
 .saved-item .saved-open .lib-stage { overflow-wrap: anywhere; }
 .saved-item .icon-btn.small { flex: none; width: 44px; height: 44px; }
 .saved-name { flex: 1; min-width: 0; }
+
+/* Review card: what to check and what would be nice to add, in one place; one tap to update */
+.review { display: grid; }
+.review-card { width: 100%; display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: var(--radius); border: 1px solid var(--warn-line); background: var(--warn-soft); color: var(--ink); text-align: left; cursor: pointer; transition: border-color .15s, transform .15s; }
+.review-card:hover { border-color: var(--warn); }
+.review-card:active { transform: scale(0.99); }
+.review-card:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.review-icon { flex: none; width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; background: var(--warn); color: var(--bg); }
+.review-icon svg { width: 22px; height: 22px; }
+.review-text { display: grid; gap: 2px; min-width: 0; }
+.review-title { font: 700 0.98rem/1.2 var(--display); text-transform: uppercase; letter-spacing: 0.04em; color: var(--warn); }
+.review-sub { font-size: 0.88rem; color: var(--muted); }
+.review-go { margin-left: auto; flex: none; display: inline-flex; align-items: center; gap: 2px; font-weight: 700; color: var(--ink); }
+.review-go svg { width: 18px; height: 18px; }
+.review-card[data-tone="calm"] { border-color: var(--line); background: var(--surface); }
+.review-card[data-tone="calm"]:hover { border-color: var(--accent); }
+.review-card[data-tone="calm"] .review-icon { background: var(--accent-soft); color: var(--accent); }
+.review-card[data-tone="calm"] .review-title { color: var(--ink); }
+@media (prefers-reduced-motion: reduce) { .review-card { transition: none; } .review-card:active { transform: none; } }
+/* In the sheet: the questions, then the optional extras as chips */
+.qs-group { display: grid; gap: 6px; padding: 0 14px 12px; }
+.qs-label { margin: 0; font: 700 0.74rem/1.2 var(--display); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.qs-group .more-questions { padding: 0 0 0 1.2rem; }
+.nice-chips { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.nice-chips li { padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); font-size: 0.86rem; }

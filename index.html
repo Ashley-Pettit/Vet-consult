@@ -227,10 +227,15 @@
 
     <p id="note-banner" class="banner" data-tone="info" hidden></p>
 
-    <details id="checks" class="checks" hidden>
-      <summary><span class="sum-title">Review before saving</span> <span class="count" id="check-count"></span><span class="sum-hint">Tap to answer</span></summary>
-      <ul id="check-list"></ul>
-    </details>
+    <div class="review" id="checks" hidden>
+      <button type="button" class="review-card" id="review-open">
+        <span class="review-icon"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4h6v3H9z"/><path d="M9 13l2 2 4-4"/></svg></span>
+        <span class="review-text"><span class="review-title" id="review-open-title">Review before saving</span><span class="review-sub" id="review-open-sub"></span></span>
+        <span class="review-go">Update<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>
+      </button>
+      <ul id="check-list" hidden></ul>
+      <ul id="gap-list" hidden></ul>
+    </div>
 
     <section class="plain-sec" aria-labelledby="plain-title">
       <div class="sec-head" hidden>
@@ -241,12 +246,6 @@
       <label for="plain" class="sr-only">Clinical notes text to copy</label>
       <textarea id="plain" rows="14" spellcheck="true"></textarea>
     </section>
-    <details id="gaps" class="gaps" hidden>
-      <summary>Ideally also include <span class="count" id="gap-count"></span></summary>
-      <p class="help">Optional. The note is fine without these. Tap Add more info to add any.</p>
-      <ul id="gap-list"></ul>
-      <button type="button" class="btn small ghost add-more-inline">Add more info</button>
-    </details>
     <article id="note" class="note" aria-label="Formatted clinical note" hidden></article>
     <div class="feedback" data-for="note" role="group" aria-label="Was this helpful?">
       <span>Was this helpful?</span>
@@ -393,10 +392,14 @@
       <p class="muted" id="doc-subtitle"></p>
     </div>
     <p id="doc-banner" class="banner" data-tone="info" hidden></p>
-    <details id="doc-checks" class="checks" hidden>
-      <summary><span class="sum-title">Review before sending</span> <span class="count" id="doc-check-count"></span><span class="sum-hint">Tap to answer</span></summary>
-      <ul id="doc-check-list" class="plain-list"></ul>
-    </details>
+    <div class="review" id="doc-checks" hidden>
+      <button type="button" class="review-card" id="doc-review-open">
+        <span class="review-icon"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4h6v3H9z"/><path d="M9 13l2 2 4-4"/></svg></span>
+        <span class="review-text"><span class="review-title" id="doc-review-open-title">Review before sending</span><span class="review-sub" id="doc-review-open-sub"></span></span>
+        <span class="review-go">Update<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>
+      </button>
+      <ul id="doc-check-list" hidden></ul>
+    </div>
     <section class="text-vet" id="text-vet" hidden>
       <h2 id="text-vet-title">Text to your vet</h2>
       <p id="text-vet-body"></p>
@@ -682,8 +685,15 @@
   <form method="dialog" id="more-form">
     <h2 id="more-title">Add more info</h2>
     <details class="more-qs" id="more-qs" hidden>
-      <summary><span class="more-qs-title">Questions to answer</span> <span class="count" id="more-qs-count"></span></summary>
-      <ol class="more-questions" id="more-questions"></ol>
+      <summary><span class="more-qs-title" id="more-qs-title">To check</span> <span class="count" id="more-qs-count"></span></summary>
+      <div class="qs-group" id="qs-check">
+        <h3 class="qs-label">To check</h3>
+        <ol class="more-questions" id="more-questions"></ol>
+      </div>
+      <div class="qs-group" id="qs-nice" hidden>
+        <h3 class="qs-label">Nice to add, if you have them</h3>
+        <ul class="nice-chips" id="more-nice"></ul>
+      </div>
     </details>
     <div class="more-mic-zone">
       <button type="button" class="mic more-mic" id="more-mic" aria-pressed="false" aria-label="Speak what you missed">

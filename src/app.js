@@ -1166,7 +1166,6 @@ function showNotes(list, example) {
   current = 0;
   isExample = example;
   careSheet = null;
-  els.checks.open = false; // the bar opens the answer sheet instead
   renderNote();
   els.noteBanner.textContent = example
     ? inClaude
@@ -1214,11 +1213,19 @@ function renderAnimals() {
 }
 
 let checkItems = []; // the questions on the clinical note now on screen
+let gapItems = []; // what a full record would ideally also have (optional)
+/** One review card: what to check (must) and what would be nice to add (optional), one tap to update. */
+function renderReview(box, prefix, checks, nice, titles) {
+  box.hidden = !checks.length && !nice.length;
+  const card = $(prefix);
+  card.dataset.tone = checks.length ? 'warn' : 'calm';
+  $(`${prefix}-title`).textContent = checks.length ? titles[0] : 'Nice to add';
+  $(`${prefix}-sub`).textContent = [checks.length ? `${checks.length} to check` : '', nice.length ? `${nice.length} nice to add` : ''].filter(Boolean).join(' · ');
+  card.setAttribute('aria-label', `${$(`${prefix}-title`).textContent}: ${$(`${prefix}-sub`).textContent}. Update`);
+}
 function renderChecks(n, local) {
   const items = [...n.check.map((t) => ({ t, auto: false })), ...local.checks.map((t) => ({ t, auto: true }))];
   checkItems = items.map((x) => x.t);
-  els.checks.hidden = items.length === 0;
-  $('check-count').textContent = items.length ? String(items.length) : '';
   els.checkList.replaceChildren(
     ...items.map(({ t, auto }) => el('li', { class: 'check-item' }, [el('span', { class: 'check-text' }, [auto ? el('span', { class: 'tag', title: 'Worked out on this device', text: 'Auto' }) : null, t])])),
   );
@@ -1237,7 +1244,7 @@ async function fixNotes(questions, answers) {
   try {
     const job = (signal) =>
       edited ? provider.generate(buildNotesAnswerPrompt(before, questions, answers), signal) : askJson(buildRevisionPrompt(notes[idx], questions, answers), signal);
-    const run = () => runWorking('Fixing the notes', 'Putting your answers in the right places.', job, 'Usually under 15 seconds');
+    const run = () => runWorking('Updating the notes', 'Putting what you said in the right places.', job, 'Usually under 15 seconds');
     // Quick, unless an answer mentions a drug or dose: those keep the chosen model.
     const reply = DOSE_WORDS.test(answers) ? await run() : await withModel(QUICK_MODEL, async () => (await ensureProvider(), run()));
     // The words it was made from now include the answers, so the carer plan and anything else made next has them too.
@@ -1258,7 +1265,7 @@ async function fixNotes(questions, answers) {
       renderNote();
       showView('note');
     }
-    toast('Notes fixed.', edited ? { label: 'Undo', run: () => { els.plain.value = before; fitPlain(); } } : undefined);
+    toast('Notes updated.', edited ? { label: 'Undo', run: () => { els.plain.value = before; fitPlain(); } } : undefined);
   } catch (e) {
     showView('note');
     toast(e && e.code === 'cancelled' ? 'Stopped. The notes haven’t changed.' : friendly(e));
@@ -1292,11 +1299,9 @@ function noteGaps(n) {
   ].filter(([missing]) => missing).map(([, label]) => label);
 }
 function renderGaps(n) {
-  const gaps = noteGaps(n);
-  $('gaps').hidden = !gaps.length;
-  $('gaps').open = false;
-  $('gap-count').textContent = String(gaps.length);
-  $('gap-list').replaceChildren(...gaps.map((g) => el('li', { text: g })));
+  gapItems = noteGaps(n);
+  $('gap-list').replaceChildren(...gapItems.map((g) => el('li', { text: g })));
+  renderReview(els.checks, 'review-open', checkItems, gapItems, ['Review before saving']);
 }
 
 function renderNote() {
@@ -1451,7 +1456,7 @@ const MORE_HELP = 'It’s added to what you already said and the record is rewri
 // "Change": a finished care plan or document is edited in place, by voice or typing; the rest stays as it was.
 let amendTarget = null;
 const MORE_TEXT = {
-  answer: { title: 'Answer the questions', placeholder: 'Answer them in order, for example: 1. Adult. 2. 6.2 kilos. Skip any you don’t know.', go: 'Fix it' },
+  answer: { title: 'Review and update', placeholder: 'Answer them in order, for example: 1. Adult. 2. 6.2 kilos. Skip any you don’t know.', go: 'Update' },
   add: { title: 'Add more info', placeholder: 'e.g. She weighed 24.6 kilos, and the case number is 26-04417.', go: 'Update' },
   amend: { title: 'Answer or change', placeholder: 'e.g. Feeds every 3 hours, not 4. She weighs 130 grams now.', go: 'Make change' },
 };
@@ -1460,26 +1465,33 @@ const ANSWER_HELP = 'Answer them in order. Skip any you don’t know.';
 // The review questions show at the top of the sheet in a collapsible list: open when the person came to answer
 // them, closed when they came to change something (they can still open it and answer any).
 let answerQs = null; // the questions on show
-let answerMode = false; // came from the review bar to answer them
-function showQuestions(qs, open = false) {
+let answerNice = []; // optional things that would be nice to add (clinical notes)
+let answerMode = false; // came from the review card to answer them
+function showQuestions(qs, open = false, nice = []) {
   answerQs = qs && qs.length ? qs : null;
-  $('more-qs').hidden = !answerQs;
-  $('more-qs').open = Boolean(answerQs && open);
-  $('more-qs-count').textContent = answerQs ? String(answerQs.length) : '';
+  answerNice = nice && nice.length ? nice : [];
+  const any = Boolean(answerQs || answerNice.length);
+  $('more-qs').hidden = !any;
+  $('more-qs').open = any && open;
+  $('more-qs-title').textContent = answerQs ? (answerNice.length ? 'To check, and nice to add' : 'To check') : 'Nice to add';
+  $('more-qs-count').textContent = String((answerQs || []).length + answerNice.length);
+  $('qs-check').hidden = !answerQs;
+  $('qs-nice').hidden = !answerNice.length;
   $('more-questions').replaceChildren(...(answerQs || []).map((q) => el('li', { text: q })));
+  $('more-nice').replaceChildren(...answerNice.map((g) => el('li', { text: g })));
 }
 const numbered = (qs) => qs.map((q, i) => `${i + 1}. ${q}`).join('\n');
 /** Answer every review question at once: the questions on show, the mic already listening, one tap to fix. */
-function openAnswers(target, qs) {
-  if (busy || !qs.length) return;
+function openAnswers(target, qs, nice = []) {
+  if (busy || (!qs.length && !nice.length)) return;
   amendTarget = target;
   renderMopDirections(false);
   answerMode = true;
-  showQuestions(qs, true);
+  showQuestions(qs, true, nice);
   const t = MORE_TEXT.answer;
   $('more-title').textContent = t.title;
-  moreText.placeholder = t.placeholder;
-  $('more-go').textContent = t.go;
+  moreText.placeholder = qs.length ? t.placeholder : 'Say what you have, for example: weighs 6.2 kilos, temp 38.4.';
+  $('more-go').textContent = target.type === 'notes' ? 'Update notes' : target.type === 'care' ? 'Update plan' : 'Update';
   addMoreInfo(true);
 }
 function openMore(target) {
@@ -1506,7 +1518,7 @@ function addMoreInfo(keepTarget) {
     amendTarget = null;
     answerMode = false;
     // From the clinical note: its review questions, ready to answer if wanted.
-    showQuestions(!$('view-note').hidden ? checkItems : null);
+    showQuestions(!$('view-note').hidden ? checkItems : null, false, !$('view-note').hidden ? gapItems : []);
     renderMopDirections(false);
     $('more-title').textContent = MORE_TEXT.add.title;
     moreText.placeholder = MORE_TEXT.add.placeholder;
@@ -1581,12 +1593,13 @@ more.addEventListener('close', async () => {
   const picked = amendTarget ? mopDirectionText() : '';
   const extra = [typed, picked].filter(Boolean).join('\n\n');
   const qs = answerQs;
+  const nice = answerNice;
   const answering = answerMode;
   showQuestions(null);
   answerMode = false;
   if (more.returnValue !== 'go' || !extra) return;
   more.returnValue = '';
-  if (answering && qs && amendTarget && amendTarget.type === 'notes') return fixNotes(qs, typed);
+  if (answering && amendTarget && amendTarget.type === 'notes') return fixNotes([...(qs || []), ...nice.map((g) => `(optional, if given) ${g}`)], typed);
   if (answering && qs && amendTarget) return amend(amendTarget, `Answers to the review questions. Put each answer where it belongs and remove that question from "check"; leave any question that wasn't answered.\n${numbered(qs)}\nAnswers: ${typed}`);
   // A change can also answer some of the questions on show ("1. adult"), so they go along for reference.
   const withQs = (t) => (qs ? `${t}\n\nThe review questions on show were (the person may have answered some of them by number):\n${numbered(qs)}` : t);
@@ -2541,14 +2554,10 @@ function mopVideo(d) {
 const NUMBERED = /^\d+[.)]\s+/;
 const docList = (items) => (items.length > 1 && items.every((x) => NUMBERED.test(x)) ? el('ol', { class: 'num-list' }, items.map((x) => el('li', { text: x.replace(NUMBERED, '') }))) : list(items));
 function renderDoc(d, kind) {
-  document.querySelector('#doc-checks .sum-title').textContent = kind === 'witness' || kind === 'opinion' ? 'Review before signing' : 'Review before sending';
   $('doc-title').textContent = keepBrackets(d.title || DOC_KINDS[kind].label);
   $('doc-subtitle').textContent = d.subtitle;
   $('doc-subtitle').hidden = !d.subtitle;
-  const checks = $('doc-checks');
-  checks.hidden = d.check.length === 0;
-  checks.open = false;
-  $('doc-check-count').textContent = d.check.length ? String(d.check.length) : '';
+  renderReview($('doc-checks'), 'doc-review-open', d.check, [], [kind === 'witness' || kind === 'opinion' ? 'Review before signing' : 'Review before sending']);
   $('doc-check-list').replaceChildren(...d.check.map((c) => el('li', { text: c })));
   $('doc').replaceChildren(
     ...(kind === 'mop' ? [el('p', { class: 'ai-disclaimer', text: aiNoteFor(d.title) })] : []),
@@ -2650,10 +2659,7 @@ $('doc-copy').addEventListener('click', () => {
 });
 $('doc-new').addEventListener('click', changeDoc);
 // The review bar opens the questions ready to answer, rather than just listing them.
-$('doc-checks').querySelector('summary').addEventListener('click', (e) => {
-  e.preventDefault();
-  if (currentDoc) openAnswers({ type: 'doc' }, currentDoc.d.check);
-});
+$('doc-review-open').addEventListener('click', () => currentDoc && openAnswers({ type: 'doc' }, currentDoc.d.check));
 
 /* ---------------- make another from the same words ---------------- */
 
@@ -3304,10 +3310,7 @@ $('unlock').addEventListener('input', (e) => {
 /* ---------------- "Add more info" from inside the review lists ---------------- */
 
 document.querySelectorAll('.add-more-inline').forEach((b) => b.addEventListener('click', () => addMoreInfo()));
-els.checks.querySelector('summary').addEventListener('click', (e) => {
-  e.preventDefault();
-  openAnswers({ type: 'notes' }, checkItems);
-});
+$('review-open').addEventListener('click', () => openAnswers({ type: 'notes' }, checkItems, gapItems));
 
 /* ---------------- feedback: thumbs up or down ---------------- */
 
