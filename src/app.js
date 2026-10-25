@@ -180,14 +180,32 @@ function updateCreateState() {
   if (dictation.state === 'idle' && document.body.dataset.mic !== 'keyboard') els.micStatus.textContent = idleStatus();
 }
 
+// The text's height, measured on a hidden twin of the box. Collapsing the box itself to measure it (height: auto)
+// made the page jump on phones with every key.
+let twin = null;
+function textHeight(ta) {
+  if (!twin) {
+    twin = document.createElement('textarea');
+    twin.className = 'grow-twin';
+    twin.setAttribute('aria-hidden', 'true');
+    twin.tabIndex = -1;
+    document.body.append(twin);
+  }
+  const cs = getComputedStyle(ta);
+  for (const k of ['fontFamily', 'fontSize', 'fontWeight', 'lineHeight', 'letterSpacing', 'wordSpacing', 'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft', 'boxSizing']) twin.style[k] = cs[k];
+  twin.style.width = `${ta.offsetWidth}px`;
+  twin.value = ta.value || ta.placeholder;
+  return twin.scrollHeight;
+}
+// Space for the box above the keyboard, taken once as it opens and then kept, so the suggestion bar coming and going
+// while typing doesn't resize the box.
+let keyboardRoom = null;
 function autoGrow(ta) {
-  // Never taller than what fits on screen with the Create bar under it (above the keyboard when it's up), so the box
-  // and Create are always seen together; longer notes scroll inside the box.
-  const vv = window.visualViewport;
+  // Never taller than fits on screen (above the keyboard when it's up); longer notes scroll inside the box.
   const kb = document.body.dataset.kb === 'open';
-  const room = kb && vv ? vv.height - 150 : window.innerHeight * 0.45;
-  ta.style.height = 'auto';
-  ta.style.height = Math.max(120, Math.min(ta.scrollHeight + 2, room)) + 'px';
+  const room = kb && keyboardRoom ? keyboardRoom : window.innerHeight * 0.45;
+  const want = Math.round(Math.max(120, Math.min(textHeight(ta) + 2, room)));
+  if (Math.abs(ta.offsetHeight - want) > 1) ta.style.height = `${want}px`;
 }
 
 function setTranscript(text) {
@@ -497,14 +515,12 @@ els.mic.addEventListener('click', () => {
   const vv = window.visualViewport;
   if (!vv) return;
   let lastOpen = null;
-  let lastHeight = 0;
   vv.addEventListener('resize', () => {
-    const offset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
-    const open = offset > 80;
-    document.documentElement.style.setProperty('--kb-offset', open ? `${Math.round(offset)}px` : '0px');
-    if (open === lastOpen && Math.abs(vv.height - lastHeight) <= 1) return;
+    const open = window.innerHeight - vv.height - vv.offsetTop > 80;
+    // Only opening or closing counts: the keyboard's suggestion bar changes its height while typing.
+    if (open === lastOpen) return;
     lastOpen = open;
-    lastHeight = vv.height;
+    keyboardRoom = open ? Math.max(160, vv.height - 110) : null;
     document.body.dataset.kb = open ? 'open' : '';
     autoGrow(els.transcript);
   });

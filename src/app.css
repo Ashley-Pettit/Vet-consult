@@ -1048,9 +1048,10 @@ dialog.crop-dlg h2 { margin: 0; font: 700 1.2rem/1.2 var(--display); text-transf
 .recent-meta { font-size: 0.82rem; color: var(--muted); }
 
 /* With the keyboard up, focus scrolling stops short of the Create bar */
-html:has(body[data-kb="open"]) { scroll-padding-bottom: calc(var(--kb-offset, 0px) + 96px); scroll-padding-top: 8px; }
+/* No bar over the keyboard any more: only a little room under the line being typed */
+html:has(body[data-kb="open"]) { scroll-padding-bottom: 16px; scroll-padding-top: 8px; }
 /* Room to scroll the dictation box up to the top while the keyboard covers the bottom of the page */
-body[data-kb="open"] #view-record { padding-bottom: calc(var(--kb-offset, 0px) + 96px); }
+body[data-kb="open"] #view-record { padding-bottom: 40vh; } /* a steady amount, so typing never changes the page height */
 body[data-kb="open"] .tx-hint { display: none; }
 
 /* A photo being shrunk on the phone */
@@ -1316,7 +1317,7 @@ body[data-mic="listening"] .mic-zone .mic::after { top: -5px; right: -5px; botto
 /* Composer: the words, then a row of tools inside the same box (photos and Clear on the left, the mic on the right) */
 .composer {
   display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 12px; background: var(--surface, var(--bg));
-  scroll-margin-bottom: 96px; transition: border-color 120ms ease-out, box-shadow 120ms ease-out;
+  transition: border-color 120ms ease-out, box-shadow 120ms ease-out;
 }
 .composer:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 .composer #transcript { width: 100%; min-height: 120px; border: 0; border-radius: 12px 12px 0 0; background: transparent; box-shadow: none; padding: 12px 14px 6px; resize: none; }
@@ -1354,3 +1355,9 @@ body[data-mic="listening"] .composer .mic, body[data-mic="starting"] .composer .
 #view-record .actions .btn { width: 100%; }
 @media (min-width: 720px) { #view-record .actions { text-align: right; } #view-record .actions .btn { width: auto; min-width: 220px; } }
 .composer .tx-clear { min-height: 44px; padding: 4px 10px; }
+
+/* Hidden twin of the dictation box, used only to measure how tall the text is */
+.grow-twin { position: absolute; top: 0; left: -9999px; height: 0 !important; min-height: 0 !important; overflow: hidden; visibility: hidden; resize: none; border: 0; pointer-events: none; }
+/* The status beside "Dictation" stays on one line, so a change of words never pushes the box down */
+.mic-line { white-space: nowrap; overflow: hidden; }
+.mic-line .mic-status { overflow: hidden; text-overflow: ellipsis; }
