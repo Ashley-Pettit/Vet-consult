@@ -84,6 +84,12 @@ test('favourites: save a plan with the star, find it at the top of Plans, rename
   await expect(page.locator('#care-sheet')).toContainText('Koala');
   await expect(page.locator('#care-save')).toHaveText('Saved');
   await page.locator('#care-back').click();
+  // Edit plan opens the plan's text to change, separate from Rename.
+  await page.locator('#saved-list').getByRole('button', { name: /^Edit/ }).click();
+  await expect(page.locator('#view-edit')).toBeVisible();
+  await page.locator('#edit-cancel').click();
+  await expect(page.locator('#view-care')).toBeVisible();
+  await page.locator('#care-back').click();
   await page.locator('#saved-list').getByRole('button', { name: /^Remove/ }).click();
   await expect(page.locator('#saved-plans')).toBeHidden();
   expect(calls.length).toBe(0); // saving and opening never call the AI

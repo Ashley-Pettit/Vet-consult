@@ -114,6 +114,8 @@ test('Opus can be picked (Sonnet by default) and Settings shows AI usage', async
   const calls = await mockApi(page, { body: () => ({ ...textReply(EXAMPLE_CARER_PLAN), usage: { input_tokens: 12000, output_tokens: 3000 } }) });
   await openApp(page);
   await page.locator('#open-settings').click();
+  await expect(page.locator('#model')).toBeHidden(); // AI models live under Admin
+  await page.locator('#admin-group > summary').click();
   await expect(page.locator('#model')).toHaveValue('claude-sonnet-5-5');
   await expect(page.locator('#model option')).toHaveCount(3);
   await expect(page.locator('#usage-body')).toContainText('No AI requests');
@@ -269,4 +271,16 @@ test('the loading screen offers no model choice: just the fact and Stop', async 
   await expect(page.locator('#stop')).toBeVisible();
   await expect(page.locator('#view-care')).toBeVisible();
   expect(calls[0].body.model).toBe('claude-sonnet-5-5');
+});
+
+test.describe('Add to Home Screen on an iPhone', () => {
+  test.use({ userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1' });
+  test('Settings shows the iPhone steps', async ({ page }) => {
+    await openApp(page);
+    await page.locator('#open-settings').click();
+    await expect(page.locator('#home-field')).toBeVisible();
+    await expect(page.locator('#home-help')).toContainText('iPhone or iPad');
+    await expect(page.locator('#home-steps')).toContainText('Add to Home Screen');
+    await expect(page.locator('#home-install')).toBeHidden();
+  });
 });

@@ -462,18 +462,16 @@
 
     <section class="set-group" aria-labelledby="set-app">
       <h3 class="set-title" id="set-app">App</h3>
+      <div class="field home-field" id="home-field" hidden>
+        <p class="field-label">Add to Home Screen</p>
+        <p class="help" id="home-help"></p>
+        <ol class="home-steps" id="home-steps"></ol>
+        <button type="button" class="btn ghost" id="home-install" hidden>Add to Home Screen</button>
+      </div>
+
       <div class="field check-field">
         <label class="switch-row" for="photos-on"><input type="checkbox" id="photos-on"> <span>Allow photos</span></label>
         <p class="help">Photos help identify the animal and injuries. Each one adds to AI costs.</p>
-      </div>
-
-      <div class="field" id="channel-field" hidden>
-        <p class="field-label" id="channel-label">App version</p>
-        <div class="channel-pick" role="group" aria-labelledby="channel-label">
-          <a class="channel-opt" id="channel-live" href="../care/">Live</a>
-          <a class="channel-opt" id="channel-beta" href="../care-beta/">Beta</a>
-        </div>
-        <p class="help" id="channel-help"></p>
       </div>
 
       <div class="field">
@@ -483,49 +481,63 @@
           <option value="plain">Plain (no branding)</option>
           <option value="rspca" hidden>RSPCA</option>
         </select>
-        <label for="unlock" class="sub-label">Have an access code?</label>
-        <input id="unlock" type="text" autocomplete="off" spellcheck="false" placeholder="Enter code">
-        <p class="help" id="unlock-msg" aria-live="polite"></p>
-      </div>
-    </section>
-
-    <section class="set-group" aria-labelledby="set-ai">
-      <h3 class="set-title" id="set-ai">AI</h3>
-      <div class="field">
-        <label for="model">AI model</label>
-        <select id="model"></select>
-        <p class="help">Detailed suits most cases. Fast is quickest for simple ones; Most thorough is for tricky cases and takes longer.</p>
       </div>
 
-      <section class="field usage" aria-labelledby="usage-title">
-        <h3 class="field-label" id="usage-title">AI usage</h3>
-        <div id="usage-body"></div>
-        <p class="help" id="usage-balance"></p>
-        <button type="button" class="link" id="usage-reset">Reset this count</button>
-      </section>
-
-      <details class="field advanced" id="key-field">
-        <summary>Advanced: use an API key instead</summary>
-        <label for="api-key">Anthropic API key</label>
-        <input id="api-key" type="password" autocomplete="off" spellcheck="false" placeholder="sk-ant-…">
-        <label class="check"><input type="checkbox" id="remember-key"> Remember on this device</label>
-        <p class="help">Get a key from <a href="https://platform.claude.com/" target="_blank" rel="noopener">the Claude Console</a>. Only use your own key on a device you control. Not needed in the Claude app.</p>
-      </details>
-    </section>
-
-    <section class="set-group" aria-labelledby="set-more">
-      <h3 class="set-title" id="set-more">More</h3>
       <div class="field">
         <span class="field-label">Funding</span>
         <button type="button" class="btn ghost" id="open-funding">Write a funding submission</button>
         <p class="help">Talk through what you need and why. You get a draft grant submission to polish.</p>
       </div>
-
-      <div class="field check-field">
-        <label class="switch-row" for="library-admin-on"><input type="checkbox" id="library-admin-on"> <span>Plan library admin</span></label>
-        <p class="help">Change the ready-made plans. Edits stay on this device.</p>
-      </div>
     </section>
+
+    <!-- Admin: for whoever looks after the app. Closed until tapped. -->
+    <details class="set-admin" id="admin-group">
+      <summary class="set-admin-btn">Admin</summary>
+      <div class="set-admin-body">
+        <p class="help">AI models and costs, the connection, app versions, access codes and the plan library.</p>
+
+        <div class="field">
+          <label for="model">AI model</label>
+          <select id="model"></select>
+          <p class="help">Detailed suits most cases. Fast is quickest for simple ones; Most thorough is for tricky cases and takes longer.</p>
+        </div>
+
+        <section class="field usage" aria-labelledby="usage-title">
+          <h3 class="field-label" id="usage-title">AI usage</h3>
+          <div id="usage-body"></div>
+          <p class="help" id="usage-balance"></p>
+          <button type="button" class="link" id="usage-reset">Reset this count</button>
+        </section>
+
+        <details class="field advanced" id="key-field">
+          <summary>Use an API key instead</summary>
+          <label for="api-key">Anthropic API key</label>
+          <input id="api-key" type="password" autocomplete="off" spellcheck="false" placeholder="sk-ant-…">
+          <label class="check"><input type="checkbox" id="remember-key"> Remember on this device</label>
+          <p class="help">Get a key from <a href="https://platform.claude.com/" target="_blank" rel="noopener">the Claude Console</a>. Only use your own key on a device you control. Not needed in the Claude app.</p>
+        </details>
+
+        <div class="field" id="channel-field" hidden>
+          <p class="field-label" id="channel-label">App version</p>
+          <div class="channel-pick" role="group" aria-labelledby="channel-label">
+            <a class="channel-opt" id="channel-live" href="../care/">Live</a>
+            <a class="channel-opt" id="channel-beta" href="../care-beta/">Beta</a>
+          </div>
+          <p class="help" id="channel-help"></p>
+        </div>
+
+        <div class="field">
+          <label for="unlock">Access code</label>
+          <input id="unlock" type="text" autocomplete="off" spellcheck="false" placeholder="Enter code">
+          <p class="help" id="unlock-msg" aria-live="polite"></p>
+        </div>
+
+        <div class="field check-field">
+          <label class="switch-row" for="library-admin-on"><input type="checkbox" id="library-admin-on"> <span>Plan library admin</span></label>
+          <p class="help">Change the ready-made plans. Edits stay on this device.</p>
+        </div>
+      </div>
+    </details>
 
     <div class="set-danger">
       <button type="button" class="btn ghost danger" id="forget">Clear saved data</button>

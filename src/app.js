@@ -8,6 +8,7 @@ import { store } from './storage.js';
 import { localChecks } from './clinical.js';
 import { dropUnsaidBrands } from './drugs.js';
 import { lostNote } from './factcheck.js';
+import { homeDevice, HOME_STEPS } from './homescreen.js';
 import { preparePhoto, MAX_PHOTOS } from './photos.js';
 import { ABOUT_HTML } from './about.js';
 import { lookupSource, sourcesForPrompt, SOURCE_IDS } from './sources.js';
@@ -1923,8 +1924,9 @@ function renderSaved() {
         el('span', { class: 'lib-stage', text: p.name }),
         el('span', { class: 'lib-weight', text: `Saved ${savedDate(p.savedAt)}` }),
       ]);
-      const rename = el('button', { type: 'button', class: 'icon-btn small', 'aria-label': `Rename ${p.name}`, title: 'Rename' });
-      rename.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4l10-10-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>';
+      // Two clear choices: change what the plan says, or change its name.
+      const edit = el('button', { type: 'button', class: 'link saved-act', 'aria-label': `Edit ${p.name}`, onclick: () => { openSavedPlan(p.id); $('care-edit').click(); } }, 'Edit plan');
+      const rename = el('button', { type: 'button', class: 'link saved-act', 'aria-label': `Rename ${p.name}` }, 'Rename');
       rename.addEventListener('click', () => {
         const input = el('input', { type: 'text', class: 'saved-name', 'aria-label': 'Plan name', maxlength: '80' });
         input.value = p.name;
@@ -1942,14 +1944,13 @@ function renderSaved() {
         input.focus();
         input.select();
       });
-      const remove = el('button', { type: 'button', class: 'icon-btn small', 'aria-label': `Remove ${p.name}`, title: 'Remove' });
-      remove.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+      const remove = el('button', { type: 'button', class: 'link saved-act', 'aria-label': `Remove ${p.name}` }, 'Remove');
       remove.addEventListener('click', () => {
         store.removeSaved(p.id);
         renderSaved();
         toast(`Removed ${p.name}.`, { label: 'Undo', run: () => { store.savePlan(p); renderSaved(); } });
       });
-      li.append(open, rename, remove);
+      li.append(open, el('div', { class: 'saved-acts' }, [edit, rename, remove]));
       return li;
     }),
   );
@@ -3240,6 +3241,50 @@ async function refreshConnection() {
   return p;
 }
 
+/* ---------------- Add to Home Screen: steps for this device ---------------- */
+
+// Chrome, Edge and Samsung Internet offer their own install prompt: keep it for the button in Settings.
+let installPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  installPrompt = e;
+  if (els.settings.open) renderHomeScreen();
+});
+window.addEventListener('appinstalled', () => {
+  installPrompt = null;
+  if (els.settings.open) renderHomeScreen();
+});
+const isInstalled = () => window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+function renderHomeScreen() {
+  const field = $('home-field');
+  field.hidden = inClaude; // the Claude app version can't be added
+  if (inClaude) return;
+  const steps = $('home-steps');
+  const btn = $('home-install');
+  if (isInstalled()) {
+    $('home-help').textContent = 'It’s already on your Home Screen. Open it from there for the full-screen app.';
+    steps.replaceChildren();
+    btn.hidden = true;
+    return;
+  }
+  const [where, list] = HOME_STEPS[homeDevice()];
+  // One tap where the browser can do it for us; the steps otherwise.
+  btn.hidden = !installPrompt;
+  $('home-help').textContent = installPrompt
+    ? 'Opens full screen like an app, one tap from your Home Screen.'
+    : `Opens full screen like an app, one tap from your Home Screen. On this ${where}:`;
+  steps.hidden = Boolean(installPrompt);
+  steps.innerHTML = list.map((t) => `<li>${t}</li>`).join('');
+}
+$('home-install').addEventListener('click', async () => {
+  if (!installPrompt) return;
+  installPrompt.prompt();
+  const { outcome } = await installPrompt.userChoice.catch(() => ({}));
+  installPrompt = null;
+  if (outcome === 'accepted') toast('Added to your Home Screen.');
+  renderHomeScreen();
+});
+
 async function openSettings(message) {
   els.clinician.value = settings.clinician;
   $('drugs').value = settings.drugs || '';
@@ -3257,7 +3302,9 @@ async function openSettings(message) {
     els.conn.textContent = message;
     els.conn.dataset.ok = 'false';
     els.keyField.open = true;
+    $('admin-group').open = true; // the connection lives under Admin
   }
+  renderHomeScreen();
   els.settings.returnValue = '';
   if (!els.settings.open) els.settings.showModal();
   // On a phone, focusing a box pops the keyboard over Settings: only jump to the first box with a mouse and keyboard.
