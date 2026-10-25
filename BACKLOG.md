@@ -40,6 +40,12 @@ Last updated 25 October 2026. Highest value first within each group.
 - Bird and small-mammal feed charts: the calculator uses Wombaroo growth charts for kangaroos, wallabies, wombats, koalas, possums, gliders, flying-foxes and echidnas. Dasyurids, bandicoots, microbats and all birds still have no checked chart, so their figures show as unsure.
 - Re-run the 32-case review (scratchpad eval harness) after big prompt changes.
 
+## Plan library
+- Share an admin's library edits with everyone: needs the database, or a small key-value store behind the proxy (Cloudflare KV) with admin sign-in. Today edits stay on the admin's device.
+- Queensland versions of the ready-made plans (generate with region qld; contacts and rules differ).
+- An experienced carer to read the 30 plans, especially the week numbers in each day-by-day plan.
+- More animals: sugar glider, swamp wallaby, rainbow lorikeet, crimson rosella, kookaburra, microbats, frogs.
+
 ## From the 25 October 2026 vet QA (prompt changes: re-bake after)
 - Carer plans invent detail about the find site ("recorded with GPS coordinates"). Release wording should only say the location was recorded if it was said.
 - Witness statements: when an opinion has no stated basis ("obvious to anyone", "needed a vet a week earlier"), add a check asking the vet for the reason.

@@ -39,6 +39,7 @@ const RECENT_MAX = 12;
 const SESSION_KEY = 'css.key';
 
 const USAGE = 'css.usage';
+const LIBRARY = 'css.library';
 const monthKey = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 
 export const store = {
@@ -85,6 +86,7 @@ export const store = {
       clinician: typeof s.clinician === 'string' ? s.clinician : '',
       drugs: typeof s.drugs === 'string' ? s.drugs : '',
       photosOn: s.photosOn !== false,
+      libraryAdmin: s.libraryAdmin === true,
       template: ['bunurong', 'plain', 'rspca'].includes(s.template) ? s.template : 'bunurong',
       model: typeof s.model === 'string' ? s.model : '',
       noteType: typeof s.noteType === 'string' ? s.noteType : 'consult',
@@ -101,6 +103,7 @@ export const store = {
       clinician: s.clinician || '',
       drugs: String(s.drugs || '').slice(0, 3000),
       photosOn: s.photosOn !== false,
+      libraryAdmin: s.libraryAdmin === true,
       template: s.template || 'bunurong',
       model: s.model || '',
       noteType: s.noteType || 'consult',
@@ -141,6 +144,19 @@ export const store = {
   clearRecent() {
     write(local, RECENT, null);
     write(local, LAST, null);
+  },
+  /** A library admin's edited ready-made plans on this device: { planId: plan }. */
+  loadLibraryEdits() {
+    const v = read(local, LIBRARY, {});
+    return v && typeof v === 'object' && !Array.isArray(v) ? v : {};
+  },
+  saveLibraryEdit(id, plan) {
+    return write(local, LIBRARY, { ...this.loadLibraryEdits(), [id]: plan });
+  },
+  clearLibraryEdit(id) {
+    const all = this.loadLibraryEdits();
+    delete all[id];
+    write(local, LIBRARY, all);
   },
   clearAll() {
     write(local, SETTINGS, null);

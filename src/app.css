@@ -1189,9 +1189,10 @@ body[data-kb="open"] .tx-hint { display: none; }
 @keyframes soap-pulse { 50% { opacity: 0.3; } }
 @media (prefers-reduced-motion: reduce) { #polish-soap[data-state="working"] .soap-dot { animation: none; } }
 
-/* Vet tabs: Notes, Care plan, then the two quick tools */
+/* Vet tabs: Notes, Rapid, Care plan, Advanced */
 body[data-role="vet"] .mode label:has(input[value="polish"]), body[data-role="vet"] .mode label:has(input[value="media"]) { order: 1; }
-body[data-role="vet"] .mode .adv-tab { order: 2; }
+body[data-role="vet"] .mode label:has(input[value="carer"]) { order: 2; }
+body[data-role="vet"] .mode .adv-tab { order: 3; }
 
 
 /* Doc sections that must not be missed */
@@ -1301,3 +1302,16 @@ body[data-mic="listening"] .mic-zone .mic::after { top: -5px; right: -5px; botto
 @media (min-width: 720px) { .mic-zone .mic { width: 64px; height: 64px; } }
 /* Vets use it many times a day on a phone: drop the photo banner (the logo stays) so Create sits on the first screen. */
 @media (max-width: 719px) { body[data-role="vet"] .hero-banner { display: none; } }
+
+/* Ready-made plans: one block per animal, a tappable row per stage and weight */
+.library { display: flex; flex-direction: column; gap: 18px; }
+.lib-animal h2 { margin: 0 0 8px; font-size: 1.05rem; }
+.lib-plans { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); }
+.lib-plan { width: 100%; display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 10px; text-align: left; padding: 10px 12px; min-height: 52px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface, var(--bg)); color: var(--ink); font: inherit; cursor: pointer; }
+.lib-plan:hover, .lib-plan:focus-visible { border-color: var(--accent); background: var(--accent-soft); }
+.lib-stage { font-weight: 700; }
+.lib-weight { font-size: 0.85rem; color: var(--muted); }
+.lib-plan .tag { margin: 0; }
+.library-admin { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+.edit-form { display: flex; flex-direction: column; gap: 14px; }
+.edit-form textarea { min-height: 64px; line-height: 1.5; resize: vertical; }

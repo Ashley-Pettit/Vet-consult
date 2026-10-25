@@ -727,8 +727,10 @@ export function feedCalcOf(raw) {
     const n = Number(v);
     return Number.isFinite(n) && n >= lo && n <= hi ? n : null;
   };
-  const pct = num(f.percent_body_weight_per_day, 1, 80); // birds fed by crop can take well over 40% a day
-  const feeds = num(f.feeds_per_day, 1, 24);
+  // Claude's names, or this function's own (a plan reopened from Recent, changed, edited or kept in the library),
+  // so normalising a plan twice keeps its feed calculator.
+  const pct = num(f.percent_body_weight_per_day ?? f.pct, 1, 80); // birds fed by crop can take well over 40% a day
+  const feeds = num(f.feeds_per_day ?? f.feeds, 1, 24);
   // A growth chart for the species (added by checkedFeed) can stand in for a missing percentage.
   const ok = Boolean(f.applies) && feeds !== null && (pct !== null || Boolean(f.chart));
   return {
@@ -839,6 +841,58 @@ export function normaliseCareSheet(raw, knownSources = null) {
   };
 }
 
+
+/** The parts of a care plan that can be edited as plain text: [key, label]. One item per line. */
+export const PLAN_TEXT_PARTS = [
+  ['summary', 'Summary'],
+  ['plan', 'Day-by-day plan'],
+  ['housing', 'Housing'],
+  ['feeding', 'Feeding'],
+  ['activity', 'Activity and handling'],
+  ['care', 'Other care'],
+  ['daily_checks', 'Daily tick sheet jobs'],
+  ['release.ready_when', 'Ready for release when'],
+  ['release.how', 'How to release'],
+  ['release.where', 'Where to release'],
+  ['escalate.vet', 'Contact the vet within a day if'],
+  ['escalate.urgent', 'Get vet help straight away if'],
+];
+const SINGLE = new Set(['summary', 'release.where']);
+const partOf = (c, key) => key.split('.').reduce((o, k) => (o ? o[k] : undefined), c);
+const lines = (t) => String(t || '').split('\n').map((x) => x.trim()).filter(Boolean);
+
+/** The plan as editable text, { key: text }. The day-by-day plan is a "When:" line, then one "- task" line each. */
+export function planToText(c) {
+  const out = {};
+  for (const [key] of PLAN_TEXT_PARTS) {
+    const v = partOf(c, key);
+    out[key] = key === 'plan' ? (v || []).map((p) => [`${p.when}:`, ...p.tasks.map((t) => `- ${t}`)].join('\n')).join('\n') : SINGLE.has(key) ? String(v || '') : (v || []).join('\n');
+  }
+  return out;
+}
+
+/** The plan with the edited text put back. In the day-by-day plan, a line ending in ":" starts a new step. */
+export function textToPlan(c, text) {
+  const next = { ...c, release: { ...c.release }, escalate: { ...c.escalate } };
+  for (const [key] of PLAN_TEXT_PARTS) {
+    if (!(key in text)) continue;
+    let v;
+    if (key === 'plan') {
+      v = [];
+      for (const l of lines(text[key])) {
+        const task = l.replace(/^[-•*]\s*/, '');
+        if (!/^[-•*]/.test(l) && /:$/.test(l) && l.length <= 61) v.push({ when: l.slice(0, -1).trim(), tasks: [] });
+        else if (v.length) v[v.length - 1].tasks.push(task);
+        else v.push({ when: 'Day 1', tasks: [task] });
+      }
+      v = v.filter((p) => p.tasks.length);
+    } else v = SINGLE.has(key) ? lines(text[key]).join(' ') : lines(text[key]);
+    const [a, b] = key.split('.');
+    if (b) next[a][b] = v;
+    else next[a] = v;
+  }
+  return next;
+}
 
 export function careSheetText(c, lookup = () => null) {
   const L = [];

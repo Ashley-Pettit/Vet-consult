@@ -65,6 +65,9 @@ import {
   buildRevisionPrompt,
   buildAmendPrompt,
   mergeAmend,
+  PLAN_TEXT_PARTS,
+  planToText,
+  textToPlan,
   buildCareSheetPrompt,
   extractJson,
   normaliseNote,
@@ -98,7 +101,7 @@ const els = {
   settings: $('settings'), openSettings: $('open-settings'), clinician: $('clinician'), model: $('model'),
   apiKey: $('api-key'), rememberKey: $('remember-key'), keyField: $('key-field'), conn: $('conn-status'),
   forget: $('forget'), toast: $('toast'), toastText: $('toast-text'), toastAction: $('toast-action'),
-  views: { record: $('view-record'), working: $('view-working'), note: $('view-note'), care: $('view-care'), doc: $('view-doc'), polish: $('view-polish'), about: $('view-about') },
+  views: { record: $('view-record'), working: $('view-working'), note: $('view-note'), care: $('view-care'), doc: $('view-doc'), polish: $('view-polish'), about: $('view-about'), library: $('view-library'), edit: $('view-edit') },
 };
 
 const inClaude = Boolean(globalThis.claude);
@@ -1587,12 +1590,15 @@ async function amend(target, change) {
     };
     // Always the chosen model (Detailed by default): a change has to reach every place it applies, which the fast model can miss.
     const reply = await run();
+    const fromLibrary = isCare && careFrom === 'library';
     // The words it was made from now include the change, so "Use the same notes for" picks it up too.
-    setTranscript(appendSegment(els.transcript.value, `Change: ${change}`));
+    // (A ready-made plan wasn't made from the dictation, so that stays as it is.)
+    if (!fromLibrary) setTranscript(appendSegment(els.transcript.value, `Change: ${change}`));
     // Only the changed parts come back: merge them into what's on screen.
     if (isCare) {
-      const sheet = normaliseCareSheet(mergeAmend(current, reply), SOURCE_IDS());
+      const sheet = normaliseCareSheet(mergeAmend(current, reply), fromLibrary ? null : SOURCE_IDS());
       showCare(sheet, careFrom, els.careBanner.hidden ? '' : els.careBanner.textContent);
+      if (fromLibrary) return libraryChanged(sheet);
     } else {
       const d = normaliseDoc(mergeAmend(current, reply));
       if (!d.sections.length) throw new AiError('empty', '');
@@ -1614,6 +1620,102 @@ $('home').addEventListener('click', () => {
   els.mic.focus();
 });
 
+
+/* ---------------- ready-made plans ---------------- */
+
+// Standard care plans for common native animals by stage and weight (src/library-plans.js, loaded when first opened).
+// They open instantly with no AI call. A library admin can change one with Change plan or edit it as text; the
+// edited plan is kept on this device and shows instead of the original until it's reset.
+let library = null;
+let libraryPlan = null; // { id, text } of the ready-made plan on screen
+const loadLibrary = async () => (library ||= (await import('./library-plans.js')).default);
+const libraryAdmin = () => settings.libraryAdmin === true;
+function libraryEntry(id) {
+  for (const animal of library.animals) for (const plan of animal.plans) if (plan.id === id) return { animal, plan };
+  return null;
+}
+async function openLibrary() {
+  if (busy) return;
+  await loadLibrary();
+  const edits = store.loadLibraryEdits();
+  const note = $('library-note');
+  note.hidden = region().code === 'vic';
+  note.textContent = 'These plans follow Victorian guidance. Check Queensland rules and contacts before you use one.';
+  $('library-list').replaceChildren(
+    ...library.animals.map((a) =>
+      el('section', { class: 'lib-animal' }, [
+        el('h2', { text: a.name }),
+        el('ul', { class: 'lib-plans' }, a.plans.map((p) =>
+          el('li', {}, [
+            el('button', { type: 'button', class: 'lib-plan', onclick: () => openLibraryPlan(p.id) }, [
+              el('span', { class: 'lib-stage', text: p.stage }),
+              el('span', { class: 'lib-weight', text: p.weight }),
+              edits[p.id] ? el('span', { class: 'tag', text: 'Edited' }) : null,
+            ]),
+          ]),
+        )),
+      ]),
+    ),
+  );
+  showView('library');
+  $('library-title').focus();
+}
+function openLibraryPlan(id) {
+  const e = libraryEntry(id);
+  if (!e) return;
+  libraryPlan = { id, text: e.plan.text };
+  const sheet = normaliseCareSheet(store.loadLibraryEdits()[id] || e.plan.sheet, null);
+  showCare(sheet, 'library', `Ready-made plan: ${e.animal.name.toLowerCase()}, ${e.plan.stage.toLowerCase()}, ${e.plan.weight}. Check it suits your animal, then use Change plan to fit it.`);
+}
+// After Change plan on a ready-made plan: an admin's change updates the library on this device; anyone else gets
+// their own copy (kept in Recent) and the library plan stays as it was.
+function libraryChanged(sheet) {
+  if (libraryAdmin() && libraryPlan) {
+    store.saveLibraryEdit(libraryPlan.id, sheet);
+    $('care-reset').hidden = false;
+    toast('Saved to the ready-made plan on this device.');
+  } else {
+    remember('care', { sheet, from: 'library' }, sheet.animal);
+    toast('Updated. The ready-made plan itself is unchanged.');
+  }
+}
+$('open-library').addEventListener('click', openLibrary);
+$('library-back').addEventListener('click', () => showView('record'));
+$('care-reset').addEventListener('click', () => {
+  if (!libraryPlan) return;
+  store.clearLibraryEdit(libraryPlan.id);
+  openLibraryPlan(libraryPlan.id);
+  toast('Back to the original ready-made plan.');
+});
+
+// Edit as text: one box per part of the plan, one item per line.
+$('care-edit').addEventListener('click', () => {
+  if (!careSheet) return;
+  const text = planToText(careSheet);
+  $('edit-form').replaceChildren(
+    ...PLAN_TEXT_PARTS.map(([key, label]) => {
+      const id = `edit-${key.replace('.', '-')}`;
+      // Tall enough for the text as it wraps on a phone (about 40 characters a line), within reason.
+      const rows = text[key].split('\n').reduce((n, l) => n + Math.max(1, Math.ceil(l.length / 40)), 1);
+      const box = el('textarea', { id, name: key, rows: String(Math.min(14, Math.max(3, rows))) });
+      box.value = text[key];
+      return el('div', { class: 'field' }, [el('label', { for: id, text: label }), box]);
+    }),
+  );
+  showView('edit');
+  $('edit-title').focus();
+});
+const leaveEdit = () => showView('care');
+$('edit-back').addEventListener('click', leaveEdit);
+$('edit-cancel').addEventListener('click', leaveEdit);
+$('edit-save').addEventListener('click', () => {
+  if (!careSheet) return;
+  const text = Object.fromEntries([...$('edit-form').querySelectorAll('textarea')].map((t) => [t.name, t.value]));
+  const sheet = normaliseCareSheet(textToPlan(careSheet, text), null);
+  showCare(sheet, careFrom, els.careBanner.hidden ? '' : els.careBanner.textContent);
+  if (careFrom === 'library') libraryChanged(sheet);
+  else toast('Saved.');
+});
 
 /* ---------------- care plan ---------------- */
 
@@ -1947,7 +2049,7 @@ function renderCare(c) {
   const sec = (title, items, cls) => (items.length ? el('section', { class: 'care-sec ' + (cls || '') }, [el('h2', { text: title }), list(items)]) : null);
   const name = c.animal || currentNote()?.patient.name || '';
   els.careTitle.textContent = keepBrackets(c.kind === 'wildlife' ? `Care plan: ${name || 'wildlife in care'}` : `Caring for ${name || 'your animal'} at home`);
-  $('care-back-label').textContent = careFrom === 'note' ? 'Back to note' : 'Back';
+  $('care-back-label').textContent = careFrom === 'note' ? 'Back to note' : careFrom === 'library' ? 'Back to plans' : 'Back';
   $('care-back-2').textContent = 'Change plan';
   // Tick sheet: one row per daily job, one column per day, big boxes. Printable on its own for the fridge.
   const days = Math.min(c.log_days || 7, 14);
@@ -2002,7 +2104,7 @@ function renderCare(c) {
           ])
         : null,
       videoSection(carePlanVideo(c)),
-      leaveIt(c) ? null : rangesSection(c.species_group, [c.animal, c.summary, c.title, careFrom === 'note' ? '' : els.transcript.value].filter(Boolean).join(' ')),
+      leaveIt(c) ? null : rangesSection(c.species_group, [c.animal, c.summary, c.title, careFrom === 'note' ? '' : careFrom === 'library' ? (libraryPlan ? libraryPlan.text : '') : els.transcript.value].filter(Boolean).join(' ')),
       rehydrationSection(c.rehydration),
       c.plan.length
         ? el('section', { class: 'care-sec' }, [
@@ -2058,9 +2160,15 @@ function showCare(sheet, from, info = '') {
   // Vets get a discharge pack; its clinical summary is written when the pack is asked for (examples: straight away).
   $('discharge-pack').hidden = settings.role !== 'vet';
   if (settings.role === 'vet') setTimeout(() => exampleExtra(() => startVetNotes()), 400);
-  remember('care', { sheet, from }, sheet.animal);
+  // Browsing ready-made plans doesn't fill Recent; a changed one is kept (see libraryChanged).
+  if (from !== 'library') {
+    remember('care', { sheet, from }, sheet.animal);
+    libraryPlan = null;
+  }
   careSheet = sheet;
   careFrom = from;
+  $('library-admin').hidden = !(from === 'library' && libraryPlan && libraryAdmin());
+  $('care-reset').hidden = !(libraryPlan && store.loadLibraryEdits()[libraryPlan.id]);
   renderMakeNext($('make-next-care'), from === 'record' ? 'carer' : null);
   if (from === 'record') madeFrom.carer = { text: els.transcript.value, sheet, info };
   renderCare(sheet);
@@ -2112,7 +2220,7 @@ els.care.addEventListener('click', openCare);
 $('discharge-btn').addEventListener('click', openCare);
 // Copy sits top right too, so a busy vet never has to scroll for it.
 $('copy-top').addEventListener('click', () => els.copy.click());
-$('care-back').addEventListener('click', () => showView(careFrom === 'note' ? 'note' : 'record'));
+$('care-back').addEventListener('click', () => (careFrom === 'library' ? openLibrary() : showView(careFrom === 'note' ? 'note' : 'record')));
 // A plan made straight from the carer's words can take more info in place; one made from a vet note goes back to it.
 $('care-back-2').addEventListener('click', changePlan);
 // Copy offers Share (the phone's share sheet) or Copy as text. Without sharing (some computers), it just copies.
@@ -2793,6 +2901,7 @@ async function openSettings(message) {
   els.apiKey.value = settings.apiKey;
   els.rememberKey.checked = settings.rememberKey;
   $('photos-on').checked = settings.photosOn !== false;
+  $('library-admin-on').checked = settings.libraryAdmin === true;
   $('template').querySelector('option[value="rspca"]').hidden = !store.rspcaUnlocked();
   $('template').value = settings.template === 'rspca' && !store.rspcaUnlocked() ? 'bunurong' : settings.template || 'bunurong';
   $('unlock').value = '';
@@ -2816,7 +2925,7 @@ $('close-settings').addEventListener('click', () => els.settings.close('close'))
 els.settings.addEventListener('close', async () => {
   if (els.settings.returnValue !== 'save') return;
   const key = els.apiKey.value.trim();
-  settings = { ...settings, photosOn: $('photos-on').checked, template: $('template').value, drugs: $('drugs').value.slice(0, 3000), clinician: els.clinician.value.trim().slice(0, 80), model: els.model.value, apiKey: key, rememberKey: els.rememberKey.checked };
+  settings = { ...settings, photosOn: $('photos-on').checked, libraryAdmin: $('library-admin-on').checked, template: $('template').value, drugs: $('drugs').value.slice(0, 3000), clinician: els.clinician.value.trim().slice(0, 80), model: els.model.value, apiKey: key, rememberKey: els.rememberKey.checked };
   store.saveSettings(settings);
   provider = null;
   renderPhotos();

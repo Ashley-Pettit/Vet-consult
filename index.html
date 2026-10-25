@@ -54,6 +54,9 @@
       <span class="sr-only">Animal Welfare Companion</span>
     </button>
     <div class="bar-right">
+    <button class="icon-btn" id="open-library" type="button" aria-label="Ready-made plans" title="Ready-made plans">
+      <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V5a2 2 0 0 1 2-2h14v14H6.5A2.5 2.5 0 0 0 4 19.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/><path d="M8 7h8M8 11h6"/></svg>
+    </button>
     <button class="icon-btn" id="open-recent" type="button" aria-label="Recent" title="Recent" hidden>
       <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/><path d="M12 7v5l3 2"/></svg>
     </button>
@@ -291,10 +294,48 @@
     </div>
     <section class="make-next" id="make-next-care" aria-label="Make something else from this" hidden></section>
     <button type="button" class="btn ghost word-btn" id="discharge-pack" hidden><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M12 11v5M9.5 13.5h5"/></svg>Discharge pack</button>
+    <div class="library-admin" id="library-admin" hidden>
+      <button type="button" class="btn ghost" id="care-edit">Edit text</button>
+      <button type="button" class="link" id="care-reset" hidden>Reset to original</button>
+    </div>
     <button type="button" class="btn ghost word-btn" id="word-care"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 11v6M9 14l3 3 3-3"/></svg>Word printout</button>
     <div class="actions">
       <button type="button" class="btn ghost" id="care-back-2">Change plan</button>
       <button type="button" class="btn primary" id="care-copy">Share plan</button>
+    </div>
+  </section>
+
+  <!-- 4a. Ready-made plans, and editing one as text -->
+  <section id="view-library" class="view" hidden aria-labelledby="library-title">
+    <div class="note-head">
+      <div class="head-row">
+        <button type="button" class="link back" id="library-back">
+          <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+          <span>Back</span>
+        </button>
+      </div>
+      <h1 id="library-title" tabindex="-1">Ready-made plans</h1>
+      <p class="muted">Standard care plans for common native animals, by stage and weight. Open one, check it suits your animal, then change anything to fit.</p>
+    </div>
+    <p id="library-note" class="banner" hidden></p>
+    <div id="library-list" class="library"></div>
+  </section>
+
+  <section id="view-edit" class="view" hidden aria-labelledby="edit-title">
+    <div class="note-head">
+      <div class="head-row">
+        <button type="button" class="link back" id="edit-back">
+          <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+          <span>Back to plan</span>
+        </button>
+      </div>
+      <h1 id="edit-title" tabindex="-1">Edit plan</h1>
+      <p class="muted">One item per line. In the day-by-day plan, write when on its own line ending with a colon (for example "Week 2:"), then each job on the lines below it.</p>
+    </div>
+    <form id="edit-form" class="edit-form" novalidate></form>
+    <div class="actions">
+      <button type="button" class="btn ghost" id="edit-cancel">Cancel</button>
+      <button type="button" class="btn primary" id="edit-save">Save plan</button>
     </div>
   </section>
 
@@ -416,6 +457,11 @@
     <div class="field check-field">
       <label class="switch-row" for="photos-on"><input type="checkbox" id="photos-on"> <span>Allow photos</span></label>
       <p class="help">Photos help Claude identify the animal and injuries, but each photo adds to AI costs. Turn off to hide the photo buttons.</p>
+    </div>
+
+    <div class="field check-field">
+      <label class="switch-row" for="library-admin-on"><input type="checkbox" id="library-admin-on"> <span>Plan library admin</span></label>
+      <p class="help">Edit the ready-made plans with Change plan or by typing. Edits are kept on this device only.</p>
     </div>
 
     <div class="field">

@@ -85,6 +85,14 @@ Last updated 25 October 2026. For the next Claude Code session.
 - **Printouts:** `src/word.js` builds one model, used by `src/word-docx.js` (Word) and `src/pdf.js` (PDF).
   - Word uses zero side margins with content indented, so the brand band runs edge to edge.
 
+## Ready-made plans (plan library)
+
+- **What:** the book button in the header opens 30 standard care plans for 11 common Victorian natives (wombat, koala, Pacific black duck, eastern grey kangaroo, ringtail and brushtail possums, echidna, grey-headed flying-fox, magpie, tawny frogmouth, blue-tongue lizard), 2 to 4 per animal by stage and weight. They open instantly with no AI call.
+- **Where:** `src/library-plans.js` (generated, loaded only when the library opens). Screens and logic: "ready-made plans" in `src/app.js`; text editing helpers `planToText` / `textToPlan` in `src/note.js`.
+- **How they were made:** each plan's description is a scenario in `scripts/qa/scenarios.library.json`. `scripts/qa/sim.mjs` captures the app's own carer care plan prompt for each (so they're grounded in the same checked sources and Wombaroo charts), Claude (Opus) answers them, and `node scripts/library-build.mjs` writes the library. To add or change a plan: edit the scenario (and `META` in the build script), re-run those steps.
+- **Admin:** Settings → "Plan library admin". An admin gets "Edit text" (one box per part) and their Change plan results update the library plan; "Reset to original" undoes it. **Edits are kept on that device only** (no database yet). Anyone else's Change plan makes a personal copy in Recent.
+- **Limits:** Victorian guidance only (Queensland users see a note). Week numbers in the day-by-day plans are estimates tied to a stage ("around week 3 (fine fur appearing)"); worth a read by an experienced carer.
+
 ## Live QA harness (`scripts/qa/`)
 
 - **`run.mjs`** runs realistic inputs through the built app against the real proxy, then saves on-screen text, screenshots, prompts, outputs and timings to `qa-out/<TAG>/` (gitignored).
