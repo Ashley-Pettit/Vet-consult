@@ -48,6 +48,8 @@ const artifact =
   `<title>Animal Welfare Companion</title>\n<meta name="claude:viewport-fit-sides" content="cover">\n<style>${css}` +
   // Inside Claude the page already sits below the status bar, so the header must not add that space again.
   `.band{padding-top:0}.bar{padding-top:8px;padding-bottom:8px}</style>\n` +
+  // Same opening splash as the web app: flag it before the body draws.
+  `<script>document.documentElement.classList.add('booting')</script>\n` +
   body +
   `<script>${safeJs(iife.outputFiles[0].text)}</script>\n`;
 writeFileSync(art + 'care-scribe.html', artifact);

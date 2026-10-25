@@ -3335,3 +3335,13 @@ setTimeout(maybeShowHomeTip, 2500);
 
 /* ---------------- privacy policy (linked from the disclaimer) ---------------- */
 $('open-privacy').addEventListener('click', () => $('privacy-dlg').showModal());
+
+/* ---------------- opening splash ---------------- */
+// Everything above has set the page up; lift the splash on the next frame so the first thing seen is the finished layout.
+requestAnimationFrame(() => {
+  const boot = document.querySelector('.boot');
+  document.documentElement.classList.remove('booting');
+  if (!boot) return;
+  boot.classList.add('gone');
+  setTimeout(() => boot.remove(), 400);
+});
