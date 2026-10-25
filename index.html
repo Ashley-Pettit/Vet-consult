@@ -681,7 +681,10 @@
 <dialog id="more" class="more" aria-labelledby="more-title">
   <form method="dialog" id="more-form">
     <h2 id="more-title">Add more info</h2>
-    <ol class="more-questions" id="more-questions" hidden></ol>
+    <details class="more-qs" id="more-qs" hidden>
+      <summary><span class="more-qs-title">Questions to answer</span> <span class="count" id="more-qs-count"></span></summary>
+      <ol class="more-questions" id="more-questions"></ol>
+    </details>
     <div class="more-mic-zone">
       <button type="button" class="mic more-mic" id="more-mic" aria-pressed="false" aria-label="Speak what you missed">
         <svg class="i-mic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2.5" width="6" height="12" rx="3"/><path d="M5 10.5a7 7 0 0 0 14 0"/><path d="M12 17.5v4"/></svg>

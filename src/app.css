@@ -1398,7 +1398,13 @@ textarea, input { caret-color: var(--caret); }
 @keyframes boot-out { to { opacity: 0; visibility: hidden; } }
 
 /* Answer sheet: the review questions, numbered so they can be answered in order */
-.more-questions { margin: 0 0 10px; padding-left: 1.4rem; display: grid; gap: 6px; font-weight: 600; }
+.more-qs { margin: 0 0 10px; border: 1px solid var(--warn-line); border-radius: 12px; background: var(--warn-soft); }
+.more-qs summary { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 14px; cursor: pointer; list-style: none; font-weight: 700; }
+.more-qs summary::-webkit-details-marker { display: none; }
+.more-qs summary::after { content: ""; margin-left: auto; width: 8px; height: 8px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg); transition: transform .2s; }
+.more-qs[open] summary::after { transform: rotate(-135deg); }
+.more-qs .count { display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; background: var(--warn); color: var(--bg); font-size: 0.8rem; }
+.more-questions { margin: 0; padding: 0 14px 12px 2.2rem; display: grid; gap: 6px; font-weight: 600; }
 .more-questions li::marker { color: var(--accent); font-weight: 800; }
 /* Clinical notes open straight on the text to edit and copy */
 #view-note .plain-sec { margin-top: 4px; }

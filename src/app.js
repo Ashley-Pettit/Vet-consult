@@ -1453,22 +1453,29 @@ let amendTarget = null;
 const MORE_TEXT = {
   answer: { title: 'Answer the questions', placeholder: 'Answer them in order, for example: 1. Adult. 2. 6.2 kilos. Skip any you don’t know.', go: 'Fix it' },
   add: { title: 'Add more info', placeholder: 'e.g. She weighed 24.6 kilos, and the case number is 26-04417.', go: 'Update' },
-  amend: { title: 'Change or add something', placeholder: 'e.g. Feeds every 3 hours, not 4. She weighs 130 grams now.', go: 'Make change' },
+  amend: { title: 'Answer or change', placeholder: 'e.g. Feeds every 3 hours, not 4. She weighs 130 grams now.', go: 'Make change' },
 };
 const AMEND_HELP = 'Say or type what to change or add. Everything else stays as it is.';
 const ANSWER_HELP = 'Answer them in order. Skip any you don’t know.';
-let answerQs = null; // the questions being answered, when the sheet is in answer mode
-function showQuestions(qs) {
+// The review questions show at the top of the sheet in a collapsible list: open when the person came to answer
+// them, closed when they came to change something (they can still open it and answer any).
+let answerQs = null; // the questions on show
+let answerMode = false; // came from the review bar to answer them
+function showQuestions(qs, open = false) {
   answerQs = qs && qs.length ? qs : null;
-  $('more-questions').hidden = !answerQs;
+  $('more-qs').hidden = !answerQs;
+  $('more-qs').open = Boolean(answerQs && open);
+  $('more-qs-count').textContent = answerQs ? String(answerQs.length) : '';
   $('more-questions').replaceChildren(...(answerQs || []).map((q) => el('li', { text: q })));
 }
+const numbered = (qs) => qs.map((q, i) => `${i + 1}. ${q}`).join('\n');
 /** Answer every review question at once: the questions on show, the mic already listening, one tap to fix. */
 function openAnswers(target, qs) {
   if (busy || !qs.length) return;
   amendTarget = target;
   renderMopDirections(false);
-  showQuestions(qs);
+  answerMode = true;
+  showQuestions(qs, true);
   const t = MORE_TEXT.answer;
   $('more-title').textContent = t.title;
   moreText.placeholder = t.placeholder;
@@ -1476,12 +1483,13 @@ function openAnswers(target, qs) {
   addMoreInfo(true);
 }
 function openMore(target) {
-  showQuestions(null);
+  answerMode = false;
+  showQuestions(target && target.type === 'doc' && currentDoc ? currentDoc.d.check : null);
   amendTarget = target;
   renderMopDirections(Boolean(target && target.type === 'doc' && currentDoc && currentDoc.kind === 'mop'));
   const t = MORE_TEXT[target ? 'amend' : 'add'];
   $('more-title').textContent = t.title;
-  moreText.placeholder = t.placeholder;
+  moreText.placeholder = answerQs ? 'Say what to change, or answer a question by its number.' : t.placeholder;
   $('more-go').textContent = t.go;
   addMoreInfo(true);
 }
@@ -1496,7 +1504,9 @@ function changeDoc() {
 function addMoreInfo(keepTarget) {
   if (keepTarget !== true) {
     amendTarget = null;
-    showQuestions(null);
+    answerMode = false;
+    // From the clinical note: its review questions, ready to answer if wanted.
+    showQuestions(!$('view-note').hidden ? checkItems : null);
     renderMopDirections(false);
     $('more-title').textContent = MORE_TEXT.add.title;
     moreText.placeholder = MORE_TEXT.add.placeholder;
@@ -1504,8 +1514,8 @@ function addMoreInfo(keepTarget) {
   }
   moreText.value = '';
   $('more-go').disabled = true;
-  const helpText = answerQs ? ANSWER_HELP : amendTarget ? AMEND_HELP : MORE_HELP;
-  moreHelp.textContent = keyboardVoice ? `${keyboardTip()} ${helpText}` : answerQs ? `Say your answers. ${ANSWER_HELP}` : amendTarget ? `Tap the mic and say the change. ${AMEND_HELP}` : `Tap the mic and say what you missed. ${MORE_HELP}`;
+  const helpText = answerMode ? ANSWER_HELP : amendTarget ? AMEND_HELP : MORE_HELP;
+  moreHelp.textContent = keyboardVoice ? `${keyboardTip()} ${helpText}` : answerMode ? `Say your answers. ${ANSWER_HELP}` : amendTarget ? `Tap the mic and say the change. ${AMEND_HELP}` : `Tap the mic and say what you missed. ${MORE_HELP}`;
   more.showModal();
   if (keyboardVoice) moreText.focus(); // inside the tap, so the phone keyboard (and its mic key) opens straight away
   else startMoreVoice();
@@ -1526,7 +1536,7 @@ function startMoreVoice() {
   moreVoice.onstate = (st) => {
     moreMic.setAttribute('aria-pressed', String(st !== 'idle'));
     more.dataset.mic = st;
-    moreHelp.textContent = st === 'starting' ? 'One moment…' : st === 'listening' ? (answerQs ? `Listening. Answer them in order, then tap ${$('more-go').textContent}.` : `Listening. Talk now, then tap ${$('more-go').textContent}.`) : answerQs ? `Tap the mic to say more, or type. ${ANSWER_HELP}` : amendTarget ? `Tap the mic to say more, or type. ${AMEND_HELP}` : `Tap the mic to add more, or type. ${MORE_HELP}`;
+    moreHelp.textContent = st === 'starting' ? 'One moment…' : st === 'listening' ? (answerMode ? `Listening. Answer them in order, then tap ${$('more-go').textContent}.` : `Listening. Talk now, then tap ${$('more-go').textContent}.`) : answerMode ? `Tap the mic to say more, or type. ${ANSWER_HELP}` : amendTarget ? `Tap the mic to say more, or type. ${AMEND_HELP}` : `Tap the mic to add more, or type. ${MORE_HELP}`;
     if (st === 'listening') cueListening();
   };
   moreVoice.onerror = (c) => (moreHelp.textContent = speechErrorMessage(c));
@@ -1571,16 +1581,20 @@ more.addEventListener('close', async () => {
   const picked = amendTarget ? mopDirectionText() : '';
   const extra = [typed, picked].filter(Boolean).join('\n\n');
   const qs = answerQs;
+  const answering = answerMode;
   showQuestions(null);
+  answerMode = false;
   if (more.returnValue !== 'go' || !extra) return;
   more.returnValue = '';
-  if (qs && amendTarget && amendTarget.type === 'notes') return fixNotes(qs, typed);
-  if (qs && amendTarget) return amend(amendTarget, `Answers to the review questions. Put each answer where it belongs and remove that question from "check"; leave any question that wasn't answered.\n${qs.map((q, i) => `${i + 1}. ${q}`).join('\n')}\nAnswers: ${typed}`);
+  if (answering && qs && amendTarget && amendTarget.type === 'notes') return fixNotes(qs, typed);
+  if (answering && qs && amendTarget) return amend(amendTarget, `Answers to the review questions. Put each answer where it belongs and remove that question from "check"; leave any question that wasn't answered.\n${numbered(qs)}\nAnswers: ${typed}`);
+  // A change can also answer some of the questions on show ("1. adult"), so they go along for reference.
+  const withQs = (t) => (qs ? `${t}\n\nThe review questions on show were (the person may have answered some of them by number):\n${numbered(qs)}` : t);
   if (amendTarget) {
     if (picked) keepMopPicks();
-    return amend(amendTarget, extra);
+    return amend(amendTarget, withQs(extra));
   }
-  setTranscript(appendSegment(els.transcript.value, extra));
+  setTranscript(appendSegment(els.transcript.value, qs ? `${extra} (answering the review questions: ${qs.join(' ')})` : extra));
   if (isQuickUpdate(extra) && settings.model !== QUICK_MODEL) await withModel(QUICK_MODEL, () => createNote());
   else await createNote();
 });
@@ -2553,6 +2567,7 @@ function renderDoc(d, kind) {
       : []),
   );
   $('doc-copy').textContent = DOC_KINDS[kind].copy;
+  $('doc-new').textContent = d.check.length ? 'Answer or change' : 'Change';
 }
 
 function showDoc(d, kind, info = '') {
