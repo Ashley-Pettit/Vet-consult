@@ -30,6 +30,11 @@ if (CONFIG.proxyUrl) html = html.replace('</head>', `<link rel="preconnect" href
 const headScript = (html.match(/<head>[\s\S]*?<script>([\s\S]*?)<\/script>/) || [])[1];
 if (headScript) html = html.replace("script-src 'self'", `script-src 'self' 'sha256-${createHash('sha256').update(headScript).digest('base64')}'`);
 writeFileSync(out + 'index.html', html.replace('app.js"', `app.js?v=${version}"`).replace('app.css"', `app.css?v=${version}"`));
+// The beta copy (CHANNEL=beta, published at /care-beta/) installs under its own name, so it never looks like the live app.
+if (process.env.CHANNEL === 'beta') {
+  const mf = JSON.parse(readFileSync(out + 'manifest.webmanifest', 'utf8'));
+  writeFileSync(out + 'manifest.webmanifest', JSON.stringify({ ...mf, name: `${mf.name} Beta`, short_name: 'AWC Beta' }, null, 2));
+}
 writeFileSync(out + 'sw.js', readFileSync(out + 'sw.js', 'utf8').replace('__VERSION__', version));
 writeFileSync(out + '.nojekyll', '');
 writeFileSync(out + '404.html', html.replace(/<main[\s\S]*<\/main>/, '<main><p>Page not found. <a href="./">Open Animal Welfare Companion</a></p></main>').replace(/<script[\s\S]*?<\/script>/g, ''));

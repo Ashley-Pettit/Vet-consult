@@ -3333,6 +3333,26 @@ const countMade = () => {
 ['view-care', 'view-doc', 'view-note'].forEach((id) => new MutationObserver(() => { if (!$(id).hidden) countMade(); }).observe($(id), { attributes: true, attributeFilter: ['hidden'] }));
 setTimeout(maybeShowHomeTip, 2500);
 
+/* ---------------- live and beta ---------------- */
+// The app is published twice: /care/ is live, /care-beta/ has the newest changes to try first.
+// Both sit on the same site, so settings and drafts carry across when switching.
+{
+  const m = location.pathname.match(/\/(care|care-beta)\/[^/]*$/);
+  const channel = m && !inClaude ? (m[1] === 'care-beta' ? 'beta' : 'live') : null;
+  if (channel) {
+    $('channel-field').hidden = false;
+    $(`channel-${channel}`).setAttribute('aria-current', 'page');
+    $('channel-help').textContent =
+      channel === 'beta'
+        ? 'You’re on beta: the newest changes, which may have rough edges. Your settings and drafts carry across.'
+        : 'Beta has the newest changes to try before they go live. Your settings and drafts carry across.';
+  }
+  if (channel === 'beta') {
+    $('beta-chip').hidden = false;
+    document.title = `Beta | ${document.title}`;
+  }
+}
+
 /* ---------------- privacy policy (linked from the disclaimer) ---------------- */
 $('open-privacy').addEventListener('click', () => $('privacy-dlg').showModal());
 

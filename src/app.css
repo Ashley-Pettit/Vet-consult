@@ -959,6 +959,13 @@ body[data-kb="open"] .site-foot, body[data-kb="open"] .foot { display: none; }
 /* Settings: switches and access code */
 .switch-row { display: flex; align-items: center; gap: 10px; font-weight: 600; cursor: pointer; }
 .switch-row input { width: 22px; height: 22px; accent-color: var(--accent); }
+/* Live and beta: two copies of the app, with a switch in Settings and a chip on the logo while on beta. */
+.field-label { margin: 0; font-weight: 600; }
+.channel-pick { display: inline-grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; border-radius: 999px; background: var(--accent-soft); width: max-content; }
+.channel-opt { min-width: 88px; min-height: 40px; display: grid; place-items: center; padding: 0 16px; border-radius: 999px; font-weight: 700; color: var(--ink); text-decoration: none; }
+.channel-opt[aria-current="page"] { background: var(--accent); color: var(--accent-ink, #fff); }
+.brand { position: relative; }
+.beta-chip { position: absolute; left: 50%; bottom: -4px; transform: translateX(-50%); padding: 1px 8px; border-radius: 999px; background: #ffd166; color: #3a2a00; font: 700 0.68rem/1.4 var(--display); letter-spacing: 0.08em; text-transform: uppercase; }
 .sub-label { margin-top: 8px; font-weight: 600; font-size: 0.85rem; }
 
 /* AI guidance note, feed calculator, release checklist */
