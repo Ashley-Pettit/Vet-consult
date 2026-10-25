@@ -144,7 +144,7 @@ test('normaliseResult handles one note, several, and drops empties', () => {
 
 test('revision and care sheet prompts carry the note and guard rails', () => {
   const r = buildRevisionPrompt(normaliseNote(SAMPLE_NOTE), 'Clinician name not stated', 'Doctor Sam Lee');
-  assert.match(r, /<check_item>Clinician name not stated<\/check_item>/);
+  assert.match(r, /<check_items>\n1\. Clinician name not stated\n<\/check_items>/);
   assert.match(r, /<answer>Doctor Sam Lee<\/answer>/);
   assert.match(r, /"name":"Rusty"/);
   const c = buildCareSheetPrompt(normaliseNote(SAMPLE_NOTE));

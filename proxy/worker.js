@@ -16,6 +16,17 @@ const MAX_IMAGES = 5;
 const MAX_DOCS = 5;
 const IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 
+/** The one tool the app may ask for (expert opinions): web search, rebuilt from known fields only. */
+function webSearchTool(tools) {
+  if (!Array.isArray(tools) || tools.length !== 1) return null;
+  const t = tools[0] || {};
+  if (t.type !== 'web_search_20260209' || t.name !== 'web_search') return null;
+  const out = { type: t.type, name: t.name, max_uses: Math.min(Math.max(Number(t.max_uses) || 5, 1), 8) };
+  if (Array.isArray(t.blocked_domains)) out.blocked_domains = t.blocked_domains.filter((d) => typeof d === 'string' && /^[a-z0-9.-]{3,80}$/i.test(d)).slice(0, 20);
+  if (t.user_location && t.user_location.type === 'approximate' && /^[A-Z]{2}$/.test(t.user_location.country || '')) out.user_location = { type: 'approximate', country: t.user_location.country };
+  return out;
+}
+
 /** A plain string, or photo and PDF blocks followed by text (up to two text blocks: the fixed part, marked for
  * prompt caching, then this case). Nothing else gets through. */
 function validContent(c) {
@@ -87,6 +98,8 @@ export async function handle(request, env, fetchImpl = fetch) {
   }
   const model = MODELS.has(body.model) ? body.model : 'claude-sonnet-5-5';
   const stream = body.stream === true;
+  const search = body.tools === undefined ? null : webSearchTool(body.tools);
+  if (body.tools !== undefined && !search) return json(400, { error: { type: 'invalid_request' } }, h);
 
   let upstream;
   try {
@@ -97,7 +110,7 @@ export async function handle(request, env, fetchImpl = fetch) {
         'x-api-key': env.ANTHROPIC_API_KEY,
         'anthropic-version': '2023-06-01',
       },
-      body: JSON.stringify({ model, max_tokens: Math.min(Number(body.max_tokens) || MAX_TOKENS, MAX_TOKENS), messages, ...(stream ? { stream: true } : {}) }),
+      body: JSON.stringify({ model, max_tokens: Math.min(Number(body.max_tokens) || MAX_TOKENS, MAX_TOKENS), messages, ...(search ? { tools: [search] } : {}), ...(stream ? { stream: true } : {}) }),
     });
   } catch {
     return json(502, { error: { type: 'upstream_unreachable' } }, h);

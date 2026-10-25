@@ -207,7 +207,7 @@ test.describe('creating a note', () => {
 
     // Edits to the text are what gets copied.
     await page.locator('#plain').fill(plain + '\nAddendum: owner called.');
-    await page.locator('#copy').click();
+    await page.locator('#copy-top').click();
     await expect(page.locator('#copy')).toHaveText('Copied ✓');
     const clip = await page.evaluate(() => navigator.clipboard.readText());
     expect(clip).toContain('Addendum: owner called.');

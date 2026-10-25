@@ -48,6 +48,7 @@ Last updated 25 October 2026. Highest value first within each group.
 
 ## Expert opinion (Advanced, vets)
 
+- Web search only works once the proxy is redeployed (`cd proxy && npx wrangler deploy`). Until then the old proxy drops the search tool and opinions are written from the app's checked sources and attachments only.
 - The "Possums moved in winter" example isn't baked yet, so tapping it makes a live AI call. Bake it at the next re-bake, and add a house-style example for `opinion` to `template-examples.js`.
 
 ## From the 25 October 2026 vet QA (prompt changes: re-bake after)

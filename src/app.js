@@ -64,6 +64,7 @@ import {
   buildPrompt,
   buildPolishPrompt,
   buildRevisionPrompt,
+  buildNotesAnswerPrompt,
   buildAmendPrompt,
   mergeAmend,
   PLAN_TEXT_PARTS,
@@ -920,7 +921,7 @@ function startWorkingFeed(title) {
   };
 }
 
-async function runWorking(title, sub, job) {
+async function runWorking(title, sub, job, usual = 'Usually 10 to 40 seconds') {
   // With photos attached, say so first: looking at the photos is the slow part.
   const looking = sendPhotos().length && !/^Hmm/.test(title);
   els.workingTitle.textContent = looking ? 'Analysing the image' : title;
@@ -933,10 +934,10 @@ async function runWorking(title, sub, job) {
   const fill = $('working-bar-fill');
   const tick = setInterval(() => {
     const s = (Date.now() - t0) / 1000;
-    els.elapsed.textContent = s < 8 ? 'Usually 10 to 40 seconds' : `${Math.round(s)} seconds…`;
+    els.elapsed.textContent = s < 8 ? usual : `${Math.round(s)} seconds…`;
     fill.style.transform = `scaleX(${(0.92 * (1 - Math.exp(-s / 16))).toFixed(3)})`;
   }, 1000);
-  els.elapsed.textContent = 'Usually 10 to 40 seconds';
+  els.elapsed.textContent = usual;
   fill.style.transition = 'none'; // start from empty, without sliding back from last time
   fill.style.transform = 'scaleX(0.03)';
   void fill.offsetWidth;
@@ -1164,7 +1165,7 @@ function showNotes(list, example) {
   current = 0;
   isExample = example;
   careSheet = null;
-  els.checks.open = false; // closed by default: open it to review
+  els.checks.open = false; // the bar opens the answer sheet instead
   renderNote();
   els.noteBanner.textContent = example
     ? inClaude
@@ -1211,96 +1212,57 @@ function renderAnimals() {
   );
 }
 
+let checkItems = []; // the questions on the clinical note now on screen
 function renderChecks(n, local) {
   const items = [...n.check.map((t) => ({ t, auto: false })), ...local.checks.map((t) => ({ t, auto: true }))];
+  checkItems = items.map((x) => x.t);
   els.checks.hidden = items.length === 0;
   $('check-count').textContent = items.length ? String(items.length) : '';
   els.checkList.replaceChildren(
-    ...items.map(({ t, auto }) => {
-      const li = el('li', { class: 'check-item' });
-      li.append(
-        el('button', { type: 'button', class: 'check-row', 'aria-label': `${t} Answer`, onclick: () => openAnswer(li, t) }, [
-          el('span', { class: 'check-text' }, [auto ? el('span', { class: 'tag', title: 'Worked out on this device', text: 'Auto' }) : null, t]),
-          el('span', { class: 'check-go', 'aria-hidden': 'true', text: 'Answer' }),
-        ]),
-      );
-      return li;
-    }),
+    ...items.map(({ t, auto }) => el('li', { class: 'check-item' }, [el('span', { class: 'check-text' }, [auto ? el('span', { class: 'tag', title: 'Worked out on this device', text: 'Auto' }) : null, t])])),
   );
 }
 
-const ICON_MIC = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="2.5" width="6" height="12" rx="3"/><path d="M5 10.5a7 7 0 0 0 14 0M12 17.5v4"/></svg>';
-const ICON_SEND = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M13 6l6 6-6 6"/></svg>';
-
-function openAnswer(li, item) {
-  const open = li.querySelector('.answer');
-  if (open) return open.querySelector('input').focus();
-  els.checkList.querySelectorAll('.answer').forEach((a) => a.remove()); // one at a time keeps it short
-  const id = 'ans-' + Math.random().toString(36).slice(2, 8);
-  const input = el('input', { id, type: 'text', autocomplete: 'off', enterkeyhint: 'send', placeholder: 'Type or speak your answer' });
-  let voice = null;
-  const micBtn = el('button', { type: 'button', class: 'ans-btn', 'aria-label': 'Answer by voice', 'aria-pressed': 'false' });
-  micBtn.innerHTML = ICON_MIC;
-  micBtn.addEventListener('click', () => {
-    if (keyboardVoice) {
-      input.focus();
-      toast(keyboardTip());
-      return;
-    }
-    if (voice && voice.state !== 'idle') return voice.stop();
-    voice = new Dictation({ lang: CONFIG.speechLang });
-    voice.onfinal = (t) => (input.value = appendSegment(input.value, t));
-    voice.onstate = (st) => micBtn.setAttribute('aria-pressed', String(st !== 'idle'));
-    voice.onerror = (c) => toast(speechErrorMessage(c));
-    unlockAudio();
-    voice.start();
-  });
-  const send = el('button', { type: 'button', class: 'ans-btn primary', 'aria-label': 'Update note' });
-  send.innerHTML = ICON_SEND;
-  const submit = async () => {
-    voice && voice.stop();
-    const answer = input.value.trim();
-    if (!answer) return input.focus();
-    await applyAnswer(item, answer);
-  };
-  send.addEventListener('click', submit);
-  input.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      submit();
-    }
-    if (e.key === 'Escape') {
-      voice && voice.cancel();
-      panel.remove();
-    }
-  });
-  const panel = el('div', { class: 'answer' }, [el('label', { for: id, class: 'sr-only', text: `Answer: ${item}` }), input, micBtn, send]);
-  li.append(panel);
-  input.focus();
-}
-
-async function applyAnswer(item, answer) {
-  if (!(await ensureProvider())) {
-    toast(inClaude ? 'Claude isn’t available right now.' : 'Answering by voice needs the Claude app version.');
-    return;
-  }
+// Answer all the questions at once: one tap opens them with the mic already listening, then one quick AI call fixes
+// the notes. Notes the vet has edited by hand are fixed as text, so their edits stay.
+const DOSE_WORDS = /\b(mg|ml|mL|dose|tablet|inject|antibiotic|meloxicam|metacam|\d+\s*(mg|ml|kg))\b/i;
+async function fixNotes(questions, answers) {
+  if (busy) return;
+  if (!(await ensureProvider())) return toast(NO_CLAUDE);
   const idx = current;
+  const edited = els.plain.value !== plainAtRender;
+  const before = els.plain.value;
+  busy = true;
   try {
-    const run = () => runWorking('Hmm, let me think about that…', 'Adding your answer in the right place.', (signal) =>
-      askJson(buildRevisionPrompt(notes[idx], item, answer), signal),
-    );
-    const reply = isQuickUpdate(answer) ? await withModel(QUICK_MODEL, async () => (await ensureProvider(), run())) : await run();
-    const [updated] = normaliseResult(extractJson(reply), `${els.transcript.value}\n${answer}`);
-    if (!updated) throw new AiError('empty', '');
-    notes[idx] = updated;
-    careSheet = null;
-    current = idx;
-    renderNote();
-    showView('note');
-    toast('Note updated.');
+    const job = (signal) =>
+      edited ? provider.generate(buildNotesAnswerPrompt(before, questions, answers), signal) : askJson(buildRevisionPrompt(notes[idx], questions, answers), signal);
+    const run = () => runWorking('Fixing the notes', 'Putting your answers in the right places.', job, 'Usually under 15 seconds');
+    // Quick, unless an answer mentions a drug or dose: those keep the chosen model.
+    const reply = DOSE_WORDS.test(answers) ? await run() : await withModel(QUICK_MODEL, async () => (await ensureProvider(), run()));
+    // The words it was made from now include the answers, so the carer plan and anything else made next has them too.
+    setTranscript(appendSegment(els.transcript.value, `Answers: ${answers}`));
+    if (edited) {
+      const text = String(reply || '').replace(/^```[a-z]*\n?|```$/g, '').trim();
+      if (!text) throw new AiError('empty', '');
+      els.plain.value = text;
+      els.checks.hidden = true;
+      showView('note');
+      fitPlain();
+    } else {
+      const [updated] = normaliseResult(extractJson(reply), els.transcript.value);
+      if (!updated) throw new AiError('empty', '');
+      notes[idx] = updated;
+      careSheet = null;
+      current = idx;
+      renderNote();
+      showView('note');
+    }
+    toast('Notes fixed.', edited ? { label: 'Undo', run: () => { els.plain.value = before; fitPlain(); } } : undefined);
   } catch (e) {
     showView('note');
-    toast(e && e.code === 'cancelled' ? 'Stopped. The note hasn’t changed.' : friendly(e));
+    toast(e && e.code === 'cancelled' ? 'Stopped. The notes haven’t changed.' : friendly(e));
+  } finally {
+    busy = false;
   }
 }
 
@@ -1488,11 +1450,32 @@ const MORE_HELP = 'It’s added to what you already said and the record is rewri
 // "Change": a finished care plan or document is edited in place, by voice or typing; the rest stays as it was.
 let amendTarget = null;
 const MORE_TEXT = {
+  answer: { title: 'Answer the questions', placeholder: 'Answer them in order, for example: 1. Adult. 2. 6.2 kilos. Skip any you don’t know.', go: 'Fix it' },
   add: { title: 'Add more info', placeholder: 'e.g. She weighed 24.6 kilos, and the case number is 26-04417.', go: 'Update' },
   amend: { title: 'Change or add something', placeholder: 'e.g. Feeds every 3 hours, not 4. She weighs 130 grams now.', go: 'Make change' },
 };
 const AMEND_HELP = 'Say or type what to change or add. Everything else stays as it is.';
+const ANSWER_HELP = 'Answer them in order. Skip any you don’t know.';
+let answerQs = null; // the questions being answered, when the sheet is in answer mode
+function showQuestions(qs) {
+  answerQs = qs && qs.length ? qs : null;
+  $('more-questions').hidden = !answerQs;
+  $('more-questions').replaceChildren(...(answerQs || []).map((q) => el('li', { text: q })));
+}
+/** Answer every review question at once: the questions on show, the mic already listening, one tap to fix. */
+function openAnswers(target, qs) {
+  if (busy || !qs.length) return;
+  amendTarget = target;
+  renderMopDirections(false);
+  showQuestions(qs);
+  const t = MORE_TEXT.answer;
+  $('more-title').textContent = t.title;
+  moreText.placeholder = t.placeholder;
+  $('more-go').textContent = t.go;
+  addMoreInfo(true);
+}
 function openMore(target) {
+  showQuestions(null);
   amendTarget = target;
   renderMopDirections(Boolean(target && target.type === 'doc' && currentDoc && currentDoc.kind === 'mop'));
   const t = MORE_TEXT[target ? 'amend' : 'add'];
@@ -1512,6 +1495,7 @@ function changeDoc() {
 function addMoreInfo(keepTarget) {
   if (keepTarget !== true) {
     amendTarget = null;
+    showQuestions(null);
     renderMopDirections(false);
     $('more-title').textContent = MORE_TEXT.add.title;
     moreText.placeholder = MORE_TEXT.add.placeholder;
@@ -1519,8 +1503,8 @@ function addMoreInfo(keepTarget) {
   }
   moreText.value = '';
   $('more-go').disabled = true;
-  const helpText = amendTarget ? AMEND_HELP : MORE_HELP;
-  moreHelp.textContent = keyboardVoice ? `${keyboardTip()} ${helpText}` : amendTarget ? `Tap the mic and say the change. ${AMEND_HELP}` : `Tap the mic and say what you missed. ${MORE_HELP}`;
+  const helpText = answerQs ? ANSWER_HELP : amendTarget ? AMEND_HELP : MORE_HELP;
+  moreHelp.textContent = keyboardVoice ? `${keyboardTip()} ${helpText}` : answerQs ? `Say your answers. ${ANSWER_HELP}` : amendTarget ? `Tap the mic and say the change. ${AMEND_HELP}` : `Tap the mic and say what you missed. ${MORE_HELP}`;
   more.showModal();
   if (keyboardVoice) moreText.focus(); // inside the tap, so the phone keyboard (and its mic key) opens straight away
   else startMoreVoice();
@@ -1541,7 +1525,7 @@ function startMoreVoice() {
   moreVoice.onstate = (st) => {
     moreMic.setAttribute('aria-pressed', String(st !== 'idle'));
     more.dataset.mic = st;
-    moreHelp.textContent = st === 'starting' ? 'One moment…' : st === 'listening' ? `Listening. Talk now, then tap ${$('more-go').textContent}.` : amendTarget ? `Tap the mic to say more, or type. ${AMEND_HELP}` : `Tap the mic to add more, or type. ${MORE_HELP}`;
+    moreHelp.textContent = st === 'starting' ? 'One moment…' : st === 'listening' ? (answerQs ? `Listening. Answer them in order, then tap ${$('more-go').textContent}.` : `Listening. Talk now, then tap ${$('more-go').textContent}.`) : answerQs ? `Tap the mic to say more, or type. ${ANSWER_HELP}` : amendTarget ? `Tap the mic to say more, or type. ${AMEND_HELP}` : `Tap the mic to add more, or type. ${MORE_HELP}`;
     if (st === 'listening') cueListening();
   };
   moreVoice.onerror = (c) => (moreHelp.textContent = speechErrorMessage(c));
@@ -1585,8 +1569,12 @@ more.addEventListener('close', async () => {
   const typed = moreText.value.trim();
   const picked = amendTarget ? mopDirectionText() : '';
   const extra = [typed, picked].filter(Boolean).join('\n\n');
+  const qs = answerQs;
+  showQuestions(null);
   if (more.returnValue !== 'go' || !extra) return;
   more.returnValue = '';
+  if (qs && amendTarget && amendTarget.type === 'notes') return fixNotes(qs, typed);
+  if (qs && amendTarget) return amend(amendTarget, `Answers to the review questions. Put each answer where it belongs and remove that question from "check"; leave any question that wasn't answered.\n${qs.map((q, i) => `${i + 1}. ${q}`).join('\n')}\nAnswers: ${typed}`);
   if (amendTarget) {
     if (picked) keepMopPicks();
     return amend(amendTarget, extra);
@@ -2525,10 +2513,12 @@ async function createDoc(kind, text) {
   // (or nearly) by the time the record is read. Two shorter replies, so neither gets cut off.
   if (kind === 'intake') exampleExtra(startIntakeCare);
   const reply = await runWorking(`Writing the ${DOC_KINDS[kind].label.replace(/^[A-Z](?=[a-z])/, (x) => x.toLowerCase())}`, docs.length ? `Reading ${docs.length === 1 ? 'your document' : `${docs.length} documents`} with your notes.` : DOC_KINDS[kind].working, (signal) =>
-    askJson(buildDocPrompt(kind, text, opts), signal, { images: sendPhotos(), documents: pdfs }).catch((e) => {
+    // An expert opinion looks up authoritative sources on the web as it writes (where the connection allows it).
+    askJson(buildDocPrompt(kind, text, opts), signal, { images: sendPhotos(), documents: pdfs, webSearch: kind === 'opinion' }).catch((e) => {
       // A connection that doesn't take PDFs yet rejects the whole request: say that, not "check the model".
       throw pdfs.length && e && e.code === 'bad_request' ? new AiError('pdf_connection', '') : e;
     }),
+    kind === 'opinion' ? 'Usually 1 to 2 minutes' : undefined,
   );
   const d = normaliseDoc(reply);
   if (!d.sections.length) throw new AiError('empty', '');
@@ -2555,7 +2545,11 @@ $('doc-copy').addEventListener('click', () => {
   shareOrCopy(docText(currentDoc.d) + (currentDoc.kind === 'mop' ? `${mopVideo(currentDoc.d) ? `\n\n${videoLine(mopVideo(currentDoc.d))}` : ''}\n\n${aiNoteFor(currentDoc.d.title)}` : ''), $('doc-title').textContent.replace(/\u00a0/g, ' '), 'Copied. Paste it wherever it needs to go.', docWordModel(), { type: 'doc', kind: currentDoc.kind, d: currentDoc.d });
 });
 $('doc-new').addEventListener('click', changeDoc);
-$('doc-check-change').addEventListener('click', changeDoc);
+// The review bar opens the questions ready to answer, rather than just listing them.
+$('doc-checks').querySelector('summary').addEventListener('click', (e) => {
+  e.preventDefault();
+  if (currentDoc) openAnswers({ type: 'doc' }, currentDoc.d.check);
+});
 
 /* ---------------- make another from the same words ---------------- */
 
@@ -3191,6 +3185,10 @@ $('unlock').addEventListener('input', (e) => {
 /* ---------------- "Add more info" from inside the review lists ---------------- */
 
 document.querySelectorAll('.add-more-inline').forEach((b) => b.addEventListener('click', () => addMoreInfo()));
+els.checks.querySelector('summary').addEventListener('click', (e) => {
+  e.preventDefault();
+  openAnswers({ type: 'notes' }, checkItems);
+});
 
 /* ---------------- feedback: thumbs up or down ---------------- */
 

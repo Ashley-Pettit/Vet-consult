@@ -195,3 +195,20 @@ test('a dropped connection is retried quietly before any error is shown', async 
   assert.match(await p.generate('x'), /Rusty/);
   assert.equal(calls, 2);
 });
+
+test('web search: the answer is the text after the last search, streamed or not', async () => {
+  const { readStream, WEB_SEARCH_TOOL } = await import('../../src/ai.js');
+  assert.equal(WEB_SEARCH_TOOL.type, 'web_search_20260209');
+  assert.ok(WEB_SEARCH_TOOL.blocked_domains.includes('rspca.org.au'));
+  assert.equal(
+    textFromMessage({ content: [{ type: 'text', text: 'Let me look that up.' }, { type: 'server_tool_use', name: 'web_search' }, { type: 'web_search_tool_result', content: [] }, { type: 'text', text: '{"a":' }, { type: 'text', text: '1}', citations: [{}] }] }),
+    '{"a":1}',
+  );
+  const ev = (o) => `data: ${JSON.stringify(o)}\n\n`;
+  const sse = ev({ type: 'content_block_delta', delta: { type: 'text_delta', text: 'Searching first.' } }) +
+    ev({ type: 'content_block_start', content_block: { type: 'server_tool_use', name: 'web_search' } }) +
+    ev({ type: 'content_block_start', content_block: { type: 'web_search_tool_result', content: [] } }) +
+    ev({ type: 'content_block_delta', delta: { type: 'text_delta', text: '{"b":2}' } }) + ev({ type: 'message_delta', delta: { stop_reason: 'end_turn' } });
+  const body = new ReadableStream({ start(c) { c.enqueue(new TextEncoder().encode(sse)); c.close(); } });
+  assert.equal(textFromMessage(await readStream({ body })), '{"b":2}');
+});

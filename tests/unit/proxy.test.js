@@ -85,3 +85,19 @@ test('streaming requests are passed through as they arrive', async () => {
   assert.equal(res.headers.get('access-control-allow-origin'), 'https://ashley-pettit.github.io');
   assert.match(await res.text(), /message_stop/);
 });
+
+test('lets the web search tool through, rebuilt from known fields, and rejects any other tool', async () => {
+  let sent;
+  const tool = { type: 'web_search_20260209', name: 'web_search', max_uses: 50, blocked_domains: ['rspca.org.au', 'bad domain!'], user_location: { type: 'approximate', country: 'AU' }, extra: 'x' };
+  const r = await handle(req({ ...good, tools: [tool] }), env, async (url, init) => {
+    sent = JSON.parse(init.body);
+    return new Response('{"content":[{"type":"text","text":"ok"}]}', { status: 200 });
+  });
+  assert.equal(r.status, 200);
+  assert.deepEqual(sent.tools, [{ type: 'web_search_20260209', name: 'web_search', max_uses: 8, blocked_domains: ['rspca.org.au'], user_location: { type: 'approximate', country: 'AU' } }]);
+  const bad = await handle(req({ ...good, tools: [{ type: 'bash_20250124', name: 'bash' }] }), env, async () => assert.fail('should not call upstream'));
+  assert.equal(bad.status, 400);
+  let plain;
+  await handle(req(good), env, async (url, init) => ((plain = JSON.parse(init.body)), new Response('{}', { status: 200 })));
+  assert.equal(plain.tools, undefined);
+});

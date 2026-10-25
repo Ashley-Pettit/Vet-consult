@@ -228,18 +228,26 @@
     <p id="note-banner" class="banner" data-tone="info" hidden></p>
 
     <details id="checks" class="checks" hidden>
-      <summary><span class="sum-title">Review before saving</span> <span class="count" id="check-count"></span><span class="sum-hint">Tap to open</span></summary>
+      <summary><span class="sum-title">Review before saving</span> <span class="count" id="check-count"></span><span class="sum-hint">Tap to answer</span></summary>
       <ul id="check-list"></ul>
-      <button type="button" class="btn small ghost add-more-inline">Add more info</button>
     </details>
 
+    <section class="plain-sec" aria-labelledby="plain-title">
+      <div class="sec-head" hidden>
+        <h2 id="plain-title">Clinical notes</h2>
+        <button type="button" class="btn small primary copy-top" id="copy" aria-label="Copy clinical notes"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg><span>Copy</span></button>
+      </div>
+      <button type="button" class="btn small ghost polish-btn" id="polish" hidden><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.6L18 9l-4.2 1.4L12 15l-1.8-4.6L6 9l4.2-1.4z"/><path d="M19 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg>AI polish</button>
+      <label for="plain" class="sr-only">Clinical notes text to copy</label>
+      <textarea id="plain" rows="14" spellcheck="true"></textarea>
+    </section>
     <details id="gaps" class="gaps" hidden>
       <summary>Ideally also include <span class="count" id="gap-count"></span></summary>
       <p class="help">Optional. The note is fine without these. Tap Add more info to add any.</p>
       <ul id="gap-list"></ul>
       <button type="button" class="btn small ghost add-more-inline">Add more info</button>
     </details>
-    <article id="note" class="note" aria-label="Formatted clinical note"></article>
+    <article id="note" class="note" aria-label="Formatted clinical note" hidden></article>
     <div class="feedback" data-for="note" role="group" aria-label="Was this helpful?">
       <span>Was this helpful?</span>
       <button type="button" class="fb-btn" data-vote="up" aria-label="Yes, helpful"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 11v9H4v-9z"/><path d="M7 11l4-8a2 2 0 0 1 2 2v4h5.5a2 2 0 0 1 2 2.3l-1.2 7A2 2 0 0 1 17.3 20H7"/></svg></button>
@@ -253,16 +261,6 @@
       <button type="button" class="btn primary" id="discharge-btn">Make carer plan</button>
     </section>
 
-    <section class="plain-sec" aria-labelledby="plain-title">
-      <div class="sec-head">
-        <h2 id="plain-title">Clinical notes</h2>
-        <button type="button" class="btn small primary copy-top" id="copy" aria-label="Copy clinical notes"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg><span>Copy</span></button>
-      </div>
-      <p class="help">Ready to paste into your system. Edit anything here first.</p>
-      <button type="button" class="btn small ghost polish-btn" id="polish" hidden><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.6L18 9l-4.2 1.4L12 15l-1.8-4.6L6 9l4.2-1.4z"/><path d="M19 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg>AI polish</button>
-      <label for="plain" class="sr-only">Clinical notes text to copy</label>
-      <textarea id="plain" rows="14" spellcheck="true"></textarea>
-    </section>
     <div id="pms-rows"></div>
 
     <button type="button" class="btn ghost word-btn" id="word-note"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 11v6M9 14l3 3 3-3"/></svg>Word printout</button>
@@ -390,9 +388,8 @@
     </div>
     <p id="doc-banner" class="banner" data-tone="info" hidden></p>
     <details id="doc-checks" class="checks" hidden>
-      <summary><span class="sum-title">Review before sending</span> <span class="count" id="doc-check-count"></span><span class="sum-hint">Tap to open</span></summary>
+      <summary><span class="sum-title">Review before sending</span> <span class="count" id="doc-check-count"></span><span class="sum-hint">Tap to answer</span></summary>
       <ul id="doc-check-list" class="plain-list"></ul>
-      <button type="button" class="btn small ghost" id="doc-check-change">Answer or change</button>
     </details>
     <section class="text-vet" id="text-vet" hidden>
       <h2 id="text-vet-title">Text to your vet</h2>
@@ -665,6 +662,7 @@
 <dialog id="more" class="more" aria-labelledby="more-title">
   <form method="dialog" id="more-form">
     <h2 id="more-title">Add more info</h2>
+    <ol class="more-questions" id="more-questions" hidden></ol>
     <div class="more-mic-zone">
       <button type="button" class="mic more-mic" id="more-mic" aria-pressed="false" aria-label="Speak what you missed">
         <svg class="i-mic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2.5" width="6" height="12" rx="3"/><path d="M5 10.5a7 7 0 0 0 14 0"/><path d="M12 17.5v4"/></svg>

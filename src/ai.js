@@ -115,10 +115,25 @@ function withTimeout(signal, ms) {
   };
 }
 
+// Expert opinions look up authoritative sources on the web while they write. Searches are general (the prompt keeps
+// case details out of them); RSPCA sites are left out, as the app never relies on or quotes them.
+export const WEB_SEARCH_TOOL = {
+  type: 'web_search_20260209',
+  name: 'web_search',
+  max_uses: 5,
+  blocked_domains: ['rspca.org.au', 'kb.rspca.org.au', 'rspcavic.org', 'rspcaqld.org.au', 'rspcansw.org.au', 'rspcasa.org.au', 'rspcawa.asn.au', 'rspcatas.org.au', 'rspca-act.org.au'],
+  user_location: { type: 'approximate', country: 'AU' },
+};
+const SEARCH_BLOCKS = new Set(['server_tool_use', 'web_search_tool_result']);
+
 export function textFromMessage(body) {
   if (!body || !Array.isArray(body.content)) return '';
   if (body.stop_reason === 'refusal') throw new AiError('refused', AI_MESSAGES.refused);
+  // With web search, the answer is the text after the last search (any notes between searches are dropped).
+  let from = 0;
+  body.content.forEach((b, i) => b && SEARCH_BLOCKS.has(b.type) && (from = i + 1));
   return body.content
+    .slice(from)
     .filter((b) => b && b.type === 'text' && typeof b.text === 'string')
     .map((b) => b.text)
     .join('');
@@ -148,6 +163,8 @@ export async function readStream(res) {
       return;
     }
     if (ev.type === 'content_block_delta' && ev.delta && ev.delta.type === 'text_delta') text += ev.delta.text;
+    // A web search starting or returning: the answer comes after it, so drop any notes written before it.
+    else if (ev.type === 'content_block_start' && ev.content_block && SEARCH_BLOCKS.has(ev.content_block.type)) text = '';
     else if (ev.type === 'message_start' && ev.message) addUsage(ev.message.usage);
     else if (ev.type === 'message_delta') {
       if (ev.delta && ev.delta.stop_reason) stopReason = ev.delta.stop_reason;
@@ -194,9 +211,10 @@ async function callMessages(url, headers, prompt, model, signal, fetchImpl, opts
   }
 }
 
-async function callOnce(url, headers, prompt, model, signal, fetchImpl, { viaProxy = false, images = [], documents = [] } = {}) {
+async function callOnce(url, headers, prompt, model, signal, fetchImpl, { viaProxy = false, images = [], documents = [], webSearch = false } = {}) {
   if (typeof navigator !== 'undefined' && navigator.onLine === false) throw new AiError('offline', AI_MESSAGES.offline);
-  const t = withTimeout(signal, CONFIG.timeoutMs);
+  // Looking things up on the web takes longer: allow twice the usual time.
+  const t = withTimeout(signal, webSearch ? CONFIG.timeoutMs * 2 : CONFIG.timeoutMs);
   let res;
   try {
     res = await fetchImpl(url, {
@@ -206,6 +224,7 @@ async function callOnce(url, headers, prompt, model, signal, fetchImpl, { viaPro
         model,
         max_tokens: CONFIG.maxTokens,
         messages: [{ role: 'user', content: messageContent(prompt, images, documents) }],
+        ...(webSearch ? { tools: [WEB_SEARCH_TOOL] } : {}),
         // Through the connection the reply streams in, so long care plans never sit silent and get dropped.
         ...(viaProxy ? { stream: true } : {}),
       }),
@@ -311,7 +330,7 @@ export async function resolveProvider(settings = {}, env = {}) {
       id: 'proxy',
       label: 'Animal Welfare Companion connection',
       images: true,
-      generate: (prompt, signal, { images = [], documents = [] } = {}) => callMessages(CONFIG.proxyUrl, {}, prompt, model, signal, fetchImpl, { viaProxy: true, images, documents }),
+      generate: (prompt, signal, { images = [], documents = [], webSearch = false } = {}) => callMessages(CONFIG.proxyUrl, {}, prompt, model, signal, fetchImpl, { viaProxy: true, images, documents, webSearch }),
     };
   }
 
@@ -320,7 +339,7 @@ export async function resolveProvider(settings = {}, env = {}) {
       id: 'key',
       label: 'Your API key',
       images: true,
-      generate: (prompt, signal, { images = [], documents = [] } = {}) =>
+      generate: (prompt, signal, { images = [], documents = [], webSearch = false } = {}) =>
         callMessages(
           ANTHROPIC_URL,
           {
@@ -332,7 +351,7 @@ export async function resolveProvider(settings = {}, env = {}) {
           model,
           signal,
           fetchImpl,
-          { images, documents },
+          { images, documents, webSearch },
         ),
     };
   }

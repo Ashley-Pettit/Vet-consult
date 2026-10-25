@@ -7,7 +7,7 @@ test.beforeEach(async ({ page }) => asVet(page));
 
 // One mock that answers each kind of request the way Claude would.
 const smart = (prompt) => {
-  if (prompt.includes('<check_item>')) {
+  if (prompt.includes('<check_items>')) {
     const answer = prompt.match(/<answer>([\s\S]*?)<\/answer>/)[1];
     return apiReply({ ...SAMPLE_NOTE, visit: { ...SAMPLE_NOTE.visit, clinician: answer }, check: [SAMPLE_NOTE.check[1]] });
   }
@@ -60,42 +60,32 @@ test('vital flags, dose totals and PMS field copy', async ({ page, context }) =>
   expect(await page.locator('#plain').inputValue()).not.toContain('312.4');
 });
 
-test('answer a check item and the note updates', async ({ page }) => {
+test('one tap opens every review question with the mic on; one call fixes the notes', async ({ page }) => {
   const errors = watchErrors(page);
+  await fakeSpeech(page);
   await withKey(page);
   const calls = await mockApi(page, { body: smart });
   await openApp(page);
   await page.locator('#transcript').fill(DICTATION);
   await page.locator('#create').click();
   await expect(page.locator('#view-note')).toBeVisible();
-  await expect(page.locator('#checks')).not.toHaveAttribute('open', '');
+  // Straight to the notes to edit and copy: no formatted card on top.
+  await expect(page.locator('#note')).toBeHidden();
+  await expect(page.locator('#plain')).toBeVisible();
   await page.locator('#checks summary').click();
-  const first = page.locator('#check-list > li').first();
-  await expect(first).toContainText('Clinician name?');
-  await first.getByRole('button', { name: 'Answer' }).click();
-  await first.locator('input').fill('Dr Sam Lee');
-  await first.getByRole('button', { name: 'Update note' }).click();
-  await expect(page.locator('#toast-text')).toHaveText('Note updated.');
-  await expect(page.locator('#note')).toContainText('Dr Sam Lee');
-  await expect(page.locator('#check-list')).not.toContainText('Clinician name?');
-  expect(calls[1].prompt).toContain('<check_item>Clinician name?</check_item>');
-  expect(errors).toEqual([]);
-});
-
-test('answer by live mic in the answer box', async ({ page }) => {
-  await fakeSpeech(page);
-  await withKey(page);
-  await mockApi(page, { body: smart });
-  await openApp(page);
-  await page.locator('#transcript').fill(DICTATION);
-  await page.locator('#create').click();
-  await page.locator('#checks summary').click();
-  const first = page.locator('#check-list > li').first();
-  await first.getByRole('button', { name: 'Answer' }).click();
-  await first.getByRole('button', { name: 'Answer by voice' }).click();
-  await expect(first.getByRole('button', { name: 'Answer by voice' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('#more')).toBeVisible();
+  await expect(page.locator('#more-questions li').first()).toContainText('Clinician name?');
+  await expect(page.locator('#more-mic')).toHaveAttribute('aria-pressed', 'true'); // listening straight away
   await page.evaluate(() => window.__fakeSay('doctor sam lee'));
-  await expect(first.locator('input')).toHaveValue('Doctor sam lee');
+  await expect(page.locator('#more-text')).toHaveValue(/sam lee/i);
+  await page.locator('#more-go').click();
+  await expect(page.locator('#toast-text')).toHaveText('Notes fixed.');
+  await expect(page.locator('#plain')).toHaveValue(/sam lee/i);
+  await expect(page.locator('#check-list')).not.toContainText('Clinician name?');
+  const fix = calls.find((c) => c.prompt.includes('<check_items>'));
+  expect(fix.prompt).toContain('1. Clinician name?');
+  expect(fix.body.model).toBe('claude-haiku-5-5'); // a quick call: no drugs or doses in the answer
+  expect(errors).toEqual([]);
 });
 
 test('care sheet for foster carers, copied as plain text', async ({ page, context }) => {

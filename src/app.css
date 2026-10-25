@@ -1396,3 +1396,9 @@ textarea, input { caret-color: var(--caret); }
 .boot-logo { width: 88px; height: 88px; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.14); animation: mark-breathe 3.2s ease-in-out infinite; }
 .boot-name { font: 700 0.95rem/1.2 var(--display); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
 @keyframes boot-out { to { opacity: 0; visibility: hidden; } }
+
+/* Answer sheet: the review questions, numbered so they can be answered in order */
+.more-questions { margin: 0 0 10px; padding-left: 1.4rem; display: grid; gap: 6px; font-weight: 600; }
+.more-questions li::marker { color: var(--accent); font-weight: 800; }
+/* Clinical notes open straight on the text to edit and copy */
+#view-note .plain-sec { margin-top: 4px; }

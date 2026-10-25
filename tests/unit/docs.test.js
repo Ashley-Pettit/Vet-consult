@@ -148,8 +148,10 @@ test('expert opinion: plain words, welfare impacts, real references only, and at
   assert.match(p, /plain Australian English/);
   assert.match(p, /"Welfare impacts"/);
   assert.match(p, /"References"/);
-  assert.match(p, /Never invent, alter or guess a reference/);
-  assert.match(p, /\[Draft for you to confirm\]/);
+  assert.match(p, /never invent, alter or guess a title, author, year, URL/);
+  assert.match(p, /use it before writing to find the best authoritative evidence/);
+  assert.match(p, /never put names, addresses, case numbers/);
+  assert.match(p, /never invent facts about this case/);
   assert.match(p, /Possum care guidelines/);
   assert.match(p, /<document title="Council report">/);
   assert.match(p, /The vet is Dr Sam Lee/);
