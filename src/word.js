@@ -4,6 +4,7 @@ import { dueLabel, formatDate, NOT_RECORDED, rehydrationTable, REHYDRATION_NOTE,
 import { chartByKey } from './feeding.js';
 import { rangesFor, rangesForAnimal } from './species-ranges.js';
 import { region } from './region.js';
+import { watchUrl } from './videos.js';
 
 export const PAGE_W = 9638; // A4 minus 2 cm margins, in twentieths of a point
 
@@ -126,7 +127,7 @@ export function careModel(c, lookup, photos = [], video = null) {
     title: c.animal ? `Care plan: ${c.animal}` : 'Care plan',
     aiNote: careAiNote(c),
     // The care video, as a link on the printout.
-    watch: video && video.id ? { ...video, url: `https://www.youtube.com/watch?v=${video.id}` } : null,
+    watch: video && (video.id || video.url) ? { ...video, url: watchUrl(video) } : null,
     blocks,
     tickSheet: c.daily_checks.length && !((Number(c.log_days) || 0) <= 1 && !c.medications.length && !c.plan.length) ? { items: c.daily_checks, days: tickDays, urgent: c.escalate.urgent } : null,
     sources: c.sources.map(lookup).filter(Boolean),

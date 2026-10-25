@@ -12,7 +12,7 @@ import { ABOUT_HTML } from './about.js';
 import { lookupSource, sourcesForPrompt, SOURCE_IDS } from './sources.js';
 import { region, setRegion } from './region.js';
 import { rangesFor, rangesForAnimal } from './species-ranges.js';
-import { careVideoFor, watchUrl } from './videos.js';
+import { careVideoFor, watchUrl, videoHost } from './videos.js';
 import { groupsIn, factsFor, namedAnimal } from './species-vet.js';
 import { SPECIES_CARE } from './species-care.js';
 import { docModel, careModel, noteModel, wordFileName, dischargeModel, THEMES } from './word.js';
@@ -1811,7 +1811,7 @@ function videoSection(v) {
       el('span', { class: 'video-play-icon', 'aria-hidden': 'true' }),
       el('span', { class: 'video-info' }, [
         el('strong', { text: v.title }),
-        el('span', { class: 'help', text: `${v.channel}${v.date ? `, ${v.date}` : ''} · opens YouTube` }),
+        el('span', { class: 'help', text: `${v.channel}${v.date ? `, ${v.date}` : ''} · opens ${videoHost(v)}` }),
       ]),
     ]),
     v.warning ? el('p', { class: 'help' }, warningParts(v.warning)) : null,

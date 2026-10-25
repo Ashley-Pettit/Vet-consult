@@ -1154,6 +1154,9 @@ export function videoForTags(tags = [], context = '') {
   return tags.length ? videoFor('', context, tags) : null;
 }
 
-export const watchUrl = (v) => `https://www.youtube.com/watch?v=${v.id}`;
+// A video can live on YouTube (id), or anywhere else such as Vimeo or an organisation's own site (url).
+export const watchUrl = (v) => v.url || `https://www.youtube.com/watch?v=${v.id}`;
+/** Where tapping the video takes you, for the small line under its title. */
+export const videoHost = (v) => (!v.url ? 'YouTube' : /vimeo\.com/.test(v.url) ? 'Vimeo' : new URL(v.url).hostname.replace(/^www\./, ''));
 export const embedUrl = (v) => `https://www.youtube-nocookie.com/embed/${v.id}?rel=0&modestbranding=1&autoplay=1`;
 export const thumbUrl = (v) => `https://i.ytimg.com/vi/${v.id}/hqdefault.jpg`;
