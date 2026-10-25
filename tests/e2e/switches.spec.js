@@ -79,25 +79,6 @@ test('a call interrupts: the dictation and the last care plan survive closing th
   expect(calls).toHaveLength(0);
 });
 
-test('New asks first; keeping it changes nothing, starting new clears the words and keeps it under Recent', async ({ page }) => {
-  await mockApi(page, { body: () => textReply(EXAMPLE_CARER_PLAN) });
-  await openApp(page);
-  await expect(page).toHaveTitle(/Animal Welfare Companion/);
-  await page.locator('#transcript').fill('Ringtail joey, cat attack.');
-  await page.locator('#create').click();
-  await expect(page.locator('#view-care')).toBeVisible();
-  await page.locator('#new-care').click();
-  await expect(page.locator('#confirm-new')).toBeVisible();
-  await page.getByRole('button', { name: 'Keep this' }).click();
-  await expect(page.locator('#view-care')).toBeVisible();
-  await page.locator('#new-care').click();
-  await page.getByRole('button', { name: 'Start new' }).click();
-  await expect(page.locator('#view-record')).toBeVisible();
-  await expect(page.locator('#transcript')).toHaveValue('');
-  await page.locator('#open-recent').click();
-  await expect(page.locator('#recent-dlg')).toContainText('Care plan');
-});
-
 test('Copy offers Share or Copy as text; no extra copy button at the top of the care plan', async ({ page, context }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
   await page.addInitScript(() => { window.__shared = []; navigator.share = async (d) => { window.__shared.push(d); }; });
@@ -230,8 +211,7 @@ test('Recent: each plan is kept on the device, the animal leads, and any one reo
     await page.locator('#transcript').fill(words);
     await page.locator('#create').click();
     await expect(page.locator('#view-care')).toBeVisible();
-    await page.locator('#new-care').click();
-    await page.getByRole('button', { name: 'Start new' }).click();
+    await page.locator('#care-back').click();
   }
   await page.locator('#open-recent').click();
   await expect(page.locator('#recent-dlg .recent-item').first()).toContainText('Ringtail possum joey');

@@ -1,7 +1,9 @@
 // Ready-made replies for the built-in examples, so trying an example never waits on (or pays for) a real AI call.
 // Each reply was made once by Claude from the exact prompt the app builds; the prompt's hash finds it again.
 // Anything that changes the prompt (your name or drugs in Settings, photos, an edited example) gets a real call.
-import BAKED from './baked-examples.js';
+// The stored replies (about 300 KB) load only when an example is actually made, not with the app.
+let BAKED = null;
+export const loadBaked = async () => (BAKED ||= (await import('./baked-examples.js')).default);
 
 export const BAKED_DELAY_MS = 1500; // long enough to feel like it's working, short enough not to wait
 
@@ -19,9 +21,10 @@ export function bakeKey(prompt) {
   return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
 }
 
-export function bakedReply(prompt, images = [], documents = []) {
+export async function bakedReply(prompt, images = [], documents = []) {
   if ((images && images.length) || (documents && documents.length)) return null;
-  return (BAKED.replies || {})[bakeKey(prompt)] ?? null;
+  const b = await loadBaked();
+  return (b.replies || {})[bakeKey(prompt)] ?? null;
 }
 
 /** Wait like a real call would, but stop straight away if Stop is pressed. */
@@ -37,9 +40,10 @@ function pause(ms, signal) {
  * Wrap a provider so example prompts are answered from the ready-made replies after a short, realistic wait.
  * With no provider at all (the public demo without a connection), the examples still work.
  */
-export function withBaked(p, makeCancelled, prepare = (x) => x) {
+export function withBaked(p, makeCancelled, prepare = (x) => x, maybeExample = () => true) {
   const generate = async (prompt, signal, opts = {}) => {
-    const baked = bakedReply(prompt, opts.images, opts.documents);
+    // Only look for a stored reply when the words are one of the built-in examples (saves loading them otherwise).
+    const baked = !p || maybeExample() ? await bakedReply(prompt, opts.images, opts.documents) : null;
     if (baked != null) {
       try {
         await pause(BAKED_DELAY_MS, signal);
@@ -49,7 +53,7 @@ export function withBaked(p, makeCancelled, prepare = (x) => x) {
       return baked;
     }
     if (!p) throw Object.assign(new Error('No Claude connection'), { code: 'forbidden' });
-    return p.generate(prepare(prompt), signal, opts);
+    return p.generate(await prepare(prompt), signal, opts);
   };
   if (p) return { ...p, generate };
   return { id: 'examples', label: 'Examples only', images: false, examplesOnly: true, generate };

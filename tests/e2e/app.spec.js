@@ -70,7 +70,7 @@ test.describe('dictation', () => {
     await page.locator('#transcript').fill(DICTATION);
     await page.locator('#create').click();
     await expect(page.locator('#view-note')).toBeVisible();
-    await page.locator('#back').click(); // "Add more info"
+    await page.locator('#review-open').click(); // the review card: answer or add, mic on
     await expect(page.locator('#more')).toHaveAttribute('data-mic', 'listening');
     await page.evaluate(() => window.__fakeSay('weight 14 kilos'));
     await page.evaluate(() => window.__fakeSay('left ear crusty', { final: false }));
@@ -212,7 +212,7 @@ test.describe('creating a note', () => {
     const clip = await page.evaluate(() => navigator.clipboard.readText());
     expect(clip).toContain('Addendum: owner called.');
 
-    await expect(page.locator('#back')).toHaveText('Add more info');
+    await expect(page.locator('#back')).toHaveText('Back');
     // The logo goes home, with the dictation kept.
     await page.locator('#home').click();
     await expect(page.locator('#view-record')).toBeVisible();

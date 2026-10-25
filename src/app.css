@@ -1464,3 +1464,11 @@ textarea, input { caret-color: var(--caret); }
 .qs-group .more-questions { padding: 0 0 0 1.2rem; }
 .nice-chips { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
 .nice-chips li { padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); font-size: 0.86rem; }
+
+/* Sources under a table: a quiet footnote set apart from what follows */
+.source-note { display: grid; gap: 6px; margin-top: 4px; padding-top: 10px; border-top: 1px dashed var(--line); }
+.source-label { margin: 0; font: 700 0.72rem/1.2 var(--display); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.source-note ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.source-note li { display: grid; gap: 1px; font-size: 0.86rem; line-height: 1.35; }
+.source-note a { color: var(--accent); text-underline-offset: 3px; overflow-wrap: anywhere; }
+.source-meta { color: var(--muted); font-size: 0.8rem; }

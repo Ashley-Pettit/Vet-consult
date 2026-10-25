@@ -1,8 +1,8 @@
 import { CONFIG } from './config.js';
 import { Dictation, speechErrorMessage } from './speech.js';
 import { resolveProvider, friendly, AiError, onUsage } from './ai.js';
-import { withBaked } from './baked.js';
-import { withTemplate, withLiveRules } from './templates.js';
+import { withBaked, loadBaked } from './baked.js';
+import { withTemplate, withLiveRules, loadTemplates } from './templates.js';
 import { readDocument, DocError, MAX_DOCS, DOC_ACCEPT } from './docs.js';
 import { store } from './storage.js';
 import { localChecks } from './clinical.js';
@@ -645,6 +645,7 @@ function updateExampleNote() {
 }
 
 function loadExample(text) {
+  loadBaked().catch(() => {}); // fetch the stored replies now, so Create is quick
   dictation.cancel();
   setTranscript(text);
   banner('');
@@ -663,9 +664,8 @@ $('load-media-example').addEventListener('click', () => loadExample(EXAMPLE_MEDI
 $('load-witness-example').addEventListener('click', () => loadExample(EXAMPLE_WITNESS_DICTATION));
 $('load-opinion-example').addEventListener('click', () => loadExample(EXAMPLE_OPINION_DICTATION));
 
-// "New" on any result: asks first, then a clean start. The result stays under "Last made".
+// A clean start (asked first). Results no longer have a New button: Back does the same job and keeps the words.
 const confirmNew = $('confirm-new');
-['new-note', 'new-care', 'new-doc', 'new-polish'].forEach((id) => $(id).addEventListener('click', () => (busy ? null : confirmNew.showModal())));
 confirmNew.addEventListener('close', () => {
   if (confirmNew.returnValue !== 'new') return;
   confirmNew.returnValue = '';
@@ -871,7 +871,11 @@ const stopped = () => new AiError('cancelled', 'Stopped.');
 function withExamples(p) {
   if (bakedOff()) return p;
   // Live drafts get Opus's house-style example for that kind of document (templates.js).
-  return p || isExampleText() ? withBaked(p, stopped, (prompt) => withTemplate(withLiveRules(prompt), region().code)) : null;
+  const prepare = async (prompt) => {
+    await loadTemplates();
+    return withTemplate(withLiveRules(prompt), region().code);
+  };
+  return p || isExampleText() ? withBaked(p, stopped, prepare, isExampleText) : null;
 }
 async function ensureProvider() {
   provider = withExamples(await resolveProvider(settings));
@@ -1215,12 +1219,13 @@ function renderAnimals() {
 let checkItems = []; // the questions on the clinical note now on screen
 let gapItems = []; // what a full record would ideally also have (optional)
 /** One review card: what to check (must) and what would be nice to add (optional), one tap to update. */
-function renderReview(box, prefix, checks, nice, titles) {
-  box.hidden = !checks.length && !nice.length;
+function renderReview(box, prefix, checks, nice, titles, always = false) {
+  const none = !checks.length && !nice.length;
+  box.hidden = none && !always;
   const card = $(prefix);
   card.dataset.tone = checks.length ? 'warn' : 'calm';
-  $(`${prefix}-title`).textContent = checks.length ? titles[0] : 'Nice to add';
-  $(`${prefix}-sub`).textContent = [checks.length ? `${checks.length} to check` : '', nice.length ? `${nice.length} nice to add` : ''].filter(Boolean).join(' · ');
+  $(`${prefix}-title`).textContent = checks.length ? titles[0] : nice.length ? 'Nice to add' : 'Add or change anything';
+  $(`${prefix}-sub`).textContent = none ? 'Say anything you missed' : [checks.length ? `${checks.length} to check` : '', nice.length ? `${nice.length} nice to add` : ''].filter(Boolean).join(' · ');
   card.setAttribute('aria-label', `${$(`${prefix}-title`).textContent}: ${$(`${prefix}-sub`).textContent}. Update`);
 }
 function renderChecks(n, local) {
@@ -1301,7 +1306,7 @@ function noteGaps(n) {
 function renderGaps(n) {
   gapItems = noteGaps(n);
   $('gap-list').replaceChildren(...gapItems.map((g) => el('li', { text: g })));
-  renderReview(els.checks, 'review-open', checkItems, gapItems, ['Review before saving']);
+  renderReview(els.checks, 'review-open', checkItems, gapItems, ['Review before saving'], true);
 }
 
 function renderNote() {
@@ -1612,8 +1617,8 @@ more.addEventListener('close', async () => {
   else await createNote();
 });
 more.addEventListener('click', (e) => e.target === more && more.close()); // tap outside to cancel
-els.back.addEventListener('click', addMoreInfo);
-$('note-more').addEventListener('click', addMoreInfo);
+// Back to the dictation, words kept. Adding more now happens from the review card.
+els.back.addEventListener('click', () => (busy ? null : showView('record')));
 
 /* MOP plans: quick directions the hotline operator (or a carer or vet) can set from dropdowns. The first option
    always leaves the plan as written, which by default means no food or water unless the notes said otherwise. */
@@ -1943,6 +1948,18 @@ function videoSection(v) {
   return el('section', { class: 'care-sec video' }, [el('h2', { text: 'Watch' }), info, warn, box]);
 }
 
+/** Where figures come from: a small footnote, one source a line, the title linked and the publisher and date quiet. */
+function sourceNote(sources) {
+  if (!sources || !sources.length) return null;
+  return el('div', { class: 'source-note' }, [
+    el('p', { class: 'source-label', text: sources.length > 1 ? 'Sources' : 'Source' }),
+    el('ul', {}, sources.map((x) => el('li', {}, [
+      x.url ? el('a', { href: x.url, target: '_blank', rel: 'noopener', text: x.title }) : el('span', { text: x.title }),
+      el('span', { class: 'source-meta', text: [x.publisher, x.date && !/no date/i.test(x.date) ? x.date : ''].filter(Boolean).join(', ') }),
+    ]))),
+  ]);
+}
+
 // Normal ranges and pouch / enclosure temperatures for the species, shown from the checked table (never from Claude).
 function rangesSection(id, context = '') {
   const g = id ? rangesForAnimal(id, region().code, context) : null;
@@ -1954,7 +1971,7 @@ function rangesSection(id, context = '') {
     g.warmth.length ? el('h3', { text: g.reptile ? 'Temperatures' : 'Pouch or enclosure temperature' }) : null,
     g.warmth.length ? el('div', { class: 'grid' }, rows(g.warmth)) : null,
     g.notes.length ? el('ul', {}, g.notes.map((x) => el('li', { text: x }))) : null,
-    el('p', { class: 'help' }, ['From: ', ...g.sources.flatMap((x, i) => [i ? '; ' : '', el('a', { href: x.url, target: '_blank', rel: 'noopener', text: x.title }), ` (${x.publisher}, ${x.date})`])]),
+    sourceNote(g.sources),
   ]);
 }
 
@@ -3310,7 +3327,7 @@ $('unlock').addEventListener('input', (e) => {
 /* ---------------- "Add more info" from inside the review lists ---------------- */
 
 document.querySelectorAll('.add-more-inline').forEach((b) => b.addEventListener('click', () => addMoreInfo()));
-$('review-open').addEventListener('click', () => openAnswers({ type: 'notes' }, checkItems, gapItems));
+$('review-open').addEventListener('click', () => (checkItems.length || gapItems.length ? openAnswers({ type: 'notes' }, checkItems, gapItems) : addMoreInfo()));
 
 /* ---------------- feedback: thumbs up or down ---------------- */
 

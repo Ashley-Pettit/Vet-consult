@@ -1,7 +1,9 @@
 // House style from Opus: one excellent finished reply per kind of document (made once by Opus from the built-in
 // examples, see scripts/bake-examples.mjs). Live drafts on the everyday model get it as a worked example, so they
 // come out with the same structure, depth and polish, and the Word printouts look as good.
-import EXAMPLES from './template-examples.js';
+// The house-style examples are only needed when a real AI call is made, so they load then, not with the app.
+let EXAMPLES = null;
+export const loadTemplates = async () => (EXAMPLES ||= (await import('./template-examples.js')).default);
 import { CACHE_SPLIT } from './note.js';
 
 // Which kind of request a prompt is. Order matters: the most specific first. Changes, revisions and Rapid polish
@@ -31,6 +33,7 @@ const GUIDE = `Here is an example of an excellent reply of this kind, written fo
 
 /** The prompt with the house-style example added just before the case itself, or unchanged if there is none. */
 export function withTemplate(prompt, regionCode = 'vic') {
+  if (!EXAMPLES) return prompt; // call loadTemplates() first
   const kind = templateKind(prompt);
   const ex = kind && ((EXAMPLES[regionCode] || {})[kind] || (EXAMPLES.vic || {})[kind]);
   if (!ex) return prompt;

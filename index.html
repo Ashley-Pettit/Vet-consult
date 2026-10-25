@@ -139,7 +139,7 @@
         <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="2.5" width="6" height="12" rx="3"/><path d="M5 10.5a7 7 0 0 0 14 0M12 17.5v4"/></svg>
         <div id="kb-coach-text">Tap the microphone on your keyboard and start talking.</div>
       </div>
-      <p id="example-note" class="example-note" hidden><strong>This is an example.</strong> Normally you’d say this into the mic or type it yourself. Tap Create to see what you’d get, or Clear to use your own words.</p>
+      <p id="example-note" class="example-note" hidden><strong>This is an example.</strong> Normally you’d say this into the mic or type it yourself.</p>
       <!-- One composer: the words, then the tools under them (photos, clear, the mic) -->
       <div class="composer" id="composer">
         <textarea id="transcript" rows="5" spellcheck="true" autocomplete="off" placeholder="Talk or type the consult. Typos are fine."></textarea>
@@ -212,10 +212,9 @@
     <div class="note-head">
       <div class="head-row">
         <button type="button" class="link back" id="back">
-          <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-          Add more info
+          <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+          <span>Back</span>
         </button>
-        <button type="button" class="link new-start" id="new-note"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M12 11v6M9 14h6"/></svg>New</button>
       </div>
       <div class="note-title-row">
         <h1 id="note-title" tabindex="-1">Clinical note</h1>
@@ -264,7 +263,6 @@
 
     <button type="button" class="btn ghost word-btn" id="word-note"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 11v6M9 14l3 3 3-3"/></svg>Word printout</button>
     <div class="actions">
-      <button type="button" class="btn ghost" id="note-more">Add more info</button>
       <button type="button" class="btn primary" id="care">Carer plan</button>
     </div>
   </section>
@@ -277,7 +275,6 @@
           <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
           <span id="care-back-label">Back to note</span>
         </button>
-        <button type="button" class="link new-start" id="new-care"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M12 11v6M9 14h6"/></svg>New</button>
       </div>
       <div class="note-title-row">
         <h1 id="care-title" tabindex="-1">Care at home</h1>
@@ -353,7 +350,6 @@
           <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
           Back
         </button>
-        <button type="button" class="link new-start" id="new-polish"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M12 11v6M9 14h6"/></svg>New</button>
       </div>
       <div class="note-title-row">
         <h1 id="polish-title" tabindex="-1">Polished notes</h1>
@@ -384,7 +380,6 @@
           <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
           Back
         </button>
-        <button type="button" class="link new-start" id="new-doc"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M12 11v6M9 14h6"/></svg>New</button>
       </div>
       <div class="note-title-row">
         <h1 id="doc-title" tabindex="-1">Report</h1>
@@ -479,6 +474,8 @@
           <a class="channel-opt" id="channel-live" href="../care/">Live</a>
           <a class="channel-opt" id="channel-beta" href="../care-beta/">Beta</a>
         </div>
+        <p class="help" id="channel-help"></p>
+      </div>
 
       <div class="field">
         <label for="template">Handout style (Word printouts)</label>

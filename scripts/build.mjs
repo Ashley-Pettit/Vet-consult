@@ -29,7 +29,10 @@ if (CONFIG.proxyUrl) html = html.replace('</head>', `<link rel="preconnect" href
 // The tiny theme script in <head> runs before the page draws (no flash of the wrong theme); allow exactly it by hash.
 const headScript = (html.match(/<head>[\s\S]*?<script>([\s\S]*?)<\/script>/) || [])[1];
 if (headScript) html = html.replace("script-src 'self'", `script-src 'self' 'sha256-${createHash('sha256').update(headScript).digest('base64')}'`);
-writeFileSync(out + 'index.html', html.replace('app.js"', `app.js?v=${version}"`).replace('app.css"', `app.css?v=${version}"`));
+// app.js imports its shared chunks straight away: tell the browser up front, so they download together, not one after another.
+const preloads = [...js.matchAll(/(?:from|import)\s*"\.\/(chunks\/[^"]+\.js)"/g)].map((m) => m[1]);
+const preloadTags = [...new Set(preloads)].map((c) => `<link rel="modulepreload" href="${c}">`).join('\n');
+writeFileSync(out + 'index.html', html.replace('app.js"', `app.js?v=${version}"`).replace('app.css"', `app.css?v=${version}"`).replace('</head>', `${preloadTags}\n</head>`));
 // The beta copy (CHANNEL=beta, published at /care-beta/) installs under its own name, so it never looks like the live app.
 if (process.env.CHANNEL === 'beta') {
   const mf = JSON.parse(readFileSync(out + 'manifest.webmanifest', 'utf8'));
