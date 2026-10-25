@@ -1461,7 +1461,7 @@ const MORE_HELP = 'It’s added to what you already said and the record is rewri
 // "Change": a finished care plan or document is edited in place, by voice or typing; the rest stays as it was.
 let amendTarget = null;
 const MORE_TEXT = {
-  answer: { title: 'Review and update', placeholder: 'Answer them in order, for example: 1. Adult. 2. 6.2 kilos. Skip any you don’t know.', go: 'Update' },
+  answer: { title: 'Review and update', placeholder: 'e.g. 1. Yes. 2. 6.2 kilos.', go: 'Update' },
   add: { title: 'Add more info', placeholder: 'e.g. She weighed 24.6 kilos, and the case number is 26-04417.', go: 'Update' },
   amend: { title: 'Answer or change', placeholder: 'e.g. Feeds every 3 hours, not 4. She weighs 130 grams now.', go: 'Make change' },
 };
@@ -1506,7 +1506,7 @@ function openMore(target) {
   renderMopDirections(Boolean(target && target.type === 'doc' && currentDoc && currentDoc.kind === 'mop'));
   const t = MORE_TEXT[target ? 'amend' : 'add'];
   $('more-title').textContent = t.title;
-  moreText.placeholder = answerQs ? 'Say what to change, or answer a question by its number.' : t.placeholder;
+  moreText.placeholder = answerQs ? 'Say a change, or answer by number.' : t.placeholder;
   $('more-go').textContent = t.go;
   addMoreInfo(true);
 }
@@ -1524,6 +1524,7 @@ function addMoreInfo(keepTarget) {
     answerMode = false;
     // From the clinical note: its review questions, ready to answer if wanted.
     showQuestions(!$('view-note').hidden ? checkItems : null, false, !$('view-note').hidden ? gapItems : []);
+    if (answerQs || answerNice.length) $('more-title').textContent = 'Review and update';
     renderMopDirections(false);
     $('more-title').textContent = MORE_TEXT.add.title;
     moreText.placeholder = MORE_TEXT.add.placeholder;

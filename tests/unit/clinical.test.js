@@ -24,7 +24,7 @@ test('adult wildlife vitals are checked against the sourced ranges; young are le
   const wombat = normaliseNote({ patient: { species: 'Bare-nosed (common) wombat', age: 'Adult' }, objective: { vitals: { temp_c: '36.1', hr_bpm: '82', rr_bpm: '22' } } });
   const { flags, checks } = vitalFlags(wombat);
   assert.deepEqual(flags, { temp_c: 'high', rr_bpm: 'high' });
-  assert.match(checks[0], /Temp 36\.1 °C is high for an adult common \(bare-nosed\) wombat \(34 to 35\)\. Correct\?/);
+  assert.match(checks[0], /Temp 36\.1 °C is high for an adult common wombat \(34 to 35\)\. Correct\?/);
   const koala = normaliseNote({ patient: { species: 'Koala', age: 'Adult' }, objective: { vitals: { temp_c: '36.0', hr_bpm: '120' } } });
   assert.deepEqual(vitalFlags(koala).flags, { hr_bpm: 'high' });
   const joey = normaliseNote({ patient: { species: 'Wombat', age: 'Furred joey' }, objective: { vitals: { temp_c: '36.5' } } });

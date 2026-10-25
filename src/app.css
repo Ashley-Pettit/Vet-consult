@@ -1398,14 +1398,6 @@ textarea, input { caret-color: var(--caret); }
 @keyframes boot-out { to { opacity: 0; visibility: hidden; } }
 
 /* Answer sheet: the review questions, numbered so they can be answered in order */
-.more-qs { margin: 0 0 10px; border: 1px solid var(--warn-line); border-radius: 12px; background: var(--warn-soft); }
-.more-qs summary { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 14px; cursor: pointer; list-style: none; font-weight: 700; }
-.more-qs summary::-webkit-details-marker { display: none; }
-.more-qs summary::after { content: ""; margin-left: auto; width: 8px; height: 8px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg); transition: transform .2s; }
-.more-qs[open] summary::after { transform: rotate(-135deg); }
-.more-qs .count { display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; background: var(--warn); color: var(--bg); font-size: 0.8rem; }
-.more-questions { margin: 0; padding: 0 14px 12px 2.2rem; display: grid; gap: 6px; font-weight: 600; }
-.more-questions li::marker { color: var(--accent); font-weight: 800; }
 /* Clinical notes open straight on the text to edit and copy */
 #view-note .plain-sec { margin-top: 4px; }
 
@@ -1459,9 +1451,6 @@ textarea, input { caret-color: var(--caret); }
 .review-card[data-tone="calm"] .review-title { color: var(--ink); }
 @media (prefers-reduced-motion: reduce) { .review-card { transition: none; } .review-card:active { transform: none; } }
 /* In the sheet: the questions, then the optional extras as chips */
-.qs-group { display: grid; gap: 6px; padding: 0 14px 12px; }
-.qs-label { margin: 0; font: 700 0.74rem/1.2 var(--display); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
-.qs-group .more-questions { padding: 0 0 0 1.2rem; }
 .nice-chips { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
 .nice-chips li { padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); font-size: 0.86rem; }
 
@@ -1472,3 +1461,36 @@ textarea, input { caret-color: var(--caret); }
 .source-note li { display: grid; gap: 1px; font-size: 0.86rem; line-height: 1.35; }
 .source-note a { color: var(--accent); text-underline-offset: 3px; overflow-wrap: anywhere; }
 .source-meta { color: var(--muted); font-size: 0.8rem; }
+
+/* Answer or change: a header, the questions that scroll, and the mic, words and Update pinned at the bottom */
+dialog.more { max-height: min(90dvh, 820px); overflow: hidden; }
+dialog.more[open] { display: flex; flex-direction: column; }
+dialog.more form { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 0; padding: 0; }
+.more-head { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px var(--gutter-r) 8px var(--gutter-l); }
+dialog.more h2 { font-size: 1.15rem; outline: none; }
+.more-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; display: grid; align-content: start; gap: 12px; padding: 0 var(--gutter-r) 12px var(--gutter-l); }
+.more-composer { flex: none; display: grid; gap: 8px; padding: 10px var(--gutter-r) calc(12px + env(safe-area-inset-bottom, 0px)) var(--gutter-l); border-top: 1px solid var(--line); background: var(--surface); }
+.more-composer #more-help { margin: 0; font-size: 0.85rem; min-height: 1.2em; }
+.more-input { display: flex; align-items: flex-end; gap: 10px; }
+dialog.more .more-input textarea { flex: 1; min-width: 0; min-height: 56px; max-height: 32dvh; }
+.mic.more-mic { width: 56px; height: 56px; box-shadow: 0 0 0 4px var(--accent-soft); }
+.mic.more-mic[aria-pressed="true"] { box-shadow: 0 0 0 4px var(--rec-soft); }
+.mic.more-mic svg { width: 26px; height: 26px; }
+#more-interim { margin: 0; }
+#more-interim:empty { display: none; }
+#more-go { width: 100%; }
+dialog.more[data-mic="listening"] .more-composer #more-help { color: var(--rec); font-weight: 650; }
+/* The questions: a plain heading row (Show / Hide), then each one as a numbered card */
+.more-qs { margin: 0; }
+.more-qs summary { display: flex; align-items: center; gap: 8px; min-height: 40px; cursor: pointer; list-style: none; font-weight: 700; border-radius: 8px; }
+.more-qs summary::-webkit-details-marker { display: none; }
+.more-qs summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.more-qs .count { display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; background: var(--warn); color: var(--bg); font-size: 0.78rem; }
+.more-qs-toggle { margin-left: auto; font-size: 0.85rem; font-weight: 650; color: var(--accent); }
+.more-qs-toggle::after { content: "Show"; }
+.more-qs[open] .more-qs-toggle::after { content: "Hide"; }
+.qs-group { display: grid; gap: 8px; padding-top: 4px; }
+.qs-label { margin: 6px 0 0; font: 700 0.74rem/1.2 var(--display); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.more-questions { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; counter-reset: q; }
+.more-questions li { counter-increment: q; display: grid; grid-template-columns: 26px 1fr; gap: 10px; align-items: start; padding: 10px 12px; border-radius: 10px; background: var(--warn-soft); border: 1px solid var(--warn-line); font-size: 0.95rem; line-height: 1.4; }
+.more-questions li::before { content: counter(q); display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--warn); color: var(--bg); font-weight: 800; font-size: 0.82rem; }

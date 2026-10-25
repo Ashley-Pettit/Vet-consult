@@ -52,7 +52,7 @@ export function wildlifeRanges(patient) {
   if (!hit || YOUNG.test(age) || !ADULT.test(age)) return null;
   const g = rangesForAnimal(hit[1], 'vic', 'adult');
   if (!g) return null;
-  const ref = { label: `adult ${g.label.toLowerCase()}` };
+  const ref = { label: `adult ${g.label.toLowerCase().replace(/\s*\([^)]*\)/g, '')}` }; // short: no bracketed alternative name
   for (const [k, v] of g.vitals) {
     // Only a real span ("34-35°C"), never a single average ("about 36.1°C").
     const m = !/\babout\b/i.test(v) && String(v).match(/(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)/);
