@@ -63,7 +63,7 @@ export const CARE_VIDEOS = {
   "bandicoot": {"id": "ApabfEWaISc", "title": "Bandicoots in care", "channel": "Megabattie (licensed wildlife carer)", "date": "2022"},
   "bandicoot-young": {"id": "FmJP_m1GZWE", "title": "A baby bandicoot in care", "channel": "Megabattie (licensed wildlife carer)", "date": "2019"},
   "flyingfox": {"id": "D9yg0Js4p2Q", "title": "Assessing a newly rescued flying-fox", "channel": "Megabattie (licensed wildlife carer)", "date": "2024", "warning": "Never touch a bat. Only trained, vaccinated people handle bats."},
-  "flyingfox-young": {"id": "34o4w-kwejY", "title": "Caring for an orphan flying-fox pup", "channel": "Megabattie (licensed wildlife carer)", "date": "2020", "warning": "The pup was found on her mother, who had died. Never touch a bat. Only trained, vaccinated people handle bats."},
+  "flyingfox-young": {"id": "34o4w-kwejY", "title": "Caring for an orphan flying-fox pup", "channel": "Megabattie (licensed wildlife carer)", "date": "2020", "warning": "In the video, the pup is found on her mother, who has died. Never touch a bat. Only trained, vaccinated people handle bats."},
   "microbat": {"id": "_b8R2wqMw9U", "title": "A microbat in care, eating mealworms", "channel": "Megabattie (licensed wildlife carer)", "date": "2025", "warning": "Never touch a bat. Only trained, vaccinated people handle bats."},
   "microbat-young": {"id": "RliRZu31t3g", "title": "Feeding orphaned baby bats", "channel": "Bat World Sanctuary (USA)", "date": "2018", "warning": "Never touch a bat. Only trained, vaccinated people handle bats. From the USA: follow local advice from your vet or wildlife expert."},
   "babybird": {"id": "K9FETK07HvQ", "title": "How to help a baby bird", "channel": "Wildlife Victoria", "date": "2019"},

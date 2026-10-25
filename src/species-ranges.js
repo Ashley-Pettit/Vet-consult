@@ -161,7 +161,16 @@ export function rangesForAnimal(id, state = 'vic', context = '') {
     return { ...g, warmth: g.warmth.filter(early) };
   }
   const keep = ([k]) => !YOUNG_ROW.test(k) || /adult|juvenile/i.test(k);
-  return { ...g, warmth: g.warmth.filter(keep), vitals: g.vitals.filter(keep), notes: (g.notes || []).filter((x) => !YOUNG_ROW.test(x) || /adult/i.test(x)) };
+  // For an adult, drop figures given only for the young: "Adult 34-35°C; pouch young 34-37°C" keeps the adult part,
+  // and "35.5-37.0°C (pouch young)" goes.
+  const YOUNG_PART = /^(pouch young|joeys?|pups?|nestlings?|chicks?|hatchlings?|puggles?)\b/i;
+  const YOUNG_ONLY = /\((pouch young|joeys?|pups?|nestlings?|chicks?|hatchlings?|puggles?)\b(?![^)]*\bmay\b)[^)]*\)/i;
+  const adultVital = ([k, v, ...rest]) => {
+    const parts = String(v).includes('(') ? [String(v)] : String(v).split(/;\s*/);
+    const v2 = parts.length > 1 ? parts.filter((x) => !YOUNG_PART.test(x)).join('; ') : String(v);
+    return v2 && !YOUNG_ONLY.test(v2) ? [k, v2, ...rest] : null;
+  };
+  return { ...g, warmth: g.warmth.filter(keep), vitals: g.vitals.filter(keep).map(adultVital).filter(Boolean), notes: (g.notes || []).filter((x) => !YOUNG_ROW.test(x) || /adult/i.test(x)) };
 }
 export function rangesFor(id, state = 'vic') {
   const g = SPECIES_RANGES[id];
