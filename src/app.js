@@ -1073,6 +1073,11 @@ function applyMode() {
     documents = [];
     renderDocs();
   }
+  // An example belongs to its own tab: switching tabs clears it. Words the person said or typed always stay.
+  if (lastMode && lastMode !== m && els.transcript.value.trim() && isExampleText()) {
+    dictation.cancel();
+    setTranscript('');
+  }
   lastMode = m;
   document.body.dataset.mode = m;
   els.create.textContent = MODE_TEXT[m].button;
@@ -1224,8 +1229,9 @@ function renderReview(box, prefix, checks, nice, titles, always = false) {
   box.hidden = none && !always;
   const card = $(prefix);
   card.dataset.tone = checks.length ? 'warn' : 'calm';
-  $(`${prefix}-title`).textContent = checks.length ? titles[0] : nice.length ? 'Nice to add' : 'Add or change anything';
-  $(`${prefix}-sub`).textContent = none ? 'Say anything you missed' : [checks.length ? `${checks.length} to check` : '', nice.length ? `${nice.length} nice to add` : ''].filter(Boolean).join(' · ');
+  const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+  $(`${prefix}-title`).textContent = checks.length ? titles[0] : 'Looking good';
+  $(`${prefix}-sub`).textContent = none ? 'Add or change anything you like' : [checks.length ? plural(checks.length, 'quick check', 'quick checks') : '', nice.length ? plural(nice.length, 'idea to add', 'ideas to add') : ''].filter(Boolean).join(' · ');
   card.setAttribute('aria-label', `${$(`${prefix}-title`).textContent}: ${$(`${prefix}-sub`).textContent}. Update`);
 }
 function renderChecks(n, local) {
@@ -1306,7 +1312,7 @@ function noteGaps(n) {
 function renderGaps(n) {
   gapItems = withoutRepeats(checkItems, noteGaps(n)); // nothing a question already asks about
   $('gap-list').replaceChildren(...gapItems.map((g) => el('li', { text: g })));
-  renderReview(els.checks, 'review-open', checkItems, gapItems, ['Review before saving'], true);
+  renderReview(els.checks, 'review-open', checkItems, gapItems, ['Nearly ready'], true);
 }
 
 function renderNote() {
@@ -1461,8 +1467,8 @@ const MORE_HELP = 'It’s added to what you already said and the record is rewri
 // "Change": a finished care plan or document is edited in place, by voice or typing; the rest stays as it was.
 let amendTarget = null;
 const MORE_TEXT = {
-  answer: { title: 'Update', placeholder: 'Say or type what to add or change. Answer a suggestion by its number.', go: 'Update' },
-  add: { title: 'Update the notes', placeholder: 'Say or type what to add or change.', go: 'Update notes' },
+  answer: { title: 'Update', placeholder: 'What would you like to add or change?', go: 'Update' },
+  add: { title: 'Update the notes', placeholder: 'What would you like to add or change?', go: 'Update notes' },
   amend: { title: 'Answer or change', placeholder: 'e.g. Feeds every 3 hours, not 4. She weighs 130 grams now.', go: 'Make change' },
 };
 const AMEND_HELP = 'Say or type what to change or add. Everything else stays as it is.';
@@ -1571,7 +1577,7 @@ function addMoreInfo(keepTarget) {
   moreText.value = '';
   $('more-go').disabled = true;
   const helpText = answerMode ? ANSWER_HELP : amendTarget ? AMEND_HELP : MORE_HELP;
-  moreHelp.textContent = keyboardVoice ? `${keyboardTip()} ${helpText}` : 'Tap the mic to talk, or type.';
+  moreHelp.textContent = keyboardVoice ? `${keyboardTip()} ${helpText}` : 'Tap the mic, or type';
   more.showModal();
   if (keyboardVoice) moreText.focus(); // inside the tap, so the phone keyboard (and its mic key) opens straight away
   else startMoreVoice();
@@ -1592,7 +1598,7 @@ function startMoreVoice() {
   moreVoice.onstate = (st) => {
     moreMic.setAttribute('aria-pressed', String(st !== 'idle'));
     more.dataset.mic = st;
-    moreHelp.textContent = st === 'starting' ? 'One moment…' : st === 'listening' ? 'Listening… tap the box to type instead.' : 'Tap the mic to talk, or type.';
+    moreHelp.textContent = st === 'starting' ? 'One moment…' : st === 'listening' ? 'Listening…' : 'Tap the mic, or type';
     if (st === 'listening') cueListening();
   };
   moreVoice.onerror = (c) => (moreHelp.textContent = speechErrorMessage(c));
@@ -1615,7 +1621,22 @@ moreMic.addEventListener('click', () => {
   }
   startMoreVoice();
 });
+// On a phone the keyboard covers the bottom of the screen without shrinking the page: size the sheet to what's left
+// above it, so the suggestions and Update can always be scrolled to.
+function fitMoreToKeyboard() {
+  const vv = window.visualViewport;
+  if (!vv || !more.open) return;
+  const hidden = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+  more.style.marginBottom = hidden > 80 ? `${hidden}px` : '';
+  more.style.maxHeight = hidden > 80 ? `${Math.round(vv.height - 8)}px` : '';
+}
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', fitMoreToKeyboard);
+  window.visualViewport.addEventListener('scroll', fitMoreToKeyboard);
+}
 more.addEventListener('close', () => {
+  more.style.marginBottom = '';
+  more.style.maxHeight = '';
   if (moreVoice) moreVoice.cancel();
   $('more-interim').textContent = '';
 });
@@ -2659,7 +2680,7 @@ function renderDoc(d, kind) {
   $('doc-title').textContent = keepBrackets(d.title || DOC_KINDS[kind].label);
   $('doc-subtitle').textContent = d.subtitle;
   $('doc-subtitle').hidden = !d.subtitle;
-  renderReview($('doc-checks'), 'doc-review-open', d.check, [], [kind === 'witness' || kind === 'opinion' ? 'Review before signing' : 'Review before sending']);
+  renderReview($('doc-checks'), 'doc-review-open', d.check, [], [kind === 'witness' || kind === 'opinion' ? 'Nearly ready to sign' : 'Nearly ready']);
   $('doc-check-list').replaceChildren(...d.check.map((c) => el('li', { text: c })));
   $('doc').replaceChildren(
     ...(kind === 'mop' ? [el('p', { class: 'ai-disclaimer', text: aiNoteFor(d.title) })] : []),

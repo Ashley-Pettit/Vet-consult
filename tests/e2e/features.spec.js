@@ -42,7 +42,7 @@ test('vital flags, dose totals and PMS field copy', async ({ page, context }) =>
   await expect(temp).toHaveCount(1);
   await expect(temp).toContainText('High');
   await expect(page.locator('.meds .calc').first()).toContainText('312.4 mg per dose');
-  await expect(page.locator('#review-open-sub')).toContainText('3 to check');
+  await expect(page.locator('#review-open-sub')).toContainText('3 quick checks');
   await expect(page.locator('#check-list')).toContainText('high for a dog');
 
   // Prescriptions and reminders each show in full, with Copy top right.
