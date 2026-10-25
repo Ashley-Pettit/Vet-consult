@@ -895,17 +895,26 @@ function startWorkingFeed(title) {
   facts = facts.sort(() => Math.random() - 0.5).slice(0, 12);
   // Only the checked facts rotate; no running commentary on what the AI is doing.
   let i = 0;
+  let fade = null;
+  const card = $('working-fact');
   const show = () => {
     const f = facts.length ? facts[i % facts.length] : null;
-    $('working-fact').hidden = !f;
+    card.hidden = !f;
     if (f) $('working-fact-text').textContent = f.text;
+    card.classList.remove('out');
     i += 1;
   };
   show();
-  const t = setInterval(show, 15000); // slow enough to read each one properly
+  // Fade the old fact out, swap the words, fade the new one in.
+  const t = setInterval(() => {
+    card.classList.add('out');
+    fade = setTimeout(show, 350);
+  }, 15000); // slow enough to read each one properly
   return () => {
     clearInterval(t);
-    $('working-fact').hidden = true;
+    clearTimeout(fade);
+    card.classList.remove('out');
+    card.hidden = true;
   };
 }
 
@@ -918,11 +927,18 @@ async function runWorking(title, sub, job) {
   showView('working');
   els.stop.focus();
   const t0 = Date.now();
+  // The bar is a gentle estimate, not a true reading: it eases towards the end and never reaches it until the reply lands.
+  const fill = $('working-bar-fill');
   const tick = setInterval(() => {
-    const s = Math.round((Date.now() - t0) / 1000);
-    els.elapsed.textContent = s < 8 ? 'Usually 10 to 40 seconds' : `${s} seconds…`;
+    const s = (Date.now() - t0) / 1000;
+    els.elapsed.textContent = s < 8 ? 'Usually 10 to 40 seconds' : `${Math.round(s)} seconds…`;
+    fill.style.transform = `scaleX(${(0.92 * (1 - Math.exp(-s / 16))).toFixed(3)})`;
   }, 1000);
   els.elapsed.textContent = 'Usually 10 to 40 seconds';
+  fill.style.transition = 'none'; // start from empty, without sliding back from last time
+  fill.style.transform = 'scaleX(0.03)';
+  void fill.offsetWidth;
+  fill.style.transition = '';
   const feed = startWorkingFeed(title);
   aborter = new AbortController();
   try {

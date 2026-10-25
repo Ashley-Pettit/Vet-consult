@@ -195,10 +195,16 @@ textarea:focus, input:focus, select:focus { border-color: var(--accent); outline
 .working { align-items: center; text-align: center; padding: 64px 0; gap: 14px; }
 .working h1 { margin: 8px 0 0; font-size: 1.35rem; font-weight: 800; }
 .muted { color: var(--muted); margin: 0; }
-.pulse { width: 64px; height: 64px; border-radius: 50%; background: var(--accent-soft); position: relative; }
-.pulse::before, .pulse::after { content: ""; position: absolute; inset: 18px; border-radius: 50%; background: var(--accent); animation: breathe 1.4s ease-in-out infinite; }
-.pulse::after { inset: 0; background: transparent; border: 3px solid var(--accent); animation: ring 1.6s ease-out infinite; }
-@keyframes breathe { 50% { transform: scale(0.7); opacity: 0.6; } }
+/* The rescue's logo, breathing slowly inside a turning ring: calm, branded, no spinner. */
+.working-mark { position: relative; width: 96px; height: 96px; display: grid; place-items: center; }
+.mark-logo { width: 80px; height: 80px; border-radius: 50%; display: block; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12); animation: mark-breathe 3.2s ease-in-out infinite; }
+.mark-ring { position: absolute; inset: 0; border-radius: 50%; background: conic-gradient(from 0deg, transparent 0 55%, var(--accent) 100%); -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px)); mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px)); animation: mark-turn 1.6s linear infinite; }
+@keyframes mark-breathe { 50% { transform: scale(0.95); } }
+@keyframes mark-turn { to { transform: rotate(360deg); } }
+.working-bar { width: min(240px, 70%); height: 4px; border-radius: 999px; background: var(--accent-soft); overflow: hidden; margin-top: 2px; }
+#working-bar-fill { display: block; height: 100%; background: var(--accent); border-radius: inherit; transform-origin: left center; transform: scaleX(0.03); transition: transform 1s linear; }
+.working-fact { transition: opacity 0.35s ease, transform 0.35s ease; }
+.working-fact.out { opacity: 0; transform: translateY(4px); }
 
 /* Note */
 .note-head { display: flex; flex-direction: column; gap: 4px; }
@@ -1205,8 +1211,8 @@ body[data-role="vet"] .mode .adv-tab { order: 3; }
 
 /* Loading screen: compact, so the fact and Stop fit on a phone without scrolling */
 .working { padding: 28px 0 20px; gap: 10px; }
-.working .pulse { width: 48px; height: 48px; }
-.working .pulse::before { inset: 13px; }
+.working-mark { width: 84px; height: 84px; }
+.mark-logo { width: 70px; height: 70px; }
 .working h1 { margin: 4px 0 0; font-size: clamp(1.15rem, 5.6vw, 1.35rem); line-height: 1.2; }
 #working-sub { margin: 0; max-width: 34rem; }
 #working-elapsed { margin: 0; font-size: 0.82rem; }
