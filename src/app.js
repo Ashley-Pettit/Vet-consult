@@ -117,6 +117,9 @@ let careSheet = null;
 let photos = [];
 let documents = []; // attached to an expert witness statement or expert opinion
 let plainAtRender = ''; // the clinical notes as Claude wrote them, to spot hand edits
+let restoring = false; // putting the screen back after a refresh
+let pendingMore = ''; // words typed in the update sheet before a refresh
+let openTimer = null;
 // Photos can be switched off in Settings to keep AI costs down.
 const sendPhotos = () => (settings.photosOn === false ? [] : photos);
 let aborter = null;
@@ -144,6 +147,7 @@ function el(tag, props = {}, children = []) {
 
 function showView(name) {
   for (const [k, v] of Object.entries(els.views)) v.hidden = k !== name;
+  keepOpen(name);
   if (name !== 'about') lastView = name;
   els.toast.hidden = true;
   document.body.dataset.view = name;
@@ -1582,8 +1586,9 @@ function addMoreInfo(keepTarget) {
     moreText.placeholder = MORE_TEXT.add.placeholder;
     $('more-go').textContent = MORE_TEXT.add.go;
   }
-  moreText.value = '';
-  $('more-go').disabled = true;
+  moreText.value = pendingMore; // words typed before a refresh come back
+  pendingMore = '';
+  $('more-go').disabled = !moreText.value.trim();
   const helpText = answerMode ? ANSWER_HELP : amendTarget ? AMEND_HELP : MORE_HELP;
   moreHelp.textContent = keyboardVoice ? `${keyboardTip()} ${helpText}` : 'Tap the mic, or type';
   more.showModal();
@@ -3302,6 +3307,7 @@ els.forget.addEventListener('click', () => {
 
 const LAST_LABEL = { notes: 'Clinical notes', care: 'Care plan', doc: 'Record', polish: 'Polished notes' };
 function remember(type, data, title) {
+  if (restoring) return;
   store.saveLast({ type, data, title: String(title || '').slice(0, 80), text: els.transcript.value, at: Date.now() });
 }
 function ago(ms) {
@@ -3372,6 +3378,61 @@ $('theme-toggle').addEventListener('click', () => {
 });
 applyTheme(document.documentElement.dataset.theme === 'light' ? 'light' : 'dark');
 
+/* ---------------- a refresh loses nothing ---------------- */
+
+// What's on screen is kept for this tab, so an accidental refresh (or the phone reloading the page) puts it back,
+// hand edits and half-typed changes included. Closing the tab clears it; Recent keeps the rest.
+function snapshot(name) {
+  const more = more_isOpen() ? moreText.value.trim() && moreText.value : pendingMore;
+  if (name === 'note' && notes.length) return { view: 'note', notes, example: isExample, plain: els.plain.value, more };
+  if ((name === 'care' || name === 'edit') && careSheet) return { view: 'care', care: { sheet: careSheet, from: careFrom }, savedId, notes: careFrom === 'note' ? notes : null, more };
+  if (name === 'doc' && currentDoc) return { view: 'doc', doc: currentDoc, more };
+  if (name === 'polish') return { view: 'polish', text: $('polish-out').value };
+  return null;
+}
+const more_isOpen = () => $('more').open;
+function keepOpen(name) {
+  if (restoring) return;
+  if (name === 'working' || name === 'about') return; // keep what was there until the new one is ready
+  clearTimeout(openTimer);
+  openTimer = null;
+  store.saveOpen(snapshot(name));
+}
+// Typing is saved a moment after it stops, not on every key.
+function keepOpenSoon() {
+  clearTimeout(openTimer);
+  openTimer = setTimeout(() => keepOpen(document.body.dataset.view), 400);
+}
+els.plain.addEventListener('input', keepOpenSoon);
+$('polish-out').addEventListener('input', keepOpenSoon);
+moreText.addEventListener('input', keepOpenSoon);
+$('more').addEventListener('close', () => setTimeout(keepOpenSoon, 0));
+window.addEventListener('pagehide', () => openTimer && keepOpen(document.body.dataset.view));
+function restoreOpen(s) {
+  if (!s) return;
+  restoring = true;
+  try {
+    if (s.view === 'note') {
+      showNotes(s.notes.map(normaliseNote), Boolean(s.example));
+      if (s.plain && s.plain !== els.plain.value) {
+        els.plain.value = s.plain;
+        els.plain.dispatchEvent(new Event('input'));
+      }
+    } else if (s.view === 'care') {
+      if (s.notes && s.notes.length) showNotes(s.notes.map(normaliseNote), false);
+      savedId = s.savedId || null;
+      showCare(normaliseCareSheet(s.care.sheet, null), s.care.from === 'note' && !(s.notes && s.notes.length) ? 'record' : s.care.from, '', true);
+    } else if (s.view === 'doc') showDoc(normaliseDoc(s.doc.d), s.doc.kind);
+    else if (s.view === 'polish') showPolish(String(s.text || ''));
+    pendingMore = s.more || '';
+  } catch {
+    showView('record');
+  } finally {
+    restoring = false;
+  }
+  keepOpen(document.body.dataset.view);
+}
+
 /* ---------------- start up ---------------- */
 
 const startMode = MODES.includes(settings.mode) ? settings.mode : 'carer';
@@ -3384,7 +3445,9 @@ setTranscript(store.loadDraft());
 if (isExampleText()) setTranscript('');
 renderResume();
 renderPhotos();
+const wasOpen = store.loadOpen();
 showView(location.hash === '#how-it-works' ? 'about' : 'record');
+if (!linkCode(location.hash)) restoreOpen(wasOpen);
 // Opened from a shared link: show the plan straight away, and keep it under Recent.
 async function openSharedLink() {
   const code = linkCode(location.hash);

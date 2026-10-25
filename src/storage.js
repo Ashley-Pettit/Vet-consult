@@ -118,6 +118,14 @@ export const store = {
     });
     write(session, SESSION_KEY, s.rememberKey ? null : s.apiKey || null);
   },
+  /** What's on screen in this tab (a plan, notes or document, with any hand edits), so a refresh puts it back. Tab only. */
+  loadOpen() {
+    const v = read(session, 'css.open', null);
+    return v && typeof v === 'object' && v.view ? v : null;
+  },
+  saveOpen(v) {
+    write(session, 'css.open', v || null);
+  },
   // Kept on the device (not just the tab), so answering a call or closing the app loses nothing.
   loadDraft() {
     return read(local, DRAFT, '') || read(session, DRAFT, '') || '';
