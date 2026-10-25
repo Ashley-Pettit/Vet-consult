@@ -17,8 +17,7 @@ Last updated 25 October 2026. For the next Claude Code session.
 
 | Branch | State |
 |---|---|
-| `bunurong-wildlife` | **Live.** The latest commit is the simpler mic (soft outlined button, red only while listening, "Tap to talk, or type below"). |
-| `qa-loops-pending` | **Not live yet.** QA loops 1 to 10: prompt fixes, ranges filtering and video tweaks, plus this file and `scripts/qa/`. It needs the examples re-baked before it ships (see "Ship qa-loops-pending" below). |
+| `bunurong-wildlife` | **Live.** Includes the simpler mic and QA loops 1 to 10 (prompt fixes, ranges filtering, video tweaks), with examples baked. |
 
 ## How to ship (standing workflow after every change)
 
@@ -26,6 +25,7 @@ Last updated 25 October 2026. For the next Claude Code session.
 2. If any prompt text in `src/note.js` (or anything else that feeds a prompt) changed, re-bake the examples. Skipping this doesn't break anything, but example runs go live (slow and costly) instead of instant.
    - `FRESH=1 PAR=8 BAKE_LOG=/tmp/bake-log.json npm run bake` (about 15 to 20 minutes; real AI calls through the proxy)
    - `npm run build && node scripts/qa/replay.mjs`: expect every line to start with `OK`. There are 82 lines, covering Vic and Qld.
+   - If replay already shows 82 `OK` lines with `calls=0`, the bake matches the prompts and doesn't need re-running.
 3. Commit with the attribution lines. Push `bunurong-wildlife`.
 4. Deploy. Pushing the branch doesn't deploy: the workflow on `main` builds the branch into `/care/`.
    - `gh workflow run "Test and deploy" -R Ashley-Pettit/Vet-consult --ref main`
@@ -33,16 +33,11 @@ Last updated 25 October 2026. For the next Claude Code session.
 5. Publish the artifact. Use the Artifact tool with `url` = the artifact link above and `file_path` = `dist-artifact/care-scribe.html`.
 6. **End the update message with the website link.**
 
-### Ship qa-loops-pending
+### In a Claude Code cloud container
 
-```
-git checkout qa-loops-pending && git rebase origin/bunurong-wildlife
-npm run build && FRESH=1 PAR=8 npm run bake && npm run build && node scripts/qa/replay.mjs
-npm run test:unit && npm run test:e2e
-git checkout bunurong-wildlife && git merge --ff-only qa-loops-pending && git push origin bunurong-wildlife
-```
-
-Then deploy and publish as above. Delete `qa-loops-pending` afterwards.
+- The network policy blocks the proxy (`care-scribe-proxy.ashley-98e.workers.dev`), so baking and `scripts/qa/run.mjs` only work after Ash adds it under Allowed domains.
+- The project's Playwright 1.48.2 looks for `chromium-1140`. Point it at the preinstalled browser before replay or e2e:
+  `mkdir -p /opt/pw-browsers/chromium-1140/chrome-linux && ln -sf /opt/pw-browsers/chromium /opt/pw-browsers/chromium-1140/chrome-linux/chrome`
 
 ## Ash's standing preferences
 
