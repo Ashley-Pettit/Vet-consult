@@ -101,16 +101,19 @@ test.describe('dictation', () => {
     await expect(page.locator('#transcript')).toHaveValue('dictated by the keyboard');
   });
 
-  test('draft survives a reload; start over can be undone', async ({ page }) => {
+  test('draft survives a reload; Clear asks first', async ({ page }) => {
     await fakeSpeech(page);
     await openApp(page);
     await page.locator('#transcript').fill(DICTATION);
     await page.reload();
     await expect(page.locator('#transcript')).toHaveValue(DICTATION);
-    await page.locator('#clear').click();
-    await expect(page.locator('#transcript')).toHaveValue('');
-    await page.locator('#toast-action').click();
+    await expect(page.locator('#clear')).toHaveCount(0); // no Start over: Clear sits in the box
+    await page.locator('#clear-text').click();
+    await page.getByRole('button', { name: 'Keep them' }).click();
     await expect(page.locator('#transcript')).toHaveValue(DICTATION);
+    await page.locator('#clear-text').click();
+    await page.locator('#confirm-clear').getByRole('button', { name: 'Clear' }).click();
+    await expect(page.locator('#transcript')).toHaveValue('');
   });
 
   test('vet has four choices: care plan, clinical notes, rapid polish, and Advanced for media and witness statements', async ({ page }) => {
@@ -180,13 +183,9 @@ test.describe('creating a note', () => {
     expect(clip).toContain('Addendum: owner called.');
 
     await expect(page.locator('#back')).toHaveText('Add more info');
-    // The logo goes home, with the dictation kept; Start over clears it with undo.
+    // The logo goes home, with the dictation kept.
     await page.locator('#home').click();
     await expect(page.locator('#view-record')).toBeVisible();
-    await expect(page.locator('#transcript')).toHaveValue(DICTATION);
-    await page.locator('#clear').click();
-    await expect(page.locator('#transcript')).toHaveValue('');
-    await page.locator('#toast-action').click();
     await expect(page.locator('#transcript')).toHaveValue(DICTATION);
     expect(errors).toEqual([]);
   });
@@ -300,7 +299,8 @@ test.describe('creating a note', () => {
     await page.locator('#mic').click();
     await expect(page.locator('#mic')).toHaveAttribute('aria-pressed', 'true');
     await page.evaluate(() => window.__fakeSay('first words'));
-    await page.locator('#clear').click();
+    await page.locator('#clear-text').click();
+    await page.locator('#confirm-clear').getByRole('button', { name: 'Clear' }).click();
     await page.evaluate(() => window.__fakeSay('late words'));
     await expect(page.locator('#transcript')).toHaveValue('');
     await expect(page.locator('#mic')).toHaveAttribute('aria-pressed', 'false');

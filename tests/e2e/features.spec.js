@@ -218,7 +218,7 @@ test('take photo opens the camera; gallery picks several; there is no video butt
 });
 
 
-test('tapping the dictation box with the keyboard up shows the whole box above the Create bar', async ({ page, isMobile }) => {
+test('tapping the dictation box with the keyboard up shows the whole box above the keyboard; Create stays in the page', async ({ page, isMobile }) => {
   test.skip(!isMobile, 'phones only');
   await page.addInitScript(() => {
     const t = new EventTarget(); t.height = innerHeight; t.width = innerWidth; t.offsetTop = 0; t.offsetLeft = 0; t.scale = 1;
@@ -230,13 +230,12 @@ test('tapping the dictation box with the keyboard up shows the whole box above t
   await page.evaluate(() => window.__kb(300));
   await expect(page.locator('body')).toHaveAttribute('data-kb', 'open');
   await expect.poll(async () => page.evaluate(() => {
-    const bar = document.querySelector('#view-record .actions').getBoundingClientRect();
     const f = document.querySelector('#transcript').closest('.field').getBoundingClientRect();
     const t = document.querySelector('#transcript').getBoundingClientRect();
-    return f.top >= 0 && t.bottom <= bar.top;
+    return f.top >= 0 && t.bottom <= innerHeight - 300;
   })).toBe(true);
-  // Create sits on top of the keyboard.
-  expect(await page.evaluate(() => getComputedStyle(document.querySelector('#view-record .actions')).position)).toBe('fixed');
+  // Create is an ordinary button under the box, not pinned above the keyboard.
+  expect(await page.evaluate(() => getComputedStyle(document.querySelector('#view-record .actions')).position)).toBe('static');
 });
 
 test('Create never covers the dictation box, and a long note scrolls inside the box with Create right under it', async ({ page }) => {

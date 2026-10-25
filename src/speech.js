@@ -52,13 +52,29 @@ export class Dictation {
     return true;
   }
 
-  _open() {
+  /** Make the recogniser ahead of time (on the press), so start() on the tap only has to begin listening. */
+  prepare() {
+    if (!this.supported || this.ready) return;
+    try {
+      this.ready = this._make();
+    } catch {
+      this.ready = null;
+    }
+  }
+
+  _make() {
     const SR = this.win.SpeechRecognition || this.win.webkitSpeechRecognition;
     const rec = new SR();
     rec.lang = this.lang;
     rec.continuous = this.continuous;
     rec.interimResults = true;
     rec.maxAlternatives = 1;
+    return rec;
+  }
+
+  _open() {
+    const rec = this.ready || this._make();
+    this.ready = null;
     this.rec = rec;
     const openedAt = this.now();
     let failed = null;

@@ -828,13 +828,7 @@ main { padding-top: 14px; }
 @media (min-width: 720px) {
   #view-record .actions { margin: 0; padding: 12px 0; background: linear-gradient(to top, var(--bg) 75%, transparent); }
 }
-body[data-kb="open"] #view-record .actions {
-  position: fixed; left: 0; right: 0; bottom: var(--kb-offset, 0px); z-index: 40; margin: 0;
-  padding: 8px var(--gutter-r) 8px var(--gutter-l); background: var(--bg); box-shadow: 0 -1px 0 var(--line), 0 -6px 16px rgba(0,0,0,.06);
-  transition: opacity 120ms ease-out;
-}
-/* While the page scrolls with the keyboard up, the bar steps aside instead of jittering after the viewport */
-body[data-kb="open"][data-kb-scroll] #view-record .actions { opacity: 0; pointer-events: none; transition: none; }
+
 body[data-kb="open"] .site-foot, body[data-kb="open"] .foot { display: none; }
 
 /* Clear: a quiet text button in the corner of the box */
@@ -1354,3 +1348,9 @@ body[data-mic="listening"] .mic-line .mic-status, body[data-mic="starting"] .mic
 /* The composer mic: the brand green when idle, red only while listening (beats the older per-mode mic colours) */
 body .composer .mic { background: var(--accent); color: var(--accent-ink); }
 body[data-mic="listening"] .composer .mic, body[data-mic="starting"] .composer .mic, body[data-mic="keyboard"] .composer .mic { background: var(--rec); color: #fff; }
+
+/* Create: one full-width button under the box, part of the page (not pinned above the keyboard or the screen edge) */
+#view-record .actions, body[data-kb="open"] #view-record .actions { position: static; display: block; margin: 0; padding: 0; background: none; box-shadow: none; }
+#view-record .actions .btn { width: 100%; }
+@media (min-width: 720px) { #view-record .actions { text-align: right; } #view-record .actions .btn { width: auto; min-width: 220px; } }
+.composer .tx-clear { min-height: 44px; padding: 4px 10px; }

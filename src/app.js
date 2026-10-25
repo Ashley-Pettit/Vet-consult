@@ -91,7 +91,7 @@ const els = {
   banner: $('banner'), transcript: $('transcript'), interim: $('interim'), examples: $('examples'),
   example: $('load-example'),
   photoInput: $('add-photo'), photoList: $('photo-list'), photoLabel: $('add-photo-label'),
-  clear: $('clear'), create: $('create'), stop: $('stop'), elapsed: $('working-elapsed'),
+  create: $('create'), stop: $('stop'), elapsed: $('working-elapsed'),
   workingTitle: $('working-title'), workingSub: $('working-sub'),
   back: $('back'), noteTitle: $('note-title'), animals: $('animals'), noteBanner: $('note-banner'),
   checks: $('checks'), checkList: $('check-list'), note: $('note'), pmsRows: $('pms-rows'),
@@ -176,7 +176,6 @@ function updateCreateState() {
   updateExampleNote();
   const has = els.transcript.value.trim().length > 0;
   els.create.disabled = !has || busy; // allowed while listening: it stops the mic first
-  els.clear.disabled = !has && photos.length === 0 && documents.length === 0;
   els.examples.hidden = has;
   if (dictation.state === 'idle' && document.body.dataset.mic !== 'keyboard') els.micStatus.textContent = idleStatus();
 }
@@ -451,6 +450,8 @@ let kbWasOn = false;
 let startedOnPress = false;
 els.mic.addEventListener('pointerdown', (e) => {
   kbWasOn = document.body.dataset.mic === 'keyboard';
+  // Get the speech engine ready while the finger is still down, so the tap only has to start it.
+  if (!keyboardVoice && dictation.state === 'idle') dictation.prepare();
   // Phones only allow the mic from a completed tap (pointerdown on a touch screen doesn't count, so the mic would
   // sit on "One moment…"). Start early only for a mouse; on touch the click below starts it.
   if (e.pointerType !== 'mouse') return;
@@ -459,8 +460,8 @@ els.mic.addEventListener('pointerdown', (e) => {
   banner('');
   els.toast.hidden = true;
   if (isExampleText()) setTranscript('');
-  unlockAudio();
   dictation.start();
+  unlockAudio();
 });
 els.mic.addEventListener('keydown', () => (kbWasOn = document.body.dataset.mic === 'keyboard'));
 els.mic.addEventListener('click', () => {
@@ -485,54 +486,36 @@ els.mic.addEventListener('click', () => {
     dictation.stop();
     return;
   }
-  unlockAudio();
+  // The mic first: setting up sound for the "listening" beep switches the phone's audio over and slowed the start,
+  // clipping the first words. The beep is set up straight after, still inside the same tap.
   dictation.start();
+  unlockAudio();
 });
-// Keep "Create" in sight above the on-screen keyboard (iPhones don't shrink the page for the keyboard).
+// Track the on-screen keyboard (iPhones don't shrink the page for it): the box shrinks to fit above it, and grows
+// back after. Only on a real change of size, never on every scroll, so nothing moves while the page is scrolled.
 (() => {
   const vv = window.visualViewport;
   if (!vv) return;
   let lastOpen = null;
   let lastHeight = 0;
-  let settle = null;
-  const place = () => {
+  vv.addEventListener('resize', () => {
     const offset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
-    document.documentElement.style.setProperty('--kb-offset', offset > 80 ? `${Math.round(offset)}px` : '0px');
-    return offset > 80;
-  };
-  const update = (e) => {
-    const open = Math.max(0, window.innerHeight - vv.height - vv.offsetTop) > 80;
-    // The keyboard opened, closed or changed height: the box shrinks to fit above it, and grows back after.
-    if (open !== lastOpen || Math.abs(vv.height - lastHeight) > 1) {
-      lastOpen = open;
-      lastHeight = vv.height;
-      document.body.dataset.kb = open ? 'open' : '';
-      autoGrow(els.transcript);
-    }
-    // Scrolling with the keyboard up: the bar would chase the moving viewport and jitter. It steps out of the way
-    // until the scroll settles, then comes back in place.
-    if (e && e.type === 'scroll' && open) {
-      document.body.dataset.kbScroll = 'on';
-      clearTimeout(settle);
-      settle = setTimeout(() => {
-        place();
-        delete document.body.dataset.kbScroll;
-      }, 140);
-      return;
-    }
-    place();
-  };
-  vv.addEventListener('resize', update);
-  vv.addEventListener('scroll', update);
+    const open = offset > 80;
+    document.documentElement.style.setProperty('--kb-offset', open ? `${Math.round(offset)}px` : '0px');
+    if (open === lastOpen && Math.abs(vv.height - lastHeight) <= 1) return;
+    lastOpen = open;
+    lastHeight = vv.height;
+    document.body.dataset.kb = open ? 'open' : '';
+    autoGrow(els.transcript);
+  });
 })();
-// Tapping the dictation box: as the keyboard comes up, show the whole box (label to last line) above the Create bar,
-// instead of leaving the line being typed hidden under the bar.
+// Tapping the dictation box: as the keyboard comes up, show the whole box above the keyboard, instead of leaving
+// the line being typed hidden under it.
 function dictationIntoView() {
-  // Only when the keyboard is up and the box is hidden behind the Create bar: lift it just enough.
+  // Only when the keyboard is up and the box runs under it: lift it just enough.
   if (document.activeElement !== els.transcript || document.body.dataset.kb !== 'open' || document.body.dataset.mic === 'keyboard') return;
   const vv = window.visualViewport;
-  const bar = document.querySelector('#view-record .actions');
-  const limit = (vv ? vv.offsetTop + vv.height : window.innerHeight) - (bar ? bar.offsetHeight : 0) - 8;
+  const limit = (vv ? vv.offsetTop + vv.height : window.innerHeight) - 8;
   const box = els.transcript.getBoundingClientRect();
   if (box.bottom > limit) window.scrollBy({ top: box.bottom - limit, behavior: 'smooth' });
 }
@@ -648,31 +631,6 @@ $('load-funding-example').addEventListener('click', () => loadExample(EXAMPLE_FU
 $('load-polish-example').addEventListener('click', () => loadExample(EXAMPLE_POLISH_DICTATION));
 $('load-media-example').addEventListener('click', () => loadExample(EXAMPLE_MEDIA_DICTATION));
 $('load-witness-example').addEventListener('click', () => loadExample(EXAMPLE_WITNESS_DICTATION));
-
-els.clear.addEventListener('click', () => {
-  const previous = els.transcript.value;
-  const prevPhotos = photos;
-  const prevDocs = documents;
-  dictation.cancel();
-  endKeyboardVoice();
-  setTranscript('');
-  photos = [];
-  documents = [];
-  renderPhotos();
-  renderDocs();
-  banner('');
-  toast('Dictation cleared.', {
-    label: 'Undo',
-    run: () => {
-      setTranscript(previous);
-      photos = prevPhotos;
-      documents = prevDocs;
-      renderPhotos();
-      renderDocs();
-    },
-  });
-  els.mic.focus();
-});
 
 // "New" on any result: asks first, then a clean start. The result stays under "Last made".
 const confirmNew = $('confirm-new');

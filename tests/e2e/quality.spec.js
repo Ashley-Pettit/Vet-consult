@@ -37,7 +37,8 @@ for (const scheme of ['light', 'dark']) {
       expect(await axe(page)).toEqual([]);
       await page.screenshot({ path: `${SHOTS}/${tag}-2-listening.png`, fullPage: true });
       await page.locator('#mic').click();
-      await page.locator('#clear').click();
+      await page.locator('#clear-text').click();
+      await page.locator('#confirm-clear').getByRole('button', { name: 'Clear' }).click();
       await page.locator('#load-example').click();
       await page.locator('#create').click();
       await expect(page.locator('#view-working')).toBeVisible();
@@ -85,7 +86,7 @@ test('keyboard only: tab order reaches the mic, text box and create button', asy
 test('touch targets are at least 44px', async ({ page }, info) => {
   test.skip(info.project.name !== 'phone', 'phone only');
   await openApp(page);
-  for (const sel of ['#mic', '#open-settings', '#create', '#clear', '.types label']) {
+  for (const sel of ['#mic', '#open-settings', '#create', '.types label']) {
     const boxes = await page.locator(sel).evaluateAll((els) => els.map((e) => e.getBoundingClientRect()).map((r) => [r.width, r.height]));
     for (const [w, h] of boxes) {
       expect(w, sel).toBeGreaterThanOrEqual(44);
