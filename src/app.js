@@ -208,8 +208,20 @@ function autoGrow(ta) {
   if (Math.abs(ta.offsetHeight - want) > 1) ta.style.height = `${want}px`;
 }
 
+// Change a box's words without moving the cursor of someone editing in it (setting .value sends it to the end).
+function setValueKeepCaret(box, text) {
+  const keep = document.activeElement === box ? [box.selectionStart, box.selectionEnd] : null;
+  box.value = text;
+  if (!keep) return;
+  try {
+    box.setSelectionRange(Math.min(keep[0], text.length), Math.min(keep[1], text.length));
+  } catch {
+    /* ignore */
+  }
+}
+
 function setTranscript(text) {
-  els.transcript.value = text;
+  setValueKeepCaret(els.transcript, text);
   store.saveDraft(text);
   autoGrow(els.transcript);
   updateCreateState();
@@ -390,7 +402,6 @@ dictation.onstate = (state) => {
   document.body.dataset.mic = state;
   els.mic.setAttribute('aria-pressed', String(on));
   els.micStatus.textContent = state === 'starting' ? 'One moment…' : state === 'listening' ? 'Listening. Tap the mic to stop' : idleStatus();
-  els.transcript.readOnly = on;
   clearInterval(timerId);
   if (on) {
     if (!startedAt) startedAt = Date.now();
@@ -408,7 +419,8 @@ dictation.onstate = (state) => {
 dictation.oninterim = (t) => (els.interim.textContent = t);
 dictation.onfinal = (t) => {
   setTranscript(appendSegment(els.transcript.value, t));
-  els.transcript.scrollTop = els.transcript.scrollHeight;
+  // Show the newest words, unless someone is in the box editing.
+  if (document.activeElement !== els.transcript) els.transcript.scrollTop = els.transcript.scrollHeight;
 };
 // If the mic never actually starts (no permission prompt, a blocked browser), don't sit on "One moment…" forever:
 // stop after a few seconds and switch to the keyboard's own voice typing, which works everywhere.
@@ -535,22 +547,21 @@ function dictationIntoView() {
   const box = els.transcript.getBoundingClientRect();
   if (box.bottom > limit) window.scrollBy({ top: box.bottom - limit, behavior: 'smooth' });
 }
-// Tapping into the box to fix something stops the live mic, so the words stay put while you edit. It unlocks on the
-// press itself (before the focus), so the same tap brings up the keyboard instead of needing a second tap.
+// Tapping into the box to fix something stops the live mic, so the words stay put while you edit. The box is never
+// locked while listening, so that one tap also puts the cursor where you tapped (a locked box needed a second tap).
 // Words still being heard land in the box when the mic stops (if the browser doesn't finish them itself).
 function landPending(voice, pending, box, after = () => {}) {
   if (!pending) return;
   const t0 = Date.now();
   const land = () => {
     if (voice.state !== 'idle' && Date.now() - t0 < 1800) return setTimeout(land, 60);
-    if (!box.value.includes(pending)) box.value = appendSegment(box.value, pending);
+    if (!box.value.includes(pending)) setValueKeepCaret(box, appendSegment(box.value, pending));
     after();
   };
   land();
 }
 function stopMicToEdit() {
   if (keyboardVoice || dictation.state === 'idle') return;
-  els.transcript.readOnly = false;
   const pending = els.interim.textContent.trim();
   dictation.stop();
   landPending(dictation, pending, els.transcript, () => setTranscript(els.transcript.value));
@@ -1490,7 +1501,7 @@ function startMoreVoice() {
   if (moreVoice && moreVoice.state !== 'idle') return moreVoice.stop();
   moreVoice = new Dictation({ lang: CONFIG.speechLang });
   moreVoice.onfinal = (t) => {
-    moreText.value = appendSegment(moreText.value, t);
+    setValueKeepCaret(moreText, appendSegment(moreText.value, t));
     $('more-interim').textContent = '';
     $('more-go').disabled = !moreText.value.trim();
   };

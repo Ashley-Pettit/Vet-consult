@@ -30,7 +30,8 @@ test.describe('dictation', () => {
     await page.evaluate(() => window.__fakeSay('this is rusty full stop temp 39.4'));
     await page.evaluate(() => window.__fakeSay('heart rate 120'));
     await expect(page.locator('#transcript')).toHaveValue('This is rusty. Temp 39.4 heart rate 120');
-    await expect(page.locator('#transcript')).toHaveJSProperty('readOnly', true);
+    // Never locked while listening, so one tap can stop the mic and edit.
+    await expect(page.locator('#transcript')).toHaveJSProperty('readOnly', false);
 
     // Browser ends recognition on its own: app keeps listening.
     await page.evaluate(() => window.__fakeEnd());
@@ -51,13 +52,14 @@ test.describe('dictation', () => {
     await expect(page.locator('#mic')).toHaveAttribute('aria-pressed', 'true');
     await page.evaluate(() => window.__fakeSay('wombat with mange'));
     await expect(page.locator('#transcript')).toHaveValue('Wombat with mange');
-    await page.locator('#transcript').click();
+    await page.evaluate(() => window.__fakeSay('on both ears', { final: false })); // still being heard
+    // One tap at the very start of the words: the mic stops and the cursor goes right there.
+    await page.locator('#transcript').click({ position: { x: 4, y: 14 } });
     await expect(page.locator('#mic')).toHaveAttribute('aria-pressed', 'false');
-    await expect(page.locator('#transcript')).toHaveJSProperty('readOnly', false);
     await expect(page.locator('#transcript')).toBeFocused();
-    await page.keyboard.press('End');
-    await page.keyboard.type(', left ear');
-    await expect(page.locator('#transcript')).toHaveValue('Wombat with mange, left ear');
+    await expect(page.locator('#transcript')).toHaveValue(/on both ears$/); // the late words still land...
+    await page.keyboard.type('Old ');
+    await expect(page.locator('#transcript')).toHaveValue(/^Old Wombat with mange.*on both ears$/); // ...and the cursor stayed put
   });
 
   test('the Add more info box listens straight away; tapping into it stops the mic and keeps the words', async ({ page }) => {
