@@ -36,7 +36,10 @@ writeFileSync(out + 'index.html', html.replace('app.js"', `app.js?v=${version}"`
 // The beta copy (CHANNEL=beta, published at /care-beta/) installs under its own name, so it never looks like the live app.
 if (process.env.CHANNEL === 'beta') {
   const mf = JSON.parse(readFileSync(out + 'manifest.webmanifest', 'utf8'));
-  writeFileSync(out + 'manifest.webmanifest', JSON.stringify({ ...mf, name: `${mf.name} Beta`, short_name: 'WWC Beta' }, null, 2));
+  // Its Home Screen icon carries a BETA label too.
+  const icons = mf.icons.map((i) => ({ ...i, src: i.src.replace(/\.png$/, '-beta.png') }));
+  writeFileSync(out + 'manifest.webmanifest', JSON.stringify({ ...mf, name: `${mf.name} Beta`, short_name: 'WWC Beta', icons }, null, 2));
+  writeFileSync(out + 'index.html', readFileSync(out + 'index.html', 'utf8').replace('icons/apple-touch-icon.png', 'icons/apple-touch-icon-beta.png'));
 }
 writeFileSync(out + 'sw.js', readFileSync(out + 'sw.js', 'utf8').replace('__VERSION__', version));
 writeFileSync(out + '.nojekyll', '');
