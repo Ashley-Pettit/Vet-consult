@@ -89,8 +89,8 @@ import {
 } from './note.js';
 import { chartByKey } from './feeding.js';
 import { shortPlanLink, unpackPlan, linkCode, linkId, shortLink, fetchSharedPlan, storePlan, reviewLink, updateSharedPlan } from './sharelink.js';
-import { endorse, endorsementState, endorsementWords, vetLabel, drName, medsKey, endorsementOf, endorsementCheck, recordCheck, changedParts } from './endorse.js';
-import { account, admin, accountError, lookupEndorsement } from './account.js';
+import { endorsementWords, vetLabel, medsKey, changedParts } from './endorse.js';
+import { account, admin, accountError } from './account.js';
 import { rxFromPlan, rxModel, rxProblems } from './rx.js';
 import { buildMedsDraftPrompt, buildMedsUpdatePrompt, normaliseMedsDraft, needsDose } from './note.js';
 
@@ -989,6 +989,9 @@ async function askJson(prompt0, signal, opts = {}) {
 const mode = () => document.querySelector('input[name="mode"]:checked')?.value || 'vet';
 const MODES = ['intake', 'log', 'carer', 'tovet', 'mop', 'funding', 'vet', 'polish', 'media', 'witness', 'opinion'];
 const ROLE_MODES = { carer: ['carer', 'intake', 'log', 'tovet', 'mop', 'funding'], vet: ['carer', 'vet', 'polish', 'media', 'witness', 'opinion'] };
+// Vets see clinical notes and care plans; Rapid polish and Advanced only with Extra vet tools (Settings > Admin).
+const VET_EXTRAS = ['polish', 'media', 'witness', 'opinion'];
+const roleModes = (role) => (role === 'vet' && settings.vetExtras !== true ? ROLE_MODES.vet.filter((m) => !VET_EXTRAS.includes(m)) : ROLE_MODES[role]);
 
 // Every dictation box ends with the reassurance about typos (in the placeholder, so it adds nothing to the screen).
 const TYPO_NOTE = ' Typos are fine.';
@@ -1012,7 +1015,12 @@ function applyRole() {
   document.body.dataset.role = role;
   document.querySelector(`input[name="role"][value="${role}"]`).checked = true;
   document.querySelectorAll('#mode [data-roles]').forEach((l) => (l.hidden = !l.dataset.roles.split(' ').includes(role)));
-  if (!ROLE_MODES[role].includes(mode())) document.querySelector(`input[name="mode"][value="${ROLE_MODES[role][0]}"]`).checked = true;
+  document.body.dataset.vetExtras = String(settings.vetExtras === true);
+  if (settings.vetExtras !== true) {
+    document.querySelector('#mode input[value="polish"]').closest('label').hidden = true;
+    $('adv-tab').hidden = true;
+  }
+  if (!roleModes(role).includes(mode())) document.querySelector(`input[name="mode"][value="${roleModes(role)[0]}"]`).checked = true;
 }
 // Carer or Vet: the switch on the front screen (any vet can use vet mode), or signing in or out of a vet account.
 function setRole(role) {
@@ -1845,9 +1853,23 @@ async function openLibrary() {
     ),
   );
   renderSaved();
+  renderRecent();
+  // Opens on Saved when there's something saved, otherwise Recent, otherwise the ready-made plans.
+  showLibTab(store.loadSaved().length ? 'saved' : store.loadRecent().length ? 'recent' : 'ready');
   showView('library');
   $('library-title').focus();
 }
+// Plans: Saved, Recent and Ready-made, one slider.
+const LIB_TABS = { saved: 'saved-plans', recent: 'recent-plans', ready: 'ready-plans' };
+function showLibTab(name) {
+  for (const [k, pane] of Object.entries(LIB_TABS)) {
+    const tab = $(`lib-tab-${k}`);
+    tab.setAttribute('aria-selected', String(k === name));
+    tab.tabIndex = k === name ? 0 : -1;
+    $(pane).hidden = k !== name;
+  }
+}
+for (const k of Object.keys(LIB_TABS)) $(`lib-tab-${k}`).addEventListener('click', () => showLibTab(k));
 function openLibraryPlan(id) {
   const e = libraryEntry(id);
   if (!e) return;
@@ -1918,12 +1940,9 @@ function openSavedPlan(id, info = '') {
   showCare(normaliseCareSheet(entry.sheet, null), 'saved', info);
 }
 const savedDate = (t) => new Date(t).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
-// Under each saved plan: who endorsed it, or that it's waiting for a vet, or when it was saved.
+// Under each saved plan: that it's waiting for a vet, or when it was saved.
 function savedLabel(p) {
   if (p.sheet) {
-    const { state, e } = endorsementState(p.sheet);
-    if (state === 'endorsed') return `Endorsed by ${vetLabel(e)}`;
-    if (state === 'changed') return 'Medications changed since the vet endorsed it';
     if (p.remote) return 'Waiting for a vet to review';
   }
   return `${p.shared ? 'Shared with you' : 'Saved'} ${savedDate(p.savedAt)}`;
@@ -1939,8 +1958,7 @@ function renderSaved() {
     });
   }
   const list = store.loadSaved();
-  $('saved-plans').hidden = !list.length;
-  $('ready-title').hidden = !list.length;
+  $('saved-empty').hidden = list.length > 0;
   $('saved-list').replaceChildren(
     ...list.map((p) => {
       const li = el('li', { class: 'saved-item' });
@@ -3337,6 +3355,7 @@ async function openSettings(message, focus) {
   els.rememberKey.checked = settings.rememberKey;
   $('photos-on').checked = settings.photosOn !== false;
   $('library-admin-on').checked = settings.libraryAdmin === true;
+  $('vet-extras-on').checked = settings.vetExtras === true;
   $('template').querySelector('option[value="rspca"]').hidden = !store.rspcaUnlocked();
   $('template').value = settings.template === 'rspca' && !store.rspcaUnlocked() ? 'bunurong' : settings.template || 'bunurong';
   $('unlock').value = '';
@@ -3379,7 +3398,7 @@ function renderAccount() {
   if (u) {
     $('acct-name').textContent = vetLabel({ by: u.name });
     $('acct-reg').textContent = u.reg ? ` · reg. ${u.reg} (${String(u.regState || '').toUpperCase()})` : '';
-    $('acct-status').textContent = u.approved ? 'Approved: you can endorse care plans and write prescriptions.' : 'Waiting for approval. The app admin checks the vet register, then turns on endorsing and prescriptions.';
+    $('acct-status').textContent = u.fake ? 'Pretend vet for testing while the app is built. Prescriptions are marked TEST.' : u.approved ? 'Approved: you can write prescriptions.' : 'Waiting for approval. The app admin checks the vet register, then turns on prescriptions.';
     $('acct-status').dataset.ok = String(Boolean(u.approved));
     $('acct-clinic').textContent = [u.clinic, u.address, u.phone].filter(Boolean).join(' · ') || u.email;
     return;
@@ -3589,45 +3608,18 @@ $('rx-go').addEventListener('click', async () => {
   }
 });
 
-// Beta only (the live build doesn't contain this): sign in as a shared test vet, to try endorsing and
-// prescriptions without a real account. Its name, reg number and script numbers all say TEST.
-if (__BETA__) {
-  const input = el('input', { type: 'checkbox', id: 'test-vet-on' });
-  const row = el('div', { class: 'field check-field', id: 'test-vet-field' }, [
-    el('label', { class: 'switch-row', for: 'test-vet-on' }, [input, ' ', el('span', { text: 'Test vet account (beta only)' })]),
-    el('p', { class: 'help', text: 'Signs in as an approved pretend vet, for testing endorsing and prescriptions. Everything it makes is marked TEST, and this switch never appears in the live app.' }),
-  ]);
-  $('testing-title').after(row);
-  // The same switch as a button beside Admin, so testing as a signed-in vet is one tap.
-  const mock = el('button', { type: 'button', class: 'set-tab set-mock', id: 'tab-test-vet', role: 'switch', 'aria-checked': 'false', title: 'Sign in as the test vet (beta only)' }, 'Test vet');
-  mock.addEventListener('click', () => input.click());
-  document.querySelector('.set-tabs').append(mock);
-  document.querySelector('.set-tabs').classList.add('with-mock');
-  const sync = () => {
-    input.checked = Boolean(account.user && account.user.test);
-    mock.setAttribute('aria-checked', String(input.checked));
-  };
-  sync();
-  $('settings').addEventListener('toggle', sync);
-  input.addEventListener('change', async () => {
-    try {
-      if (input.checked) {
-        if (account.signedIn && !account.user.test) await account.signOut();
-        await account.signInTest();
-        setRole('vet');
-        toast('Signed in as the test vet. The app is in Vet mode.');
-      } else if (account.user && account.user.test) {
-        await account.signOut();
-        toast('Test vet signed out.');
-      }
-    } catch (e) {
-      toast(accountError(e));
-    }
-    sync();
-    renderAccount();
-    if (careSheet && document.body.dataset.view === 'care') renderEndorse(careSheet);
-  });
+// While the app is being built: a pretend approved vet, Dr Ashley Fake, kept on this device only (beta and local testing).
+if (__BETA__ || location.hostname === 'localhost') {
+  $('acct-fake').hidden = false;
+  $('acct-fake-help').hidden = false;
 }
+$('acct-fake').addEventListener('click', () => {
+  account.signInFake();
+  setRole('vet');
+  if (!els.clinician.value.trim()) els.clinician.value = account.user.name;
+  renderAccount();
+  toast('Signed in as Dr Ashley Fake (pretend). The app is in Vet mode.');
+});
 
 els.openSettings.addEventListener('click', () => openSettings());
 $('close-settings').addEventListener('click', () => els.settings.close('close'));
@@ -3635,7 +3627,7 @@ $('close-settings').addEventListener('click', () => els.settings.close('close'))
 els.settings.addEventListener('close', async () => {
   // Whatever way it's closed (Save, ✕, Escape, a tap outside), changes are kept: nothing typed is lost.
   const key = els.apiKey.value.trim();
-  const next = { ...settings, photosOn: $('photos-on').checked, libraryAdmin: $('library-admin-on').checked, template: $('template').value, drugs: $('drugs').value.slice(0, 3000), clinician: els.clinician.value.trim().slice(0, 80), model: els.model.value, apiKey: key, rememberKey: els.rememberKey.checked };
+  const next = { ...settings, photosOn: $('photos-on').checked, libraryAdmin: $('library-admin-on').checked, vetExtras: $('vet-extras-on').checked, template: $('template').value, drugs: $('drugs').value.slice(0, 3000), clinician: els.clinician.value.trim().slice(0, 80), model: els.model.value, apiKey: key, rememberKey: els.rememberKey.checked };
   const changed = JSON.stringify(next) !== JSON.stringify(settings);
   if (!changed && els.settings.returnValue !== 'save') return;
   settings = next;
@@ -3643,6 +3635,8 @@ els.settings.addEventListener('close', async () => {
   provider = null;
   renderPhotos();
   updateMediaFrom();
+  applyRole(); // Extra vet tools may have changed
+  applyMode();
   if (key && !/^sk-ant-/.test(key)) toast('Saved, but that doesn’t look like an Anthropic key. Keys start with sk-ant-.');
   else toast('Settings saved.');
 });
@@ -3664,12 +3658,22 @@ function ago(ms) {
 // The last thing made stays one tap away, even after the app was closed (for example to answer the phone).
 const capFirst = (t) => (t ? t[0].toUpperCase() + t.slice(1) : t);
 const lastLabel = (last) => (last.type === 'doc' && DOC_KINDS[last.data.kind] ? DOC_KINDS[last.data.kind].label : LAST_LABEL[last.type]);
+// Recent lives in Plans now, beside Saved and Ready-made.
 function renderResume() {
-  // Recent lives behind the clock at the top, so the front screen stays clear.
+  if (!els.views.library.hidden) renderRecent();
+}
+function renderRecent() {
   const recent = store.loadRecent();
-  const btn = $('open-recent');
-  btn.hidden = !recent.length;
-  btn.setAttribute('aria-label', recent.length ? `Recent (${recent.length})` : 'Recent');
+  $('recent-list').replaceChildren(...recent.map((r) => {
+    const label = lastLabel(r);
+    const title = capFirst(String(r.title || '').trim()) || label;
+    return el('li', {}, [el('button', { type: 'button', class: 'recent-item', onclick: () => openSaved(r) }, [
+      el('span', { class: 'recent-title', text: title }),
+      el('span', { class: 'recent-meta', text: `${title !== label ? `${label} · ` : ''}${ago(Date.now() - r.at)}` }),
+    ])]);
+  }));
+  $('recent-empty').hidden = recent.length > 0;
+  $('recent-clear').hidden = !recent.length;
 }
 function openSaved(last) {
   if (!last) return;
@@ -3679,22 +3683,9 @@ function openSaved(last) {
   else if (last.type === 'notes') showNotes(last.data.map(normaliseNote), false);
   else if (last.type === 'polish') showPolish(String(last.data.text || ''));
 }
-$('open-recent').addEventListener('click', () => {
-  const list = $('recent-list');
-  list.replaceChildren(...store.loadRecent().map((r) => {
-    const label = lastLabel(r);
-    const title = capFirst(String(r.title || '').trim()) || label;
-    return el('li', {}, [el('button', { type: 'button', class: 'recent-item', onclick: () => { $('recent-dlg').close(); openSaved(r); } }, [
-      el('span', { class: 'recent-title', text: title }),
-      el('span', { class: 'recent-meta', text: `${title !== label ? `${label} · ` : ''}${ago(Date.now() - r.at)}` }),
-    ])]);
-  }));
-  $('recent-dlg').showModal();
-});
 $('recent-clear').addEventListener('click', () => {
   store.clearRecent();
-  $('recent-dlg').close();
-  renderResume();
+  renderRecent();
   toast('Recent cleared.');
 });
 
@@ -3822,11 +3813,11 @@ function medsSection(c) {
       el('button', { type: 'button', class: 'btn small ghost', onclick: () => openDraft(c, c.medications) }, c.medications.length ? 'Change them' : 'Type them in'),
     ]));
     if (c.kind === 'wildlife') parts.push(el('p', { class: 'help', text: 'Options come from Australian wildlife guidelines, for your expert review. Nothing reaches the carer until you accept it.' }));
-  } else if (w.state !== 'endorsed') {
+  } else {
     parts.push(el('div', { class: 'meds-acts' }, [
       el('button', { type: 'button', class: 'btn small ghost', onclick: (e) => askVetReview(e.currentTarget, 'meds') }, remote && remote.mine ? 'Send to the vet again' : 'Ask a vet about medications'),
     ]));
-    parts.push(el('p', { class: 'help', text: remote && remote.mine ? 'Sent for review. The vet’s medications show here when you next open the plan.' : 'Sends this plan to a vet to advise on medicines. They can add them, endorse the plan and write a prescription.' }));
+    parts.push(el('p', { class: 'help', text: remote && remote.mine ? 'Sent for review. The vet’s medications show here when you next open the plan.' : 'Sends this plan to a vet to advise on medicines. They can add them and write a prescription.' }));
   }
   return el('section', { class: 'care-sec meds-sec' }, parts);
 }
@@ -3931,76 +3922,50 @@ async function acceptDraft(c) {
   const medications = d.meds.map((m) => ({ name: m.name, how: m.how, how_often: m.how_often, how_long: m.how_long, tip: m.caution || '' }));
   medsDraft = null;
   await carePlanChanged({ ...c, medications }, 'Medications updated.');
-  if (account.approved) setTimeout(() => $('endorse-btn').focus({ preventScroll: false }), 50);
 }
 
-/* ---------------- vet endorsement and review ---------------- */
+/* ---------------- asking a vet to review ---------------- */
 
-const REVIEW_INFO = 'A carer asked you to review this plan. Check it, use Edit plan or Edit text for anything that needs fixing, then tap Endorse plan. They see your changes when they next open it.';
-// Endorsing takes a signed-in vet the admin has approved, tapping Endorse. Nothing is endorsed automatically, and
-// any change to the medications afterwards takes the endorsement off (endorsementState compares them).
+const REVIEW_INFO = 'A carer asked you to review this plan. Check it, and use Edit plan or Edit text for anything that needs fixing. They see your changes when they next open it.';
 // A function declaration, not a const: a refresh can put a plan back on screen before this part of the file has run.
 function savedEntry() {
   return savedId ? store.loadSaved().find((x) => x.id === savedId) : null;
 }
 
+// The review box on a care plan: ask a vet to review it, what the other side changed, and a note for a vet opening a link.
 function renderEndorse(c) {
   // Edit text: the library admin on ready-made plans, and vets on any other plan (reviewing one, or their own).
   $('library-admin').hidden = !((careFrom === 'library' && libraryPlan && libraryAdmin()) || (careFrom !== 'library' && settings.role === 'vet'));
   const box = $('care-endorse');
   const vet = settings.role === 'vet';
-  const w = endorsementWords(c);
   const remote = savedEntry() && savedEntry().remote;
-  let title = w.title;
-  let text = w.text;
-  let tone = w.tone;
-  if (vet && w.state === 'none') {
-    title = 'Not endorsed yet';
-    text = !account.signedIn
-      ? 'Sign in with your vet account to endorse it.'
-      : !account.approved
-        ? 'Your vet account is waiting for approval. Once the app admin approves it, you can endorse plans.'
-        : c.medications.length ? 'Check the plan and its medications, then endorse it so the carer knows a vet has authorised them.' : 'Endorse it so the carer knows a vet has checked it.';
-    tone = c.medications.length ? 'warn' : 'quiet';
-  } else if (!vet && w.state !== 'endorsed' && remote && !remote.mine) {
-    // Opened a review link someone sent, but the app isn't in vet mode: most likely the vet, not yet signed in.
+  let title = '';
+  let text = '';
+  if (vet && remote && !remote.mine) {
+    title = 'Reviewing a carer’s plan';
+    text = 'Check it, and use Edit plan or Edit text for anything that needs fixing. The carer sees your changes when they next open it.';
+  } else if (!vet && remote && !remote.mine) {
     title = 'Are you the vet reviewing this plan?';
-    text = 'Sign in with your vet account to check it, make changes and endorse it.';
-    tone = 'quiet';
-  } else if (!vet && w.state !== 'endorsed' && remote) {
-    title = 'Waiting for a vet to review';
-    text = `${c.medications.length ? 'Until then, give medicines only as your vet directed. ' : ''}Their changes and endorsement show here when you open the plan.`;
+    text = 'Switch to Vet at the top of the front screen to check and change it.';
+  } else if (!vet && remote) {
+    title = 'Sent to your vet to review';
+    text = `${c.medications.length ? 'Until they’ve checked it, give medicines only as your vet directed. ' : ''}Their changes show here when you open the plan.`;
   }
-  box.dataset.tone = tone;
+  box.dataset.tone = 'quiet';
   $('endorse-title').textContent = title;
+  $('endorse-title').hidden = !title;
   $('endorse-text').textContent = text;
   $('endorse-text').hidden = !text;
-  const vetNotIn = !vet && remote && !remote.mine && w.state !== 'endorsed';
-  $('endorse-btn').hidden = !(vet || vetNotIn) || w.state === 'endorsed' || (account.signedIn && !account.approved);
-  $('endorse-btn').textContent = !account.signedIn ? (vetNotIn ? 'Vet sign in' : 'Sign in to endorse') : w.state === 'changed' ? 'Endorse again' : 'Endorse plan';
-  $('review-btn').hidden = vet || vetNotIn || w.state === 'endorsed';
+  $('review-btn').hidden = vet || Boolean(remote && !remote.mine);
   // What the other side changed since this device last saw the plan, marked on the plan too.
   const ch = remote && remote.changes;
   $('endorse-changes').textContent = ch && ch.parts.length ? `${ch.who} changed: ${ch.parts.join(', ')}.` : '';
   $('endorse-changes').hidden = !$('endorse-changes').textContent;
   markChanged(ch ? ch.parts : []);
   $('review-btn').textContent = remote ? 'Send the review link again' : 'Ask a vet to review';
-  box.querySelector('.endorse-acts').hidden = $('endorse-btn').hidden && $('review-btn').hidden;
-  // Ready-made plans are general guides, not a plan for one animal: nothing to endorse there.
-  box.hidden = careFrom === 'library';
-  // Check an endorsement against the server's record once, then show the result.
-  const e = endorsementOf(c.endorsement);
-  if (e && e.id && endorsementCheck(e) === undefined) {
-    lookupEndorsement(e.id)
-      .then((rec) => {
-        recordCheck(e, rec);
-        if (careSheet === c) {
-          renderCare(c);
-          renderEndorse(c);
-        }
-      })
-      .catch(() => {}); // offline: checked next time
-  }
+  box.querySelector('.endorse-acts').hidden = $('review-btn').hidden;
+  // Ready-made plans are general guides, not a plan for one animal: nothing to review there.
+  box.hidden = careFrom === 'library' || (!title && !$('endorse-changes').textContent && $('review-btn').hidden);
 }
 
 // Highlight the sections named in a change ("Feeding", "Medications") so they're easy to find.
@@ -4057,39 +4022,16 @@ async function refreshRemote(id, quiet = false) {
   if (!latest || !(latest.updated > (entry.remote.updated || 0)) || !latest.plan || !latest.plan.sheet) return false;
   const sheet = normaliseCareSheet(latest.plan.sheet, null);
   const parts = [...(medsKey(entry.sheet.medications) !== medsKey(sheet.medications) ? ['Medications'] : []), ...changedParts(entry.sheet, sheet)];
-  const e = endorsementOf(sheet.endorsement);
-  const who = settings.role === 'vet' ? 'The carer' : e ? drName(e.by) : 'The vet';
+  const who = settings.role === 'vet' ? 'The carer' : 'The vet';
   store.updateSaved(id, { sheet, remote: { ...entry.remote, updated: latest.updated, changes: parts.length ? { parts, who, at: latest.updated } : entry.remote.changes || null } });
   if (!quiet && savedId === id && document.body.dataset.view === 'care') {
     showCare(sheet, 'saved', els.careBanner.hidden ? '' : els.careBanner.textContent, true);
-    const { state, e } = endorsementState(sheet);
-    toast(state === 'endorsed' && settings.role !== 'vet' ? `${vetLabel(e)} has endorsed this plan.` : 'Updated with the latest changes.');
+    toast('Updated with the latest changes.');
   }
   return true;
 }
 
-$('endorse-btn').addEventListener('click', () => {
-  if (!account.signedIn) return openSettings(undefined, 'account');
-  if (!account.approved) return toast(accountError({ code: 'not_approved' }));
-  const u = account.user;
-  $('endorse-as').textContent = `${vetLabel({ by: u.name, reg: u.reg })}${u.clinic ? `, ${u.clinic}` : ''}`;
-  $('endorse-ok').checked = false;
-  $('endorse-dlg').returnValue = '';
-  $('endorse-dlg').showModal();
-});
-$('endorse-dlg').addEventListener('close', async () => {
-  if ($('endorse-dlg').returnValue !== 'endorse' || !careSheet) return;
-  const sheet = careSheet;
-  try {
-    const rec = await account.endorse(medsKey(sheet.medications), sheet.animal || '');
-    const endorsed = endorse(sheet, rec);
-    recordCheck(endorsed.endorsement, rec);
-    await carePlanChanged(endorsed, 'Endorsed.');
-  } catch (e) {
-    toast(accountError(e));
-    if (e && e.code === 'signed_out') renderEndorse(sheet);
-  }
-});
+
 
 // Send the plan to a vet for review. focus 'meds' asks about medicines in particular.
 async function askVetReview(btn, focus = '') {
@@ -4102,7 +4044,7 @@ async function askVetReview(btn, focus = '') {
     btn.disabled = false;
     if (!j) return toast('Couldn’t make a review link. Check your internet connection, then try again.');
     remote = { id: j.id, key: j.key, updated: j.updated, mine: true };
-    // The plan is kept under Plans, linked to the review, so the vet's changes and endorsement come back to it.
+    // The plan is kept under Plans, linked to the review, so the vet's changes come back to it.
     if (entry) store.updateSaved(entry.id, { remote });
     else {
       entry = { id: `s-${j.id}`, name: planName().slice(0, 80), sheet: careSheet, savedAt: Date.now(), remote };
@@ -4115,8 +4057,8 @@ async function askVetReview(btn, focus = '') {
   }
   const url = reviewLink(remote.id, remote.key);
   const text = focus === 'meds'
-    ? 'Could you advise on medications for this animal? You can add them to the care plan, endorse it and write a prescription:'
-    : `Could you check this care plan${careSheet.medications.length ? ', including the medications,' : ''} and endorse it if it’s right?`;
+    ? 'Could you advise on medications for this animal? You can add them to the care plan and write a prescription:'
+    : `Could you check this care plan${careSheet.medications.length ? ', including the medications,' : ''} and change anything that isn’t right?`;
   if (canShare()) {
     try {
       await navigator.share({ title: `For vet review: ${planName()}`, text, url });

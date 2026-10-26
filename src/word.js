@@ -100,7 +100,6 @@ export function careModel(c, lookup, photos = [], video = null) {
   const meds = c.medications.map((m) => [m.name, m.how, m.how_often, m.how_long]);
   const ew = endorsementWords(c);
   const blocks = [
-    // Endorsed by a vet, or a draft whose medications no vet has authorised yet: said first, so nobody misses it.
     ...(ew.text ? [{ heading: ew.title, text: ew.text, tone: ew.tone === 'ok' ? 'summary' : 'warn' }] : []),
     { heading: 'Summary', text: c.summary, tone: 'summary' },
     ...(meds.length ? [{ heading: ew.medsHeading, table: { head: ['Medication', 'How', 'How often', 'How long'], rows: meds, widths: [2600, 2600, 2400, PAGE_W - 7600] }, note: c.medications.map((m) => (m.tip ? `${m.name}: ${m.tip}` : '')).filter(Boolean).join('  ') || undefined }] : []),

@@ -8,8 +8,9 @@ test('Carer or Vet is switched on the front screen (no sign in needed), and reme
   await expect(page.locator('input[name=role][value=carer]')).toBeChecked();
   await expect(page.locator('#mode label:visible')).toHaveCount(4); // intake is made from a plan, not a tab
   await page.locator('#role-seg label', { hasText: 'Vet' }).click();
-  await expect(page.locator('#mode label:visible')).toHaveCount(3);
-  await expect(page.locator('#adv-tab')).toBeVisible();
+  // Vets get SOAP notes and care plans only; Rapid polish and Advanced need Extra vet tools (Settings > Admin).
+  await expect(page.locator('#mode label:visible')).toHaveCount(2);
+  await expect(page.locator('#adv-tab')).toBeHidden();
   await expect(page.locator('input[name=mode]:checked')).toHaveValue('carer'); // vets start on the care plan
   await page.reload();
   await expect(page.locator('input[name=role][value=vet]')).toBeChecked();
@@ -72,10 +73,11 @@ test('a call interrupts: the dictation and the last care plan survive closing th
   const later = await context.newPage();
   const calls = await mockApi(later, { body: () => textReply(EXAMPLE_CARER_PLAN) });
   await later.goto('./');
-  await expect(later.locator('#open-recent')).toBeVisible();
-  await later.locator('#open-recent').click();
-  await expect(later.locator('#recent-dlg')).toContainText('Care plan');
-  await later.locator('#recent-dlg .recent-item').first().click();
+  // Recent lives in Plans, beside Saved and Ready-made.
+  await later.locator('#open-library').click();
+  await expect(later.locator('#lib-tab-recent')).toHaveAttribute('aria-selected', 'true'); // nothing saved, so Recent first
+  await expect(later.locator('#recent-plans')).toContainText('Care plan');
+  await later.locator('#recent-plans .recent-item').first().click();
   await expect(later.locator('#view-care')).toBeVisible();
   expect(calls).toHaveLength(0);
 });
@@ -216,10 +218,11 @@ test('Recent: each plan is kept on the device, the animal leads, and any one reo
     await expect(page.locator('#view-care')).toBeVisible();
     await page.locator('#care-back').click();
   }
-  await page.locator('#open-recent').click();
-  await expect(page.locator('#recent-dlg .recent-item').first()).toContainText('Ringtail possum joey');
-  await expect(page.locator('#recent-dlg .recent-item')).toHaveCount(2);
-  await page.locator('#recent-dlg .recent-item', { hasText: 'Koala' }).click();
+  await page.locator('#open-library').click();
+  await page.locator('#lib-tab-recent').click();
+  await expect(page.locator('#recent-plans .recent-item').first()).toContainText('Ringtail possum joey');
+  await expect(page.locator('#recent-plans .recent-item')).toHaveCount(2);
+  await page.locator('#recent-plans .recent-item', { hasText: 'Koala' }).click();
   await expect(page.locator('#care-title')).toContainText(/koala/i);
   expect(calls).toHaveLength(2);
 });
@@ -287,4 +290,22 @@ test.describe('Add to Home Screen on an iPhone', () => {
     await expect(page.locator('#home-steps')).toContainText('Add to Home Screen');
     await expect(page.locator('#home-install')).toBeHidden();
   });
+});
+
+test('Settings > Vet: Use as Dr Ashley Fake signs in a pretend approved vet on this device, no server needed', async ({ page }) => {
+  await openApp(page);
+  await page.locator('#open-settings').click();
+  await page.locator('#tab-vet').click();
+  await expect(page.locator('#tab-test-vet')).toHaveCount(0); // no separate Test vet button any more
+  await page.locator('#acct-fake').click();
+  await expect(page.locator('#acct-name')).toHaveText('Dr Ashley Fake');
+  await expect(page.locator('#acct-status')).toContainText('marked TEST');
+  await page.locator('#close-settings').click();
+  await expect(page.locator('input[name=role][value=vet]')).toBeChecked();
+  await page.reload();
+  await page.locator('#open-settings').click();
+  await page.locator('#tab-vet').click();
+  await expect(page.locator('#acct-name')).toHaveText('Dr Ashley Fake'); // remembered
+  await page.locator('#acct-out').click();
+  await expect(page.locator('#acct-fake')).toBeVisible();
 });

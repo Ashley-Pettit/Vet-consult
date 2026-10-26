@@ -68,21 +68,9 @@ export function recordCheck(e, rec) {
   return ok;
 }
 
-/**
- * Where a plan stands:
- * - 'endorsed': a vet endorsed it and the medications are as they were then
- * - 'changed': a vet endorsed it, but the medications have changed since
- * - 'none': no vet has endorsed it
- */
-export function endorsementState(sheet) {
-  const e = sheet && endorsementOf(sheet.endorsement);
-  if (!e) return { state: 'none', e: null };
-  // No server record behind it (or a different one): not to be trusted. Not yet checked counts as fine for now.
-  if (endorsementCheck(e) === false) return { state: 'unconfirmed', e, edited: [] };
-  // Other parts edited since: the endorsement stands (only medicine changes take it off), but they're named.
-  const now = partsKey(sheet);
-  const edited = e.parts ? PARTS.filter(([k]) => e.parts[k] && e.parts[k] !== now[k]).map(([, label]) => label) : [];
-  return { state: e.meds === medsKey(sheet.medications) ? 'endorsed' : 'changed', e, edited };
+/** Endorsing has been taken out of the app (October 2026): every plan is simply a plan, whatever older copies carry. */
+export function endorsementState() {
+  return { state: 'none', e: null, edited: [] };
 }
 
 export const endorsedDate = (at) => new Date(at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -90,46 +78,7 @@ export const endorsedDate = (at) => new Date(at).toLocaleDateString('en-AU', { d
 /** "Dr Sam Lee (reg. V1234)" */
 export const vetLabel = (e) => `${drName(e.by)}${e.reg ? ` (reg. ${e.reg})` : ''}`;
 
-/** The words shown on screen and on printouts for each state: { title, text, tone }. */
-export function endorsementWords(sheet) {
-  const { state, e, edited = [] } = endorsementState(sheet);
-  const since = edited.length ? ` Changed since it was endorsed: ${edited.join(', ')}.` : '';
-  const hasMeds = Boolean(sheet && sheet.medications && sheet.medications.length);
-  if (state === 'endorsed') {
-    return {
-      state,
-      title: 'Vet-endorsed care plan',
-      text: `Endorsed by ${vetLabel(e)}${e.clinic ? `, ${e.clinic}` : ''}, on ${endorsedDate(e.at)}.${hasMeds ? ' The medications are authorised by this vet.' : ''}${since}`,
-      tone: 'ok',
-      medsHeading: hasMeds ? `Medications (authorised by ${drName(e.by)})` : 'Medications',
-    };
-  }
-  if (state === 'changed') {
-    return {
-      state,
-      title: 'Medications changed since the vet endorsed this plan',
-      text: `${vetLabel(e)} endorsed it on ${endorsedDate(e.at)}, but the medications have changed since. Give medicines only as your vet directed until a vet endorses the plan again.${since}`,
-      tone: 'warn',
-      medsHeading: 'Medications (changed: not yet authorised by a vet)',
-    };
-  }
-  if (state === 'unconfirmed') {
-    return {
-      state,
-      title: 'This endorsement can’t be confirmed',
-      text: `The plan says ${vetLabel(e)} endorsed it, but there’s no matching record. Treat it as a draft: give medicines only as your vet directed.`,
-      tone: 'warn',
-      medsHeading: 'Medications (not confirmed as authorised by a vet)',
-    };
-  }
-  if (hasMeds) {
-    return {
-      state,
-      title: 'Draft: not checked by a vet',
-      text: 'No vet has checked the medications in this plan. Give medicines only as your vet directed, and ask a vet to check and endorse the plan.',
-      tone: 'warn',
-      medsHeading: 'Medications (not yet authorised by a vet)',
-    };
-  }
-  return { state, title: 'Not checked by a vet', text: '', tone: 'quiet', medsHeading: 'Medications' };
+/** Nothing about endorsing is shown on screen or on printouts any more. */
+export function endorsementWords() {
+  return { state: 'none', title: '', text: '', tone: 'quiet', medsHeading: 'Medications' };
 }

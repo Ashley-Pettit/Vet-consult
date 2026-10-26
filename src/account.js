@@ -15,6 +15,8 @@ const base = () => String(CONFIG.proxyUrl || '').replace(/\/+$/, '');
 const timeout = (ms) => (typeof AbortSignal !== 'undefined' && AbortSignal.timeout ? AbortSignal.timeout(ms) : undefined);
 
 let current = null; // { token, user, remember }
+// The pretend vet for trying prescriptions while the app is built. Everything it makes says TEST.
+export const FAKE_VET = { email: 'ashley.fake@example.com', name: 'Ashley Fake', reg: 'TEST-0000', regState: 'vic', clinic: 'Pretend Vet Clinic (TEST)', address: '1 Test Street, Melbourne VIC', phone: '03 0000 0000', approved: true, fake: true, test: true };
 
 function load() {
   for (const s of [safe(() => localStorage), safe(() => sessionStorage)]) {
@@ -75,6 +77,15 @@ export const account = {
     save(current);
     return j.user;
   },
+  /** While the app is being built: a pretend approved vet that lives only on this device (no server). */
+  signInFake() {
+    current = { token: 'fake', remember: true, user: { ...FAKE_VET } };
+    save(current);
+    return current.user;
+  },
+  get fake() {
+    return Boolean(current && current.user && current.user.fake);
+  },
   /** Beta testing only: sign in as the shared test vet (approved; everything it makes is marked TEST). */
   async signInTest() {
     const j = await api('/auth/test', { method: 'POST', body: {} });
@@ -86,11 +97,11 @@ export const account = {
     const was = current;
     current = null;
     save(null);
-    if (was) await api('/auth/logout', { method: 'POST', token: was.token }).catch(() => {});
+    if (was && was.token !== 'fake') await api('/auth/logout', { method: 'POST', token: was.token }).catch(() => {});
   },
   /** Fetch the latest account details (approval can change). Signs out if the session has ended. */
   async refresh() {
-    if (!current) return null;
+    if (!current || current.token === 'fake') return this.user;
     try {
       const j = await api('/auth/me', { token: current.token });
       current = { ...current, user: j.user };
@@ -104,6 +115,11 @@ export const account = {
     return this.user;
   },
   async update(details) {
+    if (current && current.token === 'fake') {
+      current = { ...current, user: { ...current.user, ...details } };
+      save(current);
+      return current.user;
+    }
     const j = await api('/auth/me', { method: 'PUT', body: details, token: current && current.token });
     current = { ...current, user: j.user };
     save(current);
@@ -115,6 +131,8 @@ export const account = {
   },
   /** A prescription number for an approved vet: { number, at }. */
   prescriptionNumber(animal, items) {
+    // The pretend vet numbers its own scripts, marked TEST so they can never pass as real.
+    if (current && current.token === 'fake') return Promise.resolve({ number: `TEST-${Date.now().toString(36).toUpperCase()}`, at: Date.now() });
     return api('/rx', { method: 'POST', body: { animal, items }, token: current && current.token });
   },
 };

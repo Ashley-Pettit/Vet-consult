@@ -67,7 +67,7 @@ export async function shortPlanLink(obj, proxyUrl, here = typeof location !== 'u
   return j ? `${linkBase(here)}#s=${j.id}` : planLink(obj, here);
 }
 
-/** The review link for a stored, editable plan: whoever opens it can change and endorse that same plan. */
+/** The review link for a stored, editable plan: whoever opens it can change that same plan. */
 export const reviewLink = (id, key, here = typeof location !== 'undefined' ? location : null) => `${linkBase(here)}#r=${id}.${key}`;
 
 /** Fetch a stored plan: { plan, updated }. Throws an Error with code 'expired' (not found) or 'offline'. */

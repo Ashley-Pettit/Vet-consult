@@ -24,9 +24,10 @@ export async function mergeSettings(page, extra) {
   });
 }
 
-/** Open the app as a vet on clinical notes (the carer tools are the default). */
+/** Open the app as a vet on clinical notes (the carer tools are the default), with Extra vet tools on so Rapid polish
+ *  and Advanced can be tested too. Plain vet mode (notes and care plan only) is checked in switches.spec. */
 export async function asVet(page) {
-  await mergeSettings(page, { role: 'vet', mode: 'vet' });
+  await mergeSettings(page, { role: 'vet', mode: 'vet', vetExtras: true });
 }
 
 const textOf = (content) => (typeof content === 'string' ? content : content.filter((b) => b.type === 'text').map((b) => b.text).join(''));
