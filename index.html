@@ -311,6 +311,7 @@
       <button type="button" class="link" id="care-reset" hidden>Reset to original</button>
     </div>
     <button type="button" class="btn ghost word-btn" id="word-care"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 11v6M9 14l3 3 3-3"/></svg>Word printout</button>
+    <button type="button" class="btn ghost word-btn vet-only" id="rx-btn"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l3 3v15H6z"/><path d="M9 9h3.5a2 2 0 0 1 0 4H9V8.5M11.5 13l3.5 5M15 13l-3.5 5"/></svg>Write a prescription</button>
     <div class="actions">
       <button type="button" class="btn ghost" id="care-back-2">Change plan</button>
       <button type="button" class="btn primary" id="care-copy">Share plan</button>
@@ -466,16 +467,70 @@
         <label for="clinician">Your name (added to every record)</label>
         <input id="clinician" type="text" autocomplete="name" placeholder="e.g. Sam Lee">
       </div>
-      <div class="field vet-only">
-        <label for="vet-reg">Vet registration number</label>
-        <input id="vet-reg" type="text" autocomplete="off" spellcheck="false" placeholder="e.g. V1234">
-        <p class="help">Goes on care plans you endorse, with your name and the date.</p>
-      </div>
 
       <div class="field">
         <label for="drugs">Drugs and products you use</label>
         <textarea id="drugs" rows="4" spellcheck="false" placeholder="One per line, e.g.&#10;Metacam 1.5 mg/mL oral&#10;Cydectin pour-on&#10;Our in-house mange wash"></textarea>
         <p class="help">Misheard names are corrected to your spelling. Common drugs are already known.</p>
+      </div>
+    </section>
+
+    <section class="set-group vet-only" id="account-group" aria-labelledby="set-account">
+      <h3 class="set-title" id="set-account">Vet account</h3>
+      <div id="acct-in" hidden>
+        <p class="acct-who"><strong id="acct-name"></strong><span id="acct-reg"></span></p>
+        <p class="acct-status" id="acct-status"></p>
+        <p class="help" id="acct-clinic"></p>
+        <button type="button" class="btn ghost" id="acct-out">Sign out</button>
+      </div>
+      <div id="acct-form">
+        <p class="help" id="acct-intro">Sign in to endorse care plans and write prescriptions. New accounts are checked against the vet register before they can be used.</p>
+        <div class="field">
+          <label for="acct-email">Email</label>
+          <input id="acct-email" type="email" autocomplete="username" spellcheck="false">
+        </div>
+        <div class="field">
+          <label for="acct-pass">Password</label>
+          <input id="acct-pass" type="password" autocomplete="current-password">
+        </div>
+        <div id="acct-new" hidden>
+          <div class="field">
+            <label for="acct-new-name">Full name</label>
+            <input id="acct-new-name" type="text" autocomplete="name" placeholder="e.g. Sam Lee">
+          </div>
+          <div class="field two">
+            <div>
+              <label for="acct-new-reg">Vet registration number</label>
+              <input id="acct-new-reg" type="text" autocomplete="off" spellcheck="false">
+            </div>
+            <div>
+              <label for="acct-new-state">Registered in</label>
+              <select id="acct-new-state">
+                <option value="vic">VIC</option><option value="qld">QLD</option><option value="nsw">NSW</option><option value="sa">SA</option>
+                <option value="wa">WA</option><option value="tas">TAS</option><option value="act">ACT</option><option value="nt">NT</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label for="acct-new-clinic">Clinic or practice</label>
+            <input id="acct-new-clinic" type="text" autocomplete="organization">
+          </div>
+          <div class="field">
+            <label for="acct-new-address">Clinic address</label>
+            <input id="acct-new-address" type="text" autocomplete="street-address">
+          </div>
+          <div class="field">
+            <label for="acct-new-phone">Clinic phone</label>
+            <input id="acct-new-phone" type="tel" autocomplete="tel">
+          </div>
+          <p class="help">Your clinic details print on prescriptions. Use a password of at least 10 characters.</p>
+        </div>
+        <label class="check"><input type="checkbox" id="acct-remember"> Remember me on this device</label>
+        <p class="acct-msg" id="acct-msg" role="status" aria-live="polite"></p>
+        <div class="acct-acts">
+          <button type="button" class="btn primary" id="acct-go">Sign in</button>
+          <button type="button" class="link" id="acct-switch">Create a vet account</button>
+        </div>
       </div>
     </section>
 
@@ -551,6 +606,16 @@
           <p class="help" id="unlock-msg" aria-live="polite"></p>
         </div>
 
+        <section class="field" id="vets-admin" aria-labelledby="vets-admin-title">
+          <h3 class="field-label" id="vets-admin-title">Vet accounts</h3>
+          <p class="help">Check each vet on the register before approving. Approved vets can endorse plans and write prescriptions.</p>
+          <label for="admin-key">Admin key</label>
+          <input id="admin-key" type="password" autocomplete="off" spellcheck="false" placeholder="The ADMIN_KEY set on Cloudflare">
+          <button type="button" class="btn ghost" id="vets-load">Show vet accounts</button>
+          <p class="help" id="vets-msg" role="status" aria-live="polite"></p>
+          <ul class="vets-list" id="vets-list"></ul>
+        </section>
+
         <div class="field check-field">
           <label class="switch-row" for="library-admin-on"><input type="checkbox" id="library-admin-on"> <span>Plan library admin</span></label>
           <p class="help">Change the ready-made plans. Edits stay on this device.</p>
@@ -584,18 +649,42 @@
   </form>
 </dialog>
 
+<dialog id="rx-dlg" class="confirm rx-dlg" aria-labelledby="rx-title">
+  <form method="dialog" id="rx-form" novalidate>
+    <h2 id="rx-title">Prescription</h2>
+    <p class="help">For one animal. Your details print at the top. It’s only valid once you sign it by hand: the law doesn’t allow a printed signature.</p>
+    <fieldset class="rx-set">
+      <legend>Animal</legend>
+      <div class="field two-eq">
+        <div><label for="rx-species">Species</label><input id="rx-species" type="text" maxlength="80"></div>
+        <div><label for="rx-name">Name or ID</label><input id="rx-name" type="text" maxlength="80" placeholder="e.g. Willow, or case 26-0417"></div>
+      </div>
+      <div class="field two-eq">
+        <div><label for="rx-age">Age</label><input id="rx-age" type="text" maxlength="60" placeholder="e.g. about 8 months"></div>
+        <div><label for="rx-sex">Sex</label><select id="rx-sex"><option value="">Choose</option><option>Female</option><option>Male</option><option>Unknown</option></select></div>
+      </div>
+      <div class="field"><label for="rx-breed">Breed or description</label><input id="rx-breed" type="text" maxlength="80"></div>
+    </fieldset>
+    <fieldset class="rx-set">
+      <legend>Owner or carer</legend>
+      <div class="field"><label for="rx-owner">Name</label><input id="rx-owner" type="text" maxlength="120" autocomplete="off" placeholder="The carer or shelter"></div>
+      <div class="field"><label for="rx-owner-address">Address</label><input id="rx-owner-address" type="text" maxlength="200" autocomplete="off"></div>
+    </fieldset>
+    <div id="rx-items"></div>
+    <button type="button" class="link" id="rx-add">Add another medicine</button>
+    <p class="rx-msg" id="rx-msg" role="alert"></p>
+    <div class="dlg-actions">
+      <button type="submit" class="btn ghost" value="cancel" formnovalidate>Cancel</button>
+      <button type="button" class="btn primary" id="rx-go">Make prescription</button>
+    </div>
+  </form>
+</dialog>
+
 <dialog id="endorse-dlg" class="confirm" aria-labelledby="endorse-dlg-title">
   <form method="dialog" id="endorse-form">
     <h2 id="endorse-dlg-title">Endorse this care plan</h2>
+    <p class="endorse-as-line">Endorsing as <strong id="endorse-as"></strong></p>
     <p class="help">Your name, registration number and today’s date go on the plan and its printouts. If the medications change later, the endorsement comes off until a vet endorses it again.</p>
-    <div class="field">
-      <label for="endorse-name">Your name</label>
-      <input id="endorse-name" type="text" autocomplete="name" maxlength="80" required>
-    </div>
-    <div class="field">
-      <label for="endorse-reg">Vet registration number</label>
-      <input id="endorse-reg" type="text" autocomplete="off" spellcheck="false" maxlength="40" required>
-    </div>
     <label class="check endorse-check"><input type="checkbox" id="endorse-ok" required> I’ve checked this plan, including the medications and doses.</label>
     <div class="dlg-actions">
       <button type="submit" class="btn ghost" value="cancel" formnovalidate>Cancel</button>

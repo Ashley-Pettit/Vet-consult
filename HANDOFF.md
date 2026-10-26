@@ -98,6 +98,18 @@ Both copies share the same site, so settings, sign-in and drafts carry across wh
 - **Printouts:** `src/word.js` builds one model, used by `src/word-docx.js` (Word) and `src/pdf.js` (PDF).
   - Word uses zero side margins with content indented, so the brand band runs edge to edge.
 
+## Sharing, vet accounts, endorsement and prescriptions
+
+- **Proxy (`proxy/`, worker `care-scribe-proxy`):** deploy with `npx wrangler deploy` from `proxy/` (needs Ash's Cloudflare token and his OK; it serves live and beta).
+  - KV `SHARES` (care-shares): shared plans for short links (`#s=<id>`, read only) and vet review links (`#r=<id>.<key>`, editable with the key). Kept 90 days.
+  - KV `USERS` (care-users): vet accounts (`u:`), sessions (`s:`, hashed tokens), failed sign-ins (`f:`), endorsement records (`e:`), prescription records (`rx:`).
+  - Secret `ADMIN_KEY`: Ash sets it in the Cloudflare dashboard. Entered once in Settings > Admin > Vet accounts to approve vets and set new passwords.
+- **Short links:** `shortPlanLink` stores the plan and falls back to the long `#p=` link if the proxy can't be reached (for example inside Claude).
+- **Endorsement (`src/endorse.js`):** only a signed-in vet the admin has approved, tapping Endorse. Never automatic. The server records each endorsement; the app looks it up, so a hand-typed one shows as unconfirmed. It comes off if the medications change (other edits keep it).
+- **Vet review:** a carer taps "Ask a vet to review"; the vet edits and endorses that same stored plan; the carer's saved copy refreshes when opened.
+- **Prescriptions (`src/rx.js`, `src/rx-docx.js`):** S4 and S8, one named animal, approved vets only (the server issues the number). Word only. Victorian rules: a printed script must be signed by the vet in their own handwriting, never pre-signed, so there is no signature image. S8 quantities and repeats in words and figures.
+- **Test vet (beta only, NEVER live):** Settings > Admin > "Test vet account (beta only)". The toggle is compiled only into the beta build (`__BETA__`, from `CHANNEL=beta`); live and the Claude artifact don't contain it. The worker's `/auth/test` needs `TEST_VET = "on"`. Everything it makes says TEST (name, reg TEST-0000, script numbers TEST-…, a red "not a valid prescription" banner). Don't remove those markings or add the toggle to live builds.
+
 ## Ready-made plans (plan library)
 
 - **What:** the book button in the header opens 30 standard care plans for 11 common Victorian natives (wombat, koala, Pacific black duck, eastern grey kangaroo, ringtail and brushtail possums, echidna, grey-headed flying-fox, magpie, tawny frogmouth, blue-tongue lizard), 2 to 4 per animal by stage and weight. They open instantly with no AI call.

@@ -89,7 +89,9 @@ import {
 } from './note.js';
 import { chartByKey } from './feeding.js';
 import { shortPlanLink, unpackPlan, linkCode, linkId, shortLink, fetchSharedPlan, storePlan, reviewLink, updateSharedPlan } from './sharelink.js';
-import { endorse, endorsementState, endorsementWords, vetLabel } from './endorse.js';
+import { endorse, endorsementState, endorsementWords, vetLabel, medsKey, endorsementOf, endorsementCheck, recordCheck } from './endorse.js';
+import { account, admin, accountError, lookupEndorsement } from './account.js';
+import { rxFromPlan, rxModel, rxProblems } from './rx.js';
 
 const $ = (id) => document.getElementById(id);
 const els = {
@@ -1785,7 +1787,7 @@ async function amend(target, change) {
     // Only the changed parts come back: merge them into what's on screen.
     if (isCare) {
       const sheet = normaliseCareSheet(mergeAmend(current, reply), fromLibrary ? null : SOURCE_IDS());
-      return await carePlanChanged(afterVetChange(sheet), 'Updated.');
+      return await carePlanChanged(sheet, 'Updated.');
     } else {
       const d = normaliseDoc(mergeAmend(current, reply));
       if (!d.sections.length) throw new AiError('empty', '');
@@ -2016,7 +2018,7 @@ $('edit-save').addEventListener('click', () => {
   if (!careSheet) return;
   const text = Object.fromEntries([...$('edit-form').querySelectorAll('textarea')].map((t) => [t.name, t.value]));
   const sheet = normaliseCareSheet(textToPlan(careSheet, text), null);
-  carePlanChanged(afterVetChange(sheet), 'Saved.');
+  carePlanChanged(sheet, 'Saved.');
 });
 
 /* ---------------- care plan ---------------- */
@@ -2552,7 +2554,7 @@ async function openCare() {
   // Already made from these same words (a vet often makes the plan first): show it, no second call.
   if (madeFrom.carer && madeFrom.carer.text === els.transcript.value) return showCare(madeFrom.carer.sheet, 'record', madeFrom.carer.info);
   if (!(await ensureProvider())) {
-    if (isExample && n.patient.name === 'Rusty') showCare(asVetMade(normaliseCareSheet(EXAMPLE_CARE_SHEET, SOURCE_IDS())), 'note', 'This is the example care plan.');
+    if (isExample && n.patient.name === 'Rusty') showCare(normaliseCareSheet(EXAMPLE_CARE_SHEET, SOURCE_IDS()), 'note', 'This is the example care plan.');
     else toast(inClaude ? 'Claude isn’t available right now.' : 'Care plans for your own notes need the Claude app version.');
     return;
   }
@@ -2560,7 +2562,7 @@ async function openCare() {
     const reply = await runWorking('Writing the care plan', 'A plan the carer can follow on their own.', (signal) =>
       askJson(buildCareSheetPrompt(n, sourcesFor(`${els.transcript.value} ${n.patient.species}`)), signal),
     );
-    showCare(asVetMade(normaliseCareSheet(extractJson(reply), SOURCE_IDS())), 'note');
+    showCare(normaliseCareSheet(extractJson(reply), SOURCE_IDS()), 'note');
   } catch (e) {
     showView('note');
     toast(e && e.code === 'cancelled' ? 'Stopped.' : friendly(e));
@@ -2570,8 +2572,8 @@ async function openCare() {
 /** Carer plan mode: spoken comments go straight to a plan, no vet note in between. */
 async function createCarePlan(text) {
   if (!(await ensureProvider())) {
-    if (text === EXAMPLE_CARER_DICTATION.trim()) return showCare(asVetMade(normaliseCareSheet(EXAMPLE_CARER_PLAN, SOURCE_IDS())), 'record', 'This is the example care plan.');
-    if (text === EXAMPLE_FOSTER_DICTATION.trim()) return showCare(asVetMade(normaliseCareSheet(EXAMPLE_FOSTER_PLAN, SOURCE_IDS())), 'record', 'This is the example care plan.');
+    if (text === EXAMPLE_CARER_DICTATION.trim()) return showCare(normaliseCareSheet(EXAMPLE_CARER_PLAN, SOURCE_IDS()), 'record', 'This is the example care plan.');
+    if (text === EXAMPLE_FOSTER_DICTATION.trim()) return showCare(normaliseCareSheet(EXAMPLE_FOSTER_PLAN, SOURCE_IDS()), 'record', 'This is the example care plan.');
     banner(NO_CLAUDE, 'info');
     return;
   }
@@ -2580,7 +2582,7 @@ async function createCarePlan(text) {
     askJson(buildCarerPlanPrompt(text, sourcesFor(text), { fromVet: settings.role === 'vet', drugs: settings.drugs, photoCount: sendPhotos().length }), signal, { images: sendPhotos() }),
   );
   notes = [];
-  showCare(asVetMade(normaliseCareSheet(extractJson(reply), SOURCE_IDS())), 'record');
+  showCare(normaliseCareSheet(extractJson(reply), SOURCE_IDS()), 'record');
 }
 
 els.care.addEventListener('click', openCare);
@@ -3115,7 +3117,7 @@ async function makeNext(m) {
     if (fresh) startIntakeCare();
     const sheet = await waitForIntakeCare(fresh);
     if (sheet === false) return; // stopped
-    if (sheet) return showCare(asVetMade(sheet), 'record');
+    if (sheet) return showCare(sheet, 'record');
   }
   await createNote();
 }
@@ -3314,9 +3316,9 @@ $('home-install').addEventListener('click', async () => {
   renderHomeScreen();
 });
 
-async function openSettings(message) {
+async function openSettings(message, focus) {
   els.clinician.value = settings.clinician;
-  $('vet-reg').value = settings.vetReg || '';
+  renderAccount();
   $('drugs').value = settings.drugs || '';
   els.model.value = settings.model || CONFIG.defaultModel;
   els.apiKey.value = settings.apiKey;
@@ -3327,6 +3329,7 @@ async function openSettings(message) {
   $('template').value = settings.template === 'rspca' && !store.rspcaUnlocked() ? 'bunurong' : settings.template || 'bunurong';
   $('unlock').value = '';
   $('unlock-msg').textContent = store.rspcaUnlocked() ? 'RSPCA handouts are unlocked on this device.' : '';
+  $('admin-key').value = admin.key;
   renderUsage(await refreshConnection());
   if (message) {
     els.conn.textContent = message;
@@ -3338,8 +3341,256 @@ async function openSettings(message) {
   els.settings.returnValue = '';
   if (!els.settings.open) els.settings.showModal();
   // On a phone, focusing a box pops the keyboard over Settings: only jump to the first box with a mouse and keyboard.
+  if (focus === 'account') {
+    $('account-group').scrollIntoView({ block: 'start' });
+    $(account.signedIn ? 'acct-out' : 'acct-email').focus({ preventScroll: true });
+    return;
+  }
   if (window.matchMedia('(pointer: fine)').matches) els.clinician.focus();
   else $('close-settings').focus({ preventScroll: true });
+}
+
+/* ---------------- vet account (Settings) ---------------- */
+
+let acctNew = false; // showing "Create a vet account" rather than "Sign in"
+function renderAccount() {
+  const u = account.user;
+  $('acct-in').hidden = !u;
+  $('acct-form').hidden = Boolean(u);
+  if (u) {
+    $('acct-name').textContent = vetLabel({ by: u.name });
+    $('acct-reg').textContent = u.reg ? ` · reg. ${u.reg} (${String(u.regState || '').toUpperCase()})` : '';
+    $('acct-status').textContent = u.approved ? 'Approved: you can endorse care plans and write prescriptions.' : 'Waiting for approval. The app admin checks the vet register, then turns on endorsing and prescriptions.';
+    $('acct-status').dataset.ok = String(Boolean(u.approved));
+    $('acct-clinic').textContent = [u.clinic, u.address, u.phone].filter(Boolean).join(' · ') || u.email;
+    return;
+  }
+  $('acct-new').hidden = !acctNew;
+  $('acct-go').textContent = acctNew ? 'Create account' : 'Sign in';
+  $('acct-switch').textContent = acctNew ? 'I already have an account' : 'Create a vet account';
+  $('acct-pass').autocomplete = acctNew ? 'new-password' : 'current-password';
+}
+$('acct-switch').addEventListener('click', () => {
+  acctNew = !acctNew;
+  $('acct-msg').textContent = '';
+  renderAccount();
+  (acctNew ? $('acct-new-name') : $('acct-email')).focus();
+});
+$('acct-go').addEventListener('click', async () => {
+  const email = $('acct-email').value.trim();
+  const password = $('acct-pass').value;
+  const remember = $('acct-remember').checked;
+  const msg = $('acct-msg');
+  if (!email || !password) return (msg.textContent = 'Add your email and password.');
+  const btn = $('acct-go');
+  btn.disabled = true;
+  msg.textContent = acctNew ? 'Creating your account…' : 'Signing in…';
+  try {
+    if (acctNew) {
+      const d = { email, name: $('acct-new-name').value.trim(), reg: $('acct-new-reg').value.trim(), regState: $('acct-new-state').value, clinic: $('acct-new-clinic').value.trim(), address: $('acct-new-address').value.trim(), phone: $('acct-new-phone').value.trim() };
+      if (!d.name || !d.reg) throw { code: 'missing_details' };
+      if (password.length < 10) throw { code: 'weak_password' };
+      await account.signUp(d, password, remember);
+    } else await account.signIn(email, password, remember);
+    $('acct-pass').value = '';
+    msg.textContent = '';
+    acctNew = false;
+    // Their name goes on every record too.
+    if (!els.clinician.value.trim()) els.clinician.value = account.user.name;
+    renderAccount();
+    if (careSheet && document.body.dataset.view === 'care') renderEndorse(careSheet);
+  } catch (e) {
+    msg.textContent = accountError(e);
+  } finally {
+    btn.disabled = false;
+  }
+});
+$('acct-out').addEventListener('click', async () => {
+  await account.signOut();
+  renderAccount();
+  if (careSheet) renderEndorse(careSheet);
+  toast('Signed out.');
+});
+// Approval can change while they're away: check once at start.
+account.refresh().then(() => {
+  if (careSheet && document.body.dataset.view === 'care') renderEndorse(careSheet);
+});
+
+/* ---------------- admin: vet accounts ---------------- */
+
+async function loadVets() {
+  const msg = $('vets-msg');
+  admin.key = $('admin-key').value.trim();
+  if (!admin.key) return (msg.textContent = 'Enter the admin key first.');
+  msg.textContent = 'Loading…';
+  try {
+    const vets = await admin.vets();
+    msg.textContent = vets.length ? `${vets.filter((v) => !v.approved).length} waiting for approval.` : 'No vet accounts yet.';
+    $('vets-list').replaceChildren(...vets.map((v) => {
+      const approve = el('button', { type: 'button', class: v.approved ? 'link danger' : 'btn small primary' }, v.approved ? 'Remove approval' : 'Approve');
+      approve.addEventListener('click', async () => {
+        try {
+          await admin.approve(v.email, !v.approved);
+          loadVets();
+        } catch (e) {
+          msg.textContent = accountError(e);
+        }
+      });
+      const reset = el('button', { type: 'button', class: 'link' }, 'Set a new password');
+      reset.addEventListener('click', async () => {
+        const pw = Array.from(crypto.getRandomValues(new Uint8Array(12)), (b) => 'abcdefghjkmnpqrstuvwxyz23456789'[b % 31]).join('');
+        try {
+          await admin.setPassword(v.email, pw);
+          msg.textContent = `New password for ${v.email}: ${pw}  (tell them, then they can sign in with it)`;
+        } catch (e) {
+          msg.textContent = accountError(e);
+        }
+      });
+      return el('li', { class: 'vet-row' }, [
+        el('p', { class: 'vet-name' }, [el('strong', { text: vetLabel({ by: v.name }) }), ` · reg. ${v.reg} (${String(v.regState || '').toUpperCase()})`]),
+        el('p', { class: 'help', text: [v.email, v.clinic, v.phone].filter(Boolean).join(' · ') }),
+        el('p', { class: v.approved ? 'vet-ok' : 'vet-wait', text: v.approved ? 'Approved' : 'Waiting for approval' }),
+        el('div', { class: 'vet-acts' }, [approve, reset]),
+      ]);
+    }));
+  } catch (e) {
+    msg.textContent = accountError(e);
+  }
+}
+$('vets-load').addEventListener('click', loadVets);
+
+/* ---------------- prescriptions ---------------- */
+
+// An approved vet writes a prescription for one animal from the care plan's medicines. The server gives each one a
+// number (and keeps a record), then the Word document is made here for the vet to print and sign by hand.
+let rxLib = null;
+const RX_LAST = 'css.rxOwner';
+function rxItemRow(i, n) {
+  const id = (k) => `rx-${k}-${n}`;
+  const row = el('fieldset', { class: 'rx-set rx-item', 'data-n': String(n) }, [
+    el('legend', { text: `Medicine${n ? ` ${n + 1}` : ''}` }),
+    el('div', { class: 'field' }, [el('label', { for: id('med'), text: 'Medicine, strength and form' }), el('input', { id: id('med'), type: 'text', maxlength: '160', placeholder: 'e.g. Doxycycline 50 mg tablets' })]),
+    el('div', { class: 'field two-eq' }, [
+      el('div', {}, [el('label', { for: id('qty'), text: 'Quantity' }), el('input', { id: id('qty'), type: 'text', maxlength: '60', placeholder: 'e.g. 14 tablets' })]),
+      el('div', {}, [el('label', { for: id('sch'), text: 'Schedule' }), el('select', { id: id('sch') }, [el('option', { value: 'S4', text: 'S4' }), el('option', { value: 'S8', text: 'S8 (controlled)' })])]),
+    ]),
+    el('div', { class: 'field' }, [el('label', { for: id('dir'), text: 'Directions' }), el('textarea', { id: id('dir'), rows: '2', maxlength: '400' })]),
+    el('div', { class: 'field two-eq' }, [
+      el('div', {}, [el('label', { for: id('rep'), text: 'Repeats' }), el('input', { id: id('rep'), type: 'number', min: '0', max: '12', inputmode: 'numeric' })]),
+      el('div', { class: 'rx-interval', hidden: true }, [el('label', { for: id('int'), text: 'Repeat interval' }), el('input', { id: id('int'), type: 'text', maxlength: '60', placeholder: 'e.g. 7 days' })]),
+    ]),
+  ]);
+  row.querySelector(`#${id('med')}`).value = i.medicine;
+  row.querySelector(`#${id('qty')}`).value = i.quantity;
+  row.querySelector(`#${id('sch')}`).value = i.schedule;
+  row.querySelector(`#${id('dir')}`).value = i.directions;
+  row.querySelector(`#${id('rep')}`).value = i.repeats;
+  row.querySelector(`#${id('int')}`).value = i.interval;
+  const sch = row.querySelector(`#${id('sch')}`);
+  const showInterval = () => (row.querySelector('.rx-interval').hidden = sch.value !== 'S8');
+  sch.addEventListener('change', showInterval);
+  showInterval();
+  return row;
+}
+function rxForm() {
+  return {
+    animal: { species: $('rx-species').value, name: $('rx-name').value, age: $('rx-age').value, sex: $('rx-sex').value, breed: $('rx-breed').value },
+    owner: { name: $('rx-owner').value, address: $('rx-owner-address').value },
+    items: [...$('rx-items').querySelectorAll('.rx-item')].map((r) => {
+      const v = (k) => r.querySelector(`[id^="rx-${k}-"]`).value;
+      return { medicine: v('med'), quantity: v('qty'), schedule: v('sch'), directions: v('dir'), repeats: v('rep'), interval: v('int') };
+    }),
+  };
+}
+$('rx-btn').addEventListener('click', () => {
+  if (!careSheet) return;
+  if (!account.signedIn) return openSettings(undefined, 'account');
+  if (!account.approved) return toast(accountError({ code: 'not_approved' }));
+  let last = {};
+  try {
+    last = JSON.parse(localStorage.getItem(RX_LAST) || '{}') || {};
+  } catch {
+    last = {};
+  }
+  const f = rxFromPlan(careSheet, last);
+  $('rx-species').value = f.animal.species;
+  $('rx-name').value = '';
+  $('rx-age').value = '';
+  $('rx-sex').value = '';
+  $('rx-breed').value = f.animal.breed;
+  $('rx-owner').value = f.owner.name;
+  $('rx-owner-address').value = f.owner.address;
+  $('rx-items').replaceChildren(...f.items.map(rxItemRow));
+  $('rx-msg').textContent = '';
+  $('rx-dlg').showModal();
+  $('rx-name').focus();
+});
+$('rx-add').addEventListener('click', () => {
+  const n = $('rx-items').querySelectorAll('.rx-item').length;
+  if (n >= 4) return toast('Up to 4 medicines on one prescription.');
+  const row = rxItemRow({ medicine: '', quantity: '', directions: '', repeats: '0', schedule: 'S4', interval: '' }, n);
+  $('rx-items').append(row);
+  row.querySelector('input').focus();
+});
+$('rx-go').addEventListener('click', async () => {
+  const f = rxForm();
+  const missing = rxProblems(f);
+  if (missing.length) {
+    $('rx-msg').textContent = `Add ${missing.join(', ')}.`;
+    return;
+  }
+  const btn = $('rx-go');
+  btn.disabled = true;
+  $('rx-msg').textContent = 'Making the prescription…';
+  try {
+    const animal = `${f.animal.species}, ${f.animal.name}`;
+    const { number, at } = await account.prescriptionNumber(animal, f.items.filter((i) => i.medicine.trim()).map((i) => ({ medicine: i.medicine, schedule: i.schedule, quantity: i.quantity })));
+    const model = rxModel(f, account.user, number, at);
+    rxLib ||= import('./rx-docx.js');
+    const blob = await (await rxLib).buildPrescription(model);
+    try {
+      localStorage.setItem(RX_LAST, JSON.stringify({ ownerName: f.owner.name.trim(), ownerAddress: f.owner.address.trim() }));
+    } catch {
+      /* not remembered: fine */
+    }
+    $('rx-dlg').close('done');
+    await deliverWord(blob, `Prescription ${f.animal.name.trim() || f.animal.species.trim()} ${number}.docx`.replace(/[\\/:*?"<>|]+/g, ' '), 'Prescription saved. Print it and sign it by hand before it goes to the pharmacy.');
+  } catch (e) {
+    $('rx-msg').textContent = e && e.code ? accountError(e) : 'Couldn’t make the prescription. Try again.';
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+// Beta only (the live build doesn't contain this): sign in as a shared test vet, to try endorsing and
+// prescriptions without a real account. Its name, reg number and script numbers all say TEST.
+if (__BETA__) {
+  const input = el('input', { type: 'checkbox', id: 'test-vet-on' });
+  const row = el('div', { class: 'field check-field', id: 'test-vet-field' }, [
+    el('label', { class: 'switch-row', for: 'test-vet-on' }, [input, ' ', el('span', { text: 'Test vet account (beta only)' })]),
+    el('p', { class: 'help', text: 'Signs in as an approved pretend vet, for testing endorsing and prescriptions. Everything it makes is marked TEST, and this switch never appears in the live app.' }),
+  ]);
+  $('vets-admin').before(row);
+  const sync = () => (input.checked = Boolean(account.user && account.user.test));
+  sync();
+  $('settings').addEventListener('toggle', sync);
+  input.addEventListener('change', async () => {
+    try {
+      if (input.checked) {
+        if (account.signedIn && !account.user.test) await account.signOut();
+        await account.signInTest();
+        toast('Signed in as the test vet.');
+      } else if (account.user && account.user.test) {
+        await account.signOut();
+        toast('Test vet signed out.');
+      }
+    } catch (e) {
+      toast(accountError(e));
+    }
+    sync();
+    renderAccount();
+    if (careSheet && document.body.dataset.view === 'care') renderEndorse(careSheet);
+  });
 }
 
 els.openSettings.addEventListener('click', () => openSettings());
@@ -3348,7 +3599,7 @@ $('close-settings').addEventListener('click', () => els.settings.close('close'))
 els.settings.addEventListener('close', async () => {
   // Whatever way it's closed (Save, ✕, Escape, a tap outside), changes are kept: nothing typed is lost.
   const key = els.apiKey.value.trim();
-  const next = { ...settings, photosOn: $('photos-on').checked, libraryAdmin: $('library-admin-on').checked, template: $('template').value, drugs: $('drugs').value.slice(0, 3000), clinician: els.clinician.value.trim().slice(0, 80), vetReg: $('vet-reg').value.trim().slice(0, 40), model: els.model.value, apiKey: key, rememberKey: els.rememberKey.checked };
+  const next = { ...settings, photosOn: $('photos-on').checked, libraryAdmin: $('library-admin-on').checked, template: $('template').value, drugs: $('drugs').value.slice(0, 3000), clinician: els.clinician.value.trim().slice(0, 80), model: els.model.value, apiKey: key, rememberKey: els.rememberKey.checked };
   const changed = JSON.stringify(next) !== JSON.stringify(settings);
   if (!changed && els.settings.returnValue !== 'save') return;
   settings = next;
@@ -3534,14 +3785,8 @@ if (!linkCode(location.hash) && !shortLink(location.hash)) restoreOpen(wasOpen);
 /* ---------------- vet endorsement and review ---------------- */
 
 const REVIEW_INFO = 'A carer asked you to review this plan. Check it, use Change plan for anything that needs fixing, then tap Endorse plan. They see your changes when they next open it.';
-// Who is endorsing: the vet's name and registration number from Settings (not verified until vets sign in).
-const vetIdentity = () => ({ name: settings.clinician || '', reg: settings.vetReg || '', clinic: '' });
-const vetReady = () => settings.role === 'vet' && Boolean(vetIdentity().name && vetIdentity().reg);
-// A plan a vet makes is endorsed by that vet as it's made, so it's clearly a vet-endorsed plan.
-const asVetMade = (sheet) => (vetReady() ? endorse(sheet, vetIdentity()) : sheet);
-// A vet's own change to an endorsed plan keeps it endorsed, in their name. Anyone else's change to the medications
-// takes the endorsement off (endorsementState compares the medications with what was endorsed).
-const afterVetChange = (sheet) => (vetReady() && sheet.endorsement ? endorse(sheet, vetIdentity()) : sheet);
+// Endorsing takes a signed-in vet the admin has approved, tapping Endorse. Nothing is endorsed automatically, and
+// any change to the medications afterwards takes the endorsement off (endorsementState compares them).
 const savedEntry = () => (savedId ? store.loadSaved().find((x) => x.id === savedId) : null);
 
 function renderEndorse(c) {
@@ -3554,7 +3799,11 @@ function renderEndorse(c) {
   let tone = w.tone;
   if (vet && w.state === 'none') {
     title = 'Not endorsed yet';
-    text = c.medications.length ? 'Check the plan and its medications, then endorse it so the carer knows a vet has authorised them.' : 'Endorse it so the carer knows a vet has checked it.';
+    text = !account.signedIn
+      ? 'Sign in with your vet account to endorse it.'
+      : !account.approved
+        ? 'Your vet account is waiting for approval. Once the app admin approves it, you can endorse plans.'
+        : c.medications.length ? 'Check the plan and its medications, then endorse it so the carer knows a vet has authorised them.' : 'Endorse it so the carer knows a vet has checked it.';
     tone = c.medications.length ? 'warn' : 'quiet';
   } else if (!vet && w.state !== 'endorsed' && remote) {
     title = 'Waiting for a vet to review';
@@ -3564,13 +3813,26 @@ function renderEndorse(c) {
   $('endorse-title').textContent = title;
   $('endorse-text').textContent = text;
   $('endorse-text').hidden = !text;
-  $('endorse-btn').hidden = !vet || w.state === 'endorsed';
-  $('endorse-btn').textContent = w.state === 'changed' ? 'Endorse again' : 'Endorse plan';
+  $('endorse-btn').hidden = !vet || w.state === 'endorsed' || (account.signedIn && !account.approved);
+  $('endorse-btn').textContent = !account.signedIn ? 'Sign in to endorse' : w.state === 'changed' ? 'Endorse again' : 'Endorse plan';
   $('review-btn').hidden = vet || w.state === 'endorsed';
   $('review-btn').textContent = remote ? 'Send the review link again' : 'Ask a vet to review';
   box.querySelector('.endorse-acts').hidden = $('endorse-btn').hidden && $('review-btn').hidden;
   // Ready-made plans are general guides, not a plan for one animal: nothing to endorse there.
   box.hidden = careFrom === 'library';
+  // Check an endorsement against the server's record once, then show the result.
+  const e = endorsementOf(c.endorsement);
+  if (e && e.id && endorsementCheck(e) === undefined) {
+    lookupEndorsement(e.id)
+      .then((rec) => {
+        recordCheck(e, rec);
+        if (careSheet === c) {
+          renderCare(c);
+          renderEndorse(c);
+        }
+      })
+      .catch(() => {}); // offline: checked next time
+  }
 }
 
 /** Send a changed plan to its review link, if it has one. True if sent, false if it couldn't be, null if no link. */
@@ -3617,24 +3879,26 @@ async function refreshRemote(id, quiet = false) {
 }
 
 $('endorse-btn').addEventListener('click', () => {
-  const v = vetIdentity();
-  $('endorse-name').value = v.name;
-  $('endorse-reg').value = v.reg;
+  if (!account.signedIn) return openSettings(undefined, 'account');
+  if (!account.approved) return toast(accountError({ code: 'not_approved' }));
+  const u = account.user;
+  $('endorse-as').textContent = `${vetLabel({ by: u.name, reg: u.reg })}${u.clinic ? `, ${u.clinic}` : ''}`;
   $('endorse-ok').checked = false;
   $('endorse-dlg').returnValue = '';
   $('endorse-dlg').showModal();
 });
-$('endorse-dlg').addEventListener('close', () => {
+$('endorse-dlg').addEventListener('close', async () => {
   if ($('endorse-dlg').returnValue !== 'endorse' || !careSheet) return;
-  const name = $('endorse-name').value.trim().slice(0, 80);
-  const reg = $('endorse-reg').value.trim().slice(0, 40);
-  if (!name || !reg) return;
-  // Remembered for next time, so their own plans are endorsed as they're made.
-  if (name !== settings.clinician || reg !== settings.vetReg) {
-    settings = { ...settings, clinician: name, vetReg: reg };
-    store.saveSettings(settings);
+  const sheet = careSheet;
+  try {
+    const rec = await account.endorse(medsKey(sheet.medications), sheet.animal || '');
+    const endorsed = endorse(sheet, rec);
+    recordCheck(endorsed.endorsement, rec);
+    await carePlanChanged(endorsed, 'Endorsed.');
+  } catch (e) {
+    toast(accountError(e));
+    if (e && e.code === 'signed_out') renderEndorse(sheet);
   }
-  carePlanChanged(endorse(careSheet, vetIdentity()), 'Endorsed.');
 });
 
 $('review-btn').addEventListener('click', async (ev) => {

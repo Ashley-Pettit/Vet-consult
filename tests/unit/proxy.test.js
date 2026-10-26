@@ -147,3 +147,70 @@ test('share links: unknown ids, odd shapes and other websites are refused', asyn
   assert.equal((await handle(shareReq('/share', { method: 'POST', body: { type: 'care', sheet: {} }, origin: 'https://evil.example' }), { ...env, SHARES })).status, 403);
   assert.equal(SHARES.m.size, 0);
 });
+
+// Vet accounts: sign up, sign in, approval before prescription numbers, admin password reset.
+const usersKv = () => {
+  const m = new Map();
+  return { m, get: async (k) => m.get(k) ?? null, put: async (k, v) => void m.set(k, v), delete: async (k) => void m.delete(k), list: async ({ prefix }) => ({ keys: [...m.keys()].filter((k) => k.startsWith(prefix)).map((name) => ({ name })) }) };
+};
+const call = async (path, { method = 'GET', body, token, admin, e } = {}) => {
+  const headers = { origin: ORIGIN, 'content-type': 'application/json' };
+  if (token) headers.authorization = `Bearer ${token}`;
+  if (admin) headers['x-admin-key'] = admin;
+  const r = await handle(new Request(`https://proxy.example${path}`, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) }), e);
+  return { status: r.status, body: await r.json() };
+};
+
+test('vet accounts: sign up, sign in, and prescriptions only once approved', async () => {
+  const e = { ...env, USERS: usersKv(), ADMIN_KEY: 'admin-key-for-tests-123' };
+  const vet = { email: 'Sam@Clinic.com.au', password: 'correct horse battery', name: 'Sam Lee', reg: 'V1234', clinic: 'Bass Coast Vets', address: '1 Main St, Inverloch VIC 3996', phone: '03 5555 0000', remember: true };
+  const up = await call('/auth/signup', { method: 'POST', body: vet, e });
+  assert.equal(up.status, 200);
+  assert.equal(up.body.user.approved, false);
+  assert.equal(up.body.user.email, 'sam@clinic.com.au');
+  assert.ok(!JSON.stringify(up.body).includes('hash'), 'no password hash leaves the server');
+  assert.ok(![...e.USERS.m.values()].some((v) => v.includes(vet.password)), 'the password itself is never stored');
+  assert.equal((await call('/auth/signup', { method: 'POST', body: vet, e })).status, 409);
+  const rx = { animal: 'Wombat, Willow', items: [{ medicine: 'Doxycycline 50 mg tablets', schedule: 'S4', quantity: '14' }] };
+  assert.equal((await call('/rx', { method: 'POST', body: rx, token: up.body.token, e })).status, 403, 'not approved yet');
+  assert.equal((await call('/endorse', { method: 'POST', body: { meds: '[]' }, token: up.body.token, e })).status, 403, 'endorsing needs approval too');
+  assert.equal((await call('/admin/vets', { admin: 'wrong', e })).status, 403);
+  const list = await call('/admin/vets', { admin: e.ADMIN_KEY, e });
+  assert.equal(list.body.vets.length, 1);
+  assert.equal((await call(`/admin/vets/${encodeURIComponent('sam@clinic.com.au')}/approve`, { method: 'POST', body: { approved: true }, admin: e.ADMIN_KEY, e })).status, 200);
+  const en = await call('/endorse', { method: 'POST', body: { meds: '[["doxycycline"]]', animal: 'Willow' }, token: up.body.token, e });
+  assert.equal(en.status, 200);
+  const look = await call(`/endorse/${en.body.id}`, { e });
+  assert.equal(look.body.by, 'Sam Lee');
+  assert.equal(look.body.meds, '[["doxycycline"]]');
+  const ok = await call('/rx', { method: 'POST', body: rx, token: up.body.token, e });
+  assert.equal(ok.status, 200);
+  assert.match(ok.body.number, /^\d{6}-[A-Z0-9]{6}$/);
+  // A new registration number needs approving again.
+  const changed = await call('/auth/me', { method: 'PUT', body: { reg: 'V9999' }, token: up.body.token, e });
+  assert.equal(changed.body.user.approved, false);
+  assert.equal((await call('/auth/logout', { method: 'POST', token: up.body.token, e })).status, 200);
+  assert.equal((await call('/auth/me', { token: up.body.token, e })).status, 401);
+});
+
+test('vet accounts: wrong passwords lock the account for a while; admin can set a new one', async () => {
+  const e = { ...env, USERS: usersKv(), ADMIN_KEY: 'admin-key-for-tests-123' };
+  await call('/auth/signup', { method: 'POST', body: { email: 'jo@vet.au', password: 'first password 1', name: 'Jo Park', reg: 'V555' }, e });
+  for (let i = 0; i < 5; i++) assert.equal((await call('/auth/login', { method: 'POST', body: { email: 'jo@vet.au', password: 'nope' }, e })).status, 401);
+  assert.equal((await call('/auth/login', { method: 'POST', body: { email: 'jo@vet.au', password: 'first password 1' }, e })).status, 429);
+  assert.equal((await call('/admin/vets/jo%40vet.au/password', { method: 'POST', body: { password: 'temporary pass 22' }, admin: e.ADMIN_KEY, e })).status, 200);
+  assert.equal((await call('/auth/login', { method: 'POST', body: { email: 'jo@vet.au', password: 'temporary pass 22' }, e })).status, 200);
+});
+
+test('test vet: only when switched on, and everything it makes is marked TEST', async () => {
+  const off = { ...env, USERS: usersKv() };
+  assert.equal((await call('/auth/test', { method: 'POST', e: off })).status, 404);
+  const e = { ...env, USERS: usersKv(), TEST_VET: 'on' };
+  const t = await call('/auth/test', { method: 'POST', e });
+  assert.equal(t.status, 200);
+  assert.equal(t.body.user.test, true);
+  assert.match(t.body.user.name, /TEST ONLY/);
+  const rx = await call('/rx', { method: 'POST', body: { animal: 'Test', items: [{ medicine: 'x', schedule: 'S4', quantity: '1' }] }, token: t.body.token, e });
+  assert.match(rx.body.number, /^TEST-/);
+  assert.equal((await call('/auth/login', { method: 'POST', body: { email: 'test-vet@test.invalid', password: '' }, e })).status, 401);
+});

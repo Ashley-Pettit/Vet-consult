@@ -2,7 +2,9 @@
 // A vet's name, registration number and the date go on the plan (and travel with it when it's shared or printed).
 // The endorsement covers the medications as they were at that moment: if they change afterwards, it no longer
 // counts until a vet endorses the plan again. Other edits (housing, feeding wording) keep it.
-// Nothing here is verified: until vets sign in, the name and number are what the vet typed.
+// Only a signed-in vet the admin has approved can endorse, and the server keeps a record of each endorsement (who,
+// when, which medications). The app looks that record up, so an endorsement typed into a plan by hand shows as
+// unconfirmed (see checkEndorsement).
 
 const norm = (x) => String(x || '').trim().toLowerCase().replace(/\s+/g, ' ');
 
@@ -17,15 +19,25 @@ export function endorsementOf(raw) {
   const by = str(raw.by, 80);
   const at = Number(raw.at);
   if (!by || !Number.isFinite(at) || at <= 0) return null;
-  return { by, reg: str(raw.reg, 40), clinic: str(raw.clinic, 120), at, meds: typeof raw.meds === 'string' ? raw.meds.slice(0, 20000) : '' };
+  return { id: /^[a-zA-Z0-9]{16}$/.test(raw.id || '') ? raw.id : '', by, reg: str(raw.reg, 40), clinic: str(raw.clinic, 120), at, meds: typeof raw.meds === 'string' ? raw.meds.slice(0, 20000) : '' };
 }
 
 /** "Dr Sam Lee" from "Sam Lee" (vets in Australia use Dr); leaves "Dr Lee" or "Prof Lee" as typed. */
 export const drName = (name) => (/^(dr|prof|professor|doctor)\b/i.test(String(name).trim()) ? String(name).trim() : `Dr ${String(name).trim()}`);
 
-/** The plan with a fresh endorsement from this vet. */
-export function endorse(sheet, vet, now = Date.now()) {
-  return { ...sheet, endorsement: { by: String(vet.name || '').trim().slice(0, 80), reg: String(vet.reg || '').trim().slice(0, 40), clinic: String(vet.clinic || '').trim().slice(0, 120), at: now, meds: medsKey(sheet.medications) } };
+/** The plan with an endorsement the server recorded: { id, by, reg, clinic, at, meds }. */
+export function endorse(sheet, rec) {
+  return { ...sheet, endorsement: endorsementOf(rec) };
+}
+
+// What the server said about each endorsement id: true (matches its record), false (no such record, or different).
+const checks = new Map();
+export const endorsementCheck = (e) => (e && e.id ? checks.get(e.id) : false);
+/** Compare an endorsement with the server's record of it (from lookupEndorsement). */
+export function recordCheck(e, rec) {
+  const ok = Boolean(rec && rec.by === e.by && rec.reg === e.reg && Number(rec.at) === e.at && rec.meds === e.meds);
+  if (e && e.id) checks.set(e.id, ok);
+  return ok;
 }
 
 /**
@@ -37,6 +49,8 @@ export function endorse(sheet, vet, now = Date.now()) {
 export function endorsementState(sheet) {
   const e = sheet && endorsementOf(sheet.endorsement);
   if (!e) return { state: 'none', e: null };
+  // No server record behind it (or a different one): not to be trusted. Not yet checked counts as fine for now.
+  if (endorsementCheck(e) === false) return { state: 'unconfirmed', e };
   return { state: e.meds === medsKey(sheet.medications) ? 'endorsed' : 'changed', e };
 }
 
@@ -65,6 +79,15 @@ export function endorsementWords(sheet) {
       text: `${vetLabel(e)} endorsed it on ${endorsedDate(e.at)}, but the medications have changed since. Give medicines only as your vet directed until a vet endorses the plan again.`,
       tone: 'warn',
       medsHeading: 'Medications (changed: not yet authorised by a vet)',
+    };
+  }
+  if (state === 'unconfirmed') {
+    return {
+      state,
+      title: 'This endorsement can’t be confirmed',
+      text: `The plan says ${vetLabel(e)} endorsed it, but there’s no matching record. Treat it as a draft: give medicines only as your vet directed.`,
+      tone: 'warn',
+      medsHeading: 'Medications (not confirmed as authorised by a vet)',
     };
   }
   if (hasMeds) {

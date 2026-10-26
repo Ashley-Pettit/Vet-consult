@@ -61,7 +61,7 @@ function cors(origin) {
   return {
     'access-control-allow-origin': origin,
     'access-control-allow-methods': 'GET, POST, PUT, OPTIONS',
-    'access-control-allow-headers': 'content-type, x-edit-key',
+    'access-control-allow-headers': 'content-type, x-edit-key, authorization, x-admin-key',
     'access-control-allow-credentials': 'true',
     'access-control-max-age': '86400',
     vary: 'origin',
@@ -128,6 +128,184 @@ async function sharedPlan(request, env, path, h) {
   return json(200, { id: newId, updated, days: SHARE_DAYS, ...(key ? { key } : {}) }, h);
 }
 
+/* ---------------- vet accounts and prescriptions ---------------- */
+// Vets sign in with email and password. A new account can endorse plans straight away, but can only get
+// prescription numbers once an admin has checked the vet register and approved it (POST /admin/vets/<email>).
+// Passwords: PBKDF2-SHA256 with a per-user salt. Sessions: random tokens, only their SHA-256 is stored.
+// KV (USERS): u:<email> user, s:<token hash> session, f:<email> failed sign-ins, rx:<number> prescription record.
+const PBKDF2_ITER = 100000;
+const SESSION_SHORT = 12 * 3600; // not remembered: half a day
+const SESSION_LONG = 90 * 86400; // remember me
+const MAX_FAILS = 5;
+const b64 = (bytes) => btoa(String.fromCharCode(...bytes));
+async function hashPassword(password, saltB64) {
+  const salt = saltB64 ? Uint8Array.from(atob(saltB64), (c) => c.charCodeAt(0)) : crypto.getRandomValues(new Uint8Array(16));
+  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveBits']);
+  const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt, iterations: PBKDF2_ITER }, key, 256);
+  return { salt: b64(salt), hash: b64(new Uint8Array(bits)) };
+}
+const sameText = (a, b) => {
+  if (typeof a !== 'string' || typeof b !== 'string' || a.length !== b.length) return false;
+  let d = 0;
+  for (let i = 0; i < a.length; i++) d |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return d === 0;
+};
+const cleanEmail = (e) => String(e || '').trim().toLowerCase();
+const EMAIL_RE = /^[^\s@]{1,64}@[^\s@]{1,190}\.[a-z]{2,}$/i;
+const field = (x, n) => String(x == null ? '' : x).trim().slice(0, n);
+const STATES = ['vic', 'nsw', 'qld', 'sa', 'wa', 'tas', 'act', 'nt'];
+// What the app sees of an account: never the password hash.
+const publicUser = (u) => ({ email: u.email, name: u.name, reg: u.reg, regState: u.regState, clinic: u.clinic, address: u.address, phone: u.phone, approved: Boolean(u.approved), created: u.created, ...(u.test ? { test: true } : {}) });
+function details(body) {
+  return { name: field(body.name, 80), reg: field(body.reg, 40), regState: STATES.includes(body.regState) ? body.regState : 'vic', clinic: field(body.clinic, 120), address: field(body.address, 200), phone: field(body.phone, 40) };
+}
+async function readJson(request) {
+  const raw = await request.text();
+  if (raw.length > 20000) return null;
+  try {
+    const j = JSON.parse(raw);
+    return j && typeof j === 'object' && !Array.isArray(j) ? j : null;
+  } catch {
+    return null;
+  }
+}
+async function newSession(env, email, remember) {
+  const token = newShareId(32);
+  await env.USERS.put(`s:${await sha256(token)}`, JSON.stringify({ email, at: Date.now() }), { expirationTtl: remember ? SESSION_LONG : SESSION_SHORT });
+  return token;
+}
+async function sessionUser(request, env) {
+  const m = /^Bearer ([a-zA-Z0-9]{32})$/.exec(request.headers.get('authorization') || '');
+  if (!m) return null;
+  const s = await env.USERS.get(`s:${await sha256(m[1])}`);
+  if (!s) return null;
+  const u = await env.USERS.get(`u:${JSON.parse(s).email}`);
+  return u ? { user: JSON.parse(u), tokenHash: await sha256(m[1]) } : null;
+}
+const isAdmin = (request, env) => Boolean(env.ADMIN_KEY) && sameText(request.headers.get('x-admin-key') || '', env.ADMIN_KEY);
+
+async function accounts(request, env, path, h) {
+  if (!env.USERS) return json(503, { error: { type: 'accounts_not_configured' } }, h);
+  const method = request.method;
+  if (path === '/auth/signup' && method === 'POST') {
+    const b = await readJson(request);
+    if (!b) return json(400, { error: { type: 'invalid_json' } }, h);
+    const email = cleanEmail(b.email);
+    const d = details(b);
+    if (!EMAIL_RE.test(email)) return json(400, { error: { type: 'bad_email' } }, h);
+    if (typeof b.password !== 'string' || b.password.length < 10 || b.password.length > 200) return json(400, { error: { type: 'weak_password' } }, h);
+    if (!d.name || !d.reg) return json(400, { error: { type: 'missing_details' } }, h);
+    if (await env.USERS.get(`u:${email}`)) return json(409, { error: { type: 'email_taken' } }, h);
+    const pw = await hashPassword(b.password);
+    const user = { email, ...d, salt: pw.salt, hash: pw.hash, approved: false, created: Date.now() };
+    await env.USERS.put(`u:${email}`, JSON.stringify(user));
+    return json(200, { token: await newSession(env, email, b.remember === true), user: publicUser(user) }, h);
+  }
+  if (path === '/auth/login' && method === 'POST') {
+    const b = await readJson(request);
+    if (!b) return json(400, { error: { type: 'invalid_json' } }, h);
+    const email = cleanEmail(b.email);
+    const fails = Number(await env.USERS.get(`f:${email}`)) || 0;
+    if (fails >= MAX_FAILS) return json(429, { error: { type: 'locked', minutes: 15 } }, h);
+    const raw = EMAIL_RE.test(email) ? await env.USERS.get(`u:${email}`) : null;
+    const user = raw ? JSON.parse(raw) : null;
+    const ok = user && !user.test && typeof b.password === 'string' && sameText((await hashPassword(b.password, user.salt)).hash, user.hash);
+    if (!ok) {
+      await env.USERS.put(`f:${email}`, String(fails + 1), { expirationTtl: 900 });
+      return json(401, { error: { type: 'wrong_login' } }, h);
+    }
+    return json(200, { token: await newSession(env, email, b.remember === true), user: publicUser(user) }, h);
+  }
+  // Beta testing only: a shared, approved test vet. Everything it makes is marked TEST in the name and numbers, so
+  // nothing it endorses or prescribes can pass as real. Switched on by the TEST_VET variable.
+  if (path === '/auth/test' && method === 'POST') {
+    if (env.TEST_VET !== 'on') return json(404, { error: { type: 'not_found' } }, h);
+    const email = 'test-vet@test.invalid';
+    let raw = await env.USERS.get(`u:${email}`);
+    if (!raw) {
+      raw = JSON.stringify({ email, name: 'Test Vet (TEST ONLY, not a real vet)', reg: 'TEST-0000', regState: 'vic', clinic: 'Test Clinic (not real)', address: '1 Test Street, Testville VIC 3000', phone: '00 0000 0000', salt: '', hash: '', approved: true, test: true, created: Date.now() });
+      await env.USERS.put(`u:${email}`, raw);
+    }
+    return json(200, { token: await newSession(env, email, false), user: publicUser(JSON.parse(raw)) }, h);
+  }
+  const me = await sessionUser(request, env);
+  if (path === '/auth/me' && method === 'GET') return me ? json(200, { user: publicUser(me.user) }, h) : json(401, { error: { type: 'signed_out' } }, h);
+  if (path === '/auth/logout' && method === 'POST') {
+    if (me) await env.USERS.delete(`s:${me.tokenHash}`);
+    return json(200, { ok: true }, h);
+  }
+  if (path === '/auth/me' && method === 'PUT') {
+    if (!me) return json(401, { error: { type: 'signed_out' } }, h);
+    if (me.user.test) return json(403, { error: { type: 'test_account' } }, h);
+    const b = await readJson(request);
+    if (!b) return json(400, { error: { type: 'invalid_json' } }, h);
+    const d = details({ ...me.user, ...b });
+    if (!d.name || !d.reg) return json(400, { error: { type: 'missing_details' } }, h);
+    // A new registration number has to be checked again before prescribing.
+    const approved = me.user.approved && d.reg === me.user.reg && d.regState === me.user.regState;
+    const user = { ...me.user, ...d, approved };
+    await env.USERS.put(`u:${user.email}`, JSON.stringify(user));
+    return json(200, { user: publicUser(user) }, h);
+  }
+  // A prescription number, only for an approved vet. The record keeps who, when, for which animal and what,
+  // so a script can be checked later; it never holds the owner's address.
+  if (path === '/rx' && method === 'POST') {
+    if (!me) return json(401, { error: { type: 'signed_out' } }, h);
+    if (!me.user.approved) return json(403, { error: { type: 'not_approved' } }, h);
+    const b = await readJson(request);
+    if (!b || !b.animal || !Array.isArray(b.items) || !b.items.length || b.items.length > 6) return json(400, { error: { type: 'invalid_request' } }, h);
+    const number = `${me.user.test ? 'TEST-' : ''}${new Date().toISOString().slice(2, 10).replace(/-/g, '')}-${newShareId(6).toUpperCase()}`;
+    const rec = { number, at: Date.now(), vet: me.user.email, reg: me.user.reg, animal: field(b.animal, 160), items: b.items.map((i) => ({ medicine: field(i && i.medicine, 160), schedule: i && i.schedule === 'S8' ? 'S8' : 'S4', quantity: field(i && i.quantity, 60) })) };
+    await env.USERS.put(`rx:${number}`, JSON.stringify(rec), { expirationTtl: 3 * 365 * 86400 });
+    return json(200, { number, at: rec.at }, h);
+  }
+  // Endorsing a care plan: only an approved vet. The server keeps the record (who, when, which medications), and
+  // anyone can look it up by id, so an endorsement typed into a plan by hand shows as unconfirmed.
+  if (path === '/endorse' && method === 'POST') {
+    if (!me) return json(401, { error: { type: 'signed_out' } }, h);
+    if (!me.user.approved) return json(403, { error: { type: 'not_approved' } }, h);
+    const b = await readJson(request);
+    if (!b || typeof b.meds !== 'string' || b.meds.length > 20000) return json(400, { error: { type: 'invalid_request' } }, h);
+    const id = newShareId(16);
+    const rec = { by: me.user.name, reg: me.user.reg, clinic: me.user.clinic, at: Date.now(), meds: b.meds, animal: field(b.animal, 160) };
+    await env.USERS.put(`e:${id}`, JSON.stringify(rec), { expirationTtl: 3 * 365 * 86400 });
+    return json(200, { id, ...rec }, h);
+  }
+  const em = /^\/endorse\/([a-zA-Z0-9]{16})$/.exec(path);
+  if (em && method === 'GET') {
+    const raw = await env.USERS.get(`e:${em[1]}`);
+    if (!raw) return json(404, { error: { type: 'not_found' } }, h);
+    const r = JSON.parse(raw);
+    return json(200, { id: em[1], by: r.by, reg: r.reg, clinic: r.clinic, at: r.at, meds: r.meds }, { 'cache-control': 'public, max-age=86400', ...h });
+  }
+  // Admin: list vets, approve or un-approve, set a temporary password.
+  if (path.startsWith('/admin/')) {
+    if (!isAdmin(request, env)) return json(403, { error: { type: 'not_admin' } }, h);
+    if (path === '/admin/vets' && method === 'GET') {
+      const list = await env.USERS.list({ prefix: 'u:' });
+      const users = (await Promise.all(list.keys.map((k) => env.USERS.get(k.name)))).filter(Boolean).map((x) => publicUser(JSON.parse(x)));
+      return json(200, { vets: users.sort((a, b) => Number(a.approved) - Number(b.approved) || b.created - a.created) }, h);
+    }
+    const m = /^\/admin\/vets\/([^/]+)\/(approve|password)$/.exec(path);
+    if (m && method === 'POST') {
+      const email = cleanEmail(decodeURIComponent(m[1]));
+      const raw = await env.USERS.get(`u:${email}`);
+      if (!raw) return json(404, { error: { type: 'not_found' } }, h);
+      const user = JSON.parse(raw);
+      const b = (await readJson(request)) || {};
+      if (m[2] === 'approve') user.approved = b.approved !== false;
+      else {
+        if (typeof b.password !== 'string' || b.password.length < 10) return json(400, { error: { type: 'weak_password' } }, h);
+        Object.assign(user, await hashPassword(b.password));
+        await env.USERS.delete(`f:${email}`);
+      }
+      await env.USERS.put(`u:${email}`, JSON.stringify(user));
+      return json(200, { user: publicUser(user) }, h);
+    }
+  }
+  return json(404, { error: { type: 'not_found' } }, h);
+}
+
 export async function handle(request, env, fetchImpl = fetch) {
   const origin = request.headers.get('origin') || '';
   // Only the app's own address may call this. Override with an ALLOWED_ORIGINS variable if it moves.
@@ -141,6 +319,7 @@ export async function handle(request, env, fetchImpl = fetch) {
   if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: h });
   const path = new URL(request.url).pathname.replace(/\/+$/, '');
   if (path === '/share' || path.startsWith('/share/')) return sharedPlan(request, env, path, h);
+  if (path.startsWith('/auth/') || path.startsWith('/admin/') || path === '/rx' || path === '/endorse' || path.startsWith('/endorse/')) return accounts(request, env, path, h);
   if (request.method !== 'POST') return json(405, { error: { type: 'method_not_allowed' } }, h);
   if (!env.ANTHROPIC_API_KEY) return json(500, { error: { type: 'not_configured' } }, h);
 

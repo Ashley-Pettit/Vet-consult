@@ -5,9 +5,17 @@ compatibility_date = "2026-06-01"
 
 [vars]
 ALLOWED_ORIGINS = "https://ashley-pettit.github.io"
+# Shared test vet for beta testing (everything it makes is marked TEST). The toggle exists only in the beta build.
+TEST_VET = "on"
 # Secret: wrangler secret put ANTHROPIC_API_KEY
 
 # Shared plans for short links and vet review links (kept 90 days).
 [[kv_namespaces]]
 binding = "SHARES"
 id = "2675cfa5be054c5497c038bb466c83d0"
+
+# Vet accounts, endorsement records and prescription numbers.
+# Secret ADMIN_KEY (set in the Cloudflare dashboard): approves vets and resets passwords from Settings > Admin.
+[[kv_namespaces]]
+binding = "USERS"
+id = "2c93bdac9a2348eeb07a492b75b7d925"
