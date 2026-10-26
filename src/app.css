@@ -1763,3 +1763,10 @@ details.care-sec.fold .fold-actions { margin: 10px 0; }
 /* Beta: a Test vet button beside Admin, lit while signed in as the test vet */
 .set-tabs.with-mock { grid-template-columns: repeat(4, 1fr); }
 .set-mock[aria-checked="true"] { color: var(--accent); box-shadow: inset 0 0 0 2px var(--accent); }
+
+/* How it works: the two plan-to-prescription flows, side by side on wider screens */
+.flows { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); margin-top: 10px; }
+.flow { background: var(--surface); border-radius: var(--radius); padding: 14px 16px; box-shadow: inset 0 0 0 1px var(--line); }
+.flow h3 { margin: 0 0 8px; font-size: 1.05rem; }
+.flow ol { margin: 0; padding-left: 1.3em; display: grid; gap: 6px; line-height: 1.45; }
+.flow li::marker { color: var(--accent); font-weight: 800; }

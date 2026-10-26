@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './test.js';
 import { withKey, mockApi, openApp, textReply } from './helpers.js';
 
 test('ready-made plans open from the header with no AI call, and Back returns to the list', async ({ page }) => {

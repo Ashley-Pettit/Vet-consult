@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './test.js';
 import AxeBuilder from '@axe-core/playwright';
 import { fakeSpeech, withKey, mockApi, openApp, DICTATION, asVet } from './helpers.js';
 

@@ -76,6 +76,34 @@ export const ABOUT_HTML = `
 </section>
 
 <section class="about-sec">
+  <h2>From plan to prescription</h2>
+  <p>Two common ways a care plan and its medicines move between a carer and a vet. Endorsing and prescriptions need a vet signed in to an approved vet account; everything else works for any vet.</p>
+  <div class="flows">
+    <article class="flow">
+      <h3>The carer starts the plan</h3>
+      <ol>
+        <li>The <b>carer</b> creates the care plan.</li>
+        <li>They tap <b>Ask a vet to review</b> and send the link to their vet.</li>
+        <li>The <b>vet</b> opens it, checks or changes the medicines, and taps <b>Endorse plan</b>. The carer’s copy shows what changed.</li>
+        <li>The vet taps <b>Write a prescription</b>, prints it and signs it by hand.</li>
+        <li>The <b>carer</b> collects the signed script.</li>
+      </ol>
+    </article>
+    <article class="flow">
+      <h3>The vet starts the plan</h3>
+      <ol>
+        <li>The <b>vet</b> has the animal.</li>
+        <li>They switch to <b>Vet</b> and create the care plan, from their notes or straight from what they say.</li>
+        <li>They check or change the medicines and endorse the plan.</li>
+        <li>They tap <b>Write a prescription</b>, print it and sign it by hand.</li>
+        <li>The <b>vet or carer</b> gets the medicine.</li>
+        <li>The <b>carer</b> collects the animal, with the plan shared to their phone.</li>
+      </ol>
+    </article>
+  </div>
+</section>
+
+<section class="about-sec">
   <h2>Made for carers on the go</h2>
   <ul class="ticks">
     <li><b>Phone-first.</b> Big buttons, a mic you can hit with a gloved thumb, and the screen stays awake while you talk.</li>

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './test.js';
 import { readFileSync } from 'node:fs';
 import { SAMPLE_NOTE, DICTATION, watchErrors, asVet } from './helpers.js';
 

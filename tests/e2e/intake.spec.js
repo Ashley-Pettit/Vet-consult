@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './test.js';
 import { withKey, mockApi, openApp, textReply } from './helpers.js';
 import { EXAMPLE_CARER_PLAN, aiNoteFor } from '../../src/note.js';
 

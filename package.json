@@ -5,7 +5,7 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "serve": "node scripts/serve.mjs dist 4173",
-    "test:unit": "node --test tests/unit/*.test.js",
+    "test:unit": "node --import ./tests/no-network.mjs --test tests/unit/*.test.js",
     "test:e2e": "playwright test",
     "test": "npm run test:unit && npm run build && npm run test:e2e",
     "bake": "npm run build && node scripts/bake-examples.mjs"

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './test.js';
 import { fakeSpeech, noSpeech, withKey, mockApi, watchErrors, openApp, DICTATION, apiReply, asVet } from './helpers.js';
 
 // These tests cover the vet's clinical notes; the app opens on the carer tools by default.
