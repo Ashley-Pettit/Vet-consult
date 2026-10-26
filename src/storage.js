@@ -168,10 +168,11 @@ export const store = {
     delete all[id];
     write(local, LIBRARY, all);
   },
-  /** Favourite plans the person saved, newest first: [{ id, name, sheet, savedAt }]. Kept until they remove them. */
+  /** Favourite plans the person saved, newest first: [{ id, name, sheet, savedAt }], or { doc: { kind, d } } for a
+   * shared document such as a MOP plan; shared: true when it came from someone else's link. Kept until they remove them. */
   loadSaved() {
     const v = read(local, SAVED, []);
-    return Array.isArray(v) ? v.filter((x) => x && typeof x === 'object' && x.id && x.sheet) : [];
+    return Array.isArray(v) ? v.filter((x) => x && typeof x === 'object' && x.id && (x.sheet || (x.doc && x.doc.d))) : [];
   },
   /** Add or update a saved plan. False if the phone is out of space. */
   savePlan(entry) {

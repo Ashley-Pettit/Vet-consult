@@ -42,5 +42,12 @@ export async function planLink(obj, here = typeof location !== 'undefined' ? loc
   return `${base}#p=${await packPlan(obj)}`;
 }
 
+/** A short id that is the same every time the same link is opened, so a shared plan is saved once. */
+export function linkId(code) {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < code.length; i++) h = Math.imul(h ^ code.charCodeAt(i), 0x01000193);
+  return `s${(h >>> 0).toString(36)}`;
+}
+
 /** The packed plan in a URL hash ("#p=..."), or null. */
 export const linkCode = (hash = '') => (hash.startsWith('#p=') ? hash.slice(3) : null);

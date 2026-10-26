@@ -88,7 +88,7 @@ import {
   feedAmounts,
 } from './note.js';
 import { chartByKey } from './feeding.js';
-import { planLink, unpackPlan, linkCode } from './sharelink.js';
+import { planLink, unpackPlan, linkCode, linkId } from './sharelink.js';
 
 const $ = (id) => document.getElementById(id);
 const els = {
@@ -1790,7 +1790,12 @@ async function amend(target, change) {
     } else {
       const d = normaliseDoc(mergeAmend(current, reply));
       if (!d.sections.length) throw new AiError('empty', '');
+      const keep = savedId;
       showDoc(d, currentDoc.kind);
+      if (keep && store.updateSaved(keep, { doc: { kind: currentDoc.kind, d }, savedAt: Date.now() })) {
+        savedId = keep;
+        return toast('Updated your saved copy.');
+      }
     }
     toast('Updated.');
   } catch (e) {
@@ -1905,12 +1910,17 @@ $('care-save').addEventListener('click', () => {
   refreshSaveBtn();
   toast('Saved. Find it under Plans, the book at the top.');
 });
-function openSavedPlan(id) {
+function openSavedPlan(id, info = '') {
   const entry = store.loadSaved().find((x) => x.id === id);
   if (!entry) return;
-  savedId = id;
   libraryPlan = null;
-  showCare(normaliseCareSheet(entry.sheet, null), 'saved', '');
+  if (entry.doc) {
+    showDoc(normaliseDoc(entry.doc.d), entry.doc.kind, info);
+    savedId = id;
+    return;
+  }
+  savedId = id;
+  showCare(normaliseCareSheet(entry.sheet, null), 'saved', info);
 }
 const savedDate = (t) => new Date(t).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
 function renderSaved() {
@@ -1922,7 +1932,7 @@ function renderSaved() {
       const li = el('li', { class: 'saved-item' });
       const open = el('button', { type: 'button', class: 'lib-plan saved-open', onclick: () => openSavedPlan(p.id) }, [
         el('span', { class: 'lib-stage', text: p.name }),
-        el('span', { class: 'lib-weight', text: `Saved ${savedDate(p.savedAt)}` }),
+        el('span', { class: 'lib-weight', text: `${p.shared ? 'Shared with you' : 'Saved'} ${savedDate(p.savedAt)}` }),
       ]);
       // Two clear choices: change what the plan says, or change its name.
       const edit = el('button', { type: 'button', class: 'link saved-act', 'aria-label': `Edit ${p.name}`, onclick: () => { openSavedPlan(p.id); $('care-edit').click(); } }, 'Edit plan');
@@ -1950,7 +1960,7 @@ function renderSaved() {
         renderSaved();
         toast(`Removed ${p.name}.`, { label: 'Undo', run: () => { store.savePlan(p); renderSaved(); } });
       });
-      li.append(open, el('div', { class: 'saved-acts' }, [edit, rename, remove]));
+      li.append(open, el('div', { class: 'saved-acts' }, [p.sheet ? edit : null, rename, remove].filter(Boolean)));
       return li;
     }),
   );
@@ -2726,6 +2736,7 @@ function renderDoc(d, kind) {
 
 function showDoc(d, kind, info = '') {
   resetFeedback();
+  savedId = null; // set again straight after when it was opened from Plans
   // An expert opinion isn't kept in Recent: its documents and the vet's words stay with this one opinion.
   if (kind !== 'opinion') remember('doc', { d, kind }, d.title);
   currentDoc = { d, kind };
@@ -3501,19 +3512,30 @@ renderPhotos();
 const wasOpen = store.loadOpen();
 showView(location.hash === '#how-it-works' ? 'about' : 'record');
 if (!linkCode(location.hash)) restoreOpen(wasOpen);
-// Opened from a shared link: show the plan straight away, and keep it under Recent.
+// Opened from a shared link: show the plan straight away and save it on this device, under Plans (the book at the
+// top), so it's still there after the link is gone. Opening the same link again shows their saved copy, edits and all.
+const SHARED_INFO = 'Shared with you and saved under Plans (the book at the top). Check it with the person who sent it.';
 async function openSharedLink() {
   const code = linkCode(location.hash);
   if (!code) return;
   try {
     const p = await unpackPlan(code);
     if (p.region && p.region !== region().code) setRegion(p.region);
-    if (p.type === 'care' && p.sheet) {
+    const id = linkId(code);
+    if (store.loadSaved().some((x) => x.id === id)) {
+      openSavedPlan(id, SHARED_INFO);
+    } else if (p.type === 'care' && p.sheet) {
       const c = normaliseCareSheet(p.sheet, null);
-      showCare(c, 'record', 'Shared with you. Check it with the person who sent it.');
+      showCare(c, 'record', SHARED_INFO);
+      if (store.savePlan({ id, name: planName().slice(0, 80), sheet: c, savedAt: Date.now(), shared: true })) {
+        savedId = id;
+        refreshSaveBtn();
+      } else showCare(c, 'record', 'Shared with you. This device is out of space, so it isn’t saved: tap Save after removing an old plan.');
     } else if (p.type === 'doc' && p.d && DOC_KINDS[p.kind]) {
       const d = normaliseDoc(p.d);
-      showDoc(d, p.kind, 'Shared with you. Check it with the person who sent it.');
+      const saved = p.kind !== 'opinion' && store.savePlan({ id, name: String(d.title || DOC_KINDS[p.kind].label).slice(0, 80), doc: { kind: p.kind, d }, savedAt: Date.now(), shared: true });
+      showDoc(d, p.kind, saved ? SHARED_INFO : 'Shared with you. Check it with the person who sent it.');
+      if (saved) savedId = id;
     }
     renderResume();
   } catch {
