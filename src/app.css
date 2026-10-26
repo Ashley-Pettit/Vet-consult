@@ -1770,3 +1770,19 @@ details.care-sec.fold .fold-actions { margin: 10px 0; }
 .flow h3 { margin: 0 0 8px; font-size: 1.05rem; }
 .flow ol { margin: 0; padding-left: 1.3em; display: grid; gap: 6px; line-height: 1.45; }
 .flow li::marker { color: var(--accent); font-weight: 800; }
+/* Medications: the carer's ask, and the vet's draft for review */
+.meds-none { margin: 0 0 8px; color: var(--muted); }
+.meds-acts { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; margin-top: 10px; }
+.meds-acts .btn { min-height: 44px; }
+.meds-sec > .help { margin: 8px 0 0; font-size: 0.86rem; }
+.draft { margin-top: 12px; padding: 14px; border-radius: 12px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line), inset 4px 0 0 var(--accent); display: grid; gap: 8px; }
+.draft-title { margin: 0; font-weight: 700; }
+.draft .help, .draft-note { margin: 0; }
+.draft-note { font-size: 0.92rem; font-style: italic; }
+.draft-meds li.suggested { box-shadow: inset 3px 0 0 var(--leaf); padding-left: 10px; }
+.draft-meds .tag { margin-left: 8px; padding: 1px 8px; border-radius: 999px; font-size: 0.72rem; font-weight: 700; background: var(--accent-soft); color: var(--accent); vertical-align: middle; white-space: nowrap; }
+.draft-meds .dose-needed { color: var(--warn); font-weight: 600; }
+.draft-meds .caution { color: var(--warn); }
+.draft textarea { width: 100%; }
+.draft-msg { margin: 0; font-size: 0.9rem; color: var(--warn); }
+.draft-msg:empty { display: none; }

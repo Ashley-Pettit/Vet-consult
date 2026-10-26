@@ -92,6 +92,7 @@ import { shortPlanLink, unpackPlan, linkCode, linkId, shortLink, fetchSharedPlan
 import { endorse, endorsementState, endorsementWords, vetLabel, drName, medsKey, endorsementOf, endorsementCheck, recordCheck, changedParts } from './endorse.js';
 import { account, admin, accountError, lookupEndorsement } from './account.js';
 import { rxFromPlan, rxModel, rxProblems } from './rx.js';
+import { buildMedsDraftPrompt, buildMedsUpdatePrompt, normaliseMedsDraft, needsDose } from './note.js';
 
 const $ = (id) => document.getElementById(id);
 const els = {
@@ -2454,18 +2455,7 @@ function renderCare(c) {
       el('p', { class: 'ai-check top', text: careAiNote(c) }),
       c.summary ? el('p', { class: 'care-summary', text: c.summary }) : null,
       pigeonFact(`${c.animal} ${c.species} ${c.summary}`),
-      c.medications.length
-        ? el('section', { class: 'care-sec' }, [
-            el('h2', { text: endorsementWords(c).medsHeading }),
-            el('ul', { class: 'meds' }, c.medications.map((m) =>
-              el('li', {}, [
-                el('strong', { text: m.name }),
-                el('span', { class: 'care-how', text: [...new Set([m.how, m.how_often, m.how_long].filter(Boolean))].join(' · ') }),
-                m.tip ? el('span', { class: 'care-tip', text: `Tip: ${m.tip}` }) : null,
-              ]),
-            )),
-          ])
-        : null,
+      medsSection(c),
       leaveIt(c) ? null : rangesSection(c.species_group, [c.animal, c.summary, c.title, careFrom === 'note' || careFrom === 'saved' ? '' : careFrom === 'library' ? (libraryPlan ? libraryPlan.text : '') : els.transcript.value].filter(Boolean).join(' ')),
       rehydrationSection(c.rehydration),
       c.plan.length
@@ -2520,6 +2510,7 @@ function renderCare(c) {
 
 function showCare(sheet, from, info = '', keepSaved = false) {
   resetFeedback();
+  if (!keepSaved && medsDraft && medsDraft.sheet !== sheet) medsDraft = null;
   // The Save star belongs to this plan: a new plan starts unsaved (a saved one opened from Plans sets it first).
   if (from !== 'saved' && !keepSaved) savedId = null;
   // Vets get a discharge pack; its clinical summary is written when the pack is asked for (examples: straight away).
@@ -2558,6 +2549,7 @@ async function openCare() {
       askJson(buildCareSheetPrompt(n, sourcesFor(`${els.transcript.value} ${n.patient.species}`)), signal),
     );
     showCare(normaliseCareSheet(extractJson(reply), SOURCE_IDS()), 'note');
+    if (settings.role === 'vet' && careSheet.kind === 'wildlife') startMedsDraft(careSheet);
   } catch (e) {
     showView('note');
     toast(e && e.code === 'cancelled' ? 'Stopped.' : friendly(e));
@@ -2578,6 +2570,8 @@ async function createCarePlan(text) {
   );
   notes = [];
   showCare(normaliseCareSheet(extractJson(reply), SOURCE_IDS()), 'record');
+  // A vet's plan: the medications are drafted for their review straight away.
+  if (settings.role === 'vet' && careSheet.kind === 'wildlife') startMedsDraft(careSheet);
 }
 
 els.care.addEventListener('click', openCare);
@@ -3798,6 +3792,148 @@ renderPhotos();
 const wasOpen = store.loadOpen();
 showView(location.hash === '#how-it-works' ? 'about' : 'record');
 if (!linkCode(location.hash) && !shortLink(location.hash)) restoreOpen(wasOpen);
+/* ---------------- medications: the carer asks, the vet drafts, reviews and accepts ---------------- */
+
+// A draft for the vet's review lives only on this screen: it never reaches the carer, the plan or a printout until
+// the vet taps "OK, use these". { sheet, meds, note, state: 'loading' | 'ready' | 'error', text }
+let medsDraft = null;
+// Function declarations here, not consts: a refresh can draw a plan before this part of the file has run.
+function medLine(m) {
+  return [...new Set([m.how, m.how_often, m.how_long].filter(Boolean))].join(' · ');
+}
+
+function medsSection(c) {
+  // Ready-made plans and "leave it where it is" plans have no medicines to sort out.
+  if (careFrom === 'library' || leaveIt(c)) {
+    return c.medications.length ? el('section', { class: 'care-sec' }, [el('h2', { text: 'Medications' }), el('ul', { class: 'meds' }, c.medications.map(medItem))]) : null;
+  }
+  const vet = settings.role === 'vet';
+  const w = endorsementWords(c);
+  const draft = vet && medsDraft && medsDraft.sheet === c ? medsDraft : null;
+  const remote = savedEntry() && savedEntry().remote;
+  const parts = [el('h2', { text: w.medsHeading })];
+  if (c.medications.length) parts.push(el('ul', { class: 'meds' }, c.medications.map(medItem)));
+  else parts.push(el('p', { class: 'meds-none', text: vet ? 'No medications in this plan yet.' : 'No medications in this plan. Only give medicines a vet has prescribed for this animal.' }));
+  if (draft) parts.push(draftPanel(c, draft));
+  else if (vet) {
+    parts.push(el('div', { class: 'meds-acts' }, [
+      // Options come from wildlife guidelines, so they're offered for wildlife only.
+      c.kind === 'wildlife' ? el('button', { type: 'button', class: 'btn small primary', onclick: () => startMedsDraft(c) }, c.medications.length ? 'Review medications' : 'Suggest treatment options') : null,
+      el('button', { type: 'button', class: 'btn small ghost', onclick: () => openDraft(c, c.medications) }, c.medications.length ? 'Change them' : 'Type them in'),
+    ]));
+    if (c.kind === 'wildlife') parts.push(el('p', { class: 'help', text: 'Options come from Australian wildlife guidelines, for your expert review. Nothing reaches the carer until you accept it.' }));
+  } else if (w.state !== 'endorsed') {
+    parts.push(el('div', { class: 'meds-acts' }, [
+      el('button', { type: 'button', class: 'btn small ghost', onclick: (e) => askVetReview(e.currentTarget, 'meds') }, remote && remote.mine ? 'Send to the vet again' : 'Ask a vet about medications'),
+    ]));
+    parts.push(el('p', { class: 'help', text: remote && remote.mine ? 'Sent for review. The vet’s medications show here when you next open the plan.' : 'Sends this plan to a vet to advise on medicines. They can add them, endorse the plan and write a prescription.' }));
+  }
+  return el('section', { class: 'care-sec meds-sec' }, parts);
+}
+function medItem(m) {
+  return el('li', {}, [
+    el('strong', { text: m.name }),
+    el('span', { class: 'care-how', text: medLine(m) }),
+    m.tip ? el('span', { class: 'care-tip', text: `Tip: ${m.tip}` }) : null,
+  ]);
+}
+
+// The draft, for the vet: suggested options marked with why and from where, a box for quick changes, and OK.
+function draftPanel(c, d) {
+  if (d.state === 'loading') return el('div', { class: 'draft', 'aria-busy': 'true' }, [el('p', { class: 'draft-title', text: 'Drafting medications for your review…' }), el('p', { class: 'help', text: 'From the plan and Australian wildlife guidelines. This takes a few seconds.' })]);
+  if (d.state === 'error') {
+    return el('div', { class: 'draft' }, [
+      el('p', { class: 'draft-title', text: d.title || 'Couldn’t draft the medications' }),
+      el('p', { class: 'help', text: d.error || 'Try again in a moment, or type them in.' }),
+      el('div', { class: 'meds-acts' }, [d.title ? null : el('button', { type: 'button', class: 'btn small primary', onclick: () => startMedsDraft(c) }, 'Try again'), el('button', { type: 'button', class: 'btn small ghost', onclick: () => openDraft(c, c.medications) }, 'Type them in')]),
+    ]);
+  }
+  const box = el('textarea', { id: 'draft-change', rows: '2', placeholder: 'e.g. Drop the antibiotic. Meloxicam 0.1 mg/kg by mouth once a day for 5 days.' });
+  box.value = d.text || '';
+  box.addEventListener('input', () => (d.text = box.value));
+  const missing = d.meds.filter(needsDose).length;
+  return el('div', { class: 'draft' }, [
+    el('p', { class: 'draft-title', text: 'Draft medications: for your review' }),
+    el('p', { class: 'help', text: 'Please update as per your expertise. Type any changes below, or tap OK to use them as they are.' }),
+    d.note ? el('p', { class: 'draft-note', text: d.note }) : null,
+    d.meds.length
+      ? el('ul', { class: 'meds draft-meds' }, d.meds.map((m) => el('li', { class: m.suggested ? 'suggested' : '' }, [
+          el('strong', {}, [m.name, m.suggested ? el('span', { class: 'tag', text: 'Option for you to consider' }) : null]),
+          el('span', { class: `care-how${needsDose(m) ? ' dose-needed' : ''}`, text: medLine(m) || 'Dose and route: vet to decide' }),
+          m.basis ? el('span', { class: 'care-tip', text: `Why: ${m.basis}` }) : null,
+          m.caution ? el('span', { class: 'care-tip caution', text: `Caution: ${m.caution}` }) : null,
+        ])))
+      : el('p', { class: 'meds-none', text: 'No medicines in the draft.' }),
+    el('label', { class: 'field-label', for: 'draft-change', text: 'Changes (optional)' }),
+    box,
+    el('p', { class: 'draft-msg', role: 'status', text: missing ? `${missing === 1 ? 'One medicine needs' : `${missing} medicines need`} a dose: add it in the box above, or remove it.` : '' }),
+    el('div', { class: 'meds-acts' }, [
+      el('button', { type: 'button', class: 'btn small ghost', onclick: (e) => updateDraft(c, e.currentTarget) }, 'Update draft'),
+      el('button', { type: 'button', class: 'btn small primary', onclick: () => acceptDraft(c) }, 'OK, use these'),
+      el('button', { type: 'button', class: 'link', onclick: () => { medsDraft = null; renderCare(careSheet); renderEndorse(careSheet); } }, 'Not now'),
+    ]),
+  ]);
+}
+const redrawMeds = () => {
+  if (!careSheet || document.body.dataset.view !== 'care') return;
+  renderCare(careSheet);
+  renderEndorse(careSheet);
+};
+function openDraft(c, meds) {
+  medsDraft = { sheet: c, meds: meds.map((m) => ({ name: m.name, how: m.how, how_often: m.how_often, how_long: m.how_long, suggested: false, basis: '', caution: '' })), note: '', state: 'ready', text: '' };
+  redrawMeds();
+  setTimeout(() => document.getElementById('draft-change')?.focus(), 0);
+}
+async function startMedsDraft(c) {
+  if (isExampleText() && careFrom !== 'saved') {
+    medsDraft = { sheet: c, meds: [], note: '', state: 'error', title: 'Drafting doesn’t work on an example', error: 'Try it with your own words, or type the medicines in.' };
+    return redrawMeds();
+  }
+  if (!(await ensureProvider())) return toast(NO_CLAUDE);
+  medsDraft = { sheet: c, meds: [], note: '', state: 'loading', text: '' };
+  redrawMeds();
+  const mine = medsDraft;
+  try {
+    const words = careFrom === 'saved' ? '' : els.transcript.value;
+    const reply = await askJson(buildMedsDraftPrompt(c, words, sourcesFor(`${c.animal} ${c.species} ${c.summary} ${words}`), { drugs: settings.drugs }));
+    if (medsDraft !== mine) return; // they moved on
+    const d = normaliseMedsDraft(extractJson(reply));
+    medsDraft = { sheet: c, ...d, state: 'ready', text: '' };
+  } catch (e) {
+    if (medsDraft !== mine) return;
+    medsDraft = { sheet: c, meds: [], note: '', state: 'error', error: friendly(e) };
+  }
+  redrawMeds();
+}
+async function updateDraft(c, btn) {
+  const d = medsDraft;
+  const change = (d && d.text || '').trim();
+  if (!change) return toast('Type the change first, for example “Meloxicam 0.1 mg/kg once a day for 5 days”.');
+  if (!(await ensureProvider())) return toast(NO_CLAUDE);
+  btn.disabled = true;
+  btn.textContent = 'Updating…';
+  try {
+    const reply = await askJson(buildMedsUpdatePrompt(d.meds, change));
+    const next = normaliseMedsDraft(extractJson(reply));
+    medsDraft = { ...d, meds: next.meds, note: next.note || '', text: '' };
+    redrawMeds();
+  } catch (e) {
+    toast(friendly(e));
+    btn.disabled = false;
+    btn.textContent = 'Update draft';
+  }
+}
+async function acceptDraft(c) {
+  const d = medsDraft;
+  if (!d) return;
+  if (d.meds.some(needsDose)) return toast('Add a dose for each medicine first, or remove it, using the changes box.');
+  // What the carer gets: the medicines only, without the drafting notes. A caution becomes the carer's tip.
+  const medications = d.meds.map((m) => ({ name: m.name, how: m.how, how_often: m.how_often, how_long: m.how_long, tip: m.caution || '' }));
+  medsDraft = null;
+  await carePlanChanged({ ...c, medications }, 'Medications updated.');
+  if (account.approved) setTimeout(() => $('endorse-btn').focus({ preventScroll: false }), 50);
+}
+
 /* ---------------- vet endorsement and review ---------------- */
 
 const REVIEW_INFO = 'A carer asked you to review this plan. Check it, use Edit plan or Edit text for anything that needs fixing, then tap Endorse plan. They see your changes when they next open it.';
@@ -3955,9 +4091,9 @@ $('endorse-dlg').addEventListener('close', async () => {
   }
 });
 
-$('review-btn').addEventListener('click', async (ev) => {
+// Send the plan to a vet for review. focus 'meds' asks about medicines in particular.
+async function askVetReview(btn, focus = '') {
   if (!careSheet) return;
-  const btn = ev.currentTarget;
   let entry = savedEntry();
   let remote = entry && entry.remote;
   if (!remote) {
@@ -3974,10 +4110,13 @@ $('review-btn').addEventListener('click', async (ev) => {
       savedId = entry.id;
       refreshSaveBtn();
     }
+    renderCare(careSheet);
     renderEndorse(careSheet);
   }
   const url = reviewLink(remote.id, remote.key);
-  const text = `Could you check this care plan${careSheet.medications.length ? ', including the medications,' : ''} and endorse it if it’s right?`;
+  const text = focus === 'meds'
+    ? 'Could you advise on medications for this animal? You can add them to the care plan, endorse it and write a prescription:'
+    : `Could you check this care plan${careSheet.medications.length ? ', including the medications,' : ''} and endorse it if it’s right?`;
   if (canShare()) {
     try {
       await navigator.share({ title: `For vet review: ${planName()}`, text, url });
@@ -3988,7 +4127,8 @@ $('review-btn').addEventListener('click', async (ev) => {
   }
   const ok = await copyText(`${text} ${url}`);
   toast(ok ? 'Review link copied. Paste it into a text or email to the vet.' : 'Couldn’t copy the link.');
-});
+}
+$('review-btn').addEventListener('click', (e) => askVetReview(e.currentTarget));
 
 // Opened from a shared link: show the plan straight away and save it on this device, under Plans (the book at the
 // top), so it's still there after the link is gone. Opening the same link again shows their saved copy, edits and all.

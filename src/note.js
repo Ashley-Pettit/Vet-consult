@@ -176,6 +176,69 @@ ${text}
 </dictation>`;
 }
 
+/* ---------------- medications drafted for a vet's review ---------------- */
+
+const MEDS_SHAPE = `{"meds":[{"name":"","how":"","how_often":"","how_long":"","suggested":false,"basis":"","caution":""}],"note":""}`;
+
+/**
+ * Draft the medications of a care plan for a vet to review: the medicines already in the plan or the vet's words,
+ * plus (only where the checked Australian guidance supports it) potential options, each marked suggested with its
+ * basis. Doses only where a source gives one for this species. The vet accepts, changes or ignores the draft; nothing
+ * reaches the carer until they do.
+ */
+export function buildMedsDraftPrompt(sheet, words = '', sourceList = '', { drugs = '' } = {}) {
+  const about = [sheet.animal, sheet.species, sheet.summary].filter(Boolean).join('. ');
+  const guidance = vetCareForPrompt(`${about} ${words}`);
+  return `You are helping an Australian wildlife vet (working with ${region().org}) review the medications in a care plan a carer will follow. Draft the medications list for the vet's expert review.
+- First, every medication already in the plan or in the vet's words below, exactly as stated (same medicine, dose, route, timing and length). These are not suggestions: "suggested": false.
+- Then, only where the animal's condition clearly calls for treatment and the checked guidance below supports it, add potential options for the vet to consider: "suggested": true, at most 4, the most useful first. None when nothing is indicated (for example a healthy orphan), and say so in "note".
+- For a suggested option: the dose, route and timing only if a source below states them for this species (and say which source in "basis"); otherwise leave "how" as "Dose and route: vet to decide". Never work out or invent a dose.
+- "basis": a few words on why and the source title (for example "Cat contact: antibiotics within 24 h, NSW rescued possums guideline"). "caution": a species caution from the guidance if there is one, else "".
+- Wording: like a care plan's medications, plain English a carer can follow: "name" is the generic medicine name with what it is for in brackets; "how", "how_often" and "how_long" are short phrases.
+- Never suggest anything the guidance says to avoid in this species. Prefer Australian guidance; ${region().adj} rules where they differ.
+- "note": at most one short sentence for the vet, or "".
+- Australian English. Reply with ONLY this JSON: ${MEDS_SHAPE}
+${drugs ? `\nThe vet's own drugs and products (use these spellings): ${String(drugs).slice(0, 1500)}\n` : ''}
+${guidance}
+
+Reference sources:
+${sourceList}
+
+<plan>
+${JSON.stringify({ animal: sheet.animal, species: sheet.species, summary: sheet.summary, medications: sheet.medications, plan: sheet.plan, care: sheet.care, escalate: sheet.escalate })}
+</plan>
+<vets_words>${String(words).slice(0, 6000)}</vets_words>`;
+}
+
+/** Apply the vet's typed change to a medications draft. Their words are final. */
+export function buildMedsUpdatePrompt(meds, change) {
+  return `A vet is reviewing the draft medications for a wildlife care plan. Apply their change below to the list.
+- The vet's words are final: add, remove or change exactly what they say, and keep everything else as it is.
+- Speech recognition may mishear drug names and numbers: work out what was meant.
+- Anything the vet adds, changes or confirms is no longer a suggestion: set "suggested": false and "basis": "".
+- Never add a dose the vet didn't give; for a medicine without one, "how" is "Dose and route: vet to decide".
+- Wording: plain English a carer can follow; "name" is the generic name with what it is for in brackets.
+- Reply with ONLY this JSON: ${MEDS_SHAPE}
+
+<draft>
+${JSON.stringify(meds)}
+</draft>
+<change>${String(change).slice(0, 3000)}</change>`;
+}
+
+const mstr = (x, n) => (typeof x === 'string' ? x.trim().slice(0, n) : '');
+/** A clean draft: { meds: [{ name, how, how_often, how_long, suggested, basis, caution }], note }. */
+export function normaliseMedsDraft(raw) {
+  const r = raw && typeof raw === 'object' ? raw : {};
+  const meds = (Array.isArray(r.meds) ? r.meds : [])
+    .map((m) => ({ name: mstr(m && m.name, 120), how: mstr(m && m.how, 300), how_often: mstr(m && m.how_often, 160), how_long: mstr(m && m.how_long, 120), suggested: Boolean(m && m.suggested), basis: mstr(m && m.basis, 240), caution: mstr(m && m.caution, 240) }))
+    .filter((m) => m.name)
+    .slice(0, 12);
+  return { meds, note: mstr(r.note, 300) };
+}
+/** A dose still to be set by the vet. */
+export const needsDose = (m) => !m.how || /vet to decide/i.test(m.how);
+
 /** Change a finished care plan or document: apply the person's spoken or typed change, keep the rest as it is. */
 // Only the parts that change come back (output costs about five times input), and mergeAmend puts them in place.
 const AMEND_REPLY = `- Reply with ONLY a JSON object holding just the top-level keys you changed, each with its complete new value: a changed list or object comes back whole, with its unchanged entries too. Leave out every key that stays the same. If you add a question to "check", give the whole "check" list.`;

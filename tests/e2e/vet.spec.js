@@ -28,10 +28,10 @@ test('vet: plan first, notes second, copy at the top, quick notes look finished'
   await expect(page.locator('#review-open-title')).toHaveText('Review before saving');
   await expect(page.locator('#gap-list')).toContainText('Heart rate');
 
-  // Back to the plan: already made, no new call.
+  // Back to the plan: already made, no new call. (The vet's medicines draft is its own call, made with the plan.)
   await page.locator('#care').click();
   await expect(page.locator('#view-care')).toBeVisible();
-  expect(calls.length).toBe(2);
+  expect(calls.filter((c) => !c.prompt.includes('Draft the medications list')).length).toBe(2);
 });
 
 test('vet: clinical notes are written only when asked for, from the same words', async ({ page }) => {
