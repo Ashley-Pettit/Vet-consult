@@ -2,24 +2,19 @@ import { test, expect } from '@playwright/test';
 import { mockApi, openApp, textReply, SAMPLE_NOTE } from './helpers.js';
 import { EXAMPLE_CARER_PLAN } from '../../src/note.js';
 
-test('Normal or Vet is switched in Settings > Admin (not on the front screen), and remembered', async ({ page }) => {
+test('Carer or Vet is switched on the front screen (no sign in needed), and remembered', async ({ page }) => {
   await openApp(page);
-  await expect(page.locator('#view-record #role-seg')).toHaveCount(0);
+  await expect(page.locator('#view-record #role-seg')).toBeVisible();
   await expect(page.locator('input[name=role][value=carer]')).toBeChecked();
   await expect(page.locator('#mode label:visible')).toHaveCount(4); // intake is made from a plan, not a tab
-  await page.locator('#open-settings').click();
-  await page.locator('#tab-admin').click();
   await page.locator('#role-seg label', { hasText: 'Vet' }).click();
-  await page.locator('#close-settings').click();
   await expect(page.locator('#mode label:visible')).toHaveCount(3);
   await expect(page.locator('#adv-tab')).toBeVisible();
   await expect(page.locator('input[name=mode]:checked')).toHaveValue('carer'); // vets start on the care plan
   await page.reload();
   await expect(page.locator('input[name=role][value=vet]')).toBeChecked();
-  await page.locator('#open-settings').click();
-  await page.locator('#tab-admin').click();
-  await page.locator('#role-seg label', { hasText: 'Normal' }).click();
-  await page.locator('#close-settings').click();
+  await expect(page.locator('#role-seg')).toBeVisible(); // still there in vet mode, to switch back
+  await page.locator('#role-seg label', { hasText: 'Carer' }).click();
   await expect(page.locator('#mode label:visible')).toHaveCount(4); // intake is made from a plan, not a tab
 });
 

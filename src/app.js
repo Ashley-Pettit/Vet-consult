@@ -1013,7 +1013,7 @@ function applyRole() {
   document.querySelectorAll('#mode [data-roles]').forEach((l) => (l.hidden = !l.dataset.roles.split(' ').includes(role)));
   if (!ROLE_MODES[role].includes(mode())) document.querySelector(`input[name="mode"][value="${ROLE_MODES[role][0]}"]`).checked = true;
 }
-// Normal (carer) or Vet. Set in Settings > Admin, or by signing in or out of a vet account.
+// Carer or Vet: the switch on the front screen (any vet can use vet mode), or signing in or out of a vet account.
 function setRole(role) {
   if ((settings.role === 'vet' ? 'vet' : 'carer') === role) return;
   settings.role = role;
@@ -3439,10 +3439,10 @@ $('acct-go').addEventListener('click', async () => {
 });
 $('acct-out').addEventListener('click', async () => {
   await account.signOut();
-  setRole('carer');
+  // Vet mode doesn't need an account, so signing out leaves the Carer / Vet switch as it is.
   renderAccount();
   if (careSheet) renderEndorse(careSheet);
-  toast('Signed out. The app is back in Normal mode.');
+  toast('Signed out. Prescriptions and endorsing need a vet sign in.');
 });
 // Approval can change while they're away: check once at start.
 account.refresh().then(() => {
@@ -3604,7 +3604,15 @@ if (__BETA__) {
     el('p', { class: 'help', text: 'Signs in as an approved pretend vet, for testing endorsing and prescriptions. Everything it makes is marked TEST, and this switch never appears in the live app.' }),
   ]);
   $('testing-title').after(row);
-  const sync = () => (input.checked = Boolean(account.user && account.user.test));
+  // The same switch as a button beside Admin, so testing as a signed-in vet is one tap.
+  const mock = el('button', { type: 'button', class: 'set-tab set-mock', id: 'tab-test-vet', role: 'switch', 'aria-checked': 'false', title: 'Sign in as the test vet (beta only)' }, 'Test vet');
+  mock.addEventListener('click', () => input.click());
+  document.querySelector('.set-tabs').append(mock);
+  document.querySelector('.set-tabs').classList.add('with-mock');
+  const sync = () => {
+    input.checked = Boolean(account.user && account.user.test);
+    mock.setAttribute('aria-checked', String(input.checked));
+  };
   sync();
   $('settings').addEventListener('toggle', sync);
   input.addEventListener('change', async () => {
@@ -3616,8 +3624,7 @@ if (__BETA__) {
         toast('Signed in as the test vet. The app is in Vet mode.');
       } else if (account.user && account.user.test) {
         await account.signOut();
-        setRole('carer');
-        toast('Test vet signed out. The app is back in Normal mode.');
+        toast('Test vet signed out.');
       }
     } catch (e) {
       toast(accountError(e));

@@ -1760,3 +1760,6 @@ details.care-sec.fold > summary:focus-visible { outline: 3px solid var(--accent)
 details.care-sec.fold .fold-actions { margin: 10px 0; }
 .rename-acts { margin-top: 8px; justify-content: flex-start; }
 .saved-item input.saved-name { width: 100%; }
+/* Beta: a Test vet button beside Admin, lit while signed in as the test vet */
+.set-tabs.with-mock { grid-template-columns: repeat(4, 1fr); }
+.set-mock[aria-checked="true"] { color: var(--accent); box-shadow: inset 0 0 0 2px var(--accent); }

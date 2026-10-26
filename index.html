@@ -78,6 +78,12 @@
     <h1 id="record-title" class="sr-only">Dictate a consult</h1>
 
     <div class="who">
+      <!-- Carer or vet: any vet can use vet mode; signing in to a vet account is only needed for prescriptions and endorsing. -->
+      <fieldset class="seg" id="role-seg">
+        <legend class="sr-only">I am a</legend>
+        <label><input type="radio" name="role" value="carer"><span>Carer</span></label>
+        <label><input type="radio" name="role" value="vet"><span>Vet</span></label>
+      </fieldset>
       <fieldset class="seg" id="region-seg">
         <legend class="sr-only">Guidance for which state</legend>
         <label><input type="radio" name="region" value="vic"><span>VIC</span></label>
@@ -505,7 +511,7 @@
     <section class="set-group" id="account-group" aria-labelledby="set-account">
       <h3 class="set-title sr-only" id="set-account">Vet account</h3>
       <div id="acct-start">
-        <p class="help">For vets: sign in to use vet mode, endorse care plans and write prescriptions.</p>
+        <p class="help">Vet mode works without signing in (the Carer / Vet switch on the front screen). Sign in to endorse care plans and write prescriptions.</p>
         <button type="button" class="btn ghost" id="acct-open">Vet sign in</button>
       </div>
       <div id="acct-in" hidden>
@@ -569,15 +575,6 @@
     <div class="set-pane" id="pane-admin" role="tabpanel" aria-labelledby="tab-admin" hidden>
 
 
-        <h4 class="admin-sub">App mode</h4>
-        <div class="field">
-          <fieldset class="seg" id="role-seg">
-            <legend class="sr-only">App mode</legend>
-            <label><input type="radio" name="role" value="carer"><span>Normal</span></label>
-            <label><input type="radio" name="role" value="vet"><span>Vet</span></label>
-          </fieldset>
-          <p class="help">Normal is for carers. Vet adds clinical notes, rapid polish and the advanced tools. Signing in with a vet account switches to Vet.</p>
-        </div>
         <div class="field" id="channel-field" hidden>
           <p class="field-label" id="channel-label">App version</p>
           <div class="channel-pick" role="group" aria-labelledby="channel-label">
