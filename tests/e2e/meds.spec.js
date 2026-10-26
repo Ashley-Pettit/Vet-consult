@@ -10,35 +10,6 @@ const draft = {
   ],
   note: '',
 };
-const updated = { meds: [draft.meds[0], { ...draft.meds[1], how: '12.5 mg/kg by mouth', how_often: 'Twice a day', how_long: '7 days', suggested: false, basis: '' }], note: '' };
-
-test('a vet’s plan gets medications suggested for their review; nothing reaches the plan until they accept', async ({ page }) => {
-  await withKey(page, { role: 'vet', mode: 'carer' });
-  const calls = await mockApi(page, {
-    body: (p) => (p.includes('<change>') ? textReply(updated) : p.includes('Draft the medications list') ? textReply(draft) : textReply(plan)),
-  });
-  await openApp(page);
-  await page.locator('#transcript').fill('Ringtail joey 120 g, cat caught, meloxicam 0.1 mg/kg SID 5 days.');
-  await page.locator('#create').click();
-  await expect(page.locator('#view-care')).toBeVisible();
-  const sec = page.locator('.meds-sec');
-  await expect(sec.locator('.draft-title')).toHaveText('Suggested medications: for your review');
-  await expect(sec).toContainText('Please update as per your expertise');
-  await expect(sec.locator('.tag')).toHaveText('Option for you to consider');
-  await expect(sec.locator('.draft-msg')).toContainText('needs a dose');
-  await expect(sec.locator('> ul.meds')).toHaveCount(0); // not in the plan yet
-  // OK is held back until every medicine has a dose.
-  await sec.getByRole('button', { name: 'OK, use these' }).click();
-  await expect(sec.locator('.draft')).toBeVisible();
-  await sec.locator('#draft-change').fill('Amoxicillin-clavulanate 12.5 mg/kg by mouth twice a day for 7 days');
-  await sec.getByRole('button', { name: 'Update suggestions' }).click();
-  await expect(sec.locator('.tag')).toHaveCount(0);
-  await sec.getByRole('button', { name: 'OK, use these' }).click();
-  await expect(sec.locator('.draft')).toHaveCount(0);
-  await expect(sec.locator('ul.meds li')).toHaveCount(2);
-  await expect(sec).toContainText('12.5 mg/kg by mouth');
-  expect(calls.filter((c) => c.prompt.includes('Draft the medications list'))).toHaveLength(1);
-});
 
 test('a carer’s plan has a Medications section that asks a vet for advice', async ({ page }) => {
   await withKey(page, { role: 'carer', mode: 'carer' });
@@ -92,30 +63,68 @@ test('Ask a vet sends the shelter and animal details with the plan; they are kep
   await expect(page.locator('#shelter-address')).toHaveValue('1 Example Rd, Wonthaggi VIC');
 });
 
-test('a vet accepts the medicines, then writes the prescription: missing boxes are marked in place, and it copies for the PMS', async ({ page, context }) => {
+const rx = {
+  items: [
+    { medicine: 'Meloxicam 1.5 mg/mL oral suspension', quantity: '10 mL', directions: 'Give 0.1 mg/kg by mouth once a day with food for 5 days', schedule: 'S4', repeats: 0 },
+    { medicine: 'Amoxicillin-clavulanate 50 mg tablets', quantity: '', directions: 'Give 12.5 mg/kg by mouth twice a day for 7 days', schedule: 'S4', repeats: 0 },
+  ],
+  meds: [
+    { name: 'Meloxicam (pain relief)', how: 'By mouth with food', how_often: 'Once a day', how_long: '5 days', tip: '' },
+    { name: 'Amoxicillin-clavulanate (after the cat attack)', how: 'By mouth', how_often: 'Twice a day', how_long: '7 days', tip: '' },
+  ],
+  check: ['Amoxicillin-clavulanate: quantity to supply?'],
+};
+const vetReply = (p) => (p.includes('Draft the medications list') ? textReply(draft) : p.includes('<prescribing>') ? textReply(rx) : textReply(plan));
+
+test('vets prescribe from one box: type or tap Suggest, then Prescribe fills the plan and a one-screen prescription', async ({ page, context }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
   await withKey(page, { role: 'vet', mode: 'carer' });
-  const ready = { meds: [{ ...draft.meds[0], name: 'Meloxicam (pain relief)' }], note: '' };
-  await mockApi(page, { body: (p) => (p.includes('Draft the medications list') ? textReply(ready) : textReply(plan)) });
+  const calls = await mockApi(page, { body: vetReply });
   await openApp(page);
   await page.locator('#open-settings').click();
   await page.locator('#tab-vet').click();
   await page.locator('#acct-fake').click();
-  await page.locator('#transcript').fill('Ringtail joey 120 g, female, cat caught, meloxicam 0.1 mg/kg SID 5 days.');
+  await page.locator('#transcript').fill('Ringtail joey 120 g, female, about 8 weeks old, cat caught.');
   await page.locator('#create').click();
   await expect(page.locator('#view-care')).toBeVisible();
-  const sec = page.locator('.meds-sec');
-  await sec.getByRole('button', { name: 'OK, use these' }).click();
-  await expect(page.locator('#meds-rx')).toBeVisible(); // the next step, right there
-  await page.locator('#meds-rx').click();
+  expect(calls.filter((c) => c.prompt.includes('Draft the medications list'))).toHaveLength(0); // nothing suggested until asked
+  const box = page.locator('#rx-text');
+  await expect(box).toBeVisible();
+  await page.getByRole('button', { name: 'Suggest', exact: true }).click();
+  await expect(box).toHaveValue(/Amoxicillin-clavulanate \(after the cat attack\), dose: vet to decide/);
+  await expect(page.locator('.rx-why')).toContainText('NSW rescued possums guideline');
+  await page.locator('#rx-prescribe').click();
+  await expect(page.locator('#toast')).toContainText('vet to decide'); // a dose is still needed
+  await box.fill('Meloxicam 1.5 mg/mL oral susp 0.1 mg/kg sid 5 days, 10 mL\nAmoxyclav 50 mg tabs 12.5 mg/kg bid 7 days');
+  await page.locator('#rx-prescribe').click();
+  // The plan has the medicines in plain English, and the prescription sheet is open.
   await expect(page.locator('#rx-dlg')).toBeVisible();
-  await expect(page.locator('[id^="rx-med-"]').first()).toHaveValue('Meloxicam'); // no plain-English note on a script
-  await expect(page.locator('#rx-sex')).toHaveValue('Female');
+  await expect(page.locator('.meds-sec ul.meds li')).toHaveCount(2);
+  await expect(page.locator('#rx-checks')).toContainText('quantity to supply');
+  await expect(page.locator('#rx-animal-sum')).toContainText('Female · about 8 weeks');
+  await expect(page.locator('[id^="rx-med-"]').first()).toHaveValue('Meloxicam 1.5 mg/mL oral suspension');
   await page.locator('#rx-go').click();
-  await expect(page.locator('#rx-msg')).toContainText('highlighted');
-  await expect(page.locator('#rx-name')).toHaveAttribute('aria-invalid', 'true');
+  await expect(page.locator('#rx-name')).toHaveAttribute('aria-invalid', 'true'); // marked where it sits, its row opened
+  await expect(page.locator('#rx-animal-fields')).toBeVisible();
   await page.locator('#rx-copy').click();
   const copied = await page.evaluate(() => navigator.clipboard.readText());
-  expect(copied).toContain('Rx: Meloxicam');
+  expect(copied).toContain('Rx: Meloxicam 1.5 mg/mL oral suspension, quantity 10 mL');
   expect(copied).toContain('Prescriber: Dr Ashley Fake');
+  // The vet's own words stay in the box.
+  await page.locator('#rx-dlg button[value=cancel]').click();
+  await expect(box).toHaveValue(/Amoxyclav 50 mg tabs/);
+});
+
+test('a vet without an account can still prescribe to copy into their PMS; printing asks them to sign in', async ({ page }) => {
+  await withKey(page, { role: 'vet', mode: 'carer' });
+  await mockApi(page, { body: vetReply });
+  await openApp(page);
+  await page.locator('#transcript').fill('Ringtail joey 120 g.');
+  await page.locator('#create').click();
+  await expect(page.locator('#view-care')).toBeVisible();
+  await page.locator('#rx-text').fill('Meloxicam 1.5 mg/mL 0.1 mg/kg sid 5 days 10 mL');
+  await page.locator('#rx-prescribe').click();
+  await expect(page.locator('#rx-dlg')).toBeVisible();
+  await expect(page.locator('#rx-go')).toHaveText('Sign in to print');
+  await expect(page.locator('#rx-copy')).toBeVisible();
 });

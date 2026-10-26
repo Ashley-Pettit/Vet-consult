@@ -1608,6 +1608,31 @@ dialog.rx-dlg form { gap: 10px; }
 .rx-more .rx-grid { padding-top: 4px; }
 dialog.rx-dlg .dlg-actions { position: sticky; bottom: 0; background: var(--surface); padding-top: 10px; }
 .rx-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+/* The vet's prescribing box: like the dictation box, with Suggest in its bottom bar */
+.rxbox { display: grid; gap: 10px; margin-top: 12px; }
+.rxbox-label { font-weight: 700; }
+.rxbox-field { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.rxbox-field:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.rxbox-field textarea { width: 100%; border: 0; border-radius: 12px 12px 0 0; background: transparent; padding: 12px 14px; line-height: 1.45; resize: vertical; box-shadow: none; }
+.rxbox-field textarea:focus { outline: none; box-shadow: none; }
+.rxbox-bar { display: flex; align-items: center; gap: 8px; padding: 6px 6px 6px 14px; border-top: 1px solid var(--line); }
+.rxbox-hint { flex: 1; min-width: 0; font-size: 0.8rem; color: var(--muted); }
+.rx-suggest { min-height: 40px; flex: none; }
+.rx-why { margin: 0; padding-left: 1.2em; display: grid; gap: 4px; font-size: 0.86rem; color: var(--muted); }
+.rxbox-acts { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+.rxbox-acts .btn.primary { min-width: 9.5em; min-height: 48px; }
+.rxbox-acts .link { min-height: 44px; }
+/* Prescription sheet: who it's for, one tappable line each */
+.rx-checks { margin: 0; padding: 10px 12px 10px 2em; border-radius: 10px; background: var(--warn-soft); color: var(--ink); display: grid; gap: 4px; font-size: 0.92rem; }
+.rx-who { display: grid; gap: 0; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.rx-row { display: grid; grid-template-columns: 4.5em 1fr auto; align-items: center; gap: 10px; width: 100%; min-height: 52px; padding: 10px 14px; border: 0; background: var(--surface); color: var(--ink); text-align: left; font: inherit; cursor: pointer; }
+.rx-row + .rx-fields, .rx-fields + .rx-row, .rx-row + .rx-row { border-top: 1px solid var(--line); }
+.rx-row-k { font-weight: 700; font-size: 0.86rem; color: var(--muted); }
+.rx-row-v { min-width: 0; overflow-wrap: anywhere; }
+.rx-row-edit { color: var(--accent); font-weight: 600; font-size: 0.9rem; }
+.rx-row:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
+.rx-fields { padding: 4px 14px 14px; background: var(--surface); }
+.rx-foot { margin: 0; font-size: 0.82rem; }
 .rx-actions #rx-go { flex: 1 1 100%; order: -1; }
 @media (min-width: 480px) { .rx-actions #rx-go { flex: 0 1 auto; order: 0; } }
 .rx-dlg [aria-invalid="true"], .askvet-dlg [aria-invalid="true"] { border-color: var(--warn) !important; box-shadow: 0 0 0 2px var(--warn-soft); }
@@ -1675,14 +1700,3 @@ details.care-sec.fold .fold-actions { margin: 10px 0; }
 .meds-acts { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; margin-top: 10px; }
 .meds-acts .btn { min-height: 44px; }
 .meds-sec > .help { margin: 8px 0 0; font-size: 0.86rem; }
-.draft { margin-top: 12px; padding: 14px; border-radius: 12px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line), inset 4px 0 0 var(--accent); display: grid; gap: 8px; }
-.draft-title { margin: 0; font-weight: 700; }
-.draft .help, .draft-note { margin: 0; }
-.draft-note { font-size: 0.92rem; font-style: italic; }
-.draft-meds li.suggested { box-shadow: inset 3px 0 0 var(--leaf); padding-left: 10px; }
-.draft-meds .tag { margin-left: 8px; padding: 1px 8px; border-radius: 999px; font-size: 0.72rem; font-weight: 700; background: var(--accent-soft); color: var(--accent); vertical-align: middle; white-space: nowrap; }
-.draft-meds .dose-needed { color: var(--warn); font-weight: 600; }
-.draft-meds .caution { color: var(--warn); }
-.draft textarea { width: 100%; }
-.draft-msg { margin: 0; font-size: 0.9rem; color: var(--warn); }
-.draft-msg:empty { display: none; }

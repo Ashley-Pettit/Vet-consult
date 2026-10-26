@@ -92,7 +92,7 @@ import { shortPlanLink, unpackPlan, linkCode, linkId, shortLink, fetchSharedPlan
 import { vetLabel, medsKey, changedParts } from './plan-changes.js';
 import { account, admin, accountError } from './account.js';
 import { rxFromPlan, rxModel, rxProblems, animalFacts } from './rx.js';
-import { buildMedsDraftPrompt, buildMedsUpdatePrompt, normaliseMedsDraft, needsDose } from './note.js';
+import { buildMedsDraftPrompt, normaliseMedsDraft, needsDose, buildRxPrompt, normaliseRx } from './note.js';
 
 const $ = (id) => document.getElementById(id);
 const els = {
@@ -2525,7 +2525,6 @@ function renderCare(c) {
 
 function showCare(sheet, from, info = '', keepSaved = false) {
   resetFeedback();
-  if (!keepSaved && medsDraft && medsDraft.sheet !== sheet) medsDraft = null;
   // The Save star belongs to this plan: a new plan starts unsaved (a saved one opened from Plans sets it first).
   if (from !== 'saved' && !keepSaved) savedId = null;
   // Vets get a discharge pack; its clinical summary is written when the pack is asked for (examples: straight away).
@@ -2564,7 +2563,6 @@ async function openCare() {
       askJson(buildCareSheetPrompt(n, sourcesFor(`${els.transcript.value} ${n.patient.species}`)), signal),
     );
     showCare(normaliseCareSheet(extractJson(reply), SOURCE_IDS()), 'note');
-    if (actingVet() && careSheet.kind === 'wildlife') startMedsDraft(careSheet);
   } catch (e) {
     showView('note');
     toast(e && e.code === 'cancelled' ? 'Stopped.' : friendly(e));
@@ -2585,8 +2583,6 @@ async function createCarePlan(text) {
   );
   notes = [];
   showCare(normaliseCareSheet(extractJson(reply), SOURCE_IDS()), 'record');
-  // A vet's plan: medications are suggested for their review straight away (what they said, plus guideline options).
-  if (actingVet() && careSheet.kind === 'wildlife') startMedsDraft(careSheet);
 }
 
 els.care.addEventListener('click', openCare);
@@ -3545,10 +3541,30 @@ function rxForm() {
     }),
   };
 }
-$('rx-btn').addEventListener('click', () => {
-  if (!careSheet) return;
-  if (!account.signedIn) return openSettings(undefined, 'account');
-  if (!account.approved) return toast(accountError({ code: 'not_approved' }));
+// The check-and-print sheet: who it's for on one line each (opened only to fill in or change), the medicines as
+// script lines, anything to check first, then Copy for PMS or the numbered Word prescription.
+function rxSummaries() {
+  const a = [$('rx-name').value, $('rx-species').value, $('rx-sex').value, $('rx-age').value].map((x) => String(x || '').trim()).filter(Boolean);
+  $('rx-animal-sum').textContent = a.join(' · ') || 'Add the animal’s details';
+  const c = [$('rx-owner').value, $('rx-owner-address').value].map((x) => x.trim()).filter(Boolean);
+  $('rx-carer-sum').textContent = c.join(' · ') || 'Add the carer’s name and address';
+}
+function rxOpenRow(row, open) {
+  const fields = $(row.getAttribute('aria-controls'));
+  fields.hidden = !open;
+  row.setAttribute('aria-expanded', String(open));
+  row.querySelector('.rx-row-edit').textContent = open ? 'Done' : 'Edit';
+}
+for (const id of ['rx-animal-row', 'rx-carer-row']) {
+  $(id).addEventListener('click', () => {
+    const row = $(id);
+    rxOpenRow(row, row.getAttribute('aria-expanded') !== 'true');
+    rxSummaries();
+  });
+}
+$('rx-dlg').addEventListener('input', rxSummaries);
+function openRx(sheet = careSheet, items = null, checks = []) {
+  if (!sheet) return;
   let last = {};
   try {
     last = JSON.parse(localStorage.getItem(RX_LAST) || '{}') || {};
@@ -3557,23 +3573,32 @@ $('rx-btn').addEventListener('click', () => {
   }
   // The carer's details (sent with a review link) fill the prescription; otherwise last time's.
   const e = savedEntry();
-  const f = rxFromPlan(careSheet, last, careFrom === 'record' ? els.transcript.value : '', e && e.forVet);
+  const f = rxFromPlan(sheet, last, careFrom === 'record' ? els.transcript.value : '', e && e.forVet);
   $('rx-species').value = f.animal.species;
   $('rx-name').value = f.animal.name;
   $('rx-age').value = f.animal.age;
   $('rx-sex').value = f.animal.sex;
   $('rx-breed').value = f.animal.breed;
-  $('rx-breed-field').hidden = careSheet.kind === 'wildlife'; // wildlife has no breed: it prints as a wild animal
+  $('rx-breed-field').hidden = sheet.kind === 'wildlife'; // wildlife has no breed: it prints as a wild animal
   $('rx-owner').value = f.owner.name;
   $('rx-owner-address').value = f.owner.address;
-  $('rx-items').replaceChildren(...f.items.map(rxItemRow));
+  $('rx-items').replaceChildren(...(items && items.length ? items : f.items).map(rxItemRow));
+  $('rx-checks').replaceChildren(...checks.map((x) => el('li', { text: x })));
+  $('rx-checks').hidden = !checks.length;
   $('rx-msg').textContent = '';
   $('rx-dlg').querySelectorAll('[aria-invalid]').forEach((x) => x.removeAttribute('aria-invalid'));
+  // A row opens by itself only when something in it is missing.
+  rxOpenRow($('rx-animal-row'), !['rx-name', 'rx-species', 'rx-age', 'rx-sex'].every((id) => $(id).value.trim()));
+  rxOpenRow($('rx-carer-row'), !['rx-owner', 'rx-owner-address'].every((id) => $(id).value.trim()));
+  rxSummaries();
+  // Signed in as an approved vet: the numbered Word prescription. Otherwise Copy for PMS still works.
+  $('rx-go').textContent = account.approved ? 'Make prescription' : 'Sign in to print';
+  $('rx-foot').textContent = account.approved ? 'Makes a numbered Word prescription to print and sign by hand.' : 'Copy for PMS works now. A numbered prescription to print needs a vet sign in.';
   $('rx-dlg').showModal();
   // No box is focused, so the keyboard stays down until they tap one.
   $('rx-title').tabIndex = -1;
   $('rx-title').focus({ preventScroll: true });
-});
+}
 // The boxes a prescription can't go without: each empty one is marked where it sits, not in a list at the bottom.
 function rxMarkMissing() {
   const need = ['rx-species', 'rx-name', 'rx-age', 'rx-sex', 'rx-owner', 'rx-owner-address'];
@@ -3583,6 +3608,7 @@ function rxMarkMissing() {
   const empty = need.map((id) => $(id) || document.getElementById(id)).filter((x) => x && !x.value.trim());
   $('rx-dlg').querySelectorAll('[aria-invalid]').forEach((x) => x.removeAttribute('aria-invalid'));
   empty.forEach((x) => x.setAttribute('aria-invalid', 'true'));
+  for (const row of ['rx-animal-row', 'rx-carer-row']) if (empty.some((x) => $($(row).getAttribute('aria-controls')).contains(x))) rxOpenRow($(row), true);
   if (empty[0]) empty[0].scrollIntoView({ block: 'center', behavior: 'smooth' });
   return empty.length;
 }
@@ -3611,6 +3637,10 @@ $('rx-add').addEventListener('click', () => {
   row.querySelector('input').focus();
 });
 $('rx-go').addEventListener('click', async () => {
+  if (!account.approved) {
+    $('rx-dlg').close('signin');
+    return account.signedIn ? toast(accountError({ code: 'not_approved' })) : openSettings(undefined, 'account');
+  }
   const f = rxForm();
   const missing = rxProblems(f);
   if (missing.length) {
@@ -3819,14 +3849,16 @@ renderPhotos();
 const wasOpen = store.loadOpen();
 showView(location.hash === '#how-it-works' ? 'about' : 'record');
 if (!linkCode(location.hash) && !shortLink(location.hash)) restoreOpen(wasOpen);
-/* ---------------- medications: the carer asks, the vet drafts, reviews and accepts ---------------- */
+/* ---------------- medications: the carer asks a vet; the vet types, pastes or suggests, then prescribes ---------------- */
 
-// A draft for the vet's review lives only on this screen: it never reaches the carer, the plan or a printout until
-// the vet taps "OK, use these". { sheet, meds, note, state: 'loading' | 'ready' | 'error', text }
-let medsDraft = null;
+// The vet's prescribing box keeps its words while the plan redraws: { sheet, text, why, note, busy }.
+let rxBox = null;
 // Function declarations here, not consts: a refresh can draw a plan before this part of the file has run.
 function medLine(m) {
   return [...new Set([m.how, m.how_often, m.how_long].filter(Boolean))].join(' · ');
+}
+function medText(m) {
+  return [m.name, ...new Set([m.how, m.how_often, m.how_long].filter(Boolean))].join(', ');
 }
 
 function medsSection(c) {
@@ -3835,27 +3867,12 @@ function medsSection(c) {
     return c.medications.length ? el('section', { class: 'care-sec' }, [el('h2', { text: 'Medications' }), el('ul', { class: 'meds' }, c.medications.map(medItem))]) : null;
   }
   const vet = actingVet();
-  const draft = vet && medsDraft && medsDraft.sheet === c ? medsDraft : null;
   const remote = savedEntry() && savedEntry().remote;
   const parts = [el('h2', { text: 'Medications' })];
   if (c.medications.length) parts.push(el('ul', { class: 'meds' }, c.medications.map(medItem)));
-  else parts.push(el('p', { class: 'meds-none', text: vet ? 'No medications in this plan yet.' : 'No medications in this plan. Only give medicines a vet has prescribed for this animal.' }));
-  if (draft) parts.push(draftPanel(c, draft));
-  else if (vet && c.medications.length) {
-    // Medicines in the plan: the prescription is the next step, right here beside them.
-    parts.push(el('div', { class: 'meds-acts' }, [
-      el('button', { type: 'button', class: 'btn small primary', id: 'meds-rx', onclick: () => $('rx-btn').click() }, 'Write a prescription'),
-      el('button', { type: 'button', class: 'btn small ghost', onclick: () => openDraft(c, c.medications) }, 'Change them'),
-      c.kind === 'wildlife' ? el('button', { type: 'button', class: 'link', onclick: () => startMedsDraft(c) }, 'Check against guidelines') : null,
-    ]));
-  } else if (vet) {
-    parts.push(el('div', { class: 'meds-acts' }, [
-      // Options come from wildlife guidelines, so they're offered for wildlife only.
-      c.kind === 'wildlife' ? el('button', { type: 'button', class: 'btn small primary', onclick: () => startMedsDraft(c) }, 'Suggest treatment options') : null,
-      el('button', { type: 'button', class: 'btn small ghost', onclick: () => openDraft(c, c.medications) }, 'Type them in'),
-    ]));
-    if (c.kind === 'wildlife') parts.push(el('p', { class: 'help', text: 'Options come from Australian wildlife guidelines, for your expert review. Nothing reaches the carer until you accept it.' }));
-  } else {
+  else if (!vet) parts.push(el('p', { class: 'meds-none', text: 'No medications in this plan. Only give medicines a vet has prescribed for this animal.' }));
+  if (vet) parts.push(prescribeBox(c));
+  else {
     parts.push(el('div', { class: 'meds-acts' }, [
       el('button', { type: 'button', class: 'btn small ghost', onclick: (e) => openAskVet(e.currentTarget) }, remote && remote.mine ? 'Send to the vet again' : 'Ask a vet about medications'),
     ]));
@@ -3871,122 +3888,97 @@ function medItem(m) {
   ]);
 }
 
-// The draft, for the vet: suggested options marked with why and from where, a box for quick changes, and OK.
-function draftPanel(c, d) {
-  if (d.state === 'loading') return el('div', { class: 'draft', 'aria-busy': 'true' }, [el('p', { class: 'draft-title', text: 'Suggesting medications for your review…' }), el('p', { class: 'help', text: 'From the plan and Australian wildlife guidelines. This takes a few seconds.' })]);
-  if (d.state === 'error') {
-    return el('div', { class: 'draft' }, [
-      el('p', { class: 'draft-title', text: d.title || 'Couldn’t suggest medications' }),
-      el('p', { class: 'help', text: d.error || 'Try again in a moment, or type them in.' }),
-      el('div', { class: 'meds-acts' }, [d.title ? null : el('button', { type: 'button', class: 'btn small primary', onclick: () => startMedsDraft(c) }, 'Try again'), el('button', { type: 'button', class: 'btn small ghost', onclick: () => openDraft(c, c.medications) }, 'Type them in')]),
-    ]);
-  }
-  const typing = !d.meds.length; // "Type them in": nothing drafted yet, just a box to write the medicines
-  const box = el('textarea', { id: 'draft-change', rows: typing ? '3' : '2', placeholder: typing ? 'e.g. Meloxicam 0.1 mg/kg by mouth once a day for 5 days. Amoxicillin-clavulanate 12.5 mg/kg twice a day for 7 days.' : 'e.g. Drop the antibiotic. Meloxicam 0.1 mg/kg by mouth once a day for 5 days.' });
-  box.value = d.text || '';
-  box.addEventListener('input', () => (d.text = box.value));
-  const missing = d.meds.filter(needsDose).length;
-  return el('div', { class: 'draft' }, [
-    el('p', { class: 'draft-title', text: typing ? 'Medicines for this plan' : 'Suggested medications: for your review' }),
-    el('p', { class: 'help', text: typing ? 'Type or say each medicine with its dose, how often and how long.' : 'Please update as per your expertise. Type any changes below, or tap OK to use them as they are.' }),
-    d.note ? el('p', { class: 'draft-note', text: d.note }) : null,
-    d.meds.length
-      ? el('ul', { class: 'meds draft-meds' }, d.meds.map((m) => el('li', { class: m.suggested ? 'suggested' : '' }, [
-          el('strong', {}, [m.name, m.suggested ? el('span', { class: 'tag', text: 'Option for you to consider' }) : null]),
-          el('span', { class: `care-how${needsDose(m) ? ' dose-needed' : ''}`, text: medLine(m) || 'Dose and route: vet to decide' }),
-          m.basis ? el('span', { class: 'care-tip', text: `Why: ${m.basis}` }) : null,
-          m.caution ? el('span', { class: 'care-tip caution', text: `Caution: ${m.caution}` }) : null,
-        ])))
-      : null,
-    typing ? null : el('label', { class: 'field-label', for: 'draft-change', text: 'Changes (optional)' }),
-    box,
-    el('p', { class: 'draft-msg', role: 'status', text: missing ? `${missing === 1 ? 'One medicine needs' : `${missing} medicines need`} a dose: add it in the box above, or remove it.` : '' }),
-    el('div', { class: 'meds-acts' }, [
-      typing ? null : el('button', { type: 'button', class: 'btn small ghost', onclick: (e) => updateDraft(c, e.currentTarget) }, 'Update suggestions'),
-      el('button', { type: 'button', class: 'btn small primary', onclick: (e) => acceptDraft(c, e.currentTarget) }, typing ? 'Add to plan' : 'OK, use these'),
-      el('button', { type: 'button', class: 'link', onclick: () => { medsDraft = null; renderCare(careSheet); renderEndorse(careSheet); } }, 'Not now'),
+// One box for the vet: type, paste or dictate what they're prescribing, or tap Suggest for options from Australian
+// wildlife guidelines. Prescribe turns it into the script (and the carer's plan, in plain English) in one go.
+function prescribeBox(c) {
+  if (!rxBox || rxBox.sheet !== c) rxBox = { sheet: c, text: c.medications.map(medText).join('\n'), why: [], note: '', busy: '' };
+  const box = el('textarea', { id: 'rx-text', rows: String(Math.min(8, Math.max(3, rxBox.text.split('\n').length + 1))), placeholder: 'Type or paste, one medicine a line, e.g.\nMeloxicam 1.5 mg/mL oral suspension, 0.1 mg/kg by mouth once a day for 5 days, 10 mL' });
+  box.value = rxBox.text;
+  box.addEventListener('input', () => (rxBox.text = box.value));
+  const busy = rxBox.busy;
+  return el('div', { class: 'rxbox' }, [
+    el('label', { class: 'rxbox-label', for: 'rx-text', text: c.medications.length ? 'Prescribe these, or change them' : 'What are you prescribing?' }),
+    el('div', { class: 'rxbox-field' }, [
+      box,
+      el('div', { class: 'rxbox-bar' }, [
+        el('span', { class: 'rxbox-hint', text: 'Name, strength, dose, how often, how long, quantity' }),
+        c.kind === 'wildlife'
+          ? el('button', { type: 'button', class: 'btn small ghost rx-suggest', disabled: busy ? '' : null, onclick: (e) => suggestMeds(c, e.currentTarget) }, busy === 'suggest' ? 'Suggesting…' : 'Suggest')
+          : null,
+      ]),
+    ]),
+    rxBox.why.length ? el('ul', { class: 'rx-why', 'aria-label': 'Why these were suggested' }, rxBox.why.map((w) => el('li', { text: w }))) : null,
+    rxBox.note ? el('p', { class: 'help', text: rxBox.note }) : null,
+    el('div', { class: 'meds-acts rxbox-acts' }, [
+      el('button', { type: 'button', class: 'btn primary', id: 'rx-prescribe', disabled: busy ? '' : null, onclick: () => prescribe(c, true) }, busy === 'rx' ? 'Preparing…' : 'Prescribe'),
+      el('button', { type: 'button', class: 'link', disabled: busy ? '' : null, onclick: () => prescribe(c, false) }, 'Just update the plan'),
     ]),
   ]);
 }
 const redrawMeds = () => {
-  if (!careSheet || document.body.dataset.view !== 'care') return;
-  renderCare(careSheet);
-  renderEndorse(careSheet);
+  if (careSheet && document.body.dataset.view === 'care') renderCare(careSheet);
 };
-function openDraft(c, meds) {
-  medsDraft = { sheet: c, meds: meds.map((m) => ({ name: m.name, how: m.how, how_often: m.how_often, how_long: m.how_long, suggested: false, basis: '', caution: '' })), note: '', state: 'ready', text: '' };
-  redrawMeds();
-  setTimeout(() => document.getElementById('draft-change')?.focus(), 0);
-}
-async function startMedsDraft(c) {
-  if (isExampleText() && careFrom !== 'saved') {
-    medsDraft = { sheet: c, meds: [], note: '', state: 'error', title: 'Suggestions don’t work on an example', error: 'Try it with your own words, or type the medicines in.' };
-    return redrawMeds();
-  }
+// Suggest: options from the guidelines, added to the box as lines the vet can keep, change or delete.
+async function suggestMeds(c) {
+  if (isExampleText() && careFrom !== 'saved') return toast('Suggestions don’t work on an example. Try it with your own words.');
   if (!(await ensureProvider())) return toast(NO_CLAUDE);
-  medsDraft = { sheet: c, meds: [], note: '', state: 'loading', text: '' };
+  rxBox.busy = 'suggest';
   redrawMeds();
-  const mine = medsDraft;
   try {
     const words = careFrom === 'saved' ? '' : els.transcript.value;
-    const reply = await askJson(buildMedsDraftPrompt(c, words, sourcesFor(`${c.animal} ${c.species} ${c.summary} ${words}`), { drugs: settings.drugs }));
-    if (medsDraft !== mine) return; // they moved on
-    const d = normaliseMedsDraft(extractJson(reply));
-    medsDraft = { sheet: c, ...d, state: 'ready', text: '' };
-  } catch (e) {
-    if (medsDraft !== mine) return;
-    medsDraft = { sheet: c, meds: [], note: '', state: 'error', error: friendly(e) };
-  }
-  redrawMeds();
-}
-// Apply what was typed in the changes box. True when the draft was updated.
-async function updateDraft(c, btn, label = 'Update suggestions') {
-  const d = medsDraft;
-  const change = (d && d.text || '').trim();
-  if (!change) {
-    toast('Type the change first, for example “Meloxicam 0.1 mg/kg once a day for 5 days”.');
-    return false;
-  }
-  if (!(await ensureProvider())) {
-    toast(NO_CLAUDE);
-    return false;
-  }
-  btn.disabled = true;
-  btn.textContent = 'Updating…';
-  try {
-    const reply = await askJson(buildMedsUpdatePrompt(d.meds, change));
-    const next = normaliseMedsDraft(extractJson(reply));
-    medsDraft = { ...d, meds: next.meds, note: next.note || '', text: '' };
-    redrawMeds();
-    return true;
+    const d = normaliseMedsDraft(extractJson(await askJson(buildMedsDraftPrompt(c, words, sourcesFor(`${c.animal} ${c.species} ${c.summary} ${words}`), { drugs: settings.drugs }))));
+    const have = rxBox.text.toLowerCase();
+    const fresh = d.meds.filter((m) => m.suggested && !have.includes(m.name.toLowerCase().split(/[\s(]/)[0]));
+    // One plain line each, the way a vet would write it: "Meloxicam (pain relief), 0.1 mg/kg by mouth, once a day, 5 days".
+    const lower = (x) => x.replace(/^[A-Z](?=[a-z])/, (ch) => ch.toLowerCase());
+    const lines = fresh.map((m) => [m.name, ...(needsDose(m) ? ['dose: vet to decide'] : [m.how, m.how_often, m.how_long].filter(Boolean).map(lower))].join(', '));
+    rxBox.text = [rxBox.text.trim(), ...lines].filter(Boolean).join('\n');
+    rxBox.why = fresh.map((m) => `${m.name.replace(/\s*\(.*\)$/, '')}: ${m.basis || 'from the guidelines'}${m.caution ? `. Caution: ${m.caution}` : ''}`);
+    rxBox.note = fresh.length ? 'Suggestions from Australian wildlife guidelines, for your expert review. Change or delete any line.' : d.note || 'Nothing to suggest for this animal from the guidelines.';
   } catch (e) {
     toast(friendly(e));
-    btn.disabled = false;
-    btn.textContent = label;
-    return false;
+  } finally {
+    rxBox.busy = '';
+    redrawMeds();
   }
+  const box = document.getElementById('rx-text');
+  if (box) box.focus({ preventScroll: true });
 }
-// One tap: anything typed in the box is applied first, then the medicines go into the plan.
-async function acceptDraft(c, btn) {
-  if (medsDraft && (medsDraft.text || '').trim() && btn && !(await updateDraft(c, btn, btn.textContent))) return;
-  const d = medsDraft;
-  if (!d) return;
-  if (d.meds.some(needsDose)) return toast('Add a dose for each medicine first, or remove it, using the box.');
-  // An empty draft never wipes out medicines the plan already has.
-  if (!d.meds.length && c.medications.length) {
-    medsDraft = null;
-    return redrawMeds();
+// Prescribe (or just update the plan): one call reads the box into the script lines and the carer's medicines.
+async function prescribe(c, script) {
+  const text = (rxBox.text || '').trim();
+  const box = document.getElementById('rx-text');
+  if (!text) {
+    toast('Type or paste the medicines first, or tap Suggest.');
+    if (box) box.focus();
+    return;
   }
-  // What the carer gets: the medicines only, without the drafting notes. A caution becomes the carer's tip.
-  const medications = d.meds.map((m) => ({ name: m.name, how: m.how, how_often: m.how_often, how_long: m.how_long, tip: m.caution || '' }));
-  medsDraft = null;
-  await carePlanChanged({ ...c, medications }, 'Medicines added. Next: write the prescription.');
-  // The prescription is the next step: bring its button into view.
-  const rx = document.getElementById('meds-rx');
-  if (rx) {
-    rx.scrollIntoView({ block: 'center', behavior: 'smooth' });
-    rx.focus({ preventScroll: true });
+  if (/vet to decide/i.test(text)) {
+    toast('Add the dose where it says “vet to decide”, or delete that line.');
+    if (box) box.focus();
+    return;
   }
+  if (!(await ensureProvider())) return toast(NO_CLAUDE);
+  rxBox.busy = 'rx';
+  redrawMeds();
+  let r;
+  try {
+    r = normaliseRx(extractJson(await askJson(buildRxPrompt(text, c, { drugs: settings.drugs }))));
+  } catch (e) {
+    rxBox.busy = '';
+    redrawMeds();
+    return toast(friendly(e));
+  }
+  rxBox.busy = '';
+  if (!r.meds.length && !r.items.length) {
+    redrawMeds();
+    return toast('Couldn’t read those medicines. Try one per line: name, strength, dose, how often, how long.');
+  }
+  // The carer's plan now has these medicines, in plain English; the box keeps the vet's own words.
+  const sheet = { ...c, medications: r.meds };
+  rxBox.sheet = sheet;
+  await carePlanChanged(sheet, script ? 'Medicines added to the plan.' : 'Plan updated.');
+  if (script) openRx(sheet, r.items, r.check);
 }
 
 /* ---------------- asking a vet to review ---------------- */

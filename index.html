@@ -296,7 +296,6 @@
       <button type="button" class="link" id="care-reset" hidden>Reset to original</button>
     </div>
     <button type="button" class="btn ghost word-btn" id="word-care"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 11v6M9 14l3 3 3-3"/></svg>Word printout</button>
-    <button type="button" class="btn ghost word-btn vet-only" id="rx-btn" hidden><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l3 3v15H6z"/><path d="M9 9h3.5a2 2 0 0 1 0 4H9V8.5M11.5 13l3.5 5M15 13l-3.5 5"/></svg>Write a prescription</button>
     <div class="actions">
       <button type="button" class="btn ghost" id="care-back-2">Edit plan</button>
       <button type="button" class="btn primary" id="care-copy">Share plan</button>
@@ -701,15 +700,22 @@
 <dialog id="rx-dlg" class="confirm rx-dlg" aria-labelledby="rx-title">
   <form method="dialog" id="rx-form" novalidate>
     <h2 id="rx-title">Prescription</h2>
-    <p class="help">Check the details, make it, then print it and sign it by hand.</p>
-    <div class="rx-grid">
-      <div class="field"><label for="rx-species">Species</label><input id="rx-species" type="text" maxlength="80"></div>
-      <div class="field"><label for="rx-name">Name or ID</label><input id="rx-name" type="text" maxlength="80" placeholder="e.g. Willow, or 26-0417"></div>
-      <div class="field"><label for="rx-age">Age</label><input id="rx-age" type="text" maxlength="60" placeholder="e.g. about 8 months"></div>
-      <div class="field"><label for="rx-sex">Sex</label><select id="rx-sex"><option value="">Choose</option><option>Female</option><option>Male</option><option>Unknown</option></select></div>
-      <div class="field wide" id="rx-breed-field"><label for="rx-breed">Breed</label><input id="rx-breed" type="text" maxlength="80"></div>
-      <div class="field wide"><label for="rx-owner">Carer or shelter</label><input id="rx-owner" type="text" maxlength="120" autocomplete="off" placeholder="Name"></div>
-      <div class="field wide"><label for="rx-owner-address">Their address</label><input id="rx-owner-address" type="text" maxlength="200" autocomplete="off"></div>
+    <ul class="rx-checks" id="rx-checks" aria-label="Check before you print" hidden></ul>
+    <!-- Who it's for: one line each, opened only to fix or change something -->
+    <div class="rx-who">
+      <button type="button" class="rx-row" id="rx-animal-row" aria-expanded="false" aria-controls="rx-animal-fields"><span class="rx-row-k">Animal</span><span class="rx-row-v" id="rx-animal-sum"></span><span class="rx-row-edit">Edit</span></button>
+      <div class="rx-grid rx-fields" id="rx-animal-fields" hidden>
+        <div class="field"><label for="rx-name">Name or ID</label><input id="rx-name" type="text" maxlength="80" placeholder="e.g. Willow, or 26-0417"></div>
+        <div class="field"><label for="rx-species">Species</label><input id="rx-species" type="text" maxlength="80"></div>
+        <div class="field"><label for="rx-age">Age</label><input id="rx-age" type="text" maxlength="60" placeholder="e.g. about 8 weeks"></div>
+        <div class="field"><label for="rx-sex">Sex</label><select id="rx-sex"><option value="">Choose</option><option>Female</option><option>Male</option><option>Unknown</option></select></div>
+        <div class="field wide" id="rx-breed-field"><label for="rx-breed">Breed</label><input id="rx-breed" type="text" maxlength="80"></div>
+      </div>
+      <button type="button" class="rx-row" id="rx-carer-row" aria-expanded="false" aria-controls="rx-carer-fields"><span class="rx-row-k">Carer</span><span class="rx-row-v" id="rx-carer-sum"></span><span class="rx-row-edit">Edit</span></button>
+      <div class="rx-grid rx-fields" id="rx-carer-fields" hidden>
+        <div class="field wide"><label for="rx-owner">Carer or shelter</label><input id="rx-owner" type="text" maxlength="120" autocomplete="off" placeholder="Name"></div>
+        <div class="field wide"><label for="rx-owner-address">Their address</label><input id="rx-owner-address" type="text" maxlength="200" autocomplete="off"></div>
+      </div>
     </div>
     <div id="rx-items"></div>
     <button type="button" class="link" id="rx-add">Add another medicine</button>
@@ -719,6 +725,7 @@
       <button type="button" class="btn ghost" id="rx-copy">Copy for PMS</button>
       <button type="button" class="btn primary" id="rx-go">Make prescription</button>
     </div>
+    <p class="help rx-foot" id="rx-foot">Makes a numbered Word prescription to print and sign by hand.</p>
   </form>
 </dialog>
 
