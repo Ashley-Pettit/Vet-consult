@@ -297,11 +297,23 @@ test('Settings > Vet: Use as Dr Ashley Fake signs in a pretend approved vet on t
   await page.locator('#open-settings').click();
   await page.locator('#tab-vet').click();
   await expect(page.locator('#tab-test-vet')).toHaveCount(0); // no separate Test vet button any more
+  // Reachable part way through signing in, too.
+  await page.locator('#acct-open').click();
+  await expect(page.locator('#acct-fake')).toBeVisible();
   await page.locator('#acct-fake').click();
+  await expect(page.locator('#settings')).toBeHidden(); // back to what they were doing
+  await expect(page.locator('#toast')).toContainText('Dr Ashley Fake');
+  await expect(page.locator('#vet-badge')).toBeVisible();
+  await expect(page.locator('input[name=role][value=vet]')).toBeChecked();
+  await page.locator('#open-settings').click();
+  await page.locator('#tab-vet').click();
   await expect(page.locator('#acct-name')).toHaveText('Dr Ashley Fake');
   await expect(page.locator('#acct-status')).toContainText('marked TEST');
+  await page.locator('#acct-clinic-btn').click();
+  await page.locator('#acct-ed-phone').fill('03 5555 1234');
+  await page.locator('#acct-clinic-btn').click();
+  await expect(page.locator('#acct-clinic')).toContainText('03 5555 1234');
   await page.locator('#close-settings').click();
-  await expect(page.locator('input[name=role][value=vet]')).toBeChecked();
   await page.reload();
   await page.locator('#open-settings').click();
   await page.locator('#tab-vet').click();

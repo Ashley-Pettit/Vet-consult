@@ -54,3 +54,68 @@ test('a carer’s plan has a Medications section that asks a vet for advice', as
   await expect(sec.getByRole('button', { name: /Suggest/ })).toHaveCount(0);
   await expect(page.locator('#make-next-care')).not.toContainText('null'); // no stray text under the heading
 });
+
+test('Ask a vet sends the shelter and animal details with the plan; they are kept for next time but still shown', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await withKey(page, { role: 'carer', mode: 'carer' });
+  await mockApi(page, { body: () => textReply(plan) });
+  const stored = [];
+  await page.route(/\/share(\/|\?|$)/, async (route) => {
+    stored.push(JSON.parse(route.request().postData() || '{}'));
+    await route.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify({ id: 'abcdEFGH2345', key: 'k'.repeat(24), updated: 1 }) });
+  });
+  await openApp(page);
+  await page.locator('#transcript').fill('Ringtail joey 120 g found on the ground, about 8 weeks old.');
+  await page.locator('#create').click();
+  await expect(page.locator('#view-care')).toBeVisible();
+  await page.locator('.meds-sec').getByRole('button', { name: 'Ask a vet about medications' }).click();
+  await expect(page.locator('#askvet-dlg')).toBeVisible();
+  await expect(page.locator('#askvet-note')).toContainText('prescription guidelines'); // first time: why
+  await expect(page.locator('#av-age')).toHaveValue('about 8 weeks'); // from what was said
+  await page.locator('#askvet-go').click();
+  await expect(page.locator('#askvet-msg')).toContainText('shelter or carer name');
+  await page.locator('#av-shelter').fill('Bunurong Wildlife Care');
+  await page.locator('#av-address').fill('1 Example Rd, Wonthaggi VIC');
+  await page.locator('#av-animal').fill('Willow');
+  await page.locator('#askvet-go').click();
+  await expect.poll(() => stored.length).toBe(1);
+  expect(stored[0].forVet.carer.name).toBe('Bunurong Wildlife Care');
+  expect(stored[0].forVet.animal.name).toBe('Willow');
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toContain('Carer: Bunurong Wildlife Care, 1 Example Rd');
+  // Next time: filled in, still shown to check, no explanation needed.
+  await page.locator('.meds-sec').getByRole('button', { name: /Send to the vet again/ }).click();
+  await expect(page.locator('#av-shelter')).toHaveValue('Bunurong Wildlife Care');
+  await expect(page.locator('#askvet-note')).toBeHidden();
+  // And in Settings, to change later.
+  await page.locator('#askvet-dlg button[value=cancel]').click();
+  await page.locator('#open-settings').click();
+  await expect(page.locator('#shelter-address')).toHaveValue('1 Example Rd, Wonthaggi VIC');
+});
+
+test('a vet accepts the medicines, then writes the prescription: missing boxes are marked in place, and it copies for the PMS', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await withKey(page, { role: 'vet', mode: 'carer' });
+  const ready = { meds: [{ ...draft.meds[0], name: 'Meloxicam (pain relief)' }], note: '' };
+  await mockApi(page, { body: (p) => (p.includes('Draft the medications list') ? textReply(ready) : textReply(plan)) });
+  await openApp(page);
+  await page.locator('#open-settings').click();
+  await page.locator('#tab-vet').click();
+  await page.locator('#acct-fake').click();
+  await page.locator('#transcript').fill('Ringtail joey 120 g, female, cat caught, meloxicam 0.1 mg/kg SID 5 days.');
+  await page.locator('#create').click();
+  await expect(page.locator('#view-care')).toBeVisible();
+  const sec = page.locator('.meds-sec');
+  await sec.getByRole('button', { name: 'OK, use these' }).click();
+  await expect(page.locator('#meds-rx')).toBeVisible(); // the next step, right there
+  await page.locator('#meds-rx').click();
+  await expect(page.locator('#rx-dlg')).toBeVisible();
+  await expect(page.locator('[id^="rx-med-"]').first()).toHaveValue('Meloxicam'); // no plain-English note on a script
+  await expect(page.locator('#rx-sex')).toHaveValue('Female');
+  await page.locator('#rx-go').click();
+  await expect(page.locator('#rx-msg')).toContainText('highlighted');
+  await expect(page.locator('#rx-name')).toHaveAttribute('aria-invalid', 'true');
+  await page.locator('#rx-copy').click();
+  const copied = await page.evaluate(() => navigator.clipboard.readText());
+  expect(copied).toContain('Rx: Meloxicam');
+  expect(copied).toContain('Prescriber: Dr Ashley Fake');
+});

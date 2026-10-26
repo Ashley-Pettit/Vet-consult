@@ -174,6 +174,14 @@ export const store = {
   },
   /** Favourite plans the person saved, newest first: [{ id, name, sheet, savedAt }], or { doc: { kind, d } } for a
    * shared document such as a MOP plan; shared: true when it came from someone else's link. Kept until they remove them. */
+  /** The carer's or shelter's details for prescriptions: entered once, sent to the vet with "Ask a vet". */
+  loadShelter() {
+    const v = read(local, 'css.shelter', null) || {};
+    return { name: String(v.name || ''), address: String(v.address || ''), phone: String(v.phone || '') };
+  },
+  saveShelter(v) {
+    write(local, 'css.shelter', { name: String(v.name || '').slice(0, 120), address: String(v.address || '').slice(0, 200), phone: String(v.phone || '').slice(0, 40) });
+  },
   loadSaved() {
     const v = read(local, SAVED, []);
     return Array.isArray(v) ? v.filter((x) => x && typeof x === 'object' && x.id && (x.sheet || (x.doc && x.doc.d))) : [];
@@ -198,5 +206,6 @@ export const store = {
     write(local, DRAFT, null);
     write(local, LAST, null);
     write(local, RECENT, null);
+    write(local, 'css.shelter', null);
   },
 };

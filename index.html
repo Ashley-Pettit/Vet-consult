@@ -418,7 +418,7 @@
     <section class="make-next" id="make-next-doc" aria-label="Make something else from this" hidden></section>
     <button type="button" class="btn ghost word-btn" id="word-doc"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 11v6M9 14l3 3 3-3"/></svg>Word printout</button>
     <div class="actions">
-      <button type="button" class="btn ghost" id="doc-new">Change</button>
+      <button type="button" class="btn ghost" id="doc-new">Edit</button>
       <button type="button" class="btn primary" id="doc-copy">Copy</button>
     </div>
   </section>
@@ -468,6 +468,14 @@
       </div>
     </section>
 
+    <section class="set-group" aria-labelledby="set-shelter">
+      <h3 class="set-title" id="set-shelter">Shelter details</h3>
+      <p class="help">Sent to the vet with Ask a vet about medications, so they can fill in a prescription without asking.</p>
+      <div class="field"><label for="shelter-name">Shelter or carer name</label><input id="shelter-name" type="text" maxlength="120" autocomplete="organization"></div>
+      <div class="field"><label for="shelter-address">Address</label><input id="shelter-address" type="text" maxlength="200" autocomplete="street-address"></div>
+      <div class="field"><label for="shelter-phone">Phone</label><input id="shelter-phone" type="tel" maxlength="40" autocomplete="tel"></div>
+    </section>
+
     <section class="set-group" aria-labelledby="set-app">
       <h3 class="set-title" id="set-app">Printouts and app</h3>
       <div class="field home-field" id="home-field" hidden>
@@ -501,19 +509,27 @@
     <div class="set-pane" id="pane-vet" role="tabpanel" aria-labelledby="tab-vet" hidden>
     <section class="set-group" id="account-group" aria-labelledby="set-account">
       <h3 class="set-title sr-only" id="set-account">Vet account</h3>
-      <div id="acct-start">
-        <p class="help">Vet mode works without signing in (the Carer / Vet switch on the front screen). Sign in to write prescriptions.</p>
+      <div id="acct-start" class="acct-card">
+        <p class="acct-head">Vet account</p>
+        <p class="help">Sign in to write prescriptions. Everything else in vet mode works without an account.</p>
         <div class="acct-start-acts">
-          <button type="button" class="btn ghost" id="acct-open">Vet sign in</button>
-          <button type="button" class="btn ghost" id="acct-fake" hidden>Use as Dr Ashley Fake</button>
+          <button type="button" class="btn primary" id="acct-open">Sign in</button>
         </div>
-        <p class="help" id="acct-fake-help" hidden>Pretend to be a signed-in, approved vet while the app is being built. Prescriptions it makes are marked TEST.</p>
       </div>
-      <div id="acct-in" hidden>
+      <div id="acct-in" class="acct-card" hidden>
         <p class="acct-who"><strong id="acct-name"></strong><span id="acct-reg"></span></p>
         <p class="acct-status" id="acct-status"></p>
         <p class="help" id="acct-clinic"></p>
-        <button type="button" class="btn ghost" id="acct-out">Sign out</button>
+        <div id="acct-clinic-edit" class="rx-grid" hidden>
+          <div class="field wide"><label for="acct-ed-clinic">Clinic or practice</label><input id="acct-ed-clinic" type="text" maxlength="120" autocomplete="organization"></div>
+          <div class="field wide"><label for="acct-ed-address">Clinic address</label><input id="acct-ed-address" type="text" maxlength="200" autocomplete="street-address"></div>
+          <div class="field wide"><label for="acct-ed-phone">Clinic phone</label><input id="acct-ed-phone" type="tel" maxlength="40" autocomplete="tel"></div>
+        </div>
+        <p class="help">These print on your prescriptions.</p>
+        <div class="acct-acts">
+          <button type="button" class="btn ghost" id="acct-clinic-btn">Edit clinic details</button>
+          <button type="button" class="link" id="acct-out">Sign out</button>
+        </div>
       </div>
       <div id="acct-form" hidden>
         <p class="help" id="acct-intro">New accounts are checked against the vet register before they can write prescriptions.</p>
@@ -562,7 +578,14 @@
         <div class="acct-acts">
           <button type="button" class="btn primary" id="acct-go">Sign in</button>
           <button type="button" class="link" id="acct-switch">Create a vet account</button>
+          <button type="button" class="link" id="acct-cancel">Cancel</button>
         </div>
+      </div>
+      <!-- While the app is being built (beta and local testing): one tap to be a signed-in, approved pretend vet. -->
+      <div id="acct-fake-box" class="acct-card acct-fake-box" hidden>
+        <p class="acct-head">For testing</p>
+        <p class="help">Be a signed-in, approved pretend vet. Prescriptions it makes are marked TEST.</p>
+        <button type="button" class="btn ghost" id="acct-fake">Use as Dr Ashley Fake</button>
       </div>
     </section>
     </div>
@@ -655,6 +678,26 @@
   </form>
 </dialog>
 
+<dialog id="askvet-dlg" class="confirm askvet-dlg" aria-labelledby="askvet-title">
+  <form method="dialog" id="askvet-form" novalidate>
+    <h2 id="askvet-title">Details for the vet</h2>
+    <p class="help" id="askvet-note">To meet prescription guidelines, it’s best to send the vet these details: it saves them time. You only enter your shelter details once. We keep them on this device, and you can change them later in Settings.</p>
+    <div class="rx-grid">
+      <div class="field wide"><label for="av-shelter">Shelter or carer name</label><input id="av-shelter" type="text" maxlength="120" autocomplete="organization"></div>
+      <div class="field wide"><label for="av-address">Address</label><input id="av-address" type="text" maxlength="200" autocomplete="street-address"></div>
+      <div class="field wide"><label for="av-phone">Phone</label><input id="av-phone" type="tel" maxlength="40" autocomplete="tel"></div>
+      <div class="field wide"><label for="av-animal">Animal’s name or ID</label><input id="av-animal" type="text" maxlength="80" placeholder="e.g. Willow, or 26-0417"></div>
+      <div class="field"><label for="av-age">Age</label><input id="av-age" type="text" maxlength="60" placeholder="e.g. about 8 weeks"></div>
+      <div class="field"><label for="av-sex">Sex</label><select id="av-sex"><option value="">Choose</option><option>Female</option><option>Male</option><option>Unknown</option></select></div>
+    </div>
+    <p class="rx-msg" id="askvet-msg" role="alert"></p>
+    <div class="dlg-actions">
+      <button type="submit" class="btn ghost" value="cancel" formnovalidate>Cancel</button>
+      <button type="button" class="btn primary" id="askvet-go">Send to the vet</button>
+    </div>
+  </form>
+</dialog>
+
 <dialog id="rx-dlg" class="confirm rx-dlg" aria-labelledby="rx-title">
   <form method="dialog" id="rx-form" novalidate>
     <h2 id="rx-title">Prescription</h2>
@@ -671,8 +714,9 @@
     <div id="rx-items"></div>
     <button type="button" class="link" id="rx-add">Add another medicine</button>
     <p class="rx-msg" id="rx-msg" role="alert"></p>
-    <div class="dlg-actions">
+    <div class="dlg-actions rx-actions">
       <button type="submit" class="btn ghost" value="cancel" formnovalidate>Cancel</button>
+      <button type="button" class="btn ghost" id="rx-copy">Copy for PMS</button>
       <button type="button" class="btn primary" id="rx-go">Make prescription</button>
     </div>
   </form>

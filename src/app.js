@@ -91,7 +91,7 @@ import { chartByKey } from './feeding.js';
 import { shortPlanLink, unpackPlan, linkCode, linkId, shortLink, fetchSharedPlan, storePlan, reviewLink, updateSharedPlan } from './sharelink.js';
 import { vetLabel, medsKey, changedParts } from './plan-changes.js';
 import { account, admin, accountError } from './account.js';
-import { rxFromPlan, rxModel, rxProblems } from './rx.js';
+import { rxFromPlan, rxModel, rxProblems, animalFacts } from './rx.js';
 import { buildMedsDraftPrompt, buildMedsUpdatePrompt, normaliseMedsDraft, needsDose } from './note.js';
 
 const $ = (id) => document.getElementById(id);
@@ -1022,6 +1022,9 @@ function applyRole() {
   }
   if (!roleModes(role).includes(mode())) document.querySelector(`input[name="mode"][value="${roleModes(role)[0]}"]`).checked = true;
 }
+// A signed-in vet is treated as the vet on a plan (medicines, prescriptions, review notes), even with the switch on
+// Carer: they never see "Ask a vet" on their own plans.
+const actingVet = () => settings.role === 'vet' || account.approved;
 // Carer or Vet: the switch on the front screen (any vet can use vet mode), or signing in or out of a vet account.
 function setRole(role) {
   if ((settings.role === 'vet' ? 'vet' : 'carer') === role) return;
@@ -1475,7 +1478,7 @@ let amendTarget = null;
 const MORE_TEXT = {
   answer: { title: 'Update', placeholder: 'What would you like to add or change?', go: 'Update' },
   add: { title: 'Review before saving', placeholder: 'What would you like to add or change?', go: 'Update notes' },
-  amend: { title: 'Answer or change', placeholder: 'e.g. Feeds every 3 hours, not 4. She weighs 130 grams now.', go: 'Make change' },
+  amend: { title: 'Edit', placeholder: 'e.g. Feeds every 3 hours, not 4. She weighs 130 grams now.', go: 'Make change' },
 };
 const AMEND_HELP = 'Say or type what to change or add. Everything else stays as it is.';
 const ANSWER_HELP = 'Answer them in order. Skip any you don’t know.';
@@ -2561,7 +2564,7 @@ async function openCare() {
       askJson(buildCareSheetPrompt(n, sourcesFor(`${els.transcript.value} ${n.patient.species}`)), signal),
     );
     showCare(normaliseCareSheet(extractJson(reply), SOURCE_IDS()), 'note');
-    if (settings.role === 'vet' && careSheet.kind === 'wildlife') startMedsDraft(careSheet);
+    if (actingVet() && careSheet.kind === 'wildlife') startMedsDraft(careSheet);
   } catch (e) {
     showView('note');
     toast(e && e.code === 'cancelled' ? 'Stopped.' : friendly(e));
@@ -2583,7 +2586,7 @@ async function createCarePlan(text) {
   notes = [];
   showCare(normaliseCareSheet(extractJson(reply), SOURCE_IDS()), 'record');
   // A vet's plan: the medications are drafted for their review straight away (what they said, plus guideline options).
-  if (settings.role === 'vet' && careSheet.kind === 'wildlife') startMedsDraft(careSheet);
+  if (actingVet() && careSheet.kind === 'wildlife') startMedsDraft(careSheet);
 }
 
 els.care.addEventListener('click', openCare);
@@ -2760,7 +2763,7 @@ function renderDoc(d, kind) {
       : []),
   );
   $('doc-copy').textContent = DOC_KINDS[kind].copy;
-  $('doc-new').textContent = d.check.length ? 'Answer or change' : 'Change';
+  $('doc-new').textContent = 'Edit';
 }
 
 function showDoc(d, kind, info = '') {
@@ -3304,6 +3307,10 @@ async function openSettings(message, focus) {
   $('photos-on').checked = settings.photosOn !== false;
   $('library-admin-on').checked = settings.libraryAdmin === true;
   $('vet-extras-on').checked = settings.vetExtras === true;
+  const sh = store.loadShelter();
+  $('shelter-name').value = sh.name;
+  $('shelter-address').value = sh.address;
+  $('shelter-phone').value = sh.phone;
   $('template').querySelector('option[value="rspca"]').hidden = !store.rspcaUnlocked();
   $('template').value = settings.template === 'rspca' && !store.rspcaUnlocked() ? 'bunurong' : settings.template || 'bunurong';
   $('unlock').value = '';
@@ -3347,6 +3354,8 @@ function renderVetBadge() {
 function renderAccount() {
   renderVetBadge();
   const u = account.user;
+  // The pretend vet is offered whenever nobody is signed in, including part way through signing in.
+  $('acct-fake-box').hidden = !fakeAllowed || Boolean(u);
   $('acct-in').hidden = !u;
   $('acct-form').hidden = Boolean(u) || !acctOpen;
   $('acct-start').hidden = Boolean(u) || acctOpen;
@@ -3363,6 +3372,36 @@ function renderAccount() {
   $('acct-switch').textContent = acctNew ? 'I already have an account' : 'Create a vet account';
   $('acct-pass').autocomplete = acctNew ? 'new-password' : 'current-password';
 }
+$('acct-cancel').addEventListener('click', () => {
+  acctOpen = false;
+  renderAccount();
+});
+// Clinic details print on prescriptions: editable in place (the pretend vet's stay on this device).
+$('acct-clinic-btn').addEventListener('click', async () => {
+  const box = $('acct-clinic-edit');
+  const u = account.user;
+  if (!u) return;
+  if (box.hidden) {
+    $('acct-ed-clinic').value = u.clinic || '';
+    $('acct-ed-address').value = u.address || '';
+    $('acct-ed-phone').value = u.phone || '';
+    box.hidden = false;
+    $('acct-clinic').hidden = true;
+    $('acct-clinic-btn').textContent = 'Save clinic details';
+    $('acct-ed-clinic').focus();
+    return;
+  }
+  try {
+    await account.update({ clinic: $('acct-ed-clinic').value.trim(), address: $('acct-ed-address').value.trim(), phone: $('acct-ed-phone').value.trim() });
+    toast('Clinic details saved.');
+  } catch (e) {
+    return toast(accountError(e));
+  }
+  box.hidden = true;
+  $('acct-clinic').hidden = false;
+  $('acct-clinic-btn').textContent = 'Edit clinic details';
+  renderAccount();
+});
 $('acct-open').addEventListener('click', () => {
   acctOpen = true;
   renderAccount();
@@ -3516,9 +3555,11 @@ $('rx-btn').addEventListener('click', () => {
   } catch {
     last = {};
   }
-  const f = rxFromPlan(careSheet, last);
+  // The carer's details (sent with a review link) fill the prescription; otherwise last time's.
+  const e = savedEntry();
+  const f = rxFromPlan(careSheet, last, careFrom === 'record' ? els.transcript.value : '', e && e.forVet);
   $('rx-species').value = f.animal.species;
-  $('rx-name').value = '';
+  $('rx-name').value = f.animal.name;
   $('rx-age').value = f.animal.age;
   $('rx-sex').value = f.animal.sex;
   $('rx-breed').value = f.animal.breed;
@@ -3527,8 +3568,40 @@ $('rx-btn').addEventListener('click', () => {
   $('rx-owner-address').value = f.owner.address;
   $('rx-items').replaceChildren(...f.items.map(rxItemRow));
   $('rx-msg').textContent = '';
+  $('rx-dlg').querySelectorAll('[aria-invalid]').forEach((x) => x.removeAttribute('aria-invalid'));
   $('rx-dlg').showModal();
-  $('rx-name').focus();
+  // No box is focused, so the keyboard stays down until they tap one.
+  $('rx-title').tabIndex = -1;
+  $('rx-title').focus({ preventScroll: true });
+});
+// The boxes a prescription can't go without: each empty one is marked where it sits, not in a list at the bottom.
+function rxMarkMissing() {
+  const need = ['rx-species', 'rx-name', 'rx-age', 'rx-sex', 'rx-owner', 'rx-owner-address'];
+  $('rx-items').querySelectorAll('.rx-item').forEach((r) => {
+    if (r.querySelector('[id^="rx-med-"]').value.trim()) need.push(r.querySelector('[id^="rx-qty-"]').id, r.querySelector('[id^="rx-dir-"]').id);
+  });
+  const empty = need.map((id) => $(id) || document.getElementById(id)).filter((x) => x && !x.value.trim());
+  $('rx-dlg').querySelectorAll('[aria-invalid]').forEach((x) => x.removeAttribute('aria-invalid'));
+  empty.forEach((x) => x.setAttribute('aria-invalid', 'true'));
+  if (empty[0]) empty[0].scrollIntoView({ block: 'center', behavior: 'smooth' });
+  return empty.length;
+}
+$('rx-dlg').addEventListener('input', (e) => e.target.value && e.target.removeAttribute('aria-invalid'));
+// The same prescription as text, to paste into the practice management system.
+function rxText(f, vet) {
+  const a = f.animal;
+  const lines = [
+    `Prescription ${new Date().toLocaleDateString('en-AU')}`,
+    `Animal: ${[a.name, a.species, a.age, a.sex].filter((x) => String(x || '').trim()).join(', ')}`,
+    `Carer: ${[f.owner.name, f.owner.address].filter((x) => String(x || '').trim()).join(', ')}`,
+    ...f.items.filter((i) => i.medicine.trim()).map((i) => `Rx: ${i.medicine.trim()}${i.quantity.trim() ? `, quantity ${i.quantity.trim()}` : ''}. ${i.directions.trim()}${i.schedule === 'S8' ? ' (S8)' : ''}${Number(i.repeats) > 0 ? ` Repeats: ${i.repeats}${i.interval ? `, ${i.interval}` : ''}.` : ''}`),
+    vet ? `Prescriber: ${vetLabel({ by: vet.name, reg: vet.reg })}${vet.clinic ? `, ${vet.clinic}` : ''}` : '',
+  ];
+  return lines.filter(Boolean).join('\n');
+}
+$('rx-copy').addEventListener('click', async () => {
+  const ok = await copyText(rxText(rxForm(), account.user));
+  toast(ok ? 'Copied. Paste it into the patient’s record in your PMS.' : 'Couldn’t copy. Try again.');
 });
 $('rx-add').addEventListener('click', () => {
   const n = $('rx-items').querySelectorAll('.rx-item').length;
@@ -3541,7 +3614,8 @@ $('rx-go').addEventListener('click', async () => {
   const f = rxForm();
   const missing = rxProblems(f);
   if (missing.length) {
-    $('rx-msg').textContent = `Add ${missing.join(', ')}.`;
+    const n = rxMarkMissing();
+    $('rx-msg').textContent = n ? `Fill in the ${n === 1 ? 'highlighted box' : `${n} highlighted boxes`}.` : `Add ${missing.join(', ')}.`;
     return;
   }
   const btn = $('rx-go');
@@ -3568,16 +3642,15 @@ $('rx-go').addEventListener('click', async () => {
 });
 
 // While the app is being built: a pretend approved vet, Dr Ashley Fake, kept on this device only (beta and local testing).
-if (__BETA__ || location.hostname === 'localhost') {
-  $('acct-fake').hidden = false;
-  $('acct-fake-help').hidden = false;
-}
+const fakeAllowed = __BETA__ || location.hostname === 'localhost';
 $('acct-fake').addEventListener('click', () => {
   account.signInFake();
   setRole('vet');
   if (!els.clinician.value.trim()) els.clinician.value = account.user.name;
   renderAccount();
-  toast('Signed in as Dr Ashley Fake (pretend). The app is in Vet mode.');
+  // Done here: back to what they were doing, with one clear message (after Settings' own "saved" note).
+  if (els.settings.open) els.settings.close('save');
+  setTimeout(() => toast('Signed in as Dr Ashley Fake (pretend vet). The app is in Vet mode.'), 0);
 });
 
 els.openSettings.addEventListener('click', () => openSettings());
@@ -3587,7 +3660,11 @@ els.settings.addEventListener('close', async () => {
   // Whatever way it's closed (Save, ✕, Escape, a tap outside), changes are kept: nothing typed is lost.
   const key = els.apiKey.value.trim();
   const next = { ...settings, photosOn: $('photos-on').checked, libraryAdmin: $('library-admin-on').checked, vetExtras: $('vet-extras-on').checked, template: $('template').value, drugs: $('drugs').value.slice(0, 3000), clinician: els.clinician.value.trim().slice(0, 80), model: els.model.value, apiKey: key, rememberKey: els.rememberKey.checked };
-  const changed = JSON.stringify(next) !== JSON.stringify(settings);
+  // Shelter details live on their own (they travel with Ask a vet), but save with the rest.
+  const shelter = { name: $('shelter-name').value.trim(), address: $('shelter-address').value.trim(), phone: $('shelter-phone').value.trim() };
+  const shelterChanged = JSON.stringify(shelter) !== JSON.stringify(store.loadShelter());
+  if (shelterChanged) store.saveShelter(shelter);
+  const changed = shelterChanged || JSON.stringify(next) !== JSON.stringify(settings);
   if (!changed && els.settings.returnValue !== 'save') return;
   settings = next;
   store.saveSettings(settings);
@@ -3757,7 +3834,7 @@ function medsSection(c) {
   if (careFrom === 'library' || leaveIt(c)) {
     return c.medications.length ? el('section', { class: 'care-sec' }, [el('h2', { text: 'Medications' }), el('ul', { class: 'meds' }, c.medications.map(medItem))]) : null;
   }
-  const vet = settings.role === 'vet';
+  const vet = actingVet();
   const draft = vet && medsDraft && medsDraft.sheet === c ? medsDraft : null;
   const remote = savedEntry() && savedEntry().remote;
   const parts = [el('h2', { text: 'Medications' })];
@@ -3767,7 +3844,7 @@ function medsSection(c) {
   else if (vet && c.medications.length) {
     // Medicines in the plan: the prescription is the next step, right here beside them.
     parts.push(el('div', { class: 'meds-acts' }, [
-      el('button', { type: 'button', class: 'btn small primary', onclick: () => $('rx-btn').click() }, 'Write a prescription'),
+      el('button', { type: 'button', class: 'btn small primary', id: 'meds-rx', onclick: () => $('rx-btn').click() }, 'Write a prescription'),
       el('button', { type: 'button', class: 'btn small ghost', onclick: () => openDraft(c, c.medications) }, 'Change them'),
       c.kind === 'wildlife' ? el('button', { type: 'button', class: 'link', onclick: () => startMedsDraft(c) }, 'Check against guidelines') : null,
     ]));
@@ -3780,7 +3857,7 @@ function medsSection(c) {
     if (c.kind === 'wildlife') parts.push(el('p', { class: 'help', text: 'Options come from Australian wildlife guidelines, for your expert review. Nothing reaches the carer until you accept it.' }));
   } else {
     parts.push(el('div', { class: 'meds-acts' }, [
-      el('button', { type: 'button', class: 'btn small ghost', onclick: (e) => askVetReview(e.currentTarget, 'meds') }, remote && remote.mine ? 'Send to the vet again' : 'Ask a vet about medications'),
+      el('button', { type: 'button', class: 'btn small ghost', onclick: (e) => openAskVet(e.currentTarget) }, remote && remote.mine ? 'Send to the vet again' : 'Ask a vet about medications'),
     ]));
     parts.push(el('p', { class: 'help', text: remote && remote.mine ? 'Sent for review. The vet’s medications show here when you next open the plan.' : 'Sends this plan to a vet to advise on medicines. They can add them and write a prescription.' }));
   }
@@ -3804,13 +3881,14 @@ function draftPanel(c, d) {
       el('div', { class: 'meds-acts' }, [d.title ? null : el('button', { type: 'button', class: 'btn small primary', onclick: () => startMedsDraft(c) }, 'Try again'), el('button', { type: 'button', class: 'btn small ghost', onclick: () => openDraft(c, c.medications) }, 'Type them in')]),
     ]);
   }
-  const box = el('textarea', { id: 'draft-change', rows: '2', placeholder: 'e.g. Drop the antibiotic. Meloxicam 0.1 mg/kg by mouth once a day for 5 days.' });
+  const typing = !d.meds.length; // "Type them in": nothing drafted yet, just a box to write the medicines
+  const box = el('textarea', { id: 'draft-change', rows: typing ? '3' : '2', placeholder: typing ? 'e.g. Meloxicam 0.1 mg/kg by mouth once a day for 5 days. Amoxicillin-clavulanate 12.5 mg/kg twice a day for 7 days.' : 'e.g. Drop the antibiotic. Meloxicam 0.1 mg/kg by mouth once a day for 5 days.' });
   box.value = d.text || '';
   box.addEventListener('input', () => (d.text = box.value));
   const missing = d.meds.filter(needsDose).length;
   return el('div', { class: 'draft' }, [
-    el('p', { class: 'draft-title', text: 'Draft medications: for your review' }),
-    el('p', { class: 'help', text: 'Please update as per your expertise. Type any changes below, or tap OK to use them as they are.' }),
+    el('p', { class: 'draft-title', text: typing ? 'Medicines for this plan' : 'Draft medications: for your review' }),
+    el('p', { class: 'help', text: typing ? 'Type or say each medicine with its dose, how often and how long.' : 'Please update as per your expertise. Type any changes below, or tap OK to use them as they are.' }),
     d.note ? el('p', { class: 'draft-note', text: d.note }) : null,
     d.meds.length
       ? el('ul', { class: 'meds draft-meds' }, d.meds.map((m) => el('li', { class: m.suggested ? 'suggested' : '' }, [
@@ -3819,13 +3897,13 @@ function draftPanel(c, d) {
           m.basis ? el('span', { class: 'care-tip', text: `Why: ${m.basis}` }) : null,
           m.caution ? el('span', { class: 'care-tip caution', text: `Caution: ${m.caution}` }) : null,
         ])))
-      : el('p', { class: 'meds-none', text: 'No medicines in the draft.' }),
-    el('label', { class: 'field-label', for: 'draft-change', text: 'Changes (optional)' }),
+      : null,
+    typing ? null : el('label', { class: 'field-label', for: 'draft-change', text: 'Changes (optional)' }),
     box,
     el('p', { class: 'draft-msg', role: 'status', text: missing ? `${missing === 1 ? 'One medicine needs' : `${missing} medicines need`} a dose: add it in the box above, or remove it.` : '' }),
     el('div', { class: 'meds-acts' }, [
-      el('button', { type: 'button', class: 'btn small ghost', onclick: (e) => updateDraft(c, e.currentTarget) }, 'Update draft'),
-      el('button', { type: 'button', class: 'btn small primary', onclick: () => acceptDraft(c) }, 'OK, use these'),
+      typing ? null : el('button', { type: 'button', class: 'btn small ghost', onclick: (e) => updateDraft(c, e.currentTarget) }, 'Update draft'),
+      el('button', { type: 'button', class: 'btn small primary', onclick: (e) => acceptDraft(c, e.currentTarget) }, typing ? 'Add to plan' : 'OK, use these'),
       el('button', { type: 'button', class: 'link', onclick: () => { medsDraft = null; renderCare(careSheet); renderEndorse(careSheet); } }, 'Not now'),
     ]),
   ]);
@@ -3861,11 +3939,18 @@ async function startMedsDraft(c) {
   }
   redrawMeds();
 }
-async function updateDraft(c, btn) {
+// Apply what was typed in the changes box. True when the draft was updated.
+async function updateDraft(c, btn, label = 'Update draft') {
   const d = medsDraft;
   const change = (d && d.text || '').trim();
-  if (!change) return toast('Type the change first, for example “Meloxicam 0.1 mg/kg once a day for 5 days”.');
-  if (!(await ensureProvider())) return toast(NO_CLAUDE);
+  if (!change) {
+    toast('Type the change first, for example “Meloxicam 0.1 mg/kg once a day for 5 days”.');
+    return false;
+  }
+  if (!(await ensureProvider())) {
+    toast(NO_CLAUDE);
+    return false;
+  }
   btn.disabled = true;
   btn.textContent = 'Updating…';
   try {
@@ -3873,16 +3958,20 @@ async function updateDraft(c, btn) {
     const next = normaliseMedsDraft(extractJson(reply));
     medsDraft = { ...d, meds: next.meds, note: next.note || '', text: '' };
     redrawMeds();
+    return true;
   } catch (e) {
     toast(friendly(e));
     btn.disabled = false;
-    btn.textContent = 'Update draft';
+    btn.textContent = label;
+    return false;
   }
 }
-async function acceptDraft(c) {
+// One tap: anything typed in the box is applied first, then the medicines go into the plan.
+async function acceptDraft(c, btn) {
+  if (medsDraft && (medsDraft.text || '').trim() && btn && !(await updateDraft(c, btn, btn.textContent))) return;
   const d = medsDraft;
   if (!d) return;
-  if (d.meds.some(needsDose)) return toast('Add a dose for each medicine first, or remove it, using the changes box.');
+  if (d.meds.some(needsDose)) return toast('Add a dose for each medicine first, or remove it, using the box.');
   // An empty draft never wipes out medicines the plan already has.
   if (!d.meds.length && c.medications.length) {
     medsDraft = null;
@@ -3891,7 +3980,13 @@ async function acceptDraft(c) {
   // What the carer gets: the medicines only, without the drafting notes. A caution becomes the carer's tip.
   const medications = d.meds.map((m) => ({ name: m.name, how: m.how, how_often: m.how_often, how_long: m.how_long, tip: m.caution || '' }));
   medsDraft = null;
-  await carePlanChanged({ ...c, medications }, 'Medications updated.');
+  await carePlanChanged({ ...c, medications }, 'Medicines added. Next: write the prescription.');
+  // The prescription is the next step: bring its button into view.
+  const rx = document.getElementById('meds-rx');
+  if (rx) {
+    rx.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    rx.focus({ preventScroll: true });
+  }
 }
 
 /* ---------------- asking a vet to review ---------------- */
@@ -3907,7 +4002,7 @@ function renderEndorse(c) {
   // Edit text: the library admin on ready-made plans, and vets on any other plan (reviewing one, or their own).
   $('library-admin').hidden = !((careFrom === 'library' && libraryPlan && libraryAdmin()) || (careFrom !== 'library' && settings.role === 'vet'));
   const box = $('care-endorse');
-  const vet = settings.role === 'vet';
+  const vet = actingVet();
   const remote = savedEntry() && savedEntry().remote;
   let title = '';
   let text = '';
@@ -3955,7 +4050,7 @@ function markChanged(parts) {
 async function pushRemote(sheet) {
   const entry = savedEntry();
   if (!entry || !entry.remote || !entry.remote.key) return null;
-  const updated = await updateSharedPlan(entry.remote.id, entry.remote.key, { v: 1, region: region().code, type: 'care', sheet }, CONFIG.proxyUrl);
+  const updated = await updateSharedPlan(entry.remote.id, entry.remote.key, { v: 1, region: region().code, type: 'care', sheet, ...(entry.forVet ? { forVet: entry.forVet } : {}) }, CONFIG.proxyUrl);
   if (!updated) return false;
   store.updateSaved(entry.id, { remote: { ...entry.remote, updated } });
   return true;
@@ -3970,7 +4065,7 @@ async function carePlanChanged(sheet, done = 'Saved.') {
   if (careFrom === 'library') return libraryChanged(sheet);
   const saved = Boolean(savedId && updateSavedPlan(sheet));
   const pushed = await pushRemote(sheet);
-  const who = settings.role === 'vet' ? 'The carer sees it' : 'The vet sees it';
+  const who = actingVet() ? 'The carer sees it' : 'The vet sees it';
   if (pushed === true) toast(`${done} ${who} next time they open the plan.`);
   else if (pushed === false) toast(`${done} Couldn’t update the shared plan: check your internet connection, then try again.`);
   else toast(saved ? `${done} Your saved plan is updated.` : done);
@@ -3989,8 +4084,8 @@ async function refreshRemote(id, quiet = false) {
   if (!latest || !(latest.updated > (entry.remote.updated || 0)) || !latest.plan || !latest.plan.sheet) return false;
   const sheet = normaliseCareSheet(latest.plan.sheet, null);
   const parts = [...(medsKey(entry.sheet.medications) !== medsKey(sheet.medications) ? ['Medications'] : []), ...changedParts(entry.sheet, sheet)];
-  const who = settings.role === 'vet' ? 'The carer' : 'The vet';
-  store.updateSaved(id, { sheet, remote: { ...entry.remote, updated: latest.updated, changes: parts.length ? { parts, who, at: latest.updated } : entry.remote.changes || null } });
+  const who = actingVet() ? 'The carer' : 'The vet';
+  store.updateSaved(id, { sheet, ...(latest.plan.forVet ? { forVet: latest.plan.forVet } : {}), remote: { ...entry.remote, updated: latest.updated, changes: parts.length ? { parts, who, at: latest.updated } : entry.remote.changes || null } });
   if (!quiet && savedId === id && document.body.dataset.view === 'care') {
     showCare(sheet, 'saved', els.careBanner.hidden ? '' : els.careBanner.textContent, true);
     toast('Updated with the latest changes.');
@@ -4001,20 +4096,65 @@ async function refreshRemote(id, quiet = false) {
 
 
 // Send the plan to a vet for review. focus 'meds' asks about medicines in particular.
-async function askVetReview(btn) {
+// Before asking a vet: the shelter's details (kept on this device after the first time) and this animal's, so the
+// vet can write a prescription without having to ask. Shown every time, filled in, in case one animal differs.
+let askVetBtn = null;
+function openAskVet(btn) {
+  if (!careSheet) return;
+  askVetBtn = btn;
+  const sh = store.loadShelter();
+  const entry = savedEntry();
+  const sent = (entry && entry.forVet) || {};
+  const a = { ...animalFacts(careSheet, careFrom === 'record' ? els.transcript.value : ''), ...(sent.animal || {}) };
+  $('av-shelter').value = sh.name;
+  $('av-address').value = sh.address;
+  $('av-phone').value = sh.phone;
+  $('av-animal').value = (sent.animal && sent.animal.name) || '';
+  $('av-age').value = a.age || '';
+  $('av-sex').value = a.sex || '';
+  // The first time it explains why; after that the details are already there to check.
+  $('askvet-note').hidden = Boolean(sh.name && sh.address);
+  $('askvet-msg').textContent = '';
+  $('askvet-dlg').showModal();
+}
+$('askvet-go').addEventListener('click', async () => {
+  const carer = { name: $('av-shelter').value.trim(), address: $('av-address').value.trim(), phone: $('av-phone').value.trim() };
+  const animal = { name: $('av-animal').value.trim(), age: $('av-age').value.trim(), sex: $('av-sex').value, species: careSheet ? careSheet.species || '' : '' };
+  const missing = [!carer.name && 'the shelter or carer name', !carer.address && 'the address'].filter(Boolean);
+  if (missing.length) {
+    $('askvet-msg').textContent = `Add ${missing.join(' and ')}: a prescription needs them.`;
+    return;
+  }
+  store.saveShelter(carer);
+  $('askvet-dlg').close('sent');
+  await askVetReview(askVetBtn || $('askvet-go'), { carer, animal });
+});
+const forVetLines = (f) => {
+  if (!f) return '';
+  const c = f.carer || {};
+  const a = f.animal || {};
+  const animal = [a.name, a.species, a.age, a.sex].filter(Boolean).join(', ');
+  return `\n\nFor the prescription:\nCarer: ${[c.name, c.address, c.phone].filter(Boolean).join(', ')}${animal ? `\nAnimal: ${animal}` : ''}`;
+};
+async function askVetReview(btn, forVet = null) {
   if (!careSheet) return;
   let entry = savedEntry();
   let remote = entry && entry.remote;
+  if (remote && forVet && remote.key) {
+    // Sending again: the latest details go with the plan.
+    await updateSharedPlan(remote.id, remote.key, { v: 1, region: region().code, type: 'care', sheet: careSheet, forVet }, CONFIG.proxyUrl);
+    store.updateSaved(entry.id, { forVet });
+  }
   if (!remote) {
     btn.disabled = true;
-    const j = await storePlan({ v: 1, region: region().code, type: 'care', sheet: careSheet }, CONFIG.proxyUrl, { edit: true });
+    const j = await storePlan({ v: 1, region: region().code, type: 'care', sheet: careSheet, ...(forVet ? { forVet } : {}) }, CONFIG.proxyUrl, { edit: true });
     btn.disabled = false;
     if (!j) return toast('Couldn’t make a review link. Check your internet connection, then try again.');
     remote = { id: j.id, key: j.key, updated: j.updated, mine: true };
     // The plan is kept under Plans, linked to the review, so the vet's changes come back to it.
-    if (entry) store.updateSaved(entry.id, { remote });
+    if (entry) store.updateSaved(entry.id, { remote, ...(forVet ? { forVet } : {}) });
     else {
-      entry = { id: `s-${j.id}`, name: planName().slice(0, 80), sheet: careSheet, savedAt: Date.now(), remote };
+      entry = { id: `s-${j.id}`, name: planName().slice(0, 80), sheet: careSheet, savedAt: Date.now(), remote, ...(forVet ? { forVet } : {}) };
       if (!store.savePlan(entry)) return toast('This device is out of space. Remove a saved plan and try again.');
       savedId = entry.id;
       refreshSaveBtn();
@@ -4024,7 +4164,7 @@ async function askVetReview(btn) {
   }
   const url = reviewLink(remote.id, remote.key);
   const animal = String(careSheet.animal || '').trim();
-  const text = `Could you please review my care plan${animal ? ` for the ${animal.replace(/^(a|an|the)\s+/i, '')}` : ''}. If appropriate, please add medication to the plan and write a prescription for signing.`;
+  const text = `Could you please review my care plan${animal ? ` for the ${animal.replace(/^(a|an|the)\s+/i, '')}` : ''}. If appropriate, please add medication to the plan and write a prescription for signing.${forVetLines(forVet || (savedEntry() && savedEntry().forVet))}`;
   if (canShare()) {
     try {
       await navigator.share({ title: `For vet review: ${planName()}`, text, url });
@@ -4045,7 +4185,7 @@ async function openSharedLink() {
   const short = shortLink(location.hash);
   if (!code && !short) return;
   const review = Boolean(short && short.key);
-  const info = review && settings.role === 'vet' ? REVIEW_INFO : SHARED_INFO;
+  const info = review && actingVet() ? REVIEW_INFO : SHARED_INFO;
   // A short link whose plan is already saved here opens straight away (and picks up any newer changes).
   if (short && store.loadSaved().some((x) => x.id === `s-${short.id}`)) {
     if (review) store.updateSaved(`s-${short.id}`, { remote: { updated: 0, ...(store.loadSaved().find((x) => x.id === `s-${short.id}`).remote || {}), id: short.id, key: short.key } });
@@ -4075,7 +4215,7 @@ async function openSharedLink() {
       const c = normaliseCareSheet(p.sheet, null);
       showCare(c, 'record', info);
       const remote = review ? { id: short.id, key: short.key, updated } : undefined;
-      if (store.savePlan({ id, name: planName().slice(0, 80), sheet: c, savedAt: Date.now(), shared: true, remote })) {
+      if (store.savePlan({ id, name: planName().slice(0, 80), sheet: c, savedAt: Date.now(), shared: true, remote, ...(p.forVet ? { forVet: p.forVet } : {}) })) {
         savedId = id;
         refreshSaveBtn();
         renderEndorse(c); // now it knows about the review link

@@ -86,13 +86,22 @@ export function rxModel(f, vet, number, at = Date.now()) {
 const planWords = (c) => [c.animal, c.title, c.summary].filter(Boolean).join(' ');
 const sexOf = (w) => (/\bfemale\b/i.test(w) ? 'Female' : /\bmale\b/i.test(w) ? 'Male' : '');
 const ageOf = (w) => ((w.match(/\b(?:about |around |roughly )?\d+(?:\.\d+)?\s*(?:days?|weeks?|months?|years?)(?:\s+old)?\b/i) || [])[0] || '').replace(/\s+old$/i, '');
-export function rxFromPlan(c, last = {}) {
-  const w = planWords(c);
+/** Age and sex for this animal, from the plan and the words it was made from, where they're said. */
+export function animalFacts(c, words = '') {
+  const w = `${planWords(c)} ${words}`;
+  return { age: ageOf(w), sex: sexOf(w) };
+}
+/** The prescription filled in as far as possible: from the plan, the details a carer sent with it, or last time. */
+export function rxFromPlan(c, last = {}, words = '', sent = null) {
+  const a = animalFacts(c, words);
+  const s = sent || {};
+  const carer = s.carer || {};
+  const animal = s.animal || {};
   return {
-    animal: { species: c.species || '', name: '', age: ageOf(w), sex: sexOf(w), breed: c.kind === 'wildlife' ? 'Wild animal (no breed)' : '' },
-    owner: { name: last.ownerName || '', address: last.ownerAddress || '' },
+    animal: { species: c.species || '', name: animal.name || '', age: animal.age || a.age, sex: animal.sex || a.sex, breed: c.kind === 'wildlife' ? 'Wild animal (no breed)' : '' },
+    owner: carer.name ? { name: carer.name, address: [carer.address, carer.phone].filter(Boolean).join(' · ') } : { name: last.ownerName || '', address: last.ownerAddress || '' },
     items: (c.medications.length ? c.medications : [{ name: '' }]).slice(0, 4).map((m) => ({
-      medicine: m.name || '',
+      medicine: String(m.name || '').replace(/\s*\([^)]*\)\s*$/, '').trim(), // "Meloxicam (pain relief)" -> "Meloxicam"
       quantity: '',
       directions: [m.how, m.how_often, m.how_long].filter(Boolean).join('. '),
       repeats: '0',

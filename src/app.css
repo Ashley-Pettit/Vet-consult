@@ -836,7 +836,8 @@ body[data-kb="open"] .site-foot, body[data-kb="open"] .foot { display: none; }
 .about-back { margin-bottom: 4px; }
 #transcript { min-height: 120px; }
 @media (max-width: 719px) { .hero-banner { min-height: 112px; } .hero-inner { padding-top: 10px; padding-bottom: 10px; } .hero-title { font-size: 1.9rem; } }
-@media (max-width: 719px) { .hero-title { font-size: clamp(1.25rem, 6.8vw, 2.2rem); white-space: nowrap; } }
+/* The name fits on one line down to small phones (it got longer with the rename), and wraps rather than clipping. */
+@media (max-width: 719px) { .hero-title { font-size: clamp(1.1rem, 6.1vw, 2.2rem); white-space: normal; text-wrap: balance; overflow-wrap: anywhere; } .hero-eyebrow { white-space: normal; } }
 
 /* Normal ranges: one row per measure so long values have room */
 .care-sec.ranges .grid { grid-template-columns: 1fr; gap: 0; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
@@ -1241,7 +1242,7 @@ body[data-role="vet"] .carer-only, body:not([data-role="vet"]) .vet-only { displ
    so it never looks switched on when it isn't. */
 
 /* Vets use it many times a day on a phone: drop the photo banner (the logo stays) so Create sits on the first screen. */
-@media (max-width: 719px) { body[data-role="vet"] .hero-banner { display: none; } }
+
 
 /* Ready-made plans: one block per animal, a tappable row per stage and weight */
 .library { display: flex; flex-direction: column; gap: 18px; }
@@ -1606,6 +1607,10 @@ dialog.rx-dlg form { gap: 10px; }
 .rx-more > summary { cursor: pointer; color: var(--accent); font-weight: 600; min-height: 44px; display: flex; align-items: center; }
 .rx-more .rx-grid { padding-top: 4px; }
 dialog.rx-dlg .dlg-actions { position: sticky; bottom: 0; background: var(--surface); padding-top: 10px; }
+.rx-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+.rx-actions #rx-go { flex: 1 1 100%; order: -1; }
+@media (min-width: 480px) { .rx-actions #rx-go { flex: 0 1 auto; order: 0; } }
+.rx-dlg [aria-invalid="true"], .askvet-dlg [aria-invalid="true"] { border-color: var(--warn) !important; box-shadow: 0 0 0 2px var(--warn-soft); }
 @media (max-width: 340px) { .rx-grid { grid-template-columns: 1fr; } }
 .rx-msg { margin: 0; color: var(--err); font-size: 0.92rem; }
 .rx-msg:empty { display: none; }
@@ -1649,6 +1654,15 @@ details.care-sec.fold .fold-actions { margin: 10px 0; }
 .saved-item input.saved-name { width: 100%; }
 /* Vet sign in, or the pretend vet while the app is built */
 .acct-start-acts { display: flex; flex-wrap: wrap; gap: 8px; }
+/* Vet tab: each state is one tidy card */
+.acct-card { display: grid; gap: 10px; padding: 14px 16px; border-radius: 12px; box-shadow: inset 0 0 0 1px var(--line); background: var(--surface); }
+.acct-card .help { margin: 0; }
+.acct-head { margin: 0; font-weight: 700; font-size: 1rem; }
+.acct-start-acts .btn, .acct-fake-box .btn { width: 100%; min-height: 48px; }
+.acct-fake-box { margin-top: 12px; box-shadow: inset 0 0 0 1px var(--line); background: none; }
+#acct-form { display: grid; gap: 10px; }
+#acct-form .field { margin: 0; }
+.acct-acts .link { min-height: 44px; }
 
 /* How it works: the two plan-to-prescription flows, side by side on wider screens */
 .flows { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); margin-top: 10px; }
