@@ -33,6 +33,11 @@ function save(v) {
   if (s) safe(() => s.setItem(KEY, JSON.stringify(v)));
 }
 current = load();
+// A device still signed in to the old server test vet moves to the pretend vet (the server one is gone).
+if (current && current.user && current.user.test && !current.user.fake) {
+  current = { token: 'fake', remember: true, user: { ...FAKE_VET } };
+  save(current);
+}
 
 /** Error with a code the screens turn into plain words. */
 const fail = (code, extra = {}) => Object.assign(new Error(code), { code, ...extra });

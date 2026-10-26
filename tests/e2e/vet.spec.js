@@ -18,7 +18,7 @@ test('vet: plan first, notes second, copy at the top, quick notes look finished'
   expect(calls[0].prompt).toMatch(/helping a vet .* write a complete care plan for the wildlife carer/);
 
   // Switch to clinical notes from the same words.
-  await page.locator('#make-next-care button', { hasText: 'Clinical notes' }).click();
+  await page.locator('#make-next-care button', { hasText: 'SOAP notes' }).click();
   await expect(page.locator('#view-note')).toBeVisible();
   await expect(page.locator('#copy-top')).toBeVisible();
   await expect(page.locator('#note')).not.toContainText('Not recorded');
@@ -45,7 +45,7 @@ test('vet: clinical notes are written only when asked for, from the same words',
   await expect(page.locator('#discharge-pack')).toHaveCount(0); // the discharge pack is gone
   await page.waitForTimeout(1000);
   expect(calls.filter((c) => c.prompt.includes('<dictation>')).length).toBe(0); // nothing made in the background
-  await page.locator('.make-btn', { hasText: 'Clinical notes' }).click();
+  await page.locator('.make-btn', { hasText: 'SOAP notes' }).click();
   await expect(page.locator('#view-note')).toBeVisible();
   expect(calls.filter((c) => c.prompt.includes('<dictation>')).length).toBe(1); // written once, when asked
 });

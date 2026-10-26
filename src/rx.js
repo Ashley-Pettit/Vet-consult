@@ -82,9 +82,14 @@ export function rxModel(f, vet, number, at = Date.now()) {
 }
 
 /** Starting values for the form from a care plan: the animal and each medication's directions. */
+// Sex and age, when the plan says them ("female", "about 120 grams" isn't an age, "8 months old" is).
+const planWords = (c) => [c.animal, c.title, c.summary].filter(Boolean).join(' ');
+const sexOf = (w) => (/\bfemale\b/i.test(w) ? 'Female' : /\bmale\b/i.test(w) ? 'Male' : '');
+const ageOf = (w) => ((w.match(/\b(?:about |around |roughly )?\d+(?:\.\d+)?\s*(?:days?|weeks?|months?|years?)(?:\s+old)?\b/i) || [])[0] || '').replace(/\s+old$/i, '');
 export function rxFromPlan(c, last = {}) {
+  const w = planWords(c);
   return {
-    animal: { species: c.species || '', name: '', age: '', sex: '', breed: c.kind === 'wildlife' ? 'Wild animal (no breed)' : '' },
+    animal: { species: c.species || '', name: '', age: ageOf(w), sex: sexOf(w), breed: c.kind === 'wildlife' ? 'Wild animal (no breed)' : '' },
     owner: { name: last.ownerName || '', address: last.ownerAddress || '' },
     items: (c.medications.length ? c.medications : [{ name: '' }]).slice(0, 4).map((m) => ({
       medicine: m.name || '',

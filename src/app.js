@@ -988,7 +988,7 @@ async function askJson(prompt0, signal, opts = {}) {
 
 const mode = () => document.querySelector('input[name="mode"]:checked')?.value || 'vet';
 const MODES = ['intake', 'log', 'carer', 'tovet', 'mop', 'funding', 'vet', 'polish', 'media', 'witness', 'opinion'];
-const ROLE_MODES = { carer: ['carer', 'intake', 'log', 'tovet', 'mop', 'funding'], vet: ['carer', 'vet', 'polish', 'media', 'witness', 'opinion'] };
+const ROLE_MODES = { carer: ['carer', 'tovet', 'mop', 'funding'], vet: ['carer', 'vet', 'polish', 'media', 'witness', 'opinion'] };
 // Vets see clinical notes and care plans; Rapid polish and Advanced only with Extra vet tools (Settings > Admin).
 const VET_EXTRAS = ['polish', 'media', 'witness', 'opinion'];
 const roleModes = (role) => (role === 'vet' && settings.vetExtras !== true ? ROLE_MODES.vet.filter((m) => !VET_EXTRAS.includes(m)) : ROLE_MODES[role]);
@@ -1000,7 +1000,7 @@ const MODE_TEXT = {
   opinion: { button: 'Draft opinion', placeholder: 'The questions you were asked, what you know, and your view.' },
   media: { button: 'Draft statement', placeholder: 'The story, how the animal is doing, and what the public should do.' },
   polish: { button: 'Polish notes', placeholder: 'Jot your notes. Shorthand is fine.' },
-  vet: { button: 'Create notes', placeholder: 'Talk or type the consult.' },
+  vet: { button: 'Create SOAP notes', placeholder: 'Talk or type the consult.' },
   carer: { button: 'Create care plan', placeholder: 'The animal, its condition, meds and care needs.' },
   intake: { button: 'Create record', placeholder: 'Case number, the animal, where it was found and its condition.' },
   log: { button: 'Create log', placeholder: 'Weight, feeds, meds, toileting and behaviour.' },
@@ -1699,7 +1699,7 @@ more.addEventListener('close', async () => {
 });
 more.addEventListener('click', (e) => e.target === more && more.close()); // tap outside to cancel
 // Sending notes straight into the practice system is on the way.
-$('push-soap').addEventListener('click', () => toast('Coming soon: send these notes straight into your practice’s SOAP system.'));
+$('push-soap').addEventListener('click', () => toast('Coming soon: send these notes straight into your practice management system (PMS).'));
 // Back to the dictation, words kept. Adding more now happens from the review card.
 els.back.addEventListener('click', () => (busy ? null : showView('record')));
 
@@ -2567,7 +2567,7 @@ async function openCare() {
       askJson(buildCareSheetPrompt(n, sourcesFor(`${els.transcript.value} ${n.patient.species}`)), signal),
     );
     showCare(normaliseCareSheet(extractJson(reply), SOURCE_IDS()), 'note');
-    if (settings.role === 'vet' && careSheet.kind === 'wildlife') startMedsDraft(careSheet);
+    if (settings.role === 'vet' && careSheet.kind === 'wildlife' && !careSheet.medications.length) startMedsDraft(careSheet);
   } catch (e) {
     showView('note');
     toast(e && e.code === 'cancelled' ? 'Stopped.' : friendly(e));
@@ -2588,8 +2588,8 @@ async function createCarePlan(text) {
   );
   notes = [];
   showCare(normaliseCareSheet(extractJson(reply), SOURCE_IDS()), 'record');
-  // A vet's plan: the medications are drafted for their review straight away.
-  if (settings.role === 'vet' && careSheet.kind === 'wildlife') startMedsDraft(careSheet);
+  // A vet's plan with no medicines yet: options are drafted for their review straight away (theirs are used as said).
+  if (settings.role === 'vet' && careSheet.kind === 'wildlife' && !careSheet.medications.length) startMedsDraft(careSheet);
 }
 
 els.care.addEventListener('click', openCare);
@@ -2860,8 +2860,6 @@ $('doc-review-open').addEventListener('click', () => currentDoc && openAnswers({
 const madeFrom = {};
 const MAKE_NEXT = [
   ['carer', 'Care plan'],
-  ['intake', 'Intake record'],
-  ['log', 'Care log'],
   ['tovet', 'Summary for the vet'],
   ['mop', 'MOP plan'],
 ];
@@ -2883,7 +2881,8 @@ const svgIcon = (inner) => {
 };
 function renderMakeNext(box, current) {
   // A vet flicks between the carer plan and clinical notes from the same words, to copy either into their system.
-  const pool = settings.role === 'vet' ? [['carer', 'Carer plan'], ['vet', 'Clinical notes'], ['media', 'Media statement'], ['witness', 'Expert witness statement'], ['opinion', 'Expert opinion']] : MAKE_NEXT;
+  // Vets: SOAP notes from a care plan (the notes screen has its own Carer plan button), plus the extra tools when on.
+  const pool = settings.role === 'vet' ? [['vet', 'SOAP notes'], ['media', 'Media statement'], ['witness', 'Expert witness statement'], ['opinion', 'Expert opinion']].filter(([m]) => roleModes('vet').includes(m)) : MAKE_NEXT;
   // A statement for a prosecution and a media statement don't mix: neither offers the other.
   // Nothing is made from an expert opinion's words or documents except the opinion itself.
   const options = current && current !== 'funding' && current !== 'opinion' ? pool.filter(([m]) => m !== current && !(current === 'witness' && m === 'media') && !(current === 'media' && m === 'witness')) : [];
@@ -2896,7 +2895,7 @@ function renderMakeNext(box, current) {
     el('h2', { text: 'Use the same notes for' }),
     example
       ? el('p', { class: 'make-next-note', text: 'This is an example, so these won’t work here. Try them with your own words: they reuse what you said, with no need to say it again.' })
-      : el('p', { class: 'help', text: 'No need to say it again. One tap writes it from what you already said.' }),
+      : null,
     el('div', { class: 'make-next-row' }, options.map(([m, label]) => {
       const b = el('button', { type: 'button', class: 'make-btn', disabled: example ? '' : null }, [svgIcon(MAKE_ICONS[m] || MAKE_ICONS.vet), el('span', { text: label }), el('span', { class: 'arrow', 'aria-hidden': 'true', text: '→' })]);
       b.addEventListener('click', () => makeNext(m));
@@ -3390,7 +3389,14 @@ async function openSettings(message, focus) {
 
 let acctNew = false; // showing "Create a vet account" rather than "Sign in"
 let acctOpen = false; // the sign-in form is showing (otherwise just a "Vet sign in" button)
+// A Vet badge beside the logo while an approved vet (or the pretend one) is signed in.
+function renderVetBadge() {
+  const b = $('vet-badge');
+  b.hidden = !account.approved;
+  b.title = account.approved ? `Signed in as ${vetLabel({ by: account.user.name })}` : '';
+}
 function renderAccount() {
+  renderVetBadge();
   const u = account.user;
   $('acct-in').hidden = !u;
   $('acct-form').hidden = Boolean(u) || !acctOpen;
@@ -3458,6 +3464,7 @@ $('acct-out').addEventListener('click', async () => {
   toast('Signed out. Prescriptions and endorsing need a vet sign in.');
 });
 // Approval can change while they're away: check once at start.
+renderVetBadge();
 account.refresh().then(() => {
   if (careSheet && document.body.dataset.view === 'care') renderEndorse(careSheet);
 });
@@ -3513,17 +3520,19 @@ let rxLib = null;
 const RX_LAST = 'css.rxOwner';
 function rxItemRow(i, n) {
   const id = (k) => `rx-${k}-${n}`;
-  const row = el('fieldset', { class: 'rx-set rx-item', 'data-n': String(n) }, [
-    el('legend', { text: `Medicine${n ? ` ${n + 1}` : ''}` }),
+  // Medicine, quantity and directions up front; schedule (S4 unless changed) and repeats tucked away.
+  const row = el('div', { class: 'rx-item', 'data-n': String(n) }, [
+    n ? el('p', { class: 'rx-item-title', text: `Medicine ${n + 1}` }) : null,
     el('div', { class: 'field' }, [el('label', { for: id('med'), text: 'Medicine, strength and form' }), el('input', { id: id('med'), type: 'text', maxlength: '160', placeholder: 'e.g. Doxycycline 50 mg tablets' })]),
-    el('div', { class: 'field two-eq' }, [
-      el('div', {}, [el('label', { for: id('qty'), text: 'Quantity' }), el('input', { id: id('qty'), type: 'text', maxlength: '60', placeholder: 'e.g. 14 tablets' })]),
-      el('div', {}, [el('label', { for: id('sch'), text: 'Schedule' }), el('select', { id: id('sch') }, [el('option', { value: 'S4', text: 'S4' }), el('option', { value: 'S8', text: 'S8 (controlled)' })])]),
-    ]),
+    el('div', { class: 'field' }, [el('label', { for: id('qty'), text: 'Quantity' }), el('input', { id: id('qty'), type: 'text', maxlength: '60', placeholder: 'e.g. 14 tablets' })]),
     el('div', { class: 'field' }, [el('label', { for: id('dir'), text: 'Directions' }), el('textarea', { id: id('dir'), rows: '2', maxlength: '400' })]),
-    el('div', { class: 'field two-eq' }, [
-      el('div', {}, [el('label', { for: id('rep'), text: 'Repeats' }), el('input', { id: id('rep'), type: 'number', min: '0', max: '12', inputmode: 'numeric' })]),
-      el('div', { class: 'rx-interval', hidden: true }, [el('label', { for: id('int'), text: 'Repeat interval' }), el('input', { id: id('int'), type: 'text', maxlength: '60', placeholder: 'e.g. 7 days' })]),
+    el('details', { class: 'rx-more' }, [
+      el('summary', { text: 'Schedule and repeats' }),
+      el('div', { class: 'rx-grid' }, [
+        el('div', { class: 'field' }, [el('label', { for: id('sch'), text: 'Schedule' }), el('select', { id: id('sch') }, [el('option', { value: 'S4', text: 'S4' }), el('option', { value: 'S8', text: 'S8 (controlled)' })])]),
+        el('div', { class: 'field' }, [el('label', { for: id('rep'), text: 'Repeats' }), el('input', { id: id('rep'), type: 'number', min: '0', max: '12', inputmode: 'numeric' })]),
+        el('div', { class: 'field wide rx-interval', hidden: true }, [el('label', { for: id('int'), text: 'Repeat interval' }), el('input', { id: id('int'), type: 'text', maxlength: '60', placeholder: 'e.g. 7 days' })]),
+      ]),
     ]),
   ]);
   row.querySelector(`#${id('med')}`).value = i.medicine;
@@ -3561,9 +3570,10 @@ $('rx-btn').addEventListener('click', () => {
   const f = rxFromPlan(careSheet, last);
   $('rx-species').value = f.animal.species;
   $('rx-name').value = '';
-  $('rx-age').value = '';
-  $('rx-sex').value = '';
+  $('rx-age').value = f.animal.age;
+  $('rx-sex').value = f.animal.sex;
   $('rx-breed').value = f.animal.breed;
+  $('rx-breed-field').hidden = careSheet.kind === 'wildlife'; // wildlife has no breed: it prints as a wild animal
   $('rx-owner').value = f.owner.name;
   $('rx-owner-address').value = f.owner.address;
   $('rx-items').replaceChildren(...f.items.map(rxItemRow));
@@ -3643,7 +3653,7 @@ els.settings.addEventListener('close', async () => {
 
 /* ---------------- pick up where you left off ---------------- */
 
-const LAST_LABEL = { notes: 'Clinical notes', care: 'Care plan', doc: 'Record', polish: 'Polished notes' };
+const LAST_LABEL = { notes: 'SOAP notes', care: 'Care plan', doc: 'Record', polish: 'Polished notes' };
 function remember(type, data, title) {
   if (restoring) return;
   store.saveLast({ type, data, title: String(title || '').slice(0, 80), text: els.transcript.value, at: Date.now() });
@@ -3806,11 +3816,18 @@ function medsSection(c) {
   if (c.medications.length) parts.push(el('ul', { class: 'meds' }, c.medications.map(medItem)));
   else parts.push(el('p', { class: 'meds-none', text: vet ? 'No medications in this plan yet.' : 'No medications in this plan. Only give medicines a vet has prescribed for this animal.' }));
   if (draft) parts.push(draftPanel(c, draft));
-  else if (vet) {
+  else if (vet && c.medications.length) {
+    // Medicines in the plan: the prescription is the next step, right here beside them.
+    parts.push(el('div', { class: 'meds-acts' }, [
+      el('button', { type: 'button', class: 'btn small primary', onclick: () => $('rx-btn').click() }, 'Write a prescription'),
+      el('button', { type: 'button', class: 'btn small ghost', onclick: () => openDraft(c, c.medications) }, 'Change them'),
+      c.kind === 'wildlife' ? el('button', { type: 'button', class: 'link', onclick: () => startMedsDraft(c) }, 'Check against guidelines') : null,
+    ]));
+  } else if (vet) {
     parts.push(el('div', { class: 'meds-acts' }, [
       // Options come from wildlife guidelines, so they're offered for wildlife only.
-      c.kind === 'wildlife' ? el('button', { type: 'button', class: 'btn small primary', onclick: () => startMedsDraft(c) }, c.medications.length ? 'Review medications' : 'Suggest treatment options') : null,
-      el('button', { type: 'button', class: 'btn small ghost', onclick: () => openDraft(c, c.medications) }, c.medications.length ? 'Change them' : 'Type them in'),
+      c.kind === 'wildlife' ? el('button', { type: 'button', class: 'btn small primary', onclick: () => startMedsDraft(c) }, 'Suggest treatment options') : null,
+      el('button', { type: 'button', class: 'btn small ghost', onclick: () => openDraft(c, c.medications) }, 'Type them in'),
     ]));
     if (c.kind === 'wildlife') parts.push(el('p', { class: 'help', text: 'Options come from Australian wildlife guidelines, for your expert review. Nothing reaches the carer until you accept it.' }));
   } else {
@@ -3932,7 +3949,7 @@ function savedEntry() {
   return savedId ? store.loadSaved().find((x) => x.id === savedId) : null;
 }
 
-// The review box on a care plan: ask a vet to review it, what the other side changed, and a note for a vet opening a link.
+// A note on a care plan shared for review: what the other side changed, and a line for a vet opening the link.
 function renderEndorse(c) {
   // Edit text: the library admin on ready-made plans, and vets on any other plan (reviewing one, or their own).
   $('library-admin').hidden = !((careFrom === 'library' && libraryPlan && libraryAdmin()) || (careFrom !== 'library' && settings.role === 'vet'));
@@ -3956,16 +3973,13 @@ function renderEndorse(c) {
   $('endorse-title').hidden = !title;
   $('endorse-text').textContent = text;
   $('endorse-text').hidden = !text;
-  $('review-btn').hidden = vet || Boolean(remote && !remote.mine);
   // What the other side changed since this device last saw the plan, marked on the plan too.
   const ch = remote && remote.changes;
   $('endorse-changes').textContent = ch && ch.parts.length ? `${ch.who} changed: ${ch.parts.join(', ')}.` : '';
   $('endorse-changes').hidden = !$('endorse-changes').textContent;
   markChanged(ch ? ch.parts : []);
-  $('review-btn').textContent = remote ? 'Send the review link again' : 'Ask a vet to review';
-  box.querySelector('.endorse-acts').hidden = $('review-btn').hidden;
   // Ready-made plans are general guides, not a plan for one animal: nothing to review there.
-  box.hidden = careFrom === 'library' || (!title && !$('endorse-changes').textContent && $('review-btn').hidden);
+  box.hidden = careFrom === 'library' || (!title && !$('endorse-changes').textContent);
 }
 
 // Highlight the sections named in a change ("Feeding", "Medications") so they're easy to find.
@@ -4034,7 +4048,7 @@ async function refreshRemote(id, quiet = false) {
 
 
 // Send the plan to a vet for review. focus 'meds' asks about medicines in particular.
-async function askVetReview(btn, focus = '') {
+async function askVetReview(btn) {
   if (!careSheet) return;
   let entry = savedEntry();
   let remote = entry && entry.remote;
@@ -4056,9 +4070,8 @@ async function askVetReview(btn, focus = '') {
     renderEndorse(careSheet);
   }
   const url = reviewLink(remote.id, remote.key);
-  const text = focus === 'meds'
-    ? 'Could you advise on medications for this animal? You can add them to the care plan and write a prescription:'
-    : `Could you check this care plan${careSheet.medications.length ? ', including the medications,' : ''} and change anything that isn’t right?`;
+  const animal = String(careSheet.animal || '').trim();
+  const text = `Could you please review my care plan${animal ? ` for the ${animal.replace(/^(a|an|the)\s+/i, '')}` : ''}. If appropriate, please add medication to the plan and write a prescription for signing.`;
   if (canShare()) {
     try {
       await navigator.share({ title: `For vet review: ${planName()}`, text, url });
@@ -4070,7 +4083,6 @@ async function askVetReview(btn, focus = '') {
   const ok = await copyText(`${text} ${url}`);
   toast(ok ? 'Review link copied. Paste it into a text or email to the vet.' : 'Couldn’t copy the link.');
 }
-$('review-btn').addEventListener('click', (e) => askVetReview(e.currentTarget));
 
 // Opened from a shared link: show the plan straight away and save it on this device, under Plans (the book at the
 // top), so it's still there after the link is gone. Opening the same link again shows their saved copy, edits and all.

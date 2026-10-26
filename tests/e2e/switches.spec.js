@@ -6,7 +6,7 @@ test('Carer or Vet is switched on the front screen (no sign in needed), and reme
   await openApp(page);
   await expect(page.locator('#view-record #role-seg')).toBeVisible();
   await expect(page.locator('input[name=role][value=carer]')).toBeChecked();
-  await expect(page.locator('#mode label:visible')).toHaveCount(4); // intake is made from a plan, not a tab
+  await expect(page.locator('#mode label:visible')).toHaveCount(3); // care plan, to vet, MOP
   await page.locator('#role-seg label', { hasText: 'Vet' }).click();
   // Vets get SOAP notes and care plans only; Rapid polish and Advanced need Extra vet tools (Settings > Admin).
   await expect(page.locator('#mode label:visible')).toHaveCount(2);
@@ -16,7 +16,7 @@ test('Carer or Vet is switched on the front screen (no sign in needed), and reme
   await expect(page.locator('input[name=role][value=vet]')).toBeChecked();
   await expect(page.locator('#role-seg')).toBeVisible(); // still there in vet mode, to switch back
   await page.locator('#role-seg label', { hasText: 'Carer' }).click();
-  await expect(page.locator('#mode label:visible')).toHaveCount(4); // intake is made from a plan, not a tab
+  await expect(page.locator('#mode label:visible')).toHaveCount(3); // care plan, to vet, MOP
 });
 
 test('QLD uses RSPCA Queensland first, its phone line, and is remembered', async ({ page }) => {
