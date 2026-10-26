@@ -89,7 +89,7 @@ import {
 } from './note.js';
 import { chartByKey } from './feeding.js';
 import { shortPlanLink, unpackPlan, linkCode, linkId, shortLink, fetchSharedPlan, storePlan, reviewLink, updateSharedPlan } from './sharelink.js';
-import { vetLabel, medsKey, changedParts } from './plan-changes.js';
+import { vetLabel, drName, medsKey, changedParts } from './plan-changes.js';
 import { account, admin, accountError } from './account.js';
 import { rxFromPlan, rxModel, rxProblems, animalFacts } from './rx.js';
 import { buildMedsDraftPrompt, normaliseMedsDraft, needsDose, buildRxPrompt, normaliseRx } from './note.js';
@@ -3869,6 +3869,7 @@ function medsSection(c) {
   const vet = actingVet();
   const remote = savedEntry() && savedEntry().remote;
   const parts = [el('h2', { text: 'Medications' })];
+  if (c.prescribed && c.medications.length) parts.push(el('p', { class: 'meds-by', text: prescribedLine(c) }));
   if (c.medications.length) parts.push(el('ul', { class: 'meds' }, c.medications.map(medItem)));
   else if (!vet) parts.push(el('p', { class: 'meds-none', text: 'No medications in this plan. Only give medicines a vet has prescribed for this animal.' }));
   if (vet) parts.push(prescribeBox(c));
@@ -3879,6 +3880,10 @@ function medsSection(c) {
     parts.push(el('p', { class: 'help', text: remote && remote.mine ? 'Sent for review. The vet’s medications show here when you next open the plan.' : 'Sends this plan to a vet to advise on medicines. They can add them and write a prescription.' }));
   }
   return el('section', { class: 'care-sec meds-sec' }, parts);
+}
+function prescribedLine(c) {
+  const when = c.prescribed.at ? ` on ${new Date(c.prescribed.at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })}` : '';
+  return `Prescribed by ${c.prescribed.by}${when}. Give each one exactly as below.`;
 }
 function medItem(m) {
   return el('li', {}, [
@@ -3974,8 +3979,10 @@ async function prescribe(c, script) {
     redrawMeds();
     return toast('Couldn’t read those medicines. Try one per line: name, strength, dose, how often, how long.');
   }
-  // The carer's plan now has these medicines, in plain English; the box keeps the vet's own words.
-  const sheet = { ...c, medications: r.meds };
+  // The carer's plan now has these medicines, in plain English and as the vet directed, marked with who prescribed
+  // them; the box keeps the vet's own words.
+  const by = account.user ? account.user.name : settings.clinician;
+  const sheet = { ...c, medications: r.meds, ...(by ? { prescribed: { by: drName(by), at: Date.now() } } : {}) };
   rxBox.sheet = sheet;
   await carePlanChanged(sheet, script ? 'Medicines added to the plan.' : 'Plan updated.');
   if (script) openRx(sheet, r.items, r.check);

@@ -99,7 +99,7 @@ export function careModel(c, lookup, photos = [], video = null) {
   const meds = c.medications.map((m) => [m.name, m.how, m.how_often, m.how_long]);
   const blocks = [
     { heading: 'Summary', text: c.summary, tone: 'summary' },
-    ...(meds.length ? [{ heading: 'Medications', table: { head: ['Medication', 'How', 'How often', 'How long'], rows: meds, widths: [2600, 2600, 2400, PAGE_W - 7600] }, note: c.medications.map((m) => (m.tip ? `${m.name}: ${m.tip}` : '')).filter(Boolean).join('  ') || undefined }] : []),
+    ...(meds.length ? [{ heading: c.prescribed ? `Medications: prescribed by ${c.prescribed.by}` : 'Medications', table: { head: ['Medication', 'How', 'How often', 'How long'], rows: meds, widths: [2600, 2600, 2400, PAGE_W - 7600] }, note: c.medications.map((m) => (m.tip ? `${m.name}: ${m.tip}` : '')).filter(Boolean).join('  ') || undefined }] : []),
     ...((Number(c.log_days) || 0) <= 1 && !c.medications.length && !c.plan.length ? [] : rangesBlocks(c.species_group, [c.animal, c.summary].filter(Boolean).join(' '))),
     ...rehydrationBlocks(c.rehydration),
     // The day-by-day plan as one table, rather than a scatter of small headed sections.

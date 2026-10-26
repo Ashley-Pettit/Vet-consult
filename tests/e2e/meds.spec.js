@@ -69,7 +69,7 @@ const rx = {
     { medicine: 'Amoxicillin-clavulanate 50 mg tablets', quantity: '', directions: 'Give 12.5 mg/kg by mouth twice a day for 7 days', schedule: 'S4', repeats: 0 },
   ],
   meds: [
-    { name: 'Meloxicam (pain relief)', how: 'By mouth with food', how_often: 'Once a day', how_long: '5 days', tip: '' },
+    { name: 'Meloxicam (pain relief)', how: '0.08 mL by mouth', how_often: 'Once a day, with food', how_long: 'For 5 days', tip: 'Drip it slowly into the side of the mouth from a small syringe.' },
     { name: 'Amoxicillin-clavulanate (after the cat attack)', how: 'By mouth', how_often: 'Twice a day', how_long: '7 days', tip: '' },
   ],
   check: ['Amoxicillin-clavulanate: quantity to supply?'],
@@ -100,6 +100,7 @@ test('vets prescribe from one box: type or tap Suggest, then Prescribe fills the
   // The plan has the medicines in plain English, and the prescription sheet is open.
   await expect(page.locator('#rx-dlg')).toBeVisible();
   await expect(page.locator('.meds-sec ul.meds li')).toHaveCount(2);
+  await expect(page.locator('.meds-by')).toContainText('Prescribed by Dr Ashley Fake'); // the carer sees who prescribed them
   await expect(page.locator('#rx-checks')).toContainText('quantity to supply');
   await expect(page.locator('#rx-animal-sum')).toContainText('Female · about 8 weeks');
   await expect(page.locator('[id^="rx-med-"]').first()).toHaveValue('Meloxicam 1.5 mg/mL oral suspension');

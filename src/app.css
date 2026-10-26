@@ -1609,6 +1609,7 @@ dialog.rx-dlg form { gap: 10px; }
 dialog.rx-dlg .dlg-actions { position: sticky; bottom: 0; background: var(--surface); padding-top: 10px; }
 .rx-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
 /* The vet's prescribing box: like the dictation box, with Suggest in its bottom bar */
+.meds-by { margin: 0 0 8px; font-weight: 600; color: var(--accent); }
 .rxbox { display: grid; gap: 10px; margin-top: 12px; }
 .rxbox-label { font-weight: 700; }
 .rxbox-field { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
