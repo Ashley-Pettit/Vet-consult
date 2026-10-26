@@ -1,6 +1,5 @@
 // What goes into each Word printout (plain data, no Word library), so the app can prepare a printout without loading
 // the Word library. The library itself (word-docx.js) loads only when someone actually asks for a Word file.
-import { endorsementWords } from './endorse.js';
 import { dueLabel, formatDate, NOT_RECORDED, rehydrationTable, REHYDRATION_NOTE, careAiNote, feedAmounts } from './note.js';
 import { chartByKey } from './feeding.js';
 import { rangesFor, rangesForAnimal } from './species-ranges.js';
@@ -98,11 +97,9 @@ function feedBlocks(f) {
 
 export function careModel(c, lookup, photos = [], video = null) {
   const meds = c.medications.map((m) => [m.name, m.how, m.how_often, m.how_long]);
-  const ew = endorsementWords(c);
   const blocks = [
-    ...(ew.text ? [{ heading: ew.title, text: ew.text, tone: ew.tone === 'ok' ? 'summary' : 'warn' }] : []),
     { heading: 'Summary', text: c.summary, tone: 'summary' },
-    ...(meds.length ? [{ heading: ew.medsHeading, table: { head: ['Medication', 'How', 'How often', 'How long'], rows: meds, widths: [2600, 2600, 2400, PAGE_W - 7600] }, note: c.medications.map((m) => (m.tip ? `${m.name}: ${m.tip}` : '')).filter(Boolean).join('  ') || undefined }] : []),
+    ...(meds.length ? [{ heading: 'Medications', table: { head: ['Medication', 'How', 'How often', 'How long'], rows: meds, widths: [2600, 2600, 2400, PAGE_W - 7600] }, note: c.medications.map((m) => (m.tip ? `${m.name}: ${m.tip}` : '')).filter(Boolean).join('  ') || undefined }] : []),
     ...((Number(c.log_days) || 0) <= 1 && !c.medications.length && !c.plan.length ? [] : rangesBlocks(c.species_group, [c.animal, c.summary].filter(Boolean).join(' '))),
     ...rehydrationBlocks(c.rehydration),
     // The day-by-day plan as one table, rather than a scatter of small headed sections.
@@ -172,33 +169,3 @@ export function wordFileName(title) {
 }
 
 
-/** Discharge pack for the vet: clinical summary (when the notes are ready), medication labels, the carer plan and the fridge tick sheet. */
-export function dischargeModel(c, note, lookup, vet = '', date = new Date()) {
-  const care = careModel(c, lookup);
-  const animal = c.animal || (note && [note.patient.name, note.patient.species].filter(Boolean).join(', ')) || 'Animal in care';
-  const fromNote = note ? note.plan.treatments.filter((t) => t.when !== 'given') : [];
-  const labels = (fromNote.length
-    ? fromNote.map((t) => ({ drug: t.drug, directions: [t.dose, t.route, t.frequency].filter(Boolean).join(', '), duration: t.duration ? `For ${t.duration}` : '' }))
-    : c.medications.map((m) => ({ drug: m.name, directions: [m.how, m.how_often].filter(Boolean).join(', '), duration: m.how_long })))
-    .filter((l) => l.drug)
-    .map((l) => ({ ...l, animal, vet: vet || (note && note.visit.clinician) || '', date: formatDate(date) }));
-  const clinical = note
-    ? noteModel(note).blocks
-        .filter((b) => ['History', 'Findings', 'Assessment', 'Treatment given', 'Dispensed', 'Follow-up'].includes(b.heading))
-        .map((b) => ({ ...b, heading: b.heading === 'History' ? 'Clinical summary: history' : b.heading }))
-    : [];
-  return {
-    docType: 'Discharge pack',
-    title: `Discharge pack: ${animal}`,
-    aiNote: care.aiNote,
-    meta: [['Vet', vet || (note && note.visit.clinician) || '']],
-    blocks: [
-      ...clinical,
-      ...(labels.length ? [{ heading: 'Medication labels', labels, text: 'Cut out and attach to each medication.' }] : []),
-      { heading: 'Care plan for the carer', text: 'The carer’s plan follows, in plain English.' },
-      ...care.blocks,
-    ],
-    tickSheet: care.tickSheet,
-    sources: care.sources,
-  };
-}

@@ -78,6 +78,7 @@ export function sendTail(d = new Date()) {
   const pad = (x) => String(x).padStart(2, '0');
   return `\n\nToday is ${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}.\n${SPEED_LINE}`;
 }
+// Used by scripts/bake-examples.mjs to look up a reply by the prompt as it was before the tail was added.
 export const stripSendTail = (s) => String(s).replace(/\n\nToday is \d{2}\/\d{2}\/\d{4}\.\nWork efficiently\.[\s\S]*$/, '');
 function textBlocks(prompt, cache) {
   const p = String(prompt);

@@ -89,7 +89,7 @@ import {
 } from './note.js';
 import { chartByKey } from './feeding.js';
 import { shortPlanLink, unpackPlan, linkCode, linkId, shortLink, fetchSharedPlan, storePlan, reviewLink, updateSharedPlan } from './sharelink.js';
-import { endorsementWords, vetLabel, medsKey, changedParts } from './endorse.js';
+import { vetLabel, medsKey, changedParts } from './plan-changes.js';
 import { account, admin, accountError } from './account.js';
 import { rxFromPlan, rxModel, rxProblems } from './rx.js';
 import { buildMedsDraftPrompt, buildMedsUpdatePrompt, normaliseMedsDraft, needsDose } from './note.js';
@@ -1055,12 +1055,6 @@ document.querySelectorAll('input[name="region"]').forEach((r) =>
   }),
 );
 
-function chooseMode(m) {
-  document.querySelector(`input[name="mode"][value="${m}"]`).checked = true;
-  applyMode();
-  settings.mode = m;
-  store.saveSettings(settings);
-}
 
 // Media tab: who the statement will be from (the template in Settings), with a quick way to change it.
 function updateMediaFrom() {
@@ -2567,7 +2561,7 @@ async function openCare() {
       askJson(buildCareSheetPrompt(n, sourcesFor(`${els.transcript.value} ${n.patient.species}`)), signal),
     );
     showCare(normaliseCareSheet(extractJson(reply), SOURCE_IDS()), 'note');
-    if (settings.role === 'vet' && careSheet.kind === 'wildlife' && !careSheet.medications.length) startMedsDraft(careSheet);
+    if (settings.role === 'vet' && careSheet.kind === 'wildlife') startMedsDraft(careSheet);
   } catch (e) {
     showView('note');
     toast(e && e.code === 'cancelled' ? 'Stopped.' : friendly(e));
@@ -2588,8 +2582,8 @@ async function createCarePlan(text) {
   );
   notes = [];
   showCare(normaliseCareSheet(extractJson(reply), SOURCE_IDS()), 'record');
-  // A vet's plan with no medicines yet: options are drafted for their review straight away (theirs are used as said).
-  if (settings.role === 'vet' && careSheet.kind === 'wildlife' && !careSheet.medications.length) startMedsDraft(careSheet);
+  // A vet's plan: the medications are drafted for their review straight away (what they said, plus guideline options).
+  if (settings.role === 'vet' && careSheet.kind === 'wildlife') startMedsDraft(careSheet);
 }
 
 els.care.addEventListener('click', openCare);
@@ -2781,7 +2775,6 @@ function showDoc(d, kind, info = '') {
   $('text-vet').hidden = !textSec;
   $('text-vet-title').textContent = kind === 'mop' ? 'Text to send the caller' : 'Text to your vet';
   $('text-vet-body').textContent = textSec ? textSec.text || textSec.items.join(' ') : '';
-  $('advice-cta').hidden = kind !== 'intake';
   madeFrom[kind] = { text: els.transcript.value, d, info };
   renderDoc(d, kind);
   if (kind === 'media' && !info) info = 'Draft for review. Nothing here is public until it has been checked and approved.';
@@ -2813,9 +2806,6 @@ async function createDoc(kind, text) {
   const docs = kind === 'witness' || kind === 'opinion' ? documents : [];
   if (docs.length) opts.documents = docs;
   const pdfs = docs.filter((x) => x.kind === 'pdf');
-  // An intake starts its care plan at the same moment, in a second call, so "Need advice right now?" is ready
-  // (or nearly) by the time the record is read. Two shorter replies, so neither gets cut off.
-  if (kind === 'intake') exampleExtra(startIntakeCare);
   const reply = await runWorking(`Writing the ${DOC_KINDS[kind].label.replace(/^[A-Z](?=[a-z])/, (x) => x.toLowerCase())}`, docs.length ? `Reading ${docs.length === 1 ? 'your document' : `${docs.length} documents`} with your notes.` : DOC_KINDS[kind].working, (signal) =>
     // An expert opinion looks up authoritative sources on the web as it writes (where the connection allows it).
     askJson(buildDocPrompt(kind, text, opts), signal, { images: sendPhotos(), documents: pdfs, webSearch: kind === 'opinion' }).catch((e) => {
@@ -2903,8 +2893,6 @@ function renderMakeNext(box, current) {
     })),
   );
 }
-// "Need advice right now?" on an intake record opens the care plan, already written in the same call.
-$('advice-btn').addEventListener('click', () => makeNext('carer'));
 
 // Follow-on drafts (the care plan after an intake, a vet's clinical notes after a plan) are full AI calls, so they're
 // made when asked for, with a loader, like Word and PDF. The built-in examples answer from stored replies at no cost,
@@ -2913,37 +2901,6 @@ function exampleExtra(start) {
   if (isExampleText()) start();
 }
 
-// The care plan for an intake ("just taken in": what to do right now): { text, promise } resolving to a sheet, or null.
-let pendingCare = null;
-function startIntakeCare() {
-  const text = els.transcript.value;
-  const promise = askJson(buildCarerPlanPrompt(text.trim(), sourcesFor(text), { justIn: true, drugs: settings.drugs, photoCount: sendPhotos().length }), undefined, { images: sendPhotos() })
-    .then((r) => {
-      const sheet = normaliseCareSheet(r, SOURCE_IDS());
-      if (!(sheet.summary || sheet.plan.length || sheet.housing.length)) return null;
-      if (els.transcript.value === text) madeFrom.carer = { text, sheet, info: '' };
-      return sheet;
-    })
-    .catch(() => null);
-  pendingCare = { text, promise };
-}
-// Wait for that plan (Stop still works). Null means make one the normal way.
-async function waitForIntakeCare(fresh = false) {
-  if (!pendingCare || pendingCare.text !== els.transcript.value) return null;
-  const { promise } = pendingCare;
-  busy = true;
-  try {
-    const [title, sub] = fresh ? ['Writing the care plan', 'What to do right now, then day by day.'] : ['Finishing the care plan', 'It started earlier, so it’s nearly done.'];
-    return await runWorking(title, sub, (signal) =>
-      Promise.race([promise, new Promise((_, reject) => signal.addEventListener('abort', () => reject(new AiError('cancelled', '')), { once: true }))]),
-    );
-  } catch {
-    showView('doc');
-    return false;
-  } finally {
-    busy = false;
-  }
-}
 $('text-vet-send').addEventListener('click', async () => {
   const mopVid = currentDoc && currentDoc.kind === 'mop' ? mopVideo(currentDoc.d) : null;
   const text = $('text-vet-body').textContent + (mopVid ? `\n\n${videoLine(mopVid)}` : '');
@@ -3112,14 +3069,6 @@ async function makeNext(m) {
   if (prev && prev.text === els.transcript.value) {
     if (m === 'vet') return showNotes(prev.notes, false);
     return m === 'carer' ? showCare(prev.sheet, 'record', prev.info) : showDoc(prev.d, m, prev.info);
-  }
-  if (m === 'carer') {
-    // After an intake, the plan is the "just taken in" one (what to do right now), started now that it's asked for.
-    const fresh = Boolean(currentDoc && currentDoc.kind === 'intake' && !(pendingCare && pendingCare.text === els.transcript.value));
-    if (fresh) startIntakeCare();
-    const sheet = await waitForIntakeCare(fresh);
-    if (sheet === false) return; // stopped
-    if (sheet) return showCare(sheet, 'record');
   }
   await createNote();
 }
@@ -3809,10 +3758,9 @@ function medsSection(c) {
     return c.medications.length ? el('section', { class: 'care-sec' }, [el('h2', { text: 'Medications' }), el('ul', { class: 'meds' }, c.medications.map(medItem))]) : null;
   }
   const vet = settings.role === 'vet';
-  const w = endorsementWords(c);
   const draft = vet && medsDraft && medsDraft.sheet === c ? medsDraft : null;
   const remote = savedEntry() && savedEntry().remote;
-  const parts = [el('h2', { text: w.medsHeading })];
+  const parts = [el('h2', { text: 'Medications' })];
   if (c.medications.length) parts.push(el('ul', { class: 'meds' }, c.medications.map(medItem)));
   else parts.push(el('p', { class: 'meds-none', text: vet ? 'No medications in this plan yet.' : 'No medications in this plan. Only give medicines a vet has prescribed for this animal.' }));
   if (draft) parts.push(draftPanel(c, draft));

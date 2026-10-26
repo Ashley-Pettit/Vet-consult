@@ -1,4 +1,3 @@
-import { endorsementOf } from './endorse.js';
 import { speciesCareForPrompt } from './species-care.js';
 import { animalTags } from './sources.js';
 import { CONFIG } from './config.js';
@@ -73,16 +72,6 @@ export const NOTE_TYPES = {
 
 export const NOTE_TYPE_ORDER = ['consult', 'intake', 'inspectorate', 'surgery', 'vaccination', 'postop', 'euthanasia'];
 
-export const EMPTY_NOTE = Object.freeze({
-  patient: { name: '', species: '', breed: '', sex: '', age: '', weight_kg: '', microchip: '', animal_id: '', intake_type: '' },
-  visit: { type: '', clinician: '' },
-  subjective: '',
-  objective: { vitals: { temp_c: '', hr_bpm: '', rr_bpm: '', bcs: '', mm_crt: '', hydration: '' }, findings: [] },
-  assessment: { problems: [], differentials: [], prognosis: '' },
-  plan: { procedures: [], diagnostics: [], treatments: [], hospital_plan: [], home_care: [], follow_up: [] },
-  welfare_notes: '',
-  check: [],
-});
 
 const MAX_DICTATION = 30000;
 
@@ -794,7 +783,6 @@ export const REHYDRATION_NOTE = 'Worked out from Anne Fowler’s fluid therapy p
 // The one AI disclaimer, on every plan and document, on screen, in shared text and in Word (as Ash asked).
 export const AI_DISCLAIMER = 'This was written by AI. Your vet and experienced carers come first, every time.';
 export const AI_NOTES = [AI_DISCLAIMER];
-export const AI_CHECK_NOTE = AI_DISCLAIMER;
 export function aiNoteFor() {
   return AI_DISCLAIMER;
 }
@@ -919,7 +907,6 @@ export function normaliseCareSheet(raw, knownSources = null) {
     species_group: checkedGroup(str(r.species_group, 30), [str(r.animal, 80), str(r.species, 80)].join(' ')),
     next_visit: str(r.next_visit, 300),
     sources,
-    endorsement: endorsementOf(r.endorsement),
   };
 }
 
@@ -1486,8 +1473,6 @@ export function dueLabel(when, from = new Date()) {
   return d ? `${when} (due ${ddmmyyyy(d)})` : when;
 }
 
-// Shown on every MOP plan, word for word as Bunurong Wildlife Care asked.
-export const MOP_DISCLAIMER = 'This was written by AI. Your vet and experienced carers come first, every time.';
 
 /**
  * The media statement as it would go out once approved: headline, statement, quote, public advice, ENDS, then

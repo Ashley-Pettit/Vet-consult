@@ -91,13 +91,6 @@ export const account = {
   get fake() {
     return Boolean(current && current.user && current.user.fake);
   },
-  /** Beta testing only: sign in as the shared test vet (approved; everything it makes is marked TEST). */
-  async signInTest() {
-    const j = await api('/auth/test', { method: 'POST', body: {} });
-    current = { token: j.token, user: j.user, remember: false };
-    save(current);
-    return j.user;
-  },
   async signOut() {
     const was = current;
     current = null;
@@ -130,10 +123,6 @@ export const account = {
     save(current);
     return j.user;
   },
-  /** Record an endorsement on the server: { id, by, reg, clinic, at, meds }. */
-  endorse(meds, animal) {
-    return api('/endorse', { method: 'POST', body: { meds, animal }, token: current && current.token });
-  },
   /** A prescription number for an approved vet: { number, at }. */
   prescriptionNumber(animal, items) {
     // The pretend vet numbers its own scripts, marked TEST so they can never pass as real.
@@ -143,21 +132,6 @@ export const account = {
 };
 
 /** Look up an endorsement by id (anyone can): the server's record, or null if there's no such endorsement. */
-const checked = new Map();
-export async function lookupEndorsement(id) {
-  if (checked.has(id)) return checked.get(id);
-  try {
-    const j = await api(`/endorse/${encodeURIComponent(id)}`);
-    checked.set(id, j);
-    return j;
-  } catch (e) {
-    if (e.code === 'not_found') {
-      checked.set(id, null);
-      return null;
-    }
-    throw e; // offline: try again later
-  }
-}
 
 /** Admin: the key is kept on this device only. */
 const ADMIN = 'css.adminKey';

@@ -70,9 +70,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
   max-width: 760px; margin: 0 auto; padding: 12px var(--gutter-r) 12px var(--gutter-l);
 }
 .brand { display: flex; align-items: center; gap: 12px; }
-.brand-text { display: flex; flex-direction: column; line-height: 1.15; }
-.brand-name { font-weight: 800; font-size: 1.2rem; letter-spacing: -0.01em; }
-.brand-sub { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.9; font-weight: 600; }
+
 .logo { width: 38px; height: 38px; flex: none; }
 .icon-btn {
   width: 44px; height: 44px; border-radius: 999px; border: 1px solid transparent; background: transparent;
@@ -114,10 +112,9 @@ main { max-width: 760px; margin: 0 auto; padding: 20px var(--gutter-r) 24px var(
 .switch input:checked + .track { background: var(--accent); }
 .switch input:checked + .track::after { transform: translateX(18px); }
 .switch input:focus-visible + .track { outline: 3px solid var(--accent); outline-offset: 2px; }
-.muted-inline { color: var(--muted); font-weight: 400; }
 
 /* Mic */
-.mic-zone { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 18px 0 4px; }
+
 .mic-status { margin-top: 18px !important; }
 .mic {
   position: relative; width: 132px; height: 132px; border-radius: 50%; border: 0; cursor: pointer;
@@ -152,9 +149,7 @@ body[data-speech="none"] .mic { background: var(--surface); color: var(--muted);
 /* Fields */
 .field { display: flex; flex-direction: column; gap: 6px; }
 .field-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.photo-chip { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
-.photo-chip svg { width: 18px; height: 18px; }
-.photo-chip:focus-within { outline: 3px solid var(--accent); outline-offset: 2px; }
+
 .field label, .field-head label { font-weight: 600; font-size: 0.92rem; }
 textarea, input[type="text"], input[type="password"], select {
   width: 100%; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px;
@@ -292,7 +287,6 @@ a { color: var(--accent); text-underline-offset: 3px; }
 }
 
 /* Header actions */
-.bar-actions { display: flex; gap: 4px; }
 
 /* Small buttons */
 .btn.small { min-height: 40px; padding: 0 16px; font-size: 0.92rem; }
@@ -347,25 +341,19 @@ label.btn:focus-within { outline: 3px solid var(--accent); outline-offset: 2px; 
 .checks ul { list-style: none; padding: 0 !important; gap: 8px !important; }
 .check-item { display: flex; flex-direction: column; gap: 8px; padding: 8px 0; border-top: 1px solid var(--warn-line); }
 .check-item:first-child { border-top: 0; }
-.check-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+
 .check-text { min-width: 0; }
 .tag { display: inline-block; margin-right: 6px; padding: 1px 7px; border-radius: 6px; font-size: 0.7rem; font-weight: 750; letter-spacing: 0.04em; text-transform: uppercase; background: var(--accent-soft); color: var(--chip-ink, var(--accent)); vertical-align: 1px; }
 .answer { display: flex; flex-direction: column; gap: 8px; background: var(--surface); border-radius: 12px; padding: 10px; box-shadow: inset 0 0 0 1px var(--line); }
-.answer-input { display: flex; gap: 8px; align-items: flex-start; }
+
 .answer textarea { min-height: 64px; }
-.small-mic { width: 48px; height: 48px; flex: none; border-radius: 50%; background: var(--accent); color: var(--accent-ink); }
-.small-mic:hover { background: var(--accent); color: var(--accent-ink); filter: brightness(1.08); }
-.small-mic[aria-pressed="true"] { background: var(--rec); }
-.answer-actions { display: flex; justify-content: flex-end; gap: 8px; }
 
 /* Vital flags and dose totals */
 .vitals .kv.flag { border-color: var(--warn); background: var(--warn-soft); }
-.k .pill, .mock-pill { display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 6px; background: var(--warn); color: var(--surface); font-size: 0.66rem; letter-spacing: 0.04em; }
+.k .pill{ display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 6px; background: var(--warn); color: var(--surface); font-size: 0.66rem; letter-spacing: 0.04em; }
 .meds .calc { flex-basis: 100%; font-size: 0.85rem; color: var(--muted); }
 
 /* PMS copy rows */
-.pms { background: var(--surface); border-radius: var(--radius); box-shadow: inset 0 0 0 1px var(--line); padding: 16px 18px; display: flex; flex-direction: column; gap: 4px; }
-.pms h2 { margin: 0; font-size: 1.05rem; }
 
 /* Care sheet */
 .care { border-top-color: var(--leaf); }
@@ -399,7 +387,7 @@ details.advanced[open] { gap: 8px; }
 .mock-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 750; color: var(--muted); font-style: normal; }
 .mock-arrow { justify-self: center; width: 44px; height: 44px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; }
 .mock-arrow svg { width: 22px; height: 22px; }
-.mock-calc { color: var(--muted); font-family: var(--mono); font-size: 0.85rem; }
+
 .about-sec { display: flex; flex-direction: column; gap: 14px; }
 .about-sec h2 { margin: 0; font-size: 1.35rem; font-weight: 800; letter-spacing: -0.01em; }
 .steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
@@ -434,19 +422,12 @@ body[data-view="about"] .foot { display: none; }
 .checks h2 { display: flex; align-items: center; gap: 8px; }
 .checks .count { display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; background: var(--warn); color: var(--surface); font-size: 0.75rem; }
 .check-item { padding: 0; gap: 6px; }
-.check-row {
-  display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; min-height: 44px; padding: 6px 0;
-  background: none; border: 0; text-align: left; color: var(--ink); cursor: pointer; font: inherit;
-}
+
 .check-text { min-width: 0; line-height: 1.35; }
-.check-go { flex: none; font-size: 0.82rem; font-weight: 700; color: var(--accent); }
+
 .checks .more { align-self: flex-start; font-size: 0.88rem; padding: 6px 0 0; }
 .answer { flex-direction: row; align-items: center; gap: 6px; padding: 6px; margin-bottom: 8px; }
 .answer input { flex: 1; min-width: 0; min-height: 44px; padding: 8px 12px; border-radius: 10px; }
-.ans-btn { flex: none; width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--accent); background: var(--surface); color: var(--accent); display: grid; place-items: center; cursor: pointer; }
-.ans-btn svg { width: 20px; height: 20px; }
-.ans-btn.primary { background: var(--accent); color: var(--accent-ink); }
-.ans-btn[aria-pressed="true"] { background: var(--rec); border-color: var(--rec); color: #fff; }
 
 /* Detailed carer plan */
 .care-tip { flex-basis: 100%; font-size: 0.88rem; color: var(--muted); }
@@ -457,9 +438,9 @@ body[data-view="about"] .foot { display: none; }
 .ticksheet th, .ticksheet td { text-align: center; padding: 6px; border: 1px solid var(--line); }
 .ticksheet thead th { font-size: 0.7rem; text-transform: none; letter-spacing: 0; color: var(--ink); min-width: 70px; }
 .ticksheet tbody th { color: var(--muted); }
-.ticksheet .num, .tick-key { display: none; }
+.ticksheet .num{ display: none; }
 @media (max-width: 600px) {
-  .tick-key { display: grid; gap: 2px; margin: 0 0 6px; padding-left: 22px; font-size: 0.9rem; }
+
   .ticksheet { width: 100%; table-layout: fixed; }
   .ticksheet thead th { min-width: 0; font-size: 0.85rem; font-weight: 750; }
   .ticksheet .full { display: none; }
@@ -540,7 +521,6 @@ body[data-mode="carer"] .mic { background: var(--leaf); box-shadow: 0 0 0 10px c
 .doc .due { background: var(--accent-soft); border-radius: 12px; padding: 12px 14px; }
 .doc .due li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; }
 .doc .due .when { font-weight: 700; font-variant-numeric: tabular-nums; }
-.plain-list { list-style: disc; padding: 0 16px 12px 36px !important; display: grid; gap: 4px; }
 
 /* Bunurong Wildlife Care: matches bunurongwildlifecare.au. Olive bar with the round koala logo, koala hero photo,
    Oswald uppercase headings, DM Sans body, terracotta highlights, square-ish buttons. */
@@ -576,7 +556,7 @@ body:not([data-view="record"]) .hero-banner { display: none; }
 @media (min-width: 720px) { .hero-banner { min-height: 220px; } .hero-title { font-size: 2.8rem; } }
 
 /* Headings like the website: Oswald, uppercase, 1px tracking */
-.note-head h1, .working h1, .hero h1, .about-sec h2, .about-cta h2, .dlg-head h2, .pms h2, .plain-sec h2,
+.note-head h1, .working h1, .hero h1, .about-sec h2, .about-cta h2, .dlg-head h2, .plain-sec h2,
 .checks h2, details.checks > summary .sum-title, .care-sec h2, .soap h2, .doc .doc-sec h2 {
   font-family: var(--display); font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
 }
@@ -595,7 +575,6 @@ body:not([data-view="record"]) .hero-banner { display: none; }
 .chip, .animal, .types span { border-radius: 4px; }
 .note { border-top-color: var(--accent); }
 .care { border-top-color: var(--terra); }
-
 
 /* Footer: the website's emergency panel and charity line */
 .site-foot { max-width: 760px; margin: 8px auto 0; padding: 8px var(--gutter-r) calc(28px + env(safe-area-inset-bottom, 0px)) var(--gutter-l); text-align: center; }
@@ -626,7 +605,6 @@ dialog.more { margin: auto auto 0; width: min(560px, 100vw); max-width: 100vw; b
 dialog.more form { display: flex; flex-direction: column; gap: 12px; padding: 18px var(--gutter-r) calc(18px + env(safe-area-inset-bottom, 0px)) var(--gutter-l); }
 dialog.more h2 { margin: 0; font: 700 1.3rem/1.2 var(--display); text-transform: uppercase; letter-spacing: 1px; }
 dialog.more textarea { min-height: 110px; }
-.more-actions { display: grid; grid-template-columns: auto 1fr; gap: 10px; }
 
 /* Make from this too */
 .make-next { display: flex; flex-direction: column; gap: 8px; }
@@ -635,12 +613,10 @@ dialog.more textarea { min-height: 110px; }
 .make-next-row .chip { min-height: 44px; padding: 8px 16px; font-size: 0.95rem; }
 
 /* Mic in the Add more info sheet */
-.more-mic-zone { display: flex; align-items: center; gap: 16px; }
-.more-mic-zone .help { margin: 0; }
+
 .mic.more-mic { width: 72px; height: 72px; flex: none; box-shadow: 0 0 0 6px var(--accent-soft); }
 .mic.more-mic svg { width: 32px; height: 32px; }
 .mic.more-mic[aria-pressed="true"] { background: var(--rec); box-shadow: 0 0 0 6px var(--rec-soft); }
-
 
 /* Compact dictation screen: mic beside its status, so what's been said stays in view without scrolling */
 .hero-banner { min-height: 104px; }
@@ -649,22 +625,14 @@ dialog.more textarea { min-height: 110px; }
 .hero-sub { display: none; }
 #view-record { gap: 14px; }
 .mode-intro { font-size: 0.9rem; text-align: left; }
-.mic-zone { display: grid; grid-template-columns: auto 1fr; align-items: center; column-gap: 16px; row-gap: 2px; padding: 4px 0 0; }
-.mic-zone .mic { grid-row: span 2; width: 76px; height: 76px; box-shadow: 0 0 0 6px var(--accent-soft), var(--shadow); }
-body[data-mic="listening"] .mic-zone .mic, body[data-mic="starting"] .mic-zone .mic, body[data-mic="keyboard"] .mic-zone .mic { box-shadow: 0 0 0 6px var(--rec-soft), var(--shadow); }
-.mic-zone .mic svg { width: 34px; height: 34px; }
-.mic-zone .mic .i-stop { width: 28px; height: 28px; }
-body[data-mic="listening"] .mic-zone .mic::after { top: -6px; right: -6px; bottom: -6px; left: -6px; }
-.mic-zone .mic-status { margin: 0 !important; text-align: left; font-size: 1rem; }
-.mic-zone .timer { margin: 0; }
+
 #transcript { min-height: 140px; }
 @media (min-width: 720px) {
   .hero-banner { min-height: 150px; }
   .hero-title { font-size: 2.2rem; }
-  .mic-zone .mic { width: 88px; height: 88px; }
+
 }
-.mic-zone { grid-template-rows: 1fr auto; }
-.mic-zone .mic-status { align-self: center; }
+
 /* While talking or typing, give the words the room: drop the photo banner and the intro line */
 /* (set before the box is focused, so the phone scrolls to the right place once the layout has settled) */
 body[data-mic="keyboard"] .hero-banner, body[data-mic="listening"] .hero-banner, body[data-mic="keyboard"] .mode-intro { display: none; }
@@ -673,14 +641,9 @@ body[data-mic="keyboard"] .hero-banner, body[data-mic="listening"] .hero-banner,
 .coach { padding: 8px 12px; font-size: 0.92rem; }
 
 /* Need advice right now? (after an intake record) */
-.advice-cta { display: flex; flex-direction: column; gap: 10px; padding: 14px 16px; border-radius: 12px; background: #9a5646; color: #fff; }
-.advice-cta h2 { margin: 0; font: 700 1.25rem/1.2 var(--display); text-transform: uppercase; letter-spacing: 1px; }
-.advice-cta p { margin: 4px 0 0; font-size: 0.95rem; opacity: 0.95; }
-.advice-cta .btn.primary { background: #fff; color: #9a5646; border-color: #fff; align-self: flex-start; }
-@media (min-width: 640px) { .advice-cta { flex-direction: row; align-items: center; justify-content: space-between; } .advice-cta .btn.primary { align-self: center; } }
 
 .field-label { font-weight: 600; font-size: 0.92rem; }
-#open-funding { align-self: flex-start; }
+
 body[data-mode="funding"] .mode { display: none; }
 .mode-title { margin: 0; font: 700 1.5rem/1.15 var(--display); text-transform: uppercase; letter-spacing: 1px; }
 
@@ -689,7 +652,6 @@ body[data-mode="funding"] .mode { display: none; }
 .text-vet h2 { margin: 0; font: 700 1.1rem/1.2 var(--display); text-transform: uppercase; letter-spacing: 1px; color: var(--accent); }
 .text-vet p { margin: 0; line-height: 1.55; }
 .text-vet .btn { align-self: flex-start; }
-
 
 /* Copy, always within reach at the top right */
 .note-title-row { flex-wrap: nowrap; align-items: center; }
@@ -766,8 +728,7 @@ textarea.is-example { border-style: dashed; border-color: var(--warn-line); back
 
 /* Result screens: Back on the left, New on the right */
 .head-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.new-start { display: inline-flex; align-items: center; gap: 4px; font-weight: 700; }
-.new-start svg { width: 18px; height: 18px; }
+
 dialog.confirm { max-width: min(420px, calc(100vw - 32px)); }
 dialog.confirm form { display: flex; flex-direction: column; gap: 12px; padding: 20px; }
 dialog.confirm h2 { margin: 0; font-size: 1.15rem; }
@@ -794,7 +755,6 @@ dialog.confirm p { margin: 0; }
 .video-info .help { margin: 0; }
 .care-sec.video p { margin: 0; }
 
-
 .share-actions { display: flex; flex-direction: column; gap: 8px; }
 .share-actions .link { align-self: center; padding: 8px; }
 
@@ -807,20 +767,16 @@ dialog.confirm p { margin: 0; }
 .usage { overflow-x: auto; }
 
 /* Clear button, bottom right inside the dictation box */
-.tx-wrap { position: relative; }
-.tx-wrap #transcript { width: 100%; padding-bottom: 44px; }
+
 .tx-clear { position: absolute; right: 8px; bottom: 10px; display: inline-flex; align-items: center; gap: 4px; min-height: 32px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--muted); background: var(--surface, var(--bg)); color: var(--ink); font-size: 0.85rem; font-weight: 600; cursor: pointer; box-shadow: 0 1px 2px rgb(0 0 0 / 0.08); }
 .tx-clear svg { width: 14px; height: 14px; }
 .tx-clear:hover { border-color: var(--ink); }
-.tx-wrap { scroll-margin-bottom: 96px; }
 
 /* MOP plan disclaimer */
 .ai-disclaimer { margin: 0 0 12px; padding: 10px 12px; border-left: 4px solid var(--accent, var(--muted)); background: var(--surface, var(--bg)); border-radius: 4px; font-size: 0.92rem; font-weight: 600; }
 
 /* Share sheet: Word first, link to the app coming soon */
 .share-actions { display: flex; flex-direction: column; gap: 10px; }
-.share-soon { opacity: 0.6; cursor: not-allowed; display: inline-flex; justify-content: center; align-items: center; gap: 8px; }
-.share-soon .soon { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; border: 1px solid currentColor; border-radius: 999px; padding: 1px 8px; }
 
 /* ---------- UX pass, October 2026 ---------- */
 /* Tighter home screen */
@@ -831,7 +787,6 @@ main { padding-top: 14px; }
 .logo { width: 84px; height: 84px; }
 .hero-banner { min-height: 128px; }
 @media (min-width: 720px) { .hero-banner { min-height: 190px; } }
-.mic-zone { padding-top: 0; }
 
 /* Create stays in view: sticky on every width, and lifted above the keyboard on phones */
 #view-record .actions { position: static; }
@@ -850,7 +805,6 @@ body[data-kb="open"] .site-foot, body[data-kb="open"] .foot { display: none; }
 }
 .tx-clear svg { width: 12px; height: 12px; }
 .tx-clear:hover, .tx-clear:focus-visible { color: var(--ink); background: var(--accent-soft); border: 0; }
-.tx-wrap #transcript { padding-bottom: 36px; }
 
 /* Photos: two even tiles */
 .media-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -875,10 +829,7 @@ body[data-kb="open"] .site-foot, body[data-kb="open"] .foot { display: none; }
 /* Pick up where you left off */
 .resume { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px; background: var(--accent-soft); border: 1px solid var(--line); }
 .resume[hidden] { display: none; }
-.resume-icon { width: 22px; height: 22px; color: var(--accent); }
-.resume-body { display: flex; flex-direction: column; min-width: 0; line-height: 1.3; }
-.resume-label { font-weight: 700; font-size: 0.9rem; }
-#resume-text { font-size: 0.85rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
 .resume .btn.small { min-height: 36px; }
 
 /* How it works: Back at the top */
@@ -925,7 +876,6 @@ body[data-kb="open"] .site-foot, body[data-kb="open"] .foot { display: none; }
 .ticksheet tbody th { text-align: left; color: var(--ink); font-weight: 650; min-width: 130px; }
 .ticksheet td { min-width: 44px; height: 44px; }
 .ticksheet .box { width: 22px; height: 22px; }
-.tick-key { display: none !important; }
 
 @media print {
   @page { margin: 14mm; }
@@ -973,7 +923,6 @@ body[data-kb="open"] .site-foot, body[data-kb="open"] .foot { display: none; }
 .brand { position: relative; }
 .beta-chip { position: absolute; left: 50%; bottom: -4px; transform: translateX(-50%); padding: 1px 8px; border-radius: 999px; background: #ffd166; color: #3a2a00; font: 700 0.68rem/1.4 var(--display); letter-spacing: 0.08em; text-transform: uppercase; }
 .vet-badge { position: absolute; right: -10px; top: 2px; padding: 1px 8px; border-radius: 999px; background: var(--accent); color: var(--accent-ink); font: 700 0.68rem/1.4 var(--display); letter-spacing: 0.08em; text-transform: uppercase; box-shadow: 0 0 0 2px var(--bar, #2b3138); }
-.sub-label { margin-top: 8px; font-weight: 600; font-size: 0.85rem; }
 
 /* AI guidance note, feed calculator, release checklist */
 .ai-check { margin: 0; padding: 8px 12px; border-left: 4px solid var(--warn-line); background: var(--warn-soft); border-radius: 4px; font-size: 0.88rem; font-weight: 600; }
@@ -995,7 +944,7 @@ body[data-kb="open"] .site-foot, body[data-kb="open"] .foot { display: none; }
 
 /* Add more info: a clear listening state, words shown as they're heard */
 dialog.more[data-mic="listening"] textarea, dialog.more[data-mic="starting"] textarea { border-color: var(--rec); box-shadow: 0 0 0 3px var(--rec-soft); }
-dialog.more[data-mic="listening"] .more-mic-zone .help { color: var(--rec); font-weight: 650; }
+
 #more-interim { margin: -4px 0 0; }
 
 .care-sec.ticks .tbl { overflow-x: auto; }
@@ -1006,7 +955,7 @@ dialog.more[data-mic="listening"] .more-mic-zone .help { color: var(--rec); font
 
 /* Loading: what it's doing, and checked facts about the animal */
 .working-feed { max-width: 30rem; display: grid; gap: 10px; margin-top: 6px; }
-.working-step { margin: 0; font-weight: 650; color: var(--ink); min-height: 1.4em; }
+
 .working-fact { margin: 0; padding: 12px 14px; border-radius: 10px; background: var(--accent-soft); text-align: left; font-size: 0.92rem; line-height: 1.45; }
 .fact-label { display: block; font: 700 0.78rem/1.2 var(--display); text-transform: uppercase; letter-spacing: 0.08em; color: var(--chip-ink, var(--accent)); margin-bottom: 4px; }
 
@@ -1045,22 +994,15 @@ dialog.crop-dlg h2 { margin: 0; font: 700 1.2rem/1.2 var(--display); text-transf
 .ai-check.top { margin-bottom: 2px; }
 
 /* Reassurance under the dictation box */
-.tx-hint { display: flex; align-items: center; gap: 6px; margin: 2px 0 8px; font-size: 0.8rem; color: var(--muted, #5b6b62); line-height: 1.35; }
-.tx-hint svg { width: 14px; height: 14px; flex: none; opacity: 0.8; }
 
 /* Resume card: the animal is the headline and wraps instead of being cut off */
-.resume-kicker { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--accent); }
-.resume .resume-label { font-size: 0.98rem; font-weight: 700; color: var(--ink); white-space: normal; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-#resume-text { white-space: normal; }
+
 /* Keep Clear readable when the text runs under it */
 .tx-clear { background: var(--surface, #fff); box-shadow: 0 0 0 1px var(--line); text-decoration: none; }
 .src-meta .scope { flex: 0 0 auto !important; width: auto; }
 /* Recent plans */
 .resume { grid-template-columns: auto 1fr auto; }
-.resume-all { grid-column: 2 / -1; justify-self: start; font-size: 0.85rem; font-weight: 600; margin-top: -4px; }
-.resume-all[hidden] { display: none; }
-.recent-dlg { width: min(440px, calc(100vw - 32px)); }
-.recent-sub { margin: 4px 0 10px; color: var(--muted); font-size: 0.88rem; }
+
 .recent-list { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 8px; max-height: 60vh; overflow: auto; }
 .recent-item { width: 100%; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; padding: 10px 12px; min-height: 48px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface, var(--bg)); color: var(--ink); font: inherit; cursor: pointer; }
 .recent-item:hover, .recent-item:focus-visible { border-color: var(--accent); background: var(--accent-soft); }
@@ -1072,7 +1014,6 @@ dialog.crop-dlg h2 { margin: 0; font: 700 1.2rem/1.2 var(--display); text-transf
 html:has(body[data-kb="open"]) { scroll-padding-bottom: 16px; scroll-padding-top: 8px; }
 /* Room to scroll the dictation box up to the top while the keyboard covers the bottom of the page */
 body[data-kb="open"] #view-record { padding-bottom: 40vh; } /* a steady amount, so typing never changes the page height */
-body[data-kb="open"] .tx-hint { display: none; }
 
 /* A photo being shrunk on the phone */
 .photo-busy { display: inline-flex; align-items: center; gap: 10px; padding: 10px 14px; border: 1px dashed var(--line); border-radius: 10px; color: var(--muted); font-size: 0.9rem; font-weight: 600; }
@@ -1094,15 +1035,12 @@ body[data-kb="open"] .tx-hint { display: none; }
 .bar > #open-about { justify-self: start; }
 .recent-item:first-child { border-color: var(--accent); }
 
-
 /* Light / dark switch at the top: dark by default */
 .bar-left { display: flex; justify-content: flex-start; gap: 4px; }
 .bar > .bar-left { justify-self: start; }
-:root[data-theme="dark"] #theme-toggle .i-moon, :root[data-theme="light"] #theme-toggle .i-sun { display: none; }
 
 /* Clear: a quiet link under the bottom-right corner of the box, never on top of the words */
-.tx-wrap { display: flex; flex-direction: column; }
-.tx-wrap #transcript { padding-bottom: 12px; }
+
 .tx-clear {
   position: static; align-self: flex-end; margin-top: 6px; min-height: 32px; padding: 4px 6px;
   background: none; border: 0; box-shadow: none; border-radius: 6px;
@@ -1112,7 +1050,7 @@ body[data-kb="open"] .tx-hint { display: none; }
 .tx-clear svg { width: 12px; height: 12px; }
 
 /* Tick sheet on a phone: job names stay put on the left, days swipe sideways, boxes are big and tappable */
-.tick-hint { margin: 0 0 6px; font-size: 0.82rem; color: var(--muted); }
+
 .tick-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
 .ticksheet { border-collapse: separate; border-spacing: 0; width: max-content; min-width: 100%; table-layout: auto; font-size: 0.88rem; }
 .ticksheet th, .ticksheet td { border: 0; border-bottom: 1px solid var(--line); padding: 0; text-align: center; }
@@ -1134,7 +1072,6 @@ body[data-kb="open"] .tx-hint { display: none; }
 .ticksheet .box.on::after { content: ""; width: 7px; height: 12px; border: solid var(--accent-ink); border-width: 0 3px 3px 0; transform: translateY(-1px) rotate(45deg); }
 .ticksheet .box:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 @media (max-width: 600px) { .ticksheet .day-word { display: none; } .ticksheet thead th:not(:first-child)::before { content: "Day\A"; white-space: pre; font-size: 0.62rem; font-weight: 600; opacity: 0.7; } }
-@media (min-width: 601px) { .tick-hint { display: none; } }
 
 /* Fridge sheet: printed on its own, branded like the Word printouts */
 #fridge-print { display: none; }
@@ -1201,17 +1138,13 @@ body[data-kb="open"] .tx-hint { display: none; }
 .polish-actions { display: flex; gap: 10px; flex-wrap: wrap; }
 .polish-actions .btn { flex: 1 1 160px; }
 #polish-soap { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
-#polish-soap .soap-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); }
-#polish-soap[data-state="working"] .soap-dot { background: var(--warn); animation: soap-pulse 1.2s ease-in-out infinite; }
-#polish-soap[data-state="ready"] .soap-dot { background: var(--accent); }
+
 @keyframes soap-pulse { 50% { opacity: 0.3; } }
-@media (prefers-reduced-motion: reduce) { #polish-soap[data-state="working"] .soap-dot { animation: none; } }
 
 /* Vet tabs: Notes, Rapid, Care plan, Advanced */
 body[data-role="vet"] .mode label:has(input[value="polish"]), body[data-role="vet"] .mode label:has(input[value="media"]) { order: 1; }
 body[data-role="vet"] .mode label:has(input[value="carer"]) { order: 2; }
 body[data-role="vet"] .mode .adv-tab { order: 3; }
-
 
 /* Doc sections that must not be missed */
 .doc-sec.tone-key, .doc-sec.tone-urgent, .doc-sec.tone-warn { border-radius: 10px; padding: 10px 12px; border-left: 4px solid; }
@@ -1306,19 +1239,7 @@ body[data-role="vet"] .carer-only, body:not([data-role="vet"]) .vet-only { displ
 
 /* The mic at rest is a calm outlined button in the app's green; it turns solid red only while it is listening,
    so it never looks switched on when it isn't. */
-.mic-zone .mic, body[data-mode="carer"] .mic-zone .mic {
-  width: 60px; height: 60px; background: var(--accent-soft); color: var(--accent);
-  box-shadow: inset 0 0 0 2px var(--accent);
-}
-.mic-zone .mic svg { width: 28px; height: 28px; }
-.mic-zone .mic .i-stop { width: 22px; height: 22px; }
-body[data-mic="listening"] .mic-zone .mic, body[data-mic="starting"] .mic-zone .mic, body[data-mic="keyboard"] .mic-zone .mic {
-  background: var(--rec); color: #fff; box-shadow: 0 0 0 5px var(--rec-soft);
-}
-body[data-mic="listening"] .mic-zone .mic::after { top: -5px; right: -5px; bottom: -5px; left: -5px; }
-.mic-zone { column-gap: 14px; }
-.mic-zone .mic-status { font-size: 1.02rem; }
-@media (min-width: 720px) { .mic-zone .mic { width: 64px; height: 64px; } }
+
 /* Vets use it many times a day on a phone: drop the photo banner (the logo stays) so Create sits on the first screen. */
 @media (max-width: 719px) { body[data-role="vet"] .hero-banner { display: none; } }
 
@@ -1409,9 +1330,7 @@ textarea, input { caret-color: var(--caret); }
 .set-group { display: grid; gap: 16px; padding-top: 18px; margin-top: 8px; border-top: 1px solid var(--line); }
 .set-title { margin: 0; font: 700 0.78rem/1.2 var(--display); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
 .set-group .field { margin: 0; }
-.set-danger { display: grid; gap: 6px; justify-items: start; padding-top: 14px; border-top: 1px solid var(--line); }
-.set-danger .help { margin: 0; }
-#forget[data-armed="true"] { background: var(--err); border-color: var(--err); color: var(--surface); }
+
 .dlg-actions #save-settings { min-width: 140px; margin-left: auto; }
 @media (max-width: 600px) {
   #settings { width: 100vw; max-width: 100vw; height: 100dvh; max-height: 100dvh; margin: 0; border-radius: 0; }
@@ -1427,7 +1346,7 @@ textarea, input { caret-color: var(--caret); }
 .save-plan svg { width: 18px; height: 18px; }
 .save-plan[aria-pressed="true"] { color: var(--accent); border-color: var(--accent); }
 .lib-saved { display: grid; gap: 8px; margin-bottom: 18px; }
-.lib-saved h2, .lib-group { margin: 0 0 8px; font-size: 1.05rem; }
+.lib-saved h2{ margin: 0 0 8px; font-size: 1.05rem; }
 .saved-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .saved-item { display: flex; align-items: center; gap: 4px; }
 .saved-item .saved-open { flex: 1; min-width: 0; }
@@ -1437,22 +1356,9 @@ textarea, input { caret-color: var(--caret); }
 
 /* Review card: what to check and what would be nice to add, in one place; one tap to update */
 .review { display: grid; }
-.review-card { width: 100%; display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: var(--radius); border: 1px solid var(--warn-line); background: var(--warn-soft); color: var(--ink); text-align: left; cursor: pointer; transition: border-color .15s, transform .15s; }
-.review-card:hover { border-color: var(--warn); }
-.review-card:active { transform: scale(0.99); }
-.review-card:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
-.review-icon { flex: none; width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; background: var(--warn); color: var(--bg); }
-.review-icon svg { width: 22px; height: 22px; }
-.review-text { display: grid; gap: 2px; min-width: 0; }
-.review-title { font: 700 0.98rem/1.2 var(--display); text-transform: uppercase; letter-spacing: 0.04em; color: var(--warn); }
+
 .review-sub { font-size: 0.88rem; color: var(--muted); }
-.review-go { margin-left: auto; flex: none; display: inline-flex; align-items: center; gap: 2px; font-weight: 700; color: var(--ink); }
-.review-go svg { width: 18px; height: 18px; }
-.review-card[data-tone="calm"] { border-color: var(--line); background: var(--surface); }
-.review-card[data-tone="calm"]:hover { border-color: var(--accent); }
-.review-card[data-tone="calm"] .review-icon { background: var(--accent-soft); color: var(--accent); }
-.review-card[data-tone="calm"] .review-title { color: var(--ink); }
-@media (prefers-reduced-motion: reduce) { .review-card { transition: none; } .review-card:active { transform: none; } }
+
 /* In the sheet: the questions, then the optional extras as chips */
 .nice-chips { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
 .nice-chips li { padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); font-size: 0.86rem; }
@@ -1474,8 +1380,7 @@ dialog.more h2 { font-size: 1.15rem; outline: none; }
 .more-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; display: grid; align-content: start; gap: 12px; padding: 0 var(--gutter-r) 12px var(--gutter-l); }
 .more-composer { flex: none; display: grid; gap: 8px; padding: 10px var(--gutter-r) calc(12px + env(safe-area-inset-bottom, 0px)) var(--gutter-l); border-top: 1px solid var(--line); background: var(--surface); }
 .more-composer #more-help { margin: 0; font-size: 0.85rem; min-height: 1.2em; }
-.more-input { display: flex; align-items: flex-end; gap: 10px; }
-dialog.more .more-input textarea { flex: 1; min-width: 0; min-height: 56px; max-height: 32dvh; }
+
 .mic.more-mic { width: 56px; height: 56px; box-shadow: 0 0 0 4px var(--accent-soft); }
 .mic.more-mic[aria-pressed="true"] { box-shadow: 0 0 0 4px var(--rec-soft); }
 .mic.more-mic svg { width: 26px; height: 26px; }
@@ -1489,9 +1394,7 @@ dialog.more[data-mic="listening"] .more-composer #more-help { color: var(--rec);
 .more-qs summary::-webkit-details-marker { display: none; }
 .more-qs summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 .more-qs .count { display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; background: var(--warn); color: var(--bg); font-size: 0.78rem; }
-.more-qs-toggle { margin-left: auto; font-size: 0.85rem; font-weight: 650; color: var(--accent); }
-.more-qs-toggle::after { content: "Show"; }
-.more-qs[open] .more-qs-toggle::after { content: "Hide"; }
+
 .qs-group { display: grid; gap: 8px; padding-top: 4px; }
 .qs-label { margin: 6px 0 0; font: 700 0.74rem/1.2 var(--display); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
 .more-questions { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; counter-reset: q; }
@@ -1587,14 +1490,8 @@ html { touch-action: manipulation; }
 .care-sec.ticks ul.day-jobs { padding: 0; margin: 0; }
 
 /* Review bar, slim as on Live: title, count, "Tap to review"; it opens the update sheet */
-.review-card { padding: 10px 14px; gap: 10px; min-height: 52px; }
-.review-icon { display: none; }
-.review-text { display: flex; align-items: center; gap: 8px; }
-.review-title { font-size: 0.95rem; }
+
 .review-sub:not(:empty) { display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; background: var(--warn); color: var(--bg); font-size: 0.75rem; font-weight: 800; }
-.review-card[data-tone="calm"] .review-sub:not(:empty) { background: var(--accent-soft); color: var(--accent); }
-.review-go { font-size: 0.82rem; font-weight: 600; color: var(--muted); gap: 4px; }
-.review-go svg { width: 16px; height: 16px; }
 
 /* Review strip, as on Live: one slim line that opens in place to show what to check, with Edit for the update sheet */
 details.review { padding: 0; }
@@ -1661,14 +1558,7 @@ input[type="number"], input[type="search"], input[type="tel"], input[type="email
 .saved-item .saved-name { width: 100%; }
 
 /* Settings: Admin is one quiet button that opens the admin-only settings */
-.set-admin { border-top: 1px solid var(--line); padding-top: 14px; }
-.set-admin > summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; min-height: 48px; padding: 0 14px; border: 1px solid var(--line); border-radius: 12px; font-weight: 700; color: var(--ink); }
-.set-admin > summary::-webkit-details-marker { display: none; }
-.set-admin > summary::after { content: ""; width: 8px; height: 8px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(45deg); transition: transform .15s; }
-.set-admin[open] > summary::after { transform: rotate(-135deg); }
-.set-admin > summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
-.set-admin-body { display: grid; gap: 16px; padding: 14px 2px 4px; }
-@media (prefers-reduced-motion: reduce) { .set-admin > summary::after { transition: none; } }
+
 /* Add to Home Screen steps */
 .home-steps { margin: 4px 0 0; padding-left: 1.3em; display: grid; gap: 4px; font-size: 0.92rem; line-height: 1.4; }
 .home-steps:empty { display: none; }
@@ -1677,20 +1567,10 @@ input[type="number"], input[type="search"], input[type="tel"], input[type="email
 .endorse { margin: 12px 0 0; padding: 14px 16px; border-radius: 12px; background: var(--accent-soft); box-shadow: inset 0 0 0 1.5px var(--accent); display: grid; gap: 12px; }
 .endorse[data-tone="warn"] { background: var(--warn-soft); box-shadow: inset 0 0 0 1.5px var(--warn-line); }
 .endorse[data-tone="quiet"] { background: transparent; box-shadow: inset 0 0 0 1px var(--line); padding: 10px 14px; }
-.endorse-row { display: flex; gap: 12px; align-items: flex-start; }
-.endorse-row svg { flex: none; width: 26px; height: 26px; margin-top: 1px; color: var(--accent); }
-.endorse[data-tone="warn"] .endorse-row svg { color: var(--warn); }
-.endorse[data-tone="quiet"] .endorse-row svg { color: var(--muted); width: 22px; height: 22px; }
-.endorse .i-warn { display: none; }
-.endorse[data-tone="warn"] .i-warn { display: block; }
-.endorse[data-tone="warn"] .i-ok { display: none; }
+
 .endorse-title { margin: 0; font-weight: 700; font-size: 1.02rem; line-height: 1.3; }
 .endorse[data-tone="quiet"] .endorse-title { font-weight: 600; font-size: 0.95rem; color: var(--muted); }
 .endorse-text { margin: 4px 0 0; font-size: 0.93rem; line-height: 1.45; }
-.endorse-acts { display: flex; flex-wrap: wrap; gap: 8px; }
-.endorse-acts .btn { min-height: 44px; }
-.endorse-check { align-items: flex-start; margin: 4px 0 12px; line-height: 1.4; }
-.endorse-check input { flex: none; margin-top: 1px; }
 
 /* Vet account in Settings, and the admin list of vets */
 .acct-who { margin: 0; font-size: 1rem; }
@@ -1707,17 +1587,13 @@ input[type="number"], input[type="search"], input[type="tel"], input[type="email
 .vet-ok { color: var(--accent); font-weight: 600; }
 .vet-wait { color: var(--warn); font-weight: 600; }
 .vet-acts { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; margin-top: 6px; }
-.endorse-as-line { margin: 0 0 8px; }
 
 /* Prescription form */
 dialog.rx-dlg { max-width: min(560px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); }
 dialog.rx-dlg form { gap: 10px; }
-.rx-set { border: 0; margin: 0; padding: 12px 14px; border-radius: 12px; box-shadow: inset 0 0 0 1px var(--line); display: grid; gap: 10px; }
-.rx-set legend { font-weight: 700; padding: 0 4px; font-size: 0.95rem; }
-.rx-set .field { margin: 0; }
-.field.two-eq { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.field.two-eq label, .field.two label { display: block; margin-bottom: 4px; }
-.rx-set input, .rx-set select, .rx-set textarea { width: 100%; }
+
+ .field.two label { display: block; margin-bottom: 4px; }
+
 #rx-items { display: grid; gap: 10px; }
 /* Prescription: one plain grid of details, then each medicine; no boxes within boxes */
 .rx-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 12px; }
@@ -1733,20 +1609,16 @@ dialog.rx-dlg .dlg-actions { position: sticky; bottom: 0; background: var(--surf
 @media (max-width: 340px) { .rx-grid { grid-template-columns: 1fr; } }
 .rx-msg { margin: 0; color: var(--err); font-size: 0.92rem; }
 .rx-msg:empty { display: none; }
-@media (max-width: 380px) { .field.two-eq { grid-template-columns: 1fr; } }
+
 .endorse-changes { margin: 6px 0 0; font-size: 0.92rem; font-weight: 600; }
 /* Sections the other side changed since this device last saw the plan */
 .care-sec.changed, .care-summary.changed { box-shadow: inset 4px 0 0 var(--leaf); padding-left: 12px; border-radius: 4px; }
 .care-sec.changed > h2::after { content: 'Changed'; margin-left: 8px; padding: 1px 8px; border-radius: 999px; font-size: 0.7rem; letter-spacing: 0.04em; vertical-align: middle; background: var(--leaf); color: #fff; }
 .admin-sub { margin: 18px 0 6px; font-size: 0.8rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
-.set-admin-body .admin-sub:first-of-type { margin-top: 8px; }
 
 /* Review before saving or sending: a clean card in the app's own colours, not a brown warning box.
    The count and icon carry the attention; the card itself stays neutral. */
-.review-card { background: var(--surface); border-color: var(--line); box-shadow: inset 4px 0 0 var(--accent); }
-.review-card:hover { border-color: var(--accent); }
-.review-icon { background: var(--accent-soft); color: var(--accent); box-shadow: inset 0 0 0 1.5px var(--accent); }
-.review-title { color: var(--ink); }
+
 .checks { background: var(--surface); box-shadow: inset 0 0 0 1px var(--line), inset 4px 0 0 var(--accent); }
 .checks h2 { color: var(--ink); }
 .checks .count { background: var(--accent); color: var(--accent-ink); }
