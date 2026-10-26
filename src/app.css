@@ -1745,3 +1745,6 @@ dialog.rx-dlg form { gap: 10px; }
 .set-pane .admin-sub:first-child { margin-top: 6px; }
 #pane-admin .seg { display: grid; grid-template-columns: 1fr 1fr; }
 .conn:empty { display: none; }
+/* "Use the same notes for" after an example: a plain note, and the buttons shown but switched off */
+.make-next-note { margin: 0 0 10px; padding: 10px 12px; border-radius: 10px; font-size: 0.92rem; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line), inset 4px 0 0 var(--accent); }
+.make-next.is-example .make-btn { opacity: 0.45; cursor: not-allowed; }

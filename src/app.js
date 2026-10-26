@@ -2874,11 +2874,16 @@ function renderMakeNext(box, current) {
   const options = current && current !== 'funding' && current !== 'opinion' ? pool.filter(([m]) => m !== current && !(current === 'witness' && m === 'media') && !(current === 'media' && m === 'witness')) : [];
   box.hidden = !options.length;
   if (!options.length) return box.replaceChildren();
+  // An example has nothing of the person's own to reuse: say so, rather than offering buttons that won't work.
+  const example = isExampleText();
+  box.classList.toggle('is-example', example);
   box.replaceChildren(
     el('h2', { text: 'Use the same notes for' }),
-    el('p', { class: 'help', text: 'No need to say it again. One tap writes it from what you already said.' }),
+    example
+      ? el('p', { class: 'make-next-note', text: 'This is an example, so these won’t work here. Try them with your own words: they reuse what you said, with no need to say it again.' })
+      : el('p', { class: 'help', text: 'No need to say it again. One tap writes it from what you already said.' }),
     el('div', { class: 'make-next-row' }, options.map(([m, label]) => {
-      const b = el('button', { type: 'button', class: 'make-btn' }, [svgIcon(MAKE_ICONS[m] || MAKE_ICONS.vet), el('span', { text: label }), el('span', { class: 'arrow', 'aria-hidden': 'true', text: '→' })]);
+      const b = el('button', { type: 'button', class: 'make-btn', disabled: example ? '' : null }, [svgIcon(MAKE_ICONS[m] || MAKE_ICONS.vet), el('span', { text: label }), el('span', { class: 'arrow', 'aria-hidden': 'true', text: '→' })]);
       b.addEventListener('click', () => makeNext(m));
       return b;
     })),
