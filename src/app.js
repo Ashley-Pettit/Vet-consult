@@ -2881,7 +2881,7 @@ function renderMakeNext(box, current) {
   // An example has nothing of the person's own to reuse: say so, rather than offering buttons that won't work.
   const example = isExampleText();
   box.classList.toggle('is-example', example);
-  box.replaceChildren(
+  box.replaceChildren(...[
     el('h2', { text: 'Use the same notes for' }),
     example
       ? el('p', { class: 'make-next-note', text: 'This is an example, so these won’t work here. Try them with your own words: they reuse what you said, with no need to say it again.' })
@@ -2891,7 +2891,7 @@ function renderMakeNext(box, current) {
       b.addEventListener('click', () => makeNext(m));
       return b;
     })),
-  );
+  ].filter(Boolean));
 }
 
 // Follow-on drafts (the care plan after an intake, a vet's clinical notes after a plan) are full AI calls, so they're
@@ -3883,6 +3883,11 @@ async function acceptDraft(c) {
   const d = medsDraft;
   if (!d) return;
   if (d.meds.some(needsDose)) return toast('Add a dose for each medicine first, or remove it, using the changes box.');
+  // An empty draft never wipes out medicines the plan already has.
+  if (!d.meds.length && c.medications.length) {
+    medsDraft = null;
+    return redrawMeds();
+  }
   // What the carer gets: the medicines only, without the drafting notes. A caution becomes the carer's tip.
   const medications = d.meds.map((m) => ({ name: m.name, how: m.how, how_often: m.how_often, how_long: m.how_long, tip: m.caution || '' }));
   medsDraft = null;

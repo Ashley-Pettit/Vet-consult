@@ -52,4 +52,5 @@ test('a carer’s plan has a Medications section that asks a vet for advice', as
   await expect(sec.getByRole('button', { name: 'Ask a vet about medications' })).toBeVisible();
   await expect(sec.locator('.draft')).toHaveCount(0); // carers never see drafted options
   await expect(sec.getByRole('button', { name: /Suggest/ })).toHaveCount(0);
+  await expect(page.locator('#make-next-care')).not.toContainText('null'); // no stray text under the heading
 });
