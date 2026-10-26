@@ -1403,7 +1403,7 @@ textarea, input { caret-color: var(--caret); }
 
 /* Settings: grouped, and a full-screen sheet on phones with the title and Save always in reach */
 #settings { overflow-y: auto; overscroll-behavior: contain; }
-.set-group { display: grid; gap: 16px; padding-top: 14px; border-top: 1px solid var(--line); }
+.set-group { display: grid; gap: 16px; padding-top: 18px; margin-top: 8px; border-top: 1px solid var(--line); }
 .set-title { margin: 0; font: 700 0.78rem/1.2 var(--display); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
 .set-group .field { margin: 0; }
 .set-danger { display: grid; gap: 6px; justify-items: start; padding-top: 14px; border-top: 1px solid var(--line); }
@@ -1719,3 +1719,29 @@ dialog.rx-dlg form { gap: 10px; }
 .rx-msg { margin: 0; color: var(--err); font-size: 0.92rem; }
 .rx-msg:empty { display: none; }
 @media (max-width: 380px) { .field.two-eq { grid-template-columns: 1fr; } }
+.endorse-changes { margin: 6px 0 0; font-size: 0.92rem; font-weight: 600; }
+/* Sections the other side changed since this device last saw the plan */
+.care-sec.changed, .care-summary.changed { box-shadow: inset 4px 0 0 var(--leaf); padding-left: 12px; border-radius: 4px; }
+.care-sec.changed > h2::after { content: 'Changed'; margin-left: 8px; padding: 1px 8px; border-radius: 999px; font-size: 0.7rem; letter-spacing: 0.04em; vertical-align: middle; background: var(--leaf); color: #fff; }
+.admin-sub { margin: 18px 0 6px; font-size: 0.8rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.set-admin-body .admin-sub:first-of-type { margin-top: 8px; }
+
+/* Review before saving or sending: a clean card in the app's own colours, not a brown warning box.
+   The count and icon carry the attention; the card itself stays neutral. */
+.review-card { background: var(--surface); border-color: var(--line); box-shadow: inset 4px 0 0 var(--accent); }
+.review-card:hover { border-color: var(--accent); }
+.review-icon { background: var(--accent-soft); color: var(--accent); box-shadow: inset 0 0 0 1.5px var(--accent); }
+.review-title { color: var(--ink); }
+.checks { background: var(--surface); box-shadow: inset 0 0 0 1px var(--line), inset 4px 0 0 var(--accent); }
+.checks h2 { color: var(--ink); }
+.checks .count { background: var(--accent); color: var(--accent-ink); }
+
+/* Settings: three tabs (Standard, Vet, Admin), styled like the app's other switches */
+.set-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; padding: 3px; margin: 4px 0 6px; background: var(--surface); border-radius: 999px; box-shadow: inset 0 0 0 1px var(--line); position: sticky; top: 0; z-index: 2; }
+.set-tab { min-height: 42px; border: 0; border-radius: 999px; background: transparent; color: var(--muted); font: 700 0.92rem/1 var(--font); cursor: pointer; }
+.set-tab[aria-selected="true"] { background: var(--accent); color: var(--accent-ink); }
+.set-tab:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.set-pane > .set-group:first-child { border-top: 0; padding-top: 4px; }
+.set-pane .admin-sub:first-child { margin-top: 6px; }
+#pane-admin .seg { display: grid; grid-template-columns: 1fr 1fr; }
+.conn:empty { display: none; }

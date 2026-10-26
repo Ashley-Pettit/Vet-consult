@@ -163,7 +163,7 @@ test.describe('creating a note', () => {
     const calls = await mockApi(page);
     await openApp(page);
     await page.locator('#open-settings').click();
-    await expect(page.locator('#conn-status')).toContainText('Connected.');
+    await expect(page.locator('#conn-status')).toBeEmpty(); // connected: nothing to say
     await expect(page.locator('#key-field')).toBeHidden(); // no personal key needed
     await page.locator('#clinician').fill('Dr Sam Lee');
     await page.locator('#save-settings').click();
@@ -348,21 +348,6 @@ test.describe('creating a note', () => {
 });
 
 test.describe('settings', () => {
-  test('clear saved data removes settings and keeps the connection', async ({ page }) => {
-    await withKey(page, { clinician: 'Dr A' });
-    await openApp(page);
-    await page.locator('#open-settings').click();
-    await expect(page.locator('#clinician')).toHaveValue('Dr A');
-    await page.locator('#forget').click();
-    await expect(page.locator('#forget')).toHaveText('Tap again to clear'); // a second tap is needed
-    expect(await page.evaluate(() => localStorage.getItem('css.settings'))).not.toBeNull();
-    await page.locator('#forget').click();
-    await expect(page.locator('#conn-status')).toContainText('Connected');
-    const stored = await page.evaluate(() => localStorage.getItem('css.settings'));
-    expect(stored).toBeNull();
-  });
-
-
   test('saved settings stay on this device under Wildlife Welfare Companion’s own name', async ({ page }) => {
     await openApp(page);
     await page.locator('#open-settings').click();

@@ -2,18 +2,24 @@ import { test, expect } from '@playwright/test';
 import { mockApi, openApp, textReply, SAMPLE_NOTE } from './helpers.js';
 import { EXAMPLE_CARER_PLAN } from '../../src/note.js';
 
-test('carer or vet at the top, remembered; the old link is gone', async ({ page }) => {
+test('Normal or Vet is switched in Settings > Admin (not on the front screen), and remembered', async ({ page }) => {
   await openApp(page);
-  await expect(page.locator('#role-switch')).toHaveCount(0);
+  await expect(page.locator('#view-record #role-seg')).toHaveCount(0);
   await expect(page.locator('input[name=role][value=carer]')).toBeChecked();
   await expect(page.locator('#mode label:visible')).toHaveCount(4); // intake is made from a plan, not a tab
+  await page.locator('#open-settings').click();
+  await page.locator('#tab-admin').click();
   await page.locator('#role-seg label', { hasText: 'Vet' }).click();
+  await page.locator('#close-settings').click();
   await expect(page.locator('#mode label:visible')).toHaveCount(3);
   await expect(page.locator('#adv-tab')).toBeVisible();
   await expect(page.locator('input[name=mode]:checked')).toHaveValue('carer'); // vets start on the care plan
   await page.reload();
   await expect(page.locator('input[name=role][value=vet]')).toBeChecked();
-  await page.locator('#role-seg label', { hasText: 'Carer' }).click();
+  await page.locator('#open-settings').click();
+  await page.locator('#tab-admin').click();
+  await page.locator('#role-seg label', { hasText: 'Normal' }).click();
+  await page.locator('#close-settings').click();
   await expect(page.locator('#mode label:visible')).toHaveCount(4); // intake is made from a plan, not a tab
 });
 
@@ -115,7 +121,7 @@ test('Opus can be picked (Sonnet by default) and Settings shows AI usage', async
   await openApp(page);
   await page.locator('#open-settings').click();
   await expect(page.locator('#model')).toBeHidden(); // AI models live under Admin
-  await page.locator('#admin-group > summary').click();
+  await page.locator('#tab-admin').click();
   await expect(page.locator('#model')).toHaveValue('claude-sonnet-5-5');
   await expect(page.locator('#model option')).toHaveCount(3);
   await expect(page.locator('#usage-body')).toContainText('No AI requests');

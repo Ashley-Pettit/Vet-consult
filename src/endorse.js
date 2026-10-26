@@ -13,13 +13,41 @@ export const medsKey = (meds = []) => JSON.stringify((meds || []).map((m) => [m.
 
 const str = (x, n) => (typeof x === 'string' ? x.trim().slice(0, n) : '');
 
+/** The other parts of a plan a vet's endorsement covers, with the names people see. */
+export const PARTS = [
+  ['summary', 'Summary'],
+  ['plan', 'Day-by-day plan'],
+  ['housing', 'Housing'],
+  ['feeding', 'Feeding'],
+  ['activity', 'Activity and handling'],
+  ['care', 'Other care'],
+  ['daily_checks', 'Daily tick sheet'],
+  ['release', 'Release'],
+  ['escalate', 'When to call the vet'],
+  ['next_visit', 'Next visit'],
+];
+const fnv = (t) => {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < t.length; i++) h = Math.imul(h ^ t.charCodeAt(i), 0x01000193);
+  return (h >>> 0).toString(36);
+};
+/** A short fingerprint of each part, so later edits can be named ("Changed since: Feeding"). */
+export const partsKey = (sheet) => Object.fromEntries(PARTS.map(([k]) => [k, fnv(JSON.stringify((sheet && sheet[k]) ?? ''))]));
+/** The parts (names people see) that differ between two versions of a plan. */
+export function changedParts(a, b) {
+  const x = partsKey(a);
+  const y = partsKey(b);
+  return PARTS.filter(([k]) => x[k] !== y[k]).map(([, label]) => label);
+}
+const partsOf = (raw) => (raw && typeof raw === 'object' ? Object.fromEntries(PARTS.filter(([k]) => typeof raw[k] === 'string').map(([k]) => [k, raw[k].slice(0, 16)])) : null);
+
 /** A clean endorsement from stored or shared data, or null. */
 export function endorsementOf(raw) {
   if (!raw || typeof raw !== 'object') return null;
   const by = str(raw.by, 80);
   const at = Number(raw.at);
   if (!by || !Number.isFinite(at) || at <= 0) return null;
-  return { id: /^[a-zA-Z0-9]{16}$/.test(raw.id || '') ? raw.id : '', by, reg: str(raw.reg, 40), clinic: str(raw.clinic, 120), at, meds: typeof raw.meds === 'string' ? raw.meds.slice(0, 20000) : '' };
+  return { id: /^[a-zA-Z0-9]{16}$/.test(raw.id || '') ? raw.id : '', by, reg: str(raw.reg, 40), clinic: str(raw.clinic, 120), at, meds: typeof raw.meds === 'string' ? raw.meds.slice(0, 20000) : '', parts: partsOf(raw.parts) };
 }
 
 /** "Dr Sam Lee" from "Sam Lee" (vets in Australia use Dr); leaves "Dr Lee" or "Prof Lee" as typed. */
@@ -27,7 +55,7 @@ export const drName = (name) => (/^(dr|prof|professor|doctor)\b/i.test(String(na
 
 /** The plan with an endorsement the server recorded: { id, by, reg, clinic, at, meds }. */
 export function endorse(sheet, rec) {
-  return { ...sheet, endorsement: endorsementOf(rec) };
+  return { ...sheet, endorsement: endorsementOf({ ...rec, parts: partsKey(sheet) }) };
 }
 
 // What the server said about each endorsement id: true (matches its record), false (no such record, or different).
@@ -50,8 +78,11 @@ export function endorsementState(sheet) {
   const e = sheet && endorsementOf(sheet.endorsement);
   if (!e) return { state: 'none', e: null };
   // No server record behind it (or a different one): not to be trusted. Not yet checked counts as fine for now.
-  if (endorsementCheck(e) === false) return { state: 'unconfirmed', e };
-  return { state: e.meds === medsKey(sheet.medications) ? 'endorsed' : 'changed', e };
+  if (endorsementCheck(e) === false) return { state: 'unconfirmed', e, edited: [] };
+  // Other parts edited since: the endorsement stands (only medicine changes take it off), but they're named.
+  const now = partsKey(sheet);
+  const edited = e.parts ? PARTS.filter(([k]) => e.parts[k] && e.parts[k] !== now[k]).map(([, label]) => label) : [];
+  return { state: e.meds === medsKey(sheet.medications) ? 'endorsed' : 'changed', e, edited };
 }
 
 export const endorsedDate = (at) => new Date(at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -61,13 +92,14 @@ export const vetLabel = (e) => `${drName(e.by)}${e.reg ? ` (reg. ${e.reg})` : ''
 
 /** The words shown on screen and on printouts for each state: { title, text, tone }. */
 export function endorsementWords(sheet) {
-  const { state, e } = endorsementState(sheet);
+  const { state, e, edited = [] } = endorsementState(sheet);
+  const since = edited.length ? ` Changed since it was endorsed: ${edited.join(', ')}.` : '';
   const hasMeds = Boolean(sheet && sheet.medications && sheet.medications.length);
   if (state === 'endorsed') {
     return {
       state,
       title: 'Vet-endorsed care plan',
-      text: `Endorsed by ${vetLabel(e)}${e.clinic ? `, ${e.clinic}` : ''}, on ${endorsedDate(e.at)}.${hasMeds ? ' The medications are authorised by this vet.' : ''}`,
+      text: `Endorsed by ${vetLabel(e)}${e.clinic ? `, ${e.clinic}` : ''}, on ${endorsedDate(e.at)}.${hasMeds ? ' The medications are authorised by this vet.' : ''}${since}`,
       tone: 'ok',
       medsHeading: hasMeds ? `Medications (authorised by ${drName(e.by)})` : 'Medications',
     };
@@ -76,7 +108,7 @@ export function endorsementWords(sheet) {
     return {
       state,
       title: 'Medications changed since the vet endorsed this plan',
-      text: `${vetLabel(e)} endorsed it on ${endorsedDate(e.at)}, but the medications have changed since. Give medicines only as your vet directed until a vet endorses the plan again.`,
+      text: `${vetLabel(e)} endorsed it on ${endorsedDate(e.at)}, but the medications have changed since. Give medicines only as your vet directed until a vet endorses the plan again.${since}`,
       tone: 'warn',
       medsHeading: 'Medications (changed: not yet authorised by a vet)',
     };

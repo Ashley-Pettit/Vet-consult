@@ -82,11 +82,6 @@
     <h1 id="record-title" class="sr-only">Dictate a consult</h1>
 
     <div class="who">
-      <fieldset class="seg" id="role-seg">
-        <legend class="sr-only">I am a</legend>
-        <label><input type="radio" name="role" value="carer"><span>Carer</span></label>
-        <label><input type="radio" name="role" value="vet"><span>Vet</span></label>
-      </fieldset>
       <fieldset class="seg" id="region-seg">
         <legend class="sr-only">Guidance for which state</legend>
         <label><input type="radio" name="region" value="vic"><span>VIC</span></label>
@@ -291,10 +286,11 @@
         <div>
           <p class="endorse-title" id="endorse-title"></p>
           <p class="endorse-text" id="endorse-text"></p>
+          <p class="endorse-changes" id="endorse-changes" hidden></p>
         </div>
       </div>
       <div class="endorse-acts">
-        <button type="button" class="btn small primary vet-only" id="endorse-btn">Endorse plan</button>
+        <button type="button" class="btn small primary" id="endorse-btn">Endorse plan</button>
         <button type="button" class="btn small ghost" id="review-btn">Ask a vet to review</button>
       </div>
     </section>
@@ -459,8 +455,13 @@
       </button>
     </div>
 
-    <p class="conn" id="conn-status" role="status"></p>
+    <div class="set-tabs" role="tablist" aria-label="Settings">
+      <button type="button" role="tab" class="set-tab" id="tab-standard" aria-controls="pane-standard" aria-selected="true">Standard</button>
+      <button type="button" role="tab" class="set-tab" id="tab-vet" aria-controls="pane-vet" aria-selected="false" tabindex="-1">Vet</button>
+      <button type="button" role="tab" class="set-tab" id="tab-admin" aria-controls="pane-admin" aria-selected="false" tabindex="-1">Admin</button>
+    </div>
 
+    <div class="set-pane" id="pane-standard" role="tabpanel" aria-labelledby="tab-standard">
     <section class="set-group" aria-labelledby="set-you">
       <h3 class="set-title" id="set-you">About you</h3>
       <div class="field">
@@ -470,21 +471,48 @@
 
       <div class="field">
         <label for="drugs">Drugs and products you use</label>
-        <textarea id="drugs" rows="4" spellcheck="false" placeholder="One per line, e.g.&#10;Metacam 1.5 mg/mL oral&#10;Cydectin pour-on&#10;Our in-house mange wash"></textarea>
+        <textarea id="drugs" rows="3" spellcheck="false" placeholder="One per line, e.g.&#10;Metacam 1.5 mg/mL oral&#10;Cydectin pour-on&#10;Our in-house mange wash"></textarea>
         <p class="help">Misheard names are corrected to your spelling. Common drugs are already known.</p>
       </div>
     </section>
 
-    <section class="set-group vet-only" id="account-group" aria-labelledby="set-account">
-      <h3 class="set-title" id="set-account">Vet account</h3>
+    <section class="set-group" aria-labelledby="set-app">
+      <h3 class="set-title" id="set-app">Printouts and app</h3>
+      <div class="field home-field" id="home-field" hidden>
+        <p class="field-label">Add to Home Screen</p>
+        <p class="help" id="home-help"></p>
+        <ol class="home-steps" id="home-steps"></ol>
+        <button type="button" class="btn ghost" id="home-install" hidden>Add to Home Screen</button>
+      </div>
+
+
+      <div class="field">
+        <label for="template">Handout style (Word printouts)</label>
+        <select id="template">
+          <option value="bunurong">Bunurong Wildlife Care</option>
+          <option value="plain">Plain (no branding)</option>
+          <option value="rspca" hidden>RSPCA</option>
+        </select>
+      </div>
+
+    </section>
+    </div>
+
+    <div class="set-pane" id="pane-vet" role="tabpanel" aria-labelledby="tab-vet" hidden>
+    <section class="set-group" id="account-group" aria-labelledby="set-account">
+      <h3 class="set-title sr-only" id="set-account">Vet account</h3>
+      <div id="acct-start">
+        <p class="help">For vets: sign in to use vet mode, endorse care plans and write prescriptions.</p>
+        <button type="button" class="btn ghost" id="acct-open">Vet sign in</button>
+      </div>
       <div id="acct-in" hidden>
         <p class="acct-who"><strong id="acct-name"></strong><span id="acct-reg"></span></p>
         <p class="acct-status" id="acct-status"></p>
         <p class="help" id="acct-clinic"></p>
         <button type="button" class="btn ghost" id="acct-out">Sign out</button>
       </div>
-      <div id="acct-form">
-        <p class="help" id="acct-intro">Sign in to endorse care plans and write prescriptions. New accounts are checked against the vet register before they can be used.</p>
+      <div id="acct-form" hidden>
+        <p class="help" id="acct-intro">New accounts are checked against the vet register before they can endorse plans or write prescriptions.</p>
         <div class="field">
           <label for="acct-email">Email</label>
           <input id="acct-email" type="email" autocomplete="username" spellcheck="false">
@@ -533,43 +561,31 @@
         </div>
       </div>
     </section>
+    </div>
 
-    <section class="set-group" aria-labelledby="set-app">
-      <h3 class="set-title" id="set-app">App</h3>
-      <div class="field home-field" id="home-field" hidden>
-        <p class="field-label">Add to Home Screen</p>
-        <p class="help" id="home-help"></p>
-        <ol class="home-steps" id="home-steps"></ol>
-        <button type="button" class="btn ghost" id="home-install" hidden>Add to Home Screen</button>
-      </div>
+    <div class="set-pane" id="pane-admin" role="tabpanel" aria-labelledby="tab-admin" hidden>
 
-      <div class="field check-field">
-        <label class="switch-row" for="photos-on"><input type="checkbox" id="photos-on"> <span>Allow photos</span></label>
-        <p class="help">Photos help identify the animal and injuries. Each one adds to AI costs.</p>
-      </div>
 
-      <div class="field">
-        <label for="template">Handout style (Word printouts)</label>
-        <select id="template">
-          <option value="bunurong">Bunurong Wildlife Care</option>
-          <option value="plain">Plain (no branding)</option>
-          <option value="rspca" hidden>RSPCA</option>
-        </select>
-      </div>
+        <h4 class="admin-sub">App mode</h4>
+        <div class="field">
+          <fieldset class="seg" id="role-seg">
+            <legend class="sr-only">App mode</legend>
+            <label><input type="radio" name="role" value="carer"><span>Normal</span></label>
+            <label><input type="radio" name="role" value="vet"><span>Vet</span></label>
+          </fieldset>
+          <p class="help">Normal is for carers. Vet adds clinical notes, rapid polish and the advanced tools. Signing in with a vet account switches to Vet.</p>
+        </div>
+        <div class="field" id="channel-field" hidden>
+          <p class="field-label" id="channel-label">App version</p>
+          <div class="channel-pick" role="group" aria-labelledby="channel-label">
+            <a class="channel-opt" id="channel-live" href="../care/">Live</a>
+            <a class="channel-opt" id="channel-beta" href="../care-beta/">Beta</a>
+          </div>
+          <p class="help" id="channel-help"></p>
+        </div>
 
-      <div class="field">
-        <span class="field-label">Funding</span>
-        <button type="button" class="btn ghost" id="open-funding">Write a funding submission</button>
-        <p class="help">Talk through what you need and why. You get a draft grant submission to polish.</p>
-      </div>
-    </section>
-
-    <!-- Admin: for whoever looks after the app. Closed until tapped. -->
-    <details class="set-admin" id="admin-group">
-      <summary class="set-admin-btn">Admin</summary>
-      <div class="set-admin-body">
-        <p class="help">AI models and costs, the connection, app versions, access codes and the plan library.</p>
-
+        <h4 class="admin-sub">AI</h4>
+        <p class="conn" id="conn-status" role="status"></p>
         <div class="field">
           <label for="model">AI model</label>
           <select id="model"></select>
@@ -591,23 +607,8 @@
           <p class="help">Get a key from <a href="https://platform.claude.com/" target="_blank" rel="noopener">the Claude Console</a>. Only use your own key on a device you control. Not needed in the Claude app.</p>
         </details>
 
-        <div class="field" id="channel-field" hidden>
-          <p class="field-label" id="channel-label">App version</p>
-          <div class="channel-pick" role="group" aria-labelledby="channel-label">
-            <a class="channel-opt" id="channel-live" href="../care/">Live</a>
-            <a class="channel-opt" id="channel-beta" href="../care-beta/">Beta</a>
-          </div>
-          <p class="help" id="channel-help"></p>
-        </div>
-
-        <div class="field">
-          <label for="unlock">Access code</label>
-          <input id="unlock" type="text" autocomplete="off" spellcheck="false" placeholder="Enter code">
-          <p class="help" id="unlock-msg" aria-live="polite"></p>
-        </div>
-
-        <section class="field" id="vets-admin" aria-labelledby="vets-admin-title">
-          <h3 class="field-label" id="vets-admin-title">Vet accounts</h3>
+        <h4 class="admin-sub">Vet accounts</h4>
+        <section class="field" id="vets-admin" aria-label="Vet accounts">
           <p class="help">Check each vet on the register before approving. Approved vets can endorse plans and write prescriptions.</p>
           <label for="admin-key">Admin key</label>
           <input id="admin-key" type="password" autocomplete="off" spellcheck="false" placeholder="The ADMIN_KEY set on Cloudflare">
@@ -616,17 +617,23 @@
           <ul class="vets-list" id="vets-list"></ul>
         </section>
 
+        <h4 class="admin-sub" id="testing-title">Testing and extras</h4>
+        <div class="field check-field">
+        <label class="switch-row" for="photos-on"><input type="checkbox" id="photos-on"> <span>Allow photos</span></label>
+        <p class="help">Photos help identify the animal and injuries. Each one adds to AI costs.</p>
+      </div>
         <div class="field check-field">
           <label class="switch-row" for="library-admin-on"><input type="checkbox" id="library-admin-on"> <span>Plan library admin</span></label>
           <p class="help">Change the ready-made plans. Edits stay on this device.</p>
         </div>
-      </div>
-    </details>
 
-    <div class="set-danger">
-      <button type="button" class="btn ghost danger" id="forget">Clear saved data</button>
-      <p class="help" id="forget-help">Removes your name, settings, saved plans and recent work from this device.</p>
+        <div class="field">
+          <label for="unlock">Access code</label>
+          <input id="unlock" type="text" autocomplete="off" spellcheck="false" placeholder="Enter code">
+          <p class="help" id="unlock-msg" aria-live="polite"></p>
+        </div>
     </div>
+
 
     <div class="dlg-actions">
       <button type="submit" class="btn primary" value="save" id="save-settings">Save</button>
@@ -637,14 +644,14 @@
 <dialog id="share-sheet" class="confirm" aria-labelledby="share-title">
   <form method="dialog">
     <h2 id="share-title">Share</h2>
-    <p id="share-sub" class="help">Send it by text, email or WhatsApp. A PDF looks right on any phone; Word can be edited.</p>
+    <p id="share-sub" class="help">Send it by text, email or WhatsApp. A link opens the plan in the app; PDF and Word are files.</p>
     <div class="share-actions">
-      <button type="submit" class="btn primary" value="pdf" id="share-pdf">Share as PDF</button>
+      <button type="submit" class="btn primary" value="link" id="share-link">Share a link</button>
       <button type="submit" class="btn ghost" value="word" id="share-word">Share as Word document</button>
       <button type="submit" class="btn ghost" value="share" id="share-go">Share as text</button>
-      <button type="submit" class="btn ghost" value="copy">Copy as text</button>
-      <button type="submit" class="btn ghost" value="link" id="share-link">Share a link</button>
-      <button type="submit" class="link" value="cancel">Cancel</button>
+      <button type="submit" class="btn ghost" value="copy" id="share-copy">Copy as text</button>
+      <button type="submit" class="btn ghost" value="pdf" id="share-pdf">Share as PDF</button>
+      <button type="submit" class="link" value="cancel" id="share-cancel">Cancel</button>
     </div>
   </form>
 </dialog>

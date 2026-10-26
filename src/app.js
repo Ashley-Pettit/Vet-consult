@@ -89,7 +89,7 @@ import {
 } from './note.js';
 import { chartByKey } from './feeding.js';
 import { shortPlanLink, unpackPlan, linkCode, linkId, shortLink, fetchSharedPlan, storePlan, reviewLink, updateSharedPlan } from './sharelink.js';
-import { endorse, endorsementState, endorsementWords, vetLabel, medsKey, endorsementOf, endorsementCheck, recordCheck } from './endorse.js';
+import { endorse, endorsementState, endorsementWords, vetLabel, drName, medsKey, endorsementOf, endorsementCheck, recordCheck, changedParts } from './endorse.js';
 import { account, admin, accountError, lookupEndorsement } from './account.js';
 import { rxFromPlan, rxModel, rxProblems } from './rx.js';
 
@@ -108,7 +108,7 @@ const els = {
   about: $('view-about'), openAbout: $('open-about'),
   settings: $('settings'), openSettings: $('open-settings'), clinician: $('clinician'), model: $('model'),
   apiKey: $('api-key'), rememberKey: $('remember-key'), keyField: $('key-field'), conn: $('conn-status'),
-  forget: $('forget'), toast: $('toast'), toastText: $('toast-text'), toastAction: $('toast-action'),
+  toast: $('toast'), toastText: $('toast-text'), toastAction: $('toast-action'),
   views: { record: $('view-record'), working: $('view-working'), note: $('view-note'), care: $('view-care'), doc: $('view-doc'), polish: $('view-polish'), about: $('view-about'), library: $('view-library'), edit: $('view-edit') },
 };
 
@@ -1013,16 +1013,18 @@ function applyRole() {
   document.querySelectorAll('#mode [data-roles]').forEach((l) => (l.hidden = !l.dataset.roles.split(' ').includes(role)));
   if (!ROLE_MODES[role].includes(mode())) document.querySelector(`input[name="mode"][value="${ROLE_MODES[role][0]}"]`).checked = true;
 }
-document.querySelectorAll('input[name="role"]').forEach((r) =>
-  r.addEventListener('change', () => {
-    settings.role = r.value;
-    if (mode() === 'funding') document.querySelector('input[name="mode"][value="carer"]').checked = true;
-    applyRole();
-    applyMode();
-    settings.mode = mode();
-    store.saveSettings(settings);
-  }),
-);
+// Normal (carer) or Vet. Set in Settings > Admin, or by signing in or out of a vet account.
+function setRole(role) {
+  if ((settings.role === 'vet' ? 'vet' : 'carer') === role) return;
+  settings.role = role;
+  if (mode() === 'funding') document.querySelector('input[name="mode"][value="carer"]').checked = true;
+  applyRole();
+  applyMode();
+  settings.mode = mode();
+  store.saveSettings(settings);
+  if (careSheet && document.body.dataset.view === 'care') renderEndorse(careSheet);
+}
+document.querySelectorAll('input[name="role"]').forEach((r) => r.addEventListener('change', () => setRole(r.value)));
 
 // Which state's guidance: sources, emergency line and case numbers all follow it.
 function applyRegion() {
@@ -1050,16 +1052,6 @@ function chooseMode(m) {
   settings.mode = m;
   store.saveSettings(settings);
 }
-$('open-funding').addEventListener('click', () => {
-  if (settings.role === 'vet') {
-    settings.role = 'carer';
-    applyRole();
-  }
-  els.settings.close();
-  chooseMode('funding');
-  showView('record');
-  els.mic.focus({ preventScroll: true });
-});
 
 // Media tab: who the statement will be from (the template in Settings), with a quick way to change it.
 function updateMediaFrom() {
@@ -2535,7 +2527,7 @@ function showCare(sheet, from, info = '', keepSaved = false) {
   careSheet = sheet;
   careFrom = from;
   refreshSaveBtn();
-  $('library-admin').hidden = !(from === 'library' && libraryPlan && libraryAdmin());
+
   $('care-reset').hidden = !(libraryPlan && store.loadLibraryEdits()[libraryPlan.id]);
   renderMakeNext($('make-next-care'), from === 'record' ? 'carer' : null);
   if (from === 'record') madeFrom.carer = { text: els.transcript.value, sheet, info };
@@ -2601,10 +2593,18 @@ function shareOrCopy(text, title, copiedMsg, wordModel = null, linkData = null) 
   if (!canShare() && !wordModel && !linkData) return finishSend('copy');
   $('share-word').hidden = !wordModel;
   $('share-pdf').hidden = !wordModel || !buildPdf;
-  // PDF leads where it can be made (it looks the same on every phone); inside Claude, Word leads.
-  $('share-word').classList.toggle('primary', !buildPdf);
-  $('share-word').classList.toggle('ghost', Boolean(buildPdf));
-  $('share-sub').textContent = buildPdf ? 'Send it by text, email or WhatsApp. A PDF looks right on any phone; Word can be edited.' : 'Send it by text, email or WhatsApp: as a Word document, as plain text, or as a link that opens the plan in the app.';
+  // A link leads (it opens the plan in the app and saves it there). Without one: PDF where it can be made, else Word.
+  const lead = linkData ? 'share-link' : buildPdf && wordModel ? 'share-pdf' : 'share-word';
+  for (const id of ['share-link', 'share-pdf', 'share-word']) {
+    $(id).classList.toggle('primary', id === lead);
+    $(id).classList.toggle('ghost', id !== lead);
+  }
+  // The lead option sits first, the rest in their usual order.
+  const order = ['share-link', 'share-word', 'share-go', 'share-copy', 'share-pdf'].filter((id) => id !== lead);
+  $(lead).parentElement.append(...[lead, ...order, 'share-cancel'].map((id) => $(id)));
+  $('share-sub').textContent = linkData
+    ? 'Send it by text, email or WhatsApp. A link opens the plan in the app; PDF and Word are files.'
+    : buildPdf ? 'Send it by text, email or WhatsApp. A PDF looks right on any phone; Word can be edited.' : 'Send it by text, email or WhatsApp, as a Word document or as plain text.';
   $('share-link').hidden = !linkData;
   $('share-go').hidden = !canShare();
   $('share-sheet').showModal();
@@ -3265,7 +3265,7 @@ async function refreshConnection() {
   els.keyField.hidden = keyless;
   els.conn.dataset.ok = String(Boolean(p));
   els.conn.textContent = p
-    ? 'Connected.'
+    ? ''
     : inClaude
       ? 'Claude isn’t available right now.'
       : 'Public demo. The examples work here. Open Wildlife Welfare Companion in the Claude app to write notes with your Claude account.';
@@ -3288,8 +3288,9 @@ window.addEventListener('appinstalled', () => {
 const isInstalled = () => window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
 function renderHomeScreen() {
   const field = $('home-field');
-  field.hidden = inClaude; // the Claude app version can't be added
-  if (inClaude) return;
+  // Not offered inside the Claude app (it can't be added), or once it's already on the Home Screen.
+  field.hidden = inClaude || isInstalled();
+  if (field.hidden) return;
   const steps = $('home-steps');
   const btn = $('home-install');
   if (isInstalled()) {
@@ -3316,6 +3317,32 @@ $('home-install').addEventListener('click', async () => {
   renderHomeScreen();
 });
 
+/* ---------------- settings tabs: Standard, Vet, Admin ---------------- */
+
+const SET_TABS = ['standard', 'vet', 'admin'];
+let settingsTab = 'standard';
+function showSettingsTab(name) {
+  settingsTab = SET_TABS.includes(name) ? name : 'standard';
+  for (const t of SET_TABS) {
+    const on = t === settingsTab;
+    $(`tab-${t}`).setAttribute('aria-selected', String(on));
+    $(`tab-${t}`).tabIndex = on ? 0 : -1;
+    $(`pane-${t}`).hidden = !on;
+  }
+}
+SET_TABS.forEach((t, i) => {
+  $(`tab-${t}`).addEventListener('click', () => showSettingsTab(t));
+  // Arrow keys move between tabs, as screen reader users expect.
+  $(`tab-${t}`).addEventListener('keydown', (e) => {
+    const step = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+    if (!step) return;
+    e.preventDefault();
+    const next = SET_TABS[(i + step + SET_TABS.length) % SET_TABS.length];
+    showSettingsTab(next);
+    $(`tab-${next}`).focus();
+  });
+});
+
 async function openSettings(message, focus) {
   els.clinician.value = settings.clinician;
   renderAccount();
@@ -3335,13 +3362,18 @@ async function openSettings(message, focus) {
     els.conn.textContent = message;
     els.conn.dataset.ok = 'false';
     els.keyField.open = true;
-    $('admin-group').open = true; // the connection lives under Admin
+    showSettingsTab('admin'); // the connection lives under Admin
   }
   renderHomeScreen();
   els.settings.returnValue = '';
   if (!els.settings.open) els.settings.showModal();
   // On a phone, focusing a box pops the keyboard over Settings: only jump to the first box with a mouse and keyboard.
+  showSettingsTab(message ? 'admin' : focus === 'account' ? 'vet' : settingsTab);
   if (focus === 'account') {
+    if (!account.signedIn) {
+      acctOpen = true;
+      renderAccount();
+    }
     $('account-group').scrollIntoView({ block: 'start' });
     $(account.signedIn ? 'acct-out' : 'acct-email').focus({ preventScroll: true });
     return;
@@ -3353,10 +3385,12 @@ async function openSettings(message, focus) {
 /* ---------------- vet account (Settings) ---------------- */
 
 let acctNew = false; // showing "Create a vet account" rather than "Sign in"
+let acctOpen = false; // the sign-in form is showing (otherwise just a "Vet sign in" button)
 function renderAccount() {
   const u = account.user;
   $('acct-in').hidden = !u;
-  $('acct-form').hidden = Boolean(u);
+  $('acct-form').hidden = Boolean(u) || !acctOpen;
+  $('acct-start').hidden = Boolean(u) || acctOpen;
   if (u) {
     $('acct-name').textContent = vetLabel({ by: u.name });
     $('acct-reg').textContent = u.reg ? ` · reg. ${u.reg} (${String(u.regState || '').toUpperCase()})` : '';
@@ -3370,6 +3404,11 @@ function renderAccount() {
   $('acct-switch').textContent = acctNew ? 'I already have an account' : 'Create a vet account';
   $('acct-pass').autocomplete = acctNew ? 'new-password' : 'current-password';
 }
+$('acct-open').addEventListener('click', () => {
+  acctOpen = true;
+  renderAccount();
+  $('acct-email').focus();
+});
 $('acct-switch').addEventListener('click', () => {
   acctNew = !acctNew;
   $('acct-msg').textContent = '';
@@ -3397,6 +3436,8 @@ $('acct-go').addEventListener('click', async () => {
     acctNew = false;
     // Their name goes on every record too.
     if (!els.clinician.value.trim()) els.clinician.value = account.user.name;
+    acctOpen = false;
+    setRole('vet');
     renderAccount();
     if (careSheet && document.body.dataset.view === 'care') renderEndorse(careSheet);
   } catch (e) {
@@ -3407,9 +3448,10 @@ $('acct-go').addEventListener('click', async () => {
 });
 $('acct-out').addEventListener('click', async () => {
   await account.signOut();
+  setRole('carer');
   renderAccount();
   if (careSheet) renderEndorse(careSheet);
-  toast('Signed out.');
+  toast('Signed out. The app is back in Normal mode.');
 });
 // Approval can change while they're away: check once at start.
 account.refresh().then(() => {
@@ -3570,7 +3612,7 @@ if (__BETA__) {
     el('label', { class: 'switch-row', for: 'test-vet-on' }, [input, ' ', el('span', { text: 'Test vet account (beta only)' })]),
     el('p', { class: 'help', text: 'Signs in as an approved pretend vet, for testing endorsing and prescriptions. Everything it makes is marked TEST, and this switch never appears in the live app.' }),
   ]);
-  $('vets-admin').before(row);
+  $('testing-title').after(row);
   const sync = () => (input.checked = Boolean(account.user && account.user.test));
   sync();
   $('settings').addEventListener('toggle', sync);
@@ -3579,10 +3621,12 @@ if (__BETA__) {
       if (input.checked) {
         if (account.signedIn && !account.user.test) await account.signOut();
         await account.signInTest();
-        toast('Signed in as the test vet.');
+        setRole('vet');
+        toast('Signed in as the test vet. The app is in Vet mode.');
       } else if (account.user && account.user.test) {
         await account.signOut();
-        toast('Test vet signed out.');
+        setRole('carer');
+        toast('Test vet signed out. The app is back in Normal mode.');
       }
     } catch (e) {
       toast(accountError(e));
@@ -3609,32 +3653,6 @@ els.settings.addEventListener('close', async () => {
   updateMediaFrom();
   if (key && !/^sk-ant-/.test(key)) toast('Saved, but that doesn’t look like an Anthropic key. Keys start with sk-ant-.');
   else toast('Settings saved.');
-});
-
-// Clearing everything needs a second tap, so a slip of the thumb near Save can't wipe a device.
-let forgetTimer = null;
-els.forget.addEventListener('click', () => {
-  if (els.forget.dataset.armed !== 'true') {
-    els.forget.dataset.armed = 'true';
-    els.forget.textContent = 'Tap again to clear';
-    clearTimeout(forgetTimer);
-    forgetTimer = setTimeout(() => {
-      els.forget.dataset.armed = 'false';
-      els.forget.textContent = 'Clear saved data';
-    }, 4000);
-    return;
-  }
-  clearTimeout(forgetTimer);
-  els.forget.dataset.armed = 'false';
-  els.forget.textContent = 'Clear saved data';
-  store.clearAll();
-  settings = store.loadSettings();
-  els.clinician.value = '';
-  els.apiKey.value = '';
-  els.rememberKey.checked = false;
-  els.model.value = CONFIG.defaultModel;
-  refreshConnection();
-  toast('Saved settings removed from this device.');
 });
 
 /* ---------------- pick up where you left off ---------------- */
@@ -3790,6 +3808,8 @@ const REVIEW_INFO = 'A carer asked you to review this plan. Check it, use Change
 const savedEntry = () => (savedId ? store.loadSaved().find((x) => x.id === savedId) : null);
 
 function renderEndorse(c) {
+  // Edit text: the library admin on ready-made plans, and vets on any other plan (reviewing one, or their own).
+  $('library-admin').hidden = !((careFrom === 'library' && libraryPlan && libraryAdmin()) || (careFrom !== 'library' && settings.role === 'vet'));
   const box = $('care-endorse');
   const vet = settings.role === 'vet';
   const w = endorsementWords(c);
@@ -3805,6 +3825,11 @@ function renderEndorse(c) {
         ? 'Your vet account is waiting for approval. Once the app admin approves it, you can endorse plans.'
         : c.medications.length ? 'Check the plan and its medications, then endorse it so the carer knows a vet has authorised them.' : 'Endorse it so the carer knows a vet has checked it.';
     tone = c.medications.length ? 'warn' : 'quiet';
+  } else if (!vet && w.state !== 'endorsed' && remote && !remote.mine) {
+    // Opened a review link someone sent, but the app isn't in vet mode: most likely the vet, not yet signed in.
+    title = 'Are you the vet reviewing this plan?';
+    text = 'Sign in with your vet account to check it, make changes and endorse it.';
+    tone = 'quiet';
   } else if (!vet && w.state !== 'endorsed' && remote) {
     title = 'Waiting for a vet to review';
     text = `${c.medications.length ? 'Until then, give medicines only as your vet directed. ' : ''}Their changes and endorsement show here when you open the plan.`;
@@ -3813,9 +3838,15 @@ function renderEndorse(c) {
   $('endorse-title').textContent = title;
   $('endorse-text').textContent = text;
   $('endorse-text').hidden = !text;
-  $('endorse-btn').hidden = !vet || w.state === 'endorsed' || (account.signedIn && !account.approved);
-  $('endorse-btn').textContent = !account.signedIn ? 'Sign in to endorse' : w.state === 'changed' ? 'Endorse again' : 'Endorse plan';
-  $('review-btn').hidden = vet || w.state === 'endorsed';
+  const vetNotIn = !vet && remote && !remote.mine && w.state !== 'endorsed';
+  $('endorse-btn').hidden = !(vet || vetNotIn) || w.state === 'endorsed' || (account.signedIn && !account.approved);
+  $('endorse-btn').textContent = !account.signedIn ? (vetNotIn ? 'Vet sign in' : 'Sign in to endorse') : w.state === 'changed' ? 'Endorse again' : 'Endorse plan';
+  $('review-btn').hidden = vet || vetNotIn || w.state === 'endorsed';
+  // What the other side changed since this device last saw the plan, marked on the plan too.
+  const ch = remote && remote.changes;
+  $('endorse-changes').textContent = ch && ch.parts.length ? `${ch.who} changed: ${ch.parts.join(', ')}.` : '';
+  $('endorse-changes').hidden = !$('endorse-changes').textContent;
+  markChanged(ch ? ch.parts : []);
   $('review-btn').textContent = remote ? 'Send the review link again' : 'Ask a vet to review';
   box.querySelector('.endorse-acts').hidden = $('endorse-btn').hidden && $('review-btn').hidden;
   // Ready-made plans are general guides, not a plan for one animal: nothing to endorse there.
@@ -3835,6 +3866,22 @@ function renderEndorse(c) {
   }
 }
 
+// Highlight the sections named in a change ("Feeding", "Medications") so they're easy to find.
+function markChanged(parts) {
+  const want = new Set(parts);
+  const match = (h) =>
+    (want.has('Medications') && /^Medications/.test(h)) ||
+    (want.has('When to call the vet') && /^(Contact the vet|Get vet help)/.test(h)) ||
+    (want.has('Daily tick sheet') && /^Daily tick sheet/.test(h)) ||
+    want.has(h);
+  els.careSheet.querySelectorAll('.care-sec').forEach((sec) => {
+    const h = (sec.querySelector('h2') || {}).textContent || '';
+    sec.classList.toggle('changed', match(h.trim()));
+  });
+  const sum = els.careSheet.querySelector('.care-summary');
+  if (sum) sum.classList.toggle('changed', want.has('Summary'));
+}
+
 /** Send a changed plan to its review link, if it has one. True if sent, false if it couldn't be, null if no link. */
 async function pushRemote(sheet) {
   const entry = savedEntry();
@@ -3847,6 +3894,9 @@ async function pushRemote(sheet) {
 
 /** Every change to a care plan on screen (Change plan, editing the text, endorsing) ends here. */
 async function carePlanChanged(sheet, done = 'Saved.') {
+  // Their own change: the other side's "changed" marks have been seen.
+  const entry = savedEntry();
+  if (entry && entry.remote && entry.remote.changes) store.updateSaved(entry.id, { remote: { ...entry.remote, changes: null } });
   showCare(sheet, careFrom, els.careBanner.hidden ? '' : els.careBanner.textContent, true);
   if (careFrom === 'library') return libraryChanged(sheet);
   const saved = Boolean(savedId && updateSavedPlan(sheet));
@@ -3869,7 +3919,10 @@ async function refreshRemote(id, quiet = false) {
   }
   if (!latest || !(latest.updated > (entry.remote.updated || 0)) || !latest.plan || !latest.plan.sheet) return false;
   const sheet = normaliseCareSheet(latest.plan.sheet, null);
-  store.updateSaved(id, { sheet, remote: { ...entry.remote, updated: latest.updated } });
+  const parts = [...(medsKey(entry.sheet.medications) !== medsKey(sheet.medications) ? ['Medications'] : []), ...changedParts(entry.sheet, sheet)];
+  const e = endorsementOf(sheet.endorsement);
+  const who = settings.role === 'vet' ? 'The carer' : e ? drName(e.by) : 'The vet';
+  store.updateSaved(id, { sheet, remote: { ...entry.remote, updated: latest.updated, changes: parts.length ? { parts, who, at: latest.updated } : entry.remote.changes || null } });
   if (!quiet && savedId === id && document.body.dataset.view === 'care') {
     showCare(sheet, 'saved', els.careBanner.hidden ? '' : els.careBanner.textContent, true);
     const { state, e } = endorsementState(sheet);
@@ -3911,7 +3964,7 @@ $('review-btn').addEventListener('click', async (ev) => {
     const j = await storePlan({ v: 1, region: region().code, type: 'care', sheet: careSheet }, CONFIG.proxyUrl, { edit: true });
     btn.disabled = false;
     if (!j) return toast('Couldn’t make a review link. Check your internet connection, then try again.');
-    remote = { id: j.id, key: j.key, updated: j.updated };
+    remote = { id: j.id, key: j.key, updated: j.updated, mine: true };
     // The plan is kept under Plans, linked to the review, so the vet's changes and endorsement come back to it.
     if (entry) store.updateSaved(entry.id, { remote });
     else {
@@ -3947,7 +4000,7 @@ async function openSharedLink() {
   const info = review && settings.role === 'vet' ? REVIEW_INFO : SHARED_INFO;
   // A short link whose plan is already saved here opens straight away (and picks up any newer changes).
   if (short && store.loadSaved().some((x) => x.id === `s-${short.id}`)) {
-    if (review) store.updateSaved(`s-${short.id}`, { remote: { ...(store.loadSaved().find((x) => x.id === `s-${short.id}`).remote || { updated: 0 }), id: short.id, key: short.key } });
+    if (review) store.updateSaved(`s-${short.id}`, { remote: { updated: 0, ...(store.loadSaved().find((x) => x.id === `s-${short.id}`).remote || {}), id: short.id, key: short.key } });
     return openSavedPlan(`s-${short.id}`, info);
   }
   let p;
@@ -3977,6 +4030,7 @@ async function openSharedLink() {
       if (store.savePlan({ id, name: planName().slice(0, 80), sheet: c, savedAt: Date.now(), shared: true, remote })) {
         savedId = id;
         refreshSaveBtn();
+        renderEndorse(c); // now it knows about the review link
       } else showCare(c, 'record', 'Shared with you. This device is out of space, so it isn’t saved: tap Save after removing an old plan.');
     } else if (p.type === 'doc' && p.d && DOC_KINDS[p.kind]) {
       const d = normaliseDoc(p.d);
