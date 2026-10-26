@@ -18,7 +18,7 @@ import { rangesFor, rangesForAnimal } from './species-ranges.js';
 import { careVideoFor, watchUrl, videoHost, embedUrl, thumbUrl } from './videos.js';
 import { groupsIn, factsFor, namedAnimal } from './species-vet.js';
 import { SPECIES_CARE } from './species-care.js';
-import { docModel, careModel, noteModel, wordFileName, dischargeModel, THEMES } from './word.js';
+import { docModel, careModel, noteModel, wordFileName, THEMES } from './word.js';
 // PDF printouts (same layout as Word): the website loads the PDF maker only when PDF is tapped. The version inside
 // Claude is one file that loads all at once, so it leaves PDF out to stay quick to open.
 const buildPdf = __NO_PDF__ ? null : async (...args) => (await import('./pdf.js')).buildPdf(...args);
@@ -1852,7 +1852,7 @@ function openLibraryPlan(id) {
   if (!e) return;
   libraryPlan = { id, text: e.plan.text };
   const sheet = normaliseCareSheet(store.loadLibraryEdits()[id] || e.plan.sheet, null);
-  showCare(sheet, 'library', `Ready-made plan: ${e.animal.name.toLowerCase()}, ${e.plan.stage.toLowerCase()}, ${e.plan.weight}. Check it suits your animal, then use Change plan to fit it.`);
+  showCare(sheet, 'library', `Ready-made plan: ${e.animal.name.toLowerCase()}, ${e.plan.stage.toLowerCase()}, ${e.plan.weight}. Check it suits your animal, then use Edit plan to fit it.`);
 }
 // After Change plan on a ready-made plan: an admin's change updates the library on this device; anyone else gets
 // their own copy (kept in Recent) and the library plan stays as it was.
@@ -1962,8 +1962,10 @@ function renderSaved() {
           if (e.key === 'Enter') { e.preventDefault(); done(); }
           if (e.key === 'Escape') renderSaved();
         });
-        input.addEventListener('blur', done);
-        li.replaceChildren(input);
+        const save = el('button', { type: 'button', class: 'btn small primary', onclick: done }, 'Save name');
+        const cancel = el('button', { type: 'button', class: 'link', onclick: () => renderSaved() }, 'Cancel');
+        li.replaceChildren(el('label', { class: 'sr-only', for: `rename-${p.id}`, text: 'Plan name' }), input, el('div', { class: 'saved-acts rename-acts' }, [save, cancel]));
+        input.id = `rename-${p.id}`;
         input.focus();
         input.select();
       });
@@ -2409,15 +2411,17 @@ function renderCare(c) {
   const name = c.animal || currentNote()?.patient.name || '';
   els.careTitle.textContent = keepBrackets(c.kind === 'wildlife' ? `Care plan: ${name || 'wildlife in care'}` : `Caring for ${name || 'your animal'} at home`);
   $('care-back-label').textContent = careFrom === 'note' ? 'Back to note' : careFrom === 'library' || careFrom === 'saved' ? 'Back to plans' : 'Back';
-  $('care-back-2').textContent = 'Change plan';
+  $('care-back-2').textContent = 'Edit plan';
   // Tick sheet: one row per daily job, one column per day, big boxes. Printable on its own for the fridge.
   const days = Math.min(c.log_days || 7, 14);
   const log = c.daily_checks.length && !leaveIt(c)
-    ? el('section', { class: 'care-sec ticks' }, [
-        el('div', { class: 'sec-head' }, [
+    ? // Closed until tapped, so the plan stays short; the heading says what's inside.
+      el('details', { class: 'care-sec ticks fold' }, [
+        el('summary', {}, [
           el('h2', { text: `Daily tick sheet (${days} ${days === 1 ? 'day' : 'days'})` }),
-          el('button', { type: 'button', class: 'btn small ghost', onclick: (e) => printTickSheet(e.currentTarget) }, 'Print for the fridge'),
+          el('span', { class: 'fold-hint', text: `${c.daily_checks.length} jobs a day` }),
         ]),
+        el('div', { class: 'fold-actions' }, [el('button', { type: 'button', class: 'btn small ghost', onclick: (e) => printTickSheet(e.currentTarget) }, 'Print for the fridge')]),
         tickDays(c, days),
         el('div', { class: 'tbl tick-wrap', tabindex: '0', role: 'region', 'aria-label': 'Daily tick sheet' }, [
           el('table', { class: 'ticksheet' }, [
@@ -2519,7 +2523,6 @@ function showCare(sheet, from, info = '', keepSaved = false) {
   // The Save star belongs to this plan: a new plan starts unsaved (a saved one opened from Plans sets it first).
   if (from !== 'saved' && !keepSaved) savedId = null;
   // Vets get a discharge pack; its clinical summary is written when the pack is asked for (examples: straight away).
-  $('discharge-pack').hidden = settings.role !== 'vet';
   if (settings.role === 'vet') setTimeout(() => exampleExtra(() => startVetNotes()), 400);
   // Browsing ready-made plans doesn't fill Recent; a changed one is kept (see libraryChanged).
   if (from !== 'library' && from !== 'saved') remember('care', { sheet, from }, sheet.animal);
@@ -3083,23 +3086,6 @@ $('polish-soap').addEventListener('click', async () => {
 $('polish-back').addEventListener('click', () => showView('record'));
 $('media-from-change').addEventListener('click', () => openSettings());
 
-$('discharge-pack').addEventListener('click', async (e) => {
-  if (!careSheet) return;
-  const btn = e.currentTarget;
-  const text = els.transcript.value;
-  let list = madeFrom.vet && madeFrom.vet.text === text ? madeFrom.vet.notes : null;
-  // The clinical summary is written now that the pack is wanted.
-  const fresh = !list && !(pendingVetNotes && pendingVetNotes.text === text);
-  if (fresh) startVetNotes();
-  if (!list && pendingVetNotes && pendingVetNotes.text === text) {
-    btn.disabled = true;
-    btn.lastChild.textContent = fresh ? 'Writing the clinical summary…' : 'Finishing the clinical summary…';
-    list = await pendingVetNotes.promise;
-    btn.disabled = false;
-    btn.lastChild.textContent = 'Discharge pack';
-  }
-  saveWord(dischargeModel(careSheet, list ? list[0] : null, lookupSource, settings.clinician), btn);
-});
 
 async function makeNext(m) {
   if (busy || !els.transcript.value.trim()) return;
@@ -3714,25 +3700,24 @@ $('recent-clear').addEventListener('click', () => {
 /* ---------------- light and dark ---------------- */
 
 // Dark unless they pick light; the choice is kept on this device.
+// Dark or light: chosen in Settings > Standard and remembered on this device.
 function applyTheme(t) {
   document.documentElement.dataset.theme = t;
-  const toLight = t === 'dark';
-  const btn = $('theme-toggle');
-  btn.setAttribute('aria-label', toLight ? 'Switch to light mode' : 'Switch to dark mode');
-  btn.title = btn.getAttribute('aria-label');
-  btn.setAttribute('aria-pressed', String(t === 'light'));
+  const r = document.querySelector(`input[name="theme"][value="${t}"]`);
+  if (r) r.checked = true;
   const meta = document.getElementById('theme-color'); // not in the Claude version
   if (meta) meta.setAttribute('content', t === 'dark' ? '#2B3138' : '#647C50');
 }
-$('theme-toggle').addEventListener('click', () => {
-  const next = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
-  try {
-    localStorage.setItem('css.theme', next);
-  } catch {
-    /* still switches for this visit */
-  }
-  applyTheme(next);
-});
+document.querySelectorAll('input[name="theme"]').forEach((r) =>
+  r.addEventListener('change', () => {
+    try {
+      localStorage.setItem('css.theme', r.value);
+    } catch {
+      /* still switches for this visit */
+    }
+    applyTheme(r.value);
+  }),
+);
 applyTheme(document.documentElement.dataset.theme === 'light' ? 'light' : 'dark');
 
 /* ---------------- a refresh loses nothing ---------------- */
@@ -3782,7 +3767,8 @@ function restoreOpen(s) {
     } else if (s.view === 'doc') showDoc(normaliseDoc(s.doc.d), s.doc.kind);
     else if (s.view === 'polish') showPolish(String(s.text || ''));
     pendingMore = s.more || '';
-  } catch {
+  } catch (e) {
+    console.error('Couldn’t put back what was on screen', e);
     showView('record');
   } finally {
     restoring = false;
@@ -3807,10 +3793,13 @@ showView(location.hash === '#how-it-works' ? 'about' : 'record');
 if (!linkCode(location.hash) && !shortLink(location.hash)) restoreOpen(wasOpen);
 /* ---------------- vet endorsement and review ---------------- */
 
-const REVIEW_INFO = 'A carer asked you to review this plan. Check it, use Change plan for anything that needs fixing, then tap Endorse plan. They see your changes when they next open it.';
+const REVIEW_INFO = 'A carer asked you to review this plan. Check it, use Edit plan or Edit text for anything that needs fixing, then tap Endorse plan. They see your changes when they next open it.';
 // Endorsing takes a signed-in vet the admin has approved, tapping Endorse. Nothing is endorsed automatically, and
 // any change to the medications afterwards takes the endorsement off (endorsementState compares them).
-const savedEntry = () => (savedId ? store.loadSaved().find((x) => x.id === savedId) : null);
+// A function declaration, not a const: a refresh can put a plan back on screen before this part of the file has run.
+function savedEntry() {
+  return savedId ? store.loadSaved().find((x) => x.id === savedId) : null;
+}
 
 function renderEndorse(c) {
   // Edit text: the library admin on ready-made plans, and vets on any other plan (reviewing one, or their own).

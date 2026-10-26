@@ -229,16 +229,19 @@ test('Recent: each plan is kept on the device, the animal leads, and any one reo
   expect(calls).toHaveLength(2);
 });
 
-test('dark by default, with a switch at the top to light that is remembered', async ({ page }) => {
+test('dark by default, with Light in Settings that is remembered', async ({ page }) => {
   const errors = [];
   page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
   await openApp(page);
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
-  await page.locator('#theme-toggle').click();
+  await expect(page.locator('#theme-toggle')).toHaveCount(0); // not in the header any more
+  await page.locator('#open-settings').click();
+  await page.locator('.theme-seg label', { hasText: 'Light' }).click();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
   await page.reload();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
-  await expect(page.locator('#theme-toggle')).toHaveAttribute('aria-label', 'Switch to dark mode');
+  await page.locator('#open-settings').click();
+  await expect(page.locator('input[name=theme][value=light]')).toBeChecked();
   expect(errors.filter((e) => /Content Security Policy/i.test(e))).toEqual([]);
 });
 
