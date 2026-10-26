@@ -12,7 +12,7 @@ const draft = {
 };
 const updated = { meds: [draft.meds[0], { ...draft.meds[1], how: '12.5 mg/kg by mouth', how_often: 'Twice a day', how_long: '7 days', suggested: false, basis: '' }], note: '' };
 
-test('a vet’s plan gets medications drafted for their review; nothing reaches the plan until they accept', async ({ page }) => {
+test('a vet’s plan gets medications suggested for their review; nothing reaches the plan until they accept', async ({ page }) => {
   await withKey(page, { role: 'vet', mode: 'carer' });
   const calls = await mockApi(page, {
     body: (p) => (p.includes('<change>') ? textReply(updated) : p.includes('Draft the medications list') ? textReply(draft) : textReply(plan)),
@@ -22,7 +22,7 @@ test('a vet’s plan gets medications drafted for their review; nothing reaches 
   await page.locator('#create').click();
   await expect(page.locator('#view-care')).toBeVisible();
   const sec = page.locator('.meds-sec');
-  await expect(sec.locator('.draft-title')).toHaveText('Draft medications: for your review');
+  await expect(sec.locator('.draft-title')).toHaveText('Suggested medications: for your review');
   await expect(sec).toContainText('Please update as per your expertise');
   await expect(sec.locator('.tag')).toHaveText('Option for you to consider');
   await expect(sec.locator('.draft-msg')).toContainText('needs a dose');
@@ -31,7 +31,7 @@ test('a vet’s plan gets medications drafted for their review; nothing reaches 
   await sec.getByRole('button', { name: 'OK, use these' }).click();
   await expect(sec.locator('.draft')).toBeVisible();
   await sec.locator('#draft-change').fill('Amoxicillin-clavulanate 12.5 mg/kg by mouth twice a day for 7 days');
-  await sec.getByRole('button', { name: 'Update draft' }).click();
+  await sec.getByRole('button', { name: 'Update suggestions' }).click();
   await expect(sec.locator('.tag')).toHaveCount(0);
   await sec.getByRole('button', { name: 'OK, use these' }).click();
   await expect(sec.locator('.draft')).toHaveCount(0);

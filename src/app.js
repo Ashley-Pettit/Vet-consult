@@ -2585,7 +2585,7 @@ async function createCarePlan(text) {
   );
   notes = [];
   showCare(normaliseCareSheet(extractJson(reply), SOURCE_IDS()), 'record');
-  // A vet's plan: the medications are drafted for their review straight away (what they said, plus guideline options).
+  // A vet's plan: medications are suggested for their review straight away (what they said, plus guideline options).
   if (actingVet() && careSheet.kind === 'wildlife') startMedsDraft(careSheet);
 }
 
@@ -3873,10 +3873,10 @@ function medItem(m) {
 
 // The draft, for the vet: suggested options marked with why and from where, a box for quick changes, and OK.
 function draftPanel(c, d) {
-  if (d.state === 'loading') return el('div', { class: 'draft', 'aria-busy': 'true' }, [el('p', { class: 'draft-title', text: 'Drafting medications for your review…' }), el('p', { class: 'help', text: 'From the plan and Australian wildlife guidelines. This takes a few seconds.' })]);
+  if (d.state === 'loading') return el('div', { class: 'draft', 'aria-busy': 'true' }, [el('p', { class: 'draft-title', text: 'Suggesting medications for your review…' }), el('p', { class: 'help', text: 'From the plan and Australian wildlife guidelines. This takes a few seconds.' })]);
   if (d.state === 'error') {
     return el('div', { class: 'draft' }, [
-      el('p', { class: 'draft-title', text: d.title || 'Couldn’t draft the medications' }),
+      el('p', { class: 'draft-title', text: d.title || 'Couldn’t suggest medications' }),
       el('p', { class: 'help', text: d.error || 'Try again in a moment, or type them in.' }),
       el('div', { class: 'meds-acts' }, [d.title ? null : el('button', { type: 'button', class: 'btn small primary', onclick: () => startMedsDraft(c) }, 'Try again'), el('button', { type: 'button', class: 'btn small ghost', onclick: () => openDraft(c, c.medications) }, 'Type them in')]),
     ]);
@@ -3887,7 +3887,7 @@ function draftPanel(c, d) {
   box.addEventListener('input', () => (d.text = box.value));
   const missing = d.meds.filter(needsDose).length;
   return el('div', { class: 'draft' }, [
-    el('p', { class: 'draft-title', text: typing ? 'Medicines for this plan' : 'Draft medications: for your review' }),
+    el('p', { class: 'draft-title', text: typing ? 'Medicines for this plan' : 'Suggested medications: for your review' }),
     el('p', { class: 'help', text: typing ? 'Type or say each medicine with its dose, how often and how long.' : 'Please update as per your expertise. Type any changes below, or tap OK to use them as they are.' }),
     d.note ? el('p', { class: 'draft-note', text: d.note }) : null,
     d.meds.length
@@ -3902,7 +3902,7 @@ function draftPanel(c, d) {
     box,
     el('p', { class: 'draft-msg', role: 'status', text: missing ? `${missing === 1 ? 'One medicine needs' : `${missing} medicines need`} a dose: add it in the box above, or remove it.` : '' }),
     el('div', { class: 'meds-acts' }, [
-      typing ? null : el('button', { type: 'button', class: 'btn small ghost', onclick: (e) => updateDraft(c, e.currentTarget) }, 'Update draft'),
+      typing ? null : el('button', { type: 'button', class: 'btn small ghost', onclick: (e) => updateDraft(c, e.currentTarget) }, 'Update suggestions'),
       el('button', { type: 'button', class: 'btn small primary', onclick: (e) => acceptDraft(c, e.currentTarget) }, typing ? 'Add to plan' : 'OK, use these'),
       el('button', { type: 'button', class: 'link', onclick: () => { medsDraft = null; renderCare(careSheet); renderEndorse(careSheet); } }, 'Not now'),
     ]),
@@ -3920,7 +3920,7 @@ function openDraft(c, meds) {
 }
 async function startMedsDraft(c) {
   if (isExampleText() && careFrom !== 'saved') {
-    medsDraft = { sheet: c, meds: [], note: '', state: 'error', title: 'Drafting doesn’t work on an example', error: 'Try it with your own words, or type the medicines in.' };
+    medsDraft = { sheet: c, meds: [], note: '', state: 'error', title: 'Suggestions don’t work on an example', error: 'Try it with your own words, or type the medicines in.' };
     return redrawMeds();
   }
   if (!(await ensureProvider())) return toast(NO_CLAUDE);
@@ -3940,7 +3940,7 @@ async function startMedsDraft(c) {
   redrawMeds();
 }
 // Apply what was typed in the changes box. True when the draft was updated.
-async function updateDraft(c, btn, label = 'Update draft') {
+async function updateDraft(c, btn, label = 'Update suggestions') {
   const d = medsDraft;
   const change = (d && d.text || '').trim();
   if (!change) {
