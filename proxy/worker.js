@@ -1,5 +1,6 @@
 // Consult Scribe proxy (Cloudflare Worker).
-// Keeps the Anthropic API key on the server so staff devices never hold it.
+// Keeps the Anthropic API key on the server so staff devices never hold it. Also keeps shared plans for short links
+// (POST /share, GET and PUT /share/<id>) in the SHARES KV namespace.
 //
 // Secrets / vars (set with `wrangler secret put` / wrangler.toml):
 //   ANTHROPIC_API_KEY  (secret)  the organisation's API key
@@ -59,8 +60,8 @@ function validContent(c) {
 function cors(origin) {
   return {
     'access-control-allow-origin': origin,
-    'access-control-allow-methods': 'POST, OPTIONS',
-    'access-control-allow-headers': 'content-type',
+    'access-control-allow-methods': 'GET, POST, PUT, OPTIONS',
+    'access-control-allow-headers': 'content-type, x-edit-key',
     'access-control-allow-credentials': 'true',
     'access-control-max-age': '86400',
     vary: 'origin',
@@ -69,6 +70,63 @@ function cors(origin) {
 
 const json = (status, body, headers = {}) =>
   new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json', ...headers } });
+
+/* ---------------- short share links ---------------- */
+// "Share a link" stores the plan here and the link carries only a random id (…/care/#s=k7Q2xw9aBc), so messaging
+// apps can't cut it short. Plans are kept for SHARE_DAYS, then Cloudflare deletes them; the person who opened the
+// link keeps their own saved copy. Nothing else is stored: no names, devices or addresses.
+const SHARE_DAYS = 90;
+const SHARE_MAX = 400_000; // characters of plan JSON; a big plan with photos left out is well under this
+const ID_CHARS = 'abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const ID_RE = /^[a-zA-Z0-9]{10,16}$/;
+export function newShareId(len = 12) {
+  const bytes = crypto.getRandomValues(new Uint8Array(len));
+  return Array.from(bytes, (b) => ID_CHARS[b % ID_CHARS.length]).join('');
+}
+const sha256 = async (t) => Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(t))), (b) => b.toString(16).padStart(2, '0')).join('');
+// Only the two shapes the app shares: a care plan, or a document such as a MOP plan.
+const validPlan = (plan) =>
+  plan && typeof plan === 'object' && !Array.isArray(plan) && ((plan.type === 'care' && plan.sheet && typeof plan.sheet === 'object') || (plan.type === 'doc' && typeof plan.kind === 'string' && plan.d && typeof plan.d === 'object'));
+
+// POST /share            store a plan; with ?edit=1 also return a secret edit key (for vet review links)
+// GET  /share/<id>       { plan, updated }
+// PUT  /share/<id>       replace the plan; needs the edit key in the x-edit-key header
+async function sharedPlan(request, env, path, h) {
+  if (!env.SHARES) return json(503, { error: { type: 'sharing_not_configured' } }, h);
+  const id = path.startsWith('/share/') ? path.slice('/share/'.length) : '';
+  if (path !== '/share' && !ID_RE.test(id)) return json(404, { error: { type: 'not_found' } }, h);
+  if (request.method === 'GET' && id) {
+    const raw = await env.SHARES.get(`p:${id}`);
+    if (!raw) return json(404, { error: { type: 'not_found' } }, h);
+    const rec = JSON.parse(raw);
+    return json(200, { plan: rec.plan, updated: rec.updated || 0 }, { 'cache-control': 'no-store', ...h });
+  }
+  if (!((request.method === 'POST' && !id) || (request.method === 'PUT' && id))) return json(405, { error: { type: 'method_not_allowed' } }, h);
+  const raw = await request.text();
+  if (raw.length > SHARE_MAX) return json(413, { error: { type: 'too_large' } }, h);
+  let plan;
+  try {
+    plan = JSON.parse(raw);
+  } catch {
+    return json(400, { error: { type: 'invalid_json' } }, h);
+  }
+  if (!validPlan(plan)) return json(400, { error: { type: 'invalid_request' } }, h);
+  const updated = Date.now();
+  if (request.method === 'PUT') {
+    const old = await env.SHARES.get(`p:${id}`);
+    if (!old) return json(404, { error: { type: 'not_found' } }, h);
+    const rec = JSON.parse(old);
+    const key = request.headers.get('x-edit-key') || '';
+    if (!rec.key || !key || (await sha256(key)) !== rec.key) return json(403, { error: { type: 'not_allowed' } }, h);
+    await env.SHARES.put(`p:${id}`, JSON.stringify({ plan, key: rec.key, updated }), { expirationTtl: SHARE_DAYS * 86400 });
+    return json(200, { id, updated }, h);
+  }
+  const newId = newShareId();
+  const editable = new URL(request.url).searchParams.get('edit') === '1';
+  const key = editable ? newShareId(24) : null;
+  await env.SHARES.put(`p:${newId}`, JSON.stringify({ plan, key: key ? await sha256(key) : null, updated }), { expirationTtl: SHARE_DAYS * 86400 });
+  return json(200, { id: newId, updated, days: SHARE_DAYS, ...(key ? { key } : {}) }, h);
+}
 
 export async function handle(request, env, fetchImpl = fetch) {
   const origin = request.headers.get('origin') || '';
@@ -81,6 +139,8 @@ export async function handle(request, env, fetchImpl = fetch) {
   const h = cors(origin);
 
   if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: h });
+  const path = new URL(request.url).pathname.replace(/\/+$/, '');
+  if (path === '/share' || path.startsWith('/share/')) return sharedPlan(request, env, path, h);
   if (request.method !== 'POST') return json(405, { error: { type: 'method_not_allowed' } }, h);
   if (!env.ANTHROPIC_API_KEY) return json(500, { error: { type: 'not_configured' } }, h);
 

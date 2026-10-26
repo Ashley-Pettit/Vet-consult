@@ -1,7 +1,13 @@
-name = "consult-scribe-proxy"
+# The care app's proxy (Wildlife Welfare Companion), live at care-scribe-proxy.ashley-98e.workers.dev.
+name = "care-scribe-proxy"
 main = "worker.js"
 compatibility_date = "2026-06-01"
 
 [vars]
 ALLOWED_ORIGINS = "https://ashley-pettit.github.io"
 # Secret: wrangler secret put ANTHROPIC_API_KEY
+
+# Shared plans for short links and vet review links (kept 90 days).
+[[kv_namespaces]]
+binding = "SHARES"
+id = "2675cfa5be054c5497c038bb466c83d0"

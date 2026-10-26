@@ -1,5 +1,6 @@
 // What goes into each Word printout (plain data, no Word library), so the app can prepare a printout without loading
 // the Word library. The library itself (word-docx.js) loads only when someone actually asks for a Word file.
+import { endorsementWords } from './endorse.js';
 import { dueLabel, formatDate, NOT_RECORDED, rehydrationTable, REHYDRATION_NOTE, careAiNote, feedAmounts } from './note.js';
 import { chartByKey } from './feeding.js';
 import { rangesFor, rangesForAnimal } from './species-ranges.js';
@@ -97,9 +98,12 @@ function feedBlocks(f) {
 
 export function careModel(c, lookup, photos = [], video = null) {
   const meds = c.medications.map((m) => [m.name, m.how, m.how_often, m.how_long]);
+  const ew = endorsementWords(c);
   const blocks = [
+    // Endorsed by a vet, or a draft whose medications no vet has authorised yet: said first, so nobody misses it.
+    ...(ew.text ? [{ heading: ew.title, text: ew.text, tone: ew.tone === 'ok' ? 'summary' : 'warn' }] : []),
     { heading: 'Summary', text: c.summary, tone: 'summary' },
-    ...(meds.length ? [{ heading: 'Medications', table: { head: ['Medication', 'How', 'How often', 'How long'], rows: meds, widths: [2600, 2600, 2400, PAGE_W - 7600] }, note: c.medications.map((m) => (m.tip ? `${m.name}: ${m.tip}` : '')).filter(Boolean).join('  ') || undefined }] : []),
+    ...(meds.length ? [{ heading: ew.medsHeading, table: { head: ['Medication', 'How', 'How often', 'How long'], rows: meds, widths: [2600, 2600, 2400, PAGE_W - 7600] }, note: c.medications.map((m) => (m.tip ? `${m.name}: ${m.tip}` : '')).filter(Boolean).join('  ') || undefined }] : []),
     ...((Number(c.log_days) || 0) <= 1 && !c.medications.length && !c.plan.length ? [] : rangesBlocks(c.species_group, [c.animal, c.summary].filter(Boolean).join(' '))),
     ...rehydrationBlocks(c.rehydration),
     // The day-by-day plan as one table, rather than a scatter of small headed sections.

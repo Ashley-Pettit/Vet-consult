@@ -101,3 +101,49 @@ test('lets the web search tool through, rebuilt from known fields, and rejects a
   await handle(req(good), env, async (url, init) => ((plain = JSON.parse(init.body)), new Response('{}', { status: 200 })));
   assert.equal(plain.tools, undefined);
 });
+
+// Short share links: the plan is kept in KV and the link carries only its id.
+const kv = () => {
+  const m = new Map();
+  return { m, get: async (k) => m.get(k) ?? null, put: async (k, v, o) => m.set(k, v) && (m.ttl = o.expirationTtl) };
+};
+const shareReq = (path, { method = 'GET', body, origin = ORIGIN } = {}) =>
+  new Request(`https://proxy.example${path}`, { method, headers: { origin, 'content-type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body) });
+
+test('stores a shared plan and gives it back by id, kept 90 days', async () => {
+  const SHARES = kv();
+  const plan = { v: 1, region: 'vic', type: 'care', sheet: { animal: 'Wombat' } };
+  const r = await handle(shareReq('/share', { method: 'POST', body: plan }), { ...env, SHARES });
+  assert.equal(r.status, 200);
+  const { id } = await r.json();
+  assert.match(id, /^[a-zA-Z0-9]{12}$/);
+  assert.equal(SHARES.m.ttl, 90 * 86400);
+  const g = await handle(shareReq(`/share/${id}`), { ...env, SHARES });
+  assert.equal(g.status, 200);
+  assert.deepEqual((await g.json()).plan, plan);
+  // A plain share link can't be changed by anyone.
+  assert.equal((await handle(shareReq(`/share/${id}`, { method: 'PUT', body: plan }), { ...env, SHARES })).status, 403);
+});
+
+test('a review link can be updated only with its edit key', async () => {
+  const SHARES = kv();
+  const plan = { type: 'care', sheet: { animal: 'Possum', medications: [] } };
+  const r = await (await handle(shareReq('/share?edit=1', { method: 'POST', body: plan }), { ...env, SHARES })).json();
+  assert.match(r.key, /^[a-zA-Z0-9]{24}$/);
+  assert.ok(![...SHARES.m.values()].some((v) => v.includes(r.key)), 'the key itself is never stored');
+  const changed = { ...plan, sheet: { ...plan.sheet, endorsement: { by: 'Dr Lee' } } };
+  const put = (key) => handle(new Request(`https://proxy.example/share/${r.id}`, { method: 'PUT', headers: { origin: ORIGIN, 'x-edit-key': key }, body: JSON.stringify(changed) }), { ...env, SHARES });
+  assert.equal((await put('wrong-key-wrong-key-1234')).status, 403);
+  assert.equal((await put(r.key)).status, 200);
+  const g = await (await handle(shareReq(`/share/${r.id}`), { ...env, SHARES })).json();
+  assert.equal(g.plan.sheet.endorsement.by, 'Dr Lee');
+});
+
+test('share links: unknown ids, odd shapes and other websites are refused', async () => {
+  const SHARES = kv();
+  assert.equal((await handle(shareReq('/share/abcdefghjk12'), { ...env, SHARES })).status, 404);
+  assert.notEqual((await handle(shareReq('/share/../../x'), { ...env, SHARES })).status, 200);
+  assert.equal((await handle(shareReq('/share', { method: 'POST', body: { type: 'other' } }), { ...env, SHARES })).status, 400);
+  assert.equal((await handle(shareReq('/share', { method: 'POST', body: { type: 'care', sheet: {} }, origin: 'https://evil.example' }), { ...env, SHARES })).status, 403);
+  assert.equal(SHARES.m.size, 0);
+});

@@ -284,6 +284,20 @@
       <p class="muted carer-only">Everything you need to look after the animal. Check it, then share it or print it for the fridge.</p>
     </div>
     <p id="care-banner" class="banner" data-tone="info" hidden></p>
+    <section id="care-endorse" class="endorse" aria-live="polite" hidden>
+      <div class="endorse-row">
+        <svg class="i-ok" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.8l7.5 3v5.6c0 4.6-3.2 8.3-7.5 9.8-4.3-1.5-7.5-5.2-7.5-9.8V5.8z"/><path d="M8.6 12.2l2.4 2.4 4.6-4.8"/></svg>
+        <svg class="i-warn" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.2L2.6 19.5h18.8z"/><path d="M12 9.5v4.6M12 16.9v.1"/></svg>
+        <div>
+          <p class="endorse-title" id="endorse-title"></p>
+          <p class="endorse-text" id="endorse-text"></p>
+        </div>
+      </div>
+      <div class="endorse-acts">
+        <button type="button" class="btn small primary vet-only" id="endorse-btn">Endorse plan</button>
+        <button type="button" class="btn small ghost" id="review-btn">Ask a vet to review</button>
+      </div>
+    </section>
     <article id="care-sheet" class="note care" aria-label="Care instructions"></article>
     <div class="feedback" data-for="care" role="group" aria-label="Was this helpful?">
       <span>Was this helpful?</span>
@@ -452,6 +466,11 @@
         <label for="clinician">Your name (added to every record)</label>
         <input id="clinician" type="text" autocomplete="name" placeholder="e.g. Sam Lee">
       </div>
+      <div class="field vet-only">
+        <label for="vet-reg">Vet registration number</label>
+        <input id="vet-reg" type="text" autocomplete="off" spellcheck="false" placeholder="e.g. V1234">
+        <p class="help">Goes on care plans you endorse, with your name and the date.</p>
+      </div>
 
       <div class="field">
         <label for="drugs">Drugs and products you use</label>
@@ -561,6 +580,26 @@
       <button type="submit" class="btn ghost" value="copy">Copy as text</button>
       <button type="submit" class="btn ghost" value="link" id="share-link">Share a link</button>
       <button type="submit" class="link" value="cancel">Cancel</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="endorse-dlg" class="confirm" aria-labelledby="endorse-dlg-title">
+  <form method="dialog" id="endorse-form">
+    <h2 id="endorse-dlg-title">Endorse this care plan</h2>
+    <p class="help">Your name, registration number and today’s date go on the plan and its printouts. If the medications change later, the endorsement comes off until a vet endorses it again.</p>
+    <div class="field">
+      <label for="endorse-name">Your name</label>
+      <input id="endorse-name" type="text" autocomplete="name" maxlength="80" required>
+    </div>
+    <div class="field">
+      <label for="endorse-reg">Vet registration number</label>
+      <input id="endorse-reg" type="text" autocomplete="off" spellcheck="false" maxlength="40" required>
+    </div>
+    <label class="check endorse-check"><input type="checkbox" id="endorse-ok" required> I’ve checked this plan, including the medications and doses.</label>
+    <div class="dlg-actions">
+      <button type="submit" class="btn ghost" value="cancel" formnovalidate>Cancel</button>
+      <button type="submit" class="btn primary" value="endorse">Endorse</button>
     </div>
   </form>
 </dialog>

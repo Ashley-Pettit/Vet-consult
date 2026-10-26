@@ -1669,3 +1669,22 @@ input[type="number"], input[type="search"], input[type="tel"], input[type="email
 /* Add to Home Screen steps */
 .home-steps { margin: 4px 0 0; padding-left: 1.3em; display: grid; gap: 4px; font-size: 0.92rem; line-height: 1.4; }
 .home-steps:empty { display: none; }
+
+/* Vet endorsement on a care plan: a clear tick when a vet has endorsed it, a warning while medications aren't authorised. */
+.endorse { margin: 12px 0 0; padding: 14px 16px; border-radius: 12px; background: var(--accent-soft); box-shadow: inset 0 0 0 1.5px var(--accent); display: grid; gap: 12px; }
+.endorse[data-tone="warn"] { background: var(--warn-soft); box-shadow: inset 0 0 0 1.5px var(--warn-line); }
+.endorse[data-tone="quiet"] { background: transparent; box-shadow: inset 0 0 0 1px var(--line); padding: 10px 14px; }
+.endorse-row { display: flex; gap: 12px; align-items: flex-start; }
+.endorse-row svg { flex: none; width: 26px; height: 26px; margin-top: 1px; color: var(--accent); }
+.endorse[data-tone="warn"] .endorse-row svg { color: var(--warn); }
+.endorse[data-tone="quiet"] .endorse-row svg { color: var(--muted); width: 22px; height: 22px; }
+.endorse .i-warn { display: none; }
+.endorse[data-tone="warn"] .i-warn { display: block; }
+.endorse[data-tone="warn"] .i-ok { display: none; }
+.endorse-title { margin: 0; font-weight: 700; font-size: 1.02rem; line-height: 1.3; }
+.endorse[data-tone="quiet"] .endorse-title { font-weight: 600; font-size: 0.95rem; color: var(--muted); }
+.endorse-text { margin: 4px 0 0; font-size: 0.93rem; line-height: 1.45; }
+.endorse-acts { display: flex; flex-wrap: wrap; gap: 8px; }
+.endorse-acts .btn { min-height: 44px; }
+.endorse-check { align-items: flex-start; margin: 4px 0 12px; line-height: 1.4; }
+.endorse-check input { flex: none; margin-top: 1px; }

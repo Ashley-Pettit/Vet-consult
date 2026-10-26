@@ -1,3 +1,4 @@
+import { endorsementOf } from './endorse.js';
 import { speciesCareForPrompt } from './species-care.js';
 import { animalTags } from './sources.js';
 import { CONFIG } from './config.js';
@@ -855,6 +856,7 @@ export function normaliseCareSheet(raw, knownSources = null) {
     species_group: checkedGroup(str(r.species_group, 30), [str(r.animal, 80), str(r.species, 80)].join(' ')),
     next_visit: str(r.next_visit, 300),
     sources,
+    endorsement: endorsementOf(r.endorsement),
   };
 }
 

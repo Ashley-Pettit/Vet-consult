@@ -88,7 +88,8 @@ import {
   feedAmounts,
 } from './note.js';
 import { chartByKey } from './feeding.js';
-import { planLink, unpackPlan, linkCode, linkId } from './sharelink.js';
+import { shortPlanLink, unpackPlan, linkCode, linkId, shortLink, fetchSharedPlan, storePlan, reviewLink, updateSharedPlan } from './sharelink.js';
+import { endorse, endorsementState, endorsementWords, vetLabel } from './endorse.js';
 
 const $ = (id) => document.getElementById(id);
 const els = {
@@ -676,7 +677,7 @@ confirmNew.addEventListener('close', () => {
   if (confirmNew.returnValue !== 'new') return;
   confirmNew.returnValue = '';
   // A shared link stays in the address bar until they start something new.
-  if (linkCode(location.hash)) history.replaceState(null, '', location.pathname + location.search);
+  if (linkCode(location.hash) || shortLink(location.hash)) history.replaceState(null, '', location.pathname + location.search);
   dictation.cancel();
   endKeyboardVoice();
   setTranscript('');
@@ -1784,9 +1785,7 @@ async function amend(target, change) {
     // Only the changed parts come back: merge them into what's on screen.
     if (isCare) {
       const sheet = normaliseCareSheet(mergeAmend(current, reply), fromLibrary ? null : SOURCE_IDS());
-      showCare(sheet, careFrom, els.careBanner.hidden ? '' : els.careBanner.textContent, true);
-      if (fromLibrary) return libraryChanged(sheet);
-      if (savedId && updateSavedPlan(sheet)) return toast('Updated your saved plan.');
+      return await carePlanChanged(afterVetChange(sheet), 'Updated.');
     } else {
       const d = normaliseDoc(mergeAmend(current, reply));
       if (!d.sections.length) throw new AiError('empty', '');
@@ -1911,6 +1910,7 @@ $('care-save').addEventListener('click', () => {
   toast('Saved. Find it under Plans, the book at the top.');
 });
 function openSavedPlan(id, info = '') {
+  setTimeout(() => refreshRemote(id), 0);
   const entry = store.loadSaved().find((x) => x.id === id);
   if (!entry) return;
   libraryPlan = null;
@@ -1923,7 +1923,26 @@ function openSavedPlan(id, info = '') {
   showCare(normaliseCareSheet(entry.sheet, null), 'saved', info);
 }
 const savedDate = (t) => new Date(t).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
+// Under each saved plan: who endorsed it, or that it's waiting for a vet, or when it was saved.
+function savedLabel(p) {
+  if (p.sheet) {
+    const { state, e } = endorsementState(p.sheet);
+    if (state === 'endorsed') return `Endorsed by ${vetLabel(e)}`;
+    if (state === 'changed') return 'Medications changed since the vet endorsed it';
+    if (p.remote) return 'Waiting for a vet to review';
+  }
+  return `${p.shared ? 'Shared with you' : 'Saved'} ${savedDate(p.savedAt)}`;
+}
+let refreshingSaved = false;
 function renderSaved() {
+  // Plans sent for review: pick up the vet's changes in the background (a few at a time, once per visit).
+  if (!refreshingSaved) {
+    refreshingSaved = true;
+    Promise.all(store.loadSaved().filter((p) => p.remote).slice(0, 10).map((p) => refreshRemote(p.id, true))).then((changed) => {
+      if (changed.some(Boolean) && document.body.dataset.view === 'library') renderSaved();
+      setTimeout(() => (refreshingSaved = false), 30000);
+    });
+  }
   const list = store.loadSaved();
   $('saved-plans').hidden = !list.length;
   $('ready-title').hidden = !list.length;
@@ -1932,7 +1951,7 @@ function renderSaved() {
       const li = el('li', { class: 'saved-item' });
       const open = el('button', { type: 'button', class: 'lib-plan saved-open', onclick: () => openSavedPlan(p.id) }, [
         el('span', { class: 'lib-stage', text: p.name }),
-        el('span', { class: 'lib-weight', text: `${p.shared ? 'Shared with you' : 'Saved'} ${savedDate(p.savedAt)}` }),
+        el('span', { class: 'lib-weight', text: savedLabel(p) }),
       ]);
       // Two clear choices: change what the plan says, or change its name.
       const edit = el('button', { type: 'button', class: 'link saved-act', 'aria-label': `Edit ${p.name}`, onclick: () => { openSavedPlan(p.id); $('care-edit').click(); } }, 'Edit plan');
@@ -1997,9 +2016,7 @@ $('edit-save').addEventListener('click', () => {
   if (!careSheet) return;
   const text = Object.fromEntries([...$('edit-form').querySelectorAll('textarea')].map((t) => [t.name, t.value]));
   const sheet = normaliseCareSheet(textToPlan(careSheet, text), null);
-  showCare(sheet, careFrom, els.careBanner.hidden ? '' : els.careBanner.textContent, true);
-  if (careFrom === 'library') libraryChanged(sheet);
-  else toast(savedId && updateSavedPlan(sheet) ? 'Updated your saved plan.' : 'Saved.');
+  carePlanChanged(afterVetChange(sheet), 'Saved.');
 });
 
 /* ---------------- care plan ---------------- */
@@ -2441,7 +2458,7 @@ function renderCare(c) {
       pigeonFact(`${c.animal} ${c.species} ${c.summary}`),
       c.medications.length
         ? el('section', { class: 'care-sec' }, [
-            el('h2', { text: 'Medications' }),
+            el('h2', { text: endorsementWords(c).medsHeading }),
             el('ul', { class: 'meds' }, c.medications.map((m) =>
               el('li', {}, [
                 el('strong', { text: m.name }),
@@ -2521,6 +2538,7 @@ function showCare(sheet, from, info = '', keepSaved = false) {
   renderMakeNext($('make-next-care'), from === 'record' ? 'carer' : null);
   if (from === 'record') madeFrom.carer = { text: els.transcript.value, sheet, info };
   renderCare(sheet);
+  renderEndorse(sheet);
   els.careBanner.textContent = info;
   els.careBanner.hidden = !info;
   showView('care');
@@ -2534,7 +2552,7 @@ async function openCare() {
   // Already made from these same words (a vet often makes the plan first): show it, no second call.
   if (madeFrom.carer && madeFrom.carer.text === els.transcript.value) return showCare(madeFrom.carer.sheet, 'record', madeFrom.carer.info);
   if (!(await ensureProvider())) {
-    if (isExample && n.patient.name === 'Rusty') showCare(normaliseCareSheet(EXAMPLE_CARE_SHEET, SOURCE_IDS()), 'note', 'This is the example care plan.');
+    if (isExample && n.patient.name === 'Rusty') showCare(asVetMade(normaliseCareSheet(EXAMPLE_CARE_SHEET, SOURCE_IDS())), 'note', 'This is the example care plan.');
     else toast(inClaude ? 'Claude isn’t available right now.' : 'Care plans for your own notes need the Claude app version.');
     return;
   }
@@ -2542,7 +2560,7 @@ async function openCare() {
     const reply = await runWorking('Writing the care plan', 'A plan the carer can follow on their own.', (signal) =>
       askJson(buildCareSheetPrompt(n, sourcesFor(`${els.transcript.value} ${n.patient.species}`)), signal),
     );
-    showCare(normaliseCareSheet(extractJson(reply), SOURCE_IDS()), 'note');
+    showCare(asVetMade(normaliseCareSheet(extractJson(reply), SOURCE_IDS())), 'note');
   } catch (e) {
     showView('note');
     toast(e && e.code === 'cancelled' ? 'Stopped.' : friendly(e));
@@ -2552,8 +2570,8 @@ async function openCare() {
 /** Carer plan mode: spoken comments go straight to a plan, no vet note in between. */
 async function createCarePlan(text) {
   if (!(await ensureProvider())) {
-    if (text === EXAMPLE_CARER_DICTATION.trim()) return showCare(normaliseCareSheet(EXAMPLE_CARER_PLAN, SOURCE_IDS()), 'record', 'This is the example care plan.');
-    if (text === EXAMPLE_FOSTER_DICTATION.trim()) return showCare(normaliseCareSheet(EXAMPLE_FOSTER_PLAN, SOURCE_IDS()), 'record', 'This is the example care plan.');
+    if (text === EXAMPLE_CARER_DICTATION.trim()) return showCare(asVetMade(normaliseCareSheet(EXAMPLE_CARER_PLAN, SOURCE_IDS())), 'record', 'This is the example care plan.');
+    if (text === EXAMPLE_FOSTER_DICTATION.trim()) return showCare(asVetMade(normaliseCareSheet(EXAMPLE_FOSTER_PLAN, SOURCE_IDS())), 'record', 'This is the example care plan.');
     banner(NO_CLAUDE, 'info');
     return;
   }
@@ -2562,7 +2580,7 @@ async function createCarePlan(text) {
     askJson(buildCarerPlanPrompt(text, sourcesFor(text), { fromVet: settings.role === 'vet', drugs: settings.drugs, photoCount: sendPhotos().length }), signal, { images: sendPhotos() }),
   );
   notes = [];
-  showCare(normaliseCareSheet(extractJson(reply), SOURCE_IDS()), 'record');
+  showCare(asVetMade(normaliseCareSheet(extractJson(reply), SOURCE_IDS())), 'record');
 }
 
 els.care.addEventListener('click', openCare);
@@ -2654,7 +2672,7 @@ async function finishSend(how) {
 async function shareLink(data, title) {
   let url;
   try {
-    url = await planLink({ v: 1, region: region().code, ...data });
+    url = await shortPlanLink({ v: 1, region: region().code, ...data }, CONFIG.proxyUrl);
   } catch {
     return toast('Couldn’t make a link. Share it as Word or text instead.');
   }
@@ -3097,7 +3115,7 @@ async function makeNext(m) {
     if (fresh) startIntakeCare();
     const sheet = await waitForIntakeCare(fresh);
     if (sheet === false) return; // stopped
-    if (sheet) return showCare(sheet, 'record');
+    if (sheet) return showCare(asVetMade(sheet), 'record');
   }
   await createNote();
 }
@@ -3298,6 +3316,7 @@ $('home-install').addEventListener('click', async () => {
 
 async function openSettings(message) {
   els.clinician.value = settings.clinician;
+  $('vet-reg').value = settings.vetReg || '';
   $('drugs').value = settings.drugs || '';
   els.model.value = settings.model || CONFIG.defaultModel;
   els.apiKey.value = settings.apiKey;
@@ -3329,7 +3348,7 @@ $('close-settings').addEventListener('click', () => els.settings.close('close'))
 els.settings.addEventListener('close', async () => {
   // Whatever way it's closed (Save, ✕, Escape, a tap outside), changes are kept: nothing typed is lost.
   const key = els.apiKey.value.trim();
-  const next = { ...settings, photosOn: $('photos-on').checked, libraryAdmin: $('library-admin-on').checked, template: $('template').value, drugs: $('drugs').value.slice(0, 3000), clinician: els.clinician.value.trim().slice(0, 80), model: els.model.value, apiKey: key, rememberKey: els.rememberKey.checked };
+  const next = { ...settings, photosOn: $('photos-on').checked, libraryAdmin: $('library-admin-on').checked, template: $('template').value, drugs: $('drugs').value.slice(0, 3000), clinician: els.clinician.value.trim().slice(0, 80), vetReg: $('vet-reg').value.trim().slice(0, 40), model: els.model.value, apiKey: key, rememberKey: els.rememberKey.checked };
   const changed = JSON.stringify(next) !== JSON.stringify(settings);
   if (!changed && els.settings.returnValue !== 'save') return;
   settings = next;
@@ -3511,23 +3530,187 @@ renderResume();
 renderPhotos();
 const wasOpen = store.loadOpen();
 showView(location.hash === '#how-it-works' ? 'about' : 'record');
-if (!linkCode(location.hash)) restoreOpen(wasOpen);
+if (!linkCode(location.hash) && !shortLink(location.hash)) restoreOpen(wasOpen);
+/* ---------------- vet endorsement and review ---------------- */
+
+const REVIEW_INFO = 'A carer asked you to review this plan. Check it, use Change plan for anything that needs fixing, then tap Endorse plan. They see your changes when they next open it.';
+// Who is endorsing: the vet's name and registration number from Settings (not verified until vets sign in).
+const vetIdentity = () => ({ name: settings.clinician || '', reg: settings.vetReg || '', clinic: '' });
+const vetReady = () => settings.role === 'vet' && Boolean(vetIdentity().name && vetIdentity().reg);
+// A plan a vet makes is endorsed by that vet as it's made, so it's clearly a vet-endorsed plan.
+const asVetMade = (sheet) => (vetReady() ? endorse(sheet, vetIdentity()) : sheet);
+// A vet's own change to an endorsed plan keeps it endorsed, in their name. Anyone else's change to the medications
+// takes the endorsement off (endorsementState compares the medications with what was endorsed).
+const afterVetChange = (sheet) => (vetReady() && sheet.endorsement ? endorse(sheet, vetIdentity()) : sheet);
+const savedEntry = () => (savedId ? store.loadSaved().find((x) => x.id === savedId) : null);
+
+function renderEndorse(c) {
+  const box = $('care-endorse');
+  const vet = settings.role === 'vet';
+  const w = endorsementWords(c);
+  const remote = savedEntry() && savedEntry().remote;
+  let title = w.title;
+  let text = w.text;
+  let tone = w.tone;
+  if (vet && w.state === 'none') {
+    title = 'Not endorsed yet';
+    text = c.medications.length ? 'Check the plan and its medications, then endorse it so the carer knows a vet has authorised them.' : 'Endorse it so the carer knows a vet has checked it.';
+    tone = c.medications.length ? 'warn' : 'quiet';
+  } else if (!vet && w.state !== 'endorsed' && remote) {
+    title = 'Waiting for a vet to review';
+    text = `${c.medications.length ? 'Until then, give medicines only as your vet directed. ' : ''}Their changes and endorsement show here when you open the plan.`;
+  }
+  box.dataset.tone = tone;
+  $('endorse-title').textContent = title;
+  $('endorse-text').textContent = text;
+  $('endorse-text').hidden = !text;
+  $('endorse-btn').hidden = !vet || w.state === 'endorsed';
+  $('endorse-btn').textContent = w.state === 'changed' ? 'Endorse again' : 'Endorse plan';
+  $('review-btn').hidden = vet || w.state === 'endorsed';
+  $('review-btn').textContent = remote ? 'Send the review link again' : 'Ask a vet to review';
+  box.querySelector('.endorse-acts').hidden = $('endorse-btn').hidden && $('review-btn').hidden;
+  // Ready-made plans are general guides, not a plan for one animal: nothing to endorse there.
+  box.hidden = careFrom === 'library';
+}
+
+/** Send a changed plan to its review link, if it has one. True if sent, false if it couldn't be, null if no link. */
+async function pushRemote(sheet) {
+  const entry = savedEntry();
+  if (!entry || !entry.remote || !entry.remote.key) return null;
+  const updated = await updateSharedPlan(entry.remote.id, entry.remote.key, { v: 1, region: region().code, type: 'care', sheet }, CONFIG.proxyUrl);
+  if (!updated) return false;
+  store.updateSaved(entry.id, { remote: { ...entry.remote, updated } });
+  return true;
+}
+
+/** Every change to a care plan on screen (Change plan, editing the text, endorsing) ends here. */
+async function carePlanChanged(sheet, done = 'Saved.') {
+  showCare(sheet, careFrom, els.careBanner.hidden ? '' : els.careBanner.textContent, true);
+  if (careFrom === 'library') return libraryChanged(sheet);
+  const saved = Boolean(savedId && updateSavedPlan(sheet));
+  const pushed = await pushRemote(sheet);
+  const who = settings.role === 'vet' ? 'The carer sees it' : 'The vet sees it';
+  if (pushed === true) toast(`${done} ${who} next time they open the plan.`);
+  else if (pushed === false) toast(`${done} Couldn’t update the shared plan: check your internet connection, then try again.`);
+  else toast(saved ? `${done} Your saved plan is updated.` : done);
+}
+
+/** A saved plan linked to a review: fetch the latest from the link and keep it. True if it changed. */
+async function refreshRemote(id, quiet = false) {
+  const entry = store.loadSaved().find((x) => x.id === id);
+  if (!entry || !entry.remote || !entry.sheet) return false;
+  let latest;
+  try {
+    latest = await fetchSharedPlan(entry.remote.id, CONFIG.proxyUrl);
+  } catch {
+    return false;
+  }
+  if (!latest || !(latest.updated > (entry.remote.updated || 0)) || !latest.plan || !latest.plan.sheet) return false;
+  const sheet = normaliseCareSheet(latest.plan.sheet, null);
+  store.updateSaved(id, { sheet, remote: { ...entry.remote, updated: latest.updated } });
+  if (!quiet && savedId === id && document.body.dataset.view === 'care') {
+    showCare(sheet, 'saved', els.careBanner.hidden ? '' : els.careBanner.textContent, true);
+    const { state, e } = endorsementState(sheet);
+    toast(state === 'endorsed' && settings.role !== 'vet' ? `${vetLabel(e)} has endorsed this plan.` : 'Updated with the latest changes.');
+  }
+  return true;
+}
+
+$('endorse-btn').addEventListener('click', () => {
+  const v = vetIdentity();
+  $('endorse-name').value = v.name;
+  $('endorse-reg').value = v.reg;
+  $('endorse-ok').checked = false;
+  $('endorse-dlg').returnValue = '';
+  $('endorse-dlg').showModal();
+});
+$('endorse-dlg').addEventListener('close', () => {
+  if ($('endorse-dlg').returnValue !== 'endorse' || !careSheet) return;
+  const name = $('endorse-name').value.trim().slice(0, 80);
+  const reg = $('endorse-reg').value.trim().slice(0, 40);
+  if (!name || !reg) return;
+  // Remembered for next time, so their own plans are endorsed as they're made.
+  if (name !== settings.clinician || reg !== settings.vetReg) {
+    settings = { ...settings, clinician: name, vetReg: reg };
+    store.saveSettings(settings);
+  }
+  carePlanChanged(endorse(careSheet, vetIdentity()), 'Endorsed.');
+});
+
+$('review-btn').addEventListener('click', async (ev) => {
+  if (!careSheet) return;
+  const btn = ev.currentTarget;
+  let entry = savedEntry();
+  let remote = entry && entry.remote;
+  if (!remote) {
+    btn.disabled = true;
+    const j = await storePlan({ v: 1, region: region().code, type: 'care', sheet: careSheet }, CONFIG.proxyUrl, { edit: true });
+    btn.disabled = false;
+    if (!j) return toast('Couldn’t make a review link. Check your internet connection, then try again.');
+    remote = { id: j.id, key: j.key, updated: j.updated };
+    // The plan is kept under Plans, linked to the review, so the vet's changes and endorsement come back to it.
+    if (entry) store.updateSaved(entry.id, { remote });
+    else {
+      entry = { id: `s-${j.id}`, name: planName().slice(0, 80), sheet: careSheet, savedAt: Date.now(), remote };
+      if (!store.savePlan(entry)) return toast('This device is out of space. Remove a saved plan and try again.');
+      savedId = entry.id;
+      refreshSaveBtn();
+    }
+    renderEndorse(careSheet);
+  }
+  const url = reviewLink(remote.id, remote.key);
+  const text = `Could you check this care plan${careSheet.medications.length ? ', including the medications,' : ''} and endorse it if it’s right?`;
+  if (canShare()) {
+    try {
+      await navigator.share({ title: `For vet review: ${planName()}`, text, url });
+      return toast('Sent. You’ll see the vet’s changes here, under Plans.');
+    } catch (e) {
+      if (e && e.name === 'AbortError') return;
+    }
+  }
+  const ok = await copyText(`${text} ${url}`);
+  toast(ok ? 'Review link copied. Paste it into a text or email to the vet.' : 'Couldn’t copy the link.');
+});
+
 // Opened from a shared link: show the plan straight away and save it on this device, under Plans (the book at the
 // top), so it's still there after the link is gone. Opening the same link again shows their saved copy, edits and all.
 const SHARED_INFO = 'Shared with you and saved under Plans (the book at the top). Check it with the person who sent it.';
 async function openSharedLink() {
   const code = linkCode(location.hash);
-  if (!code) return;
+  const short = shortLink(location.hash);
+  if (!code && !short) return;
+  const review = Boolean(short && short.key);
+  const info = review && settings.role === 'vet' ? REVIEW_INFO : SHARED_INFO;
+  // A short link whose plan is already saved here opens straight away (and picks up any newer changes).
+  if (short && store.loadSaved().some((x) => x.id === `s-${short.id}`)) {
+    if (review) store.updateSaved(`s-${short.id}`, { remote: { ...(store.loadSaved().find((x) => x.id === `s-${short.id}`).remote || { updated: 0 }), id: short.id, key: short.key } });
+    return openSavedPlan(`s-${short.id}`, info);
+  }
+  let p;
+  let updated = 0;
   try {
-    const p = await unpackPlan(code);
+    if (short) ({ plan: p, updated } = await fetchSharedPlan(short.id, CONFIG.proxyUrl));
+    else p = await unpackPlan(code);
+  } catch (e) {
+    banner(
+      e && e.code === 'expired'
+        ? 'That shared plan has expired (links last 90 days) or was removed. Ask for it again.'
+        : e && e.code === 'offline'
+          ? 'Couldn’t load the shared plan. Check your internet connection, then tap the link again.'
+          : 'That link couldn’t be opened. It may have been cut short: ask for it again, or for the Word document.',
+    );
+    return;
+  }
+  try {
     if (p.region && p.region !== region().code) setRegion(p.region);
-    const id = linkId(code);
+    const id = short ? `s-${short.id}` : linkId(code);
     if (store.loadSaved().some((x) => x.id === id)) {
-      openSavedPlan(id, SHARED_INFO);
+      openSavedPlan(id, info);
     } else if (p.type === 'care' && p.sheet) {
       const c = normaliseCareSheet(p.sheet, null);
-      showCare(c, 'record', SHARED_INFO);
-      if (store.savePlan({ id, name: planName().slice(0, 80), sheet: c, savedAt: Date.now(), shared: true })) {
+      showCare(c, 'record', info);
+      const remote = review ? { id: short.id, key: short.key, updated } : undefined;
+      if (store.savePlan({ id, name: planName().slice(0, 80), sheet: c, savedAt: Date.now(), shared: true, remote })) {
         savedId = id;
         refreshSaveBtn();
       } else showCare(c, 'record', 'Shared with you. This device is out of space, so it isn’t saved: tap Save after removing an old plan.');
@@ -3539,7 +3722,7 @@ async function openSharedLink() {
     }
     renderResume();
   } catch {
-    banner('That link couldn’t be opened. It may have been cut short: ask for it again, or for the Word document.');
+    banner('That plan couldn’t be shown. Ask the person who sent it for the PDF or Word document instead.');
   }
 }
 openSharedLink();
