@@ -1,0 +1,28 @@
+# Deploy the Cloudflare proxy (proxy/worker.js and proxy/wrangler.toml) from GitHub, so nobody needs Node.js or
+# wrangler on their own computer. Run it from the Actions tab: "Deploy proxy" → Run workflow.
+# Needs two repository secrets (Settings → Secrets and variables → Actions):
+#   CLOUDFLARE_API_TOKEN   a Cloudflare API token made from the "Edit Cloudflare Workers" template
+#   CLOUDFLARE_ACCOUNT_ID  the Account ID shown on the Cloudflare Workers & Pages overview
+name: Deploy proxy
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Branch to deploy the proxy from
+        default: bunurong-wildlife
+        required: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+      - uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: proxy
+          command: deploy
