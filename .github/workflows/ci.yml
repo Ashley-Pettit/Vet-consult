@@ -36,44 +36,12 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 7
-      # Animal Welfare Companion (Bunurong Wildlife Care) is published twice:
-      #   /care/       live, from the care-prod branch
-      #   /care-beta/  beta, from the bunurong-wildlife branch (where new changes land first)
+      # Builds /care/ (live), /care-beta/ (beta) and the front page. Shared with the
+      # Ashley-Pettit/bunurong-companion mirror (companion.bunurongwildlifecare.au).
       # Promote beta to live by moving care-prod up to bunurong-wildlife, then re-running this workflow.
-      - name: Build Animal Welfare Companion into /care/ and /care-beta/
+      - name: Build Animal Welfare Companion, front page and /scribe/
         if: github.ref == 'refs/heads/main'
-        run: |
-          build_care() {
-            git fetch --depth 1 origin "$1"
-            git worktree add "../$2" FETCH_HEAD
-            (cd "../$2" && npm ci && npm run test:unit && CHANNEL="$3" npm run build)
-            cp -r "../$2/dist" "$GITHUB_WORKSPACE/dist/$2"
-          }
-          build_care care-prod care live
-          build_care bunurong-wildlife care-beta beta
-      # The front page opens the live companion (companion.bunurongwildlifecare.au); Consult Scribe moves to /scribe/.
-      - name: Front page opens the live companion
-        if: github.ref == 'refs/heads/main'
-        run: |
-          mkdir -p ../scribe
-          find dist -mindepth 1 -maxdepth 1 ! -name care ! -name care-beta -exec mv {} ../scribe/ \;
-          mv ../scribe dist/scribe
-          touch dist/.nojekyll
-          cat > dist/index.html <<'HTML'
-          <!doctype html>
-          <html lang="en-AU"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-          <title>Wildlife Welfare Companion</title>
-          <meta http-equiv="refresh" content="0; url=care/">
-          <link rel="canonical" href="care/">
-          <script>location.replace('care/' + location.search + location.hash);</script>
-          </head><body><p><a href="care/">Open Wildlife Welfare Companion</a></p></body></html>
-          HTML
-          cat > dist/404.html <<'HTML'
-          <!doctype html>
-          <html lang="en-AU"><head><meta charset="utf-8"><title>Wildlife Welfare Companion</title>
-          <script>location.replace((location.hostname.endsWith('github.io') ? '/Vet-consult/' : '/') + 'care/');</script>
-          </head><body><p>Page not found. <a href="/care/">Open Wildlife Welfare Companion</a></p></body></html>
-          HTML
+        run: bash scripts/build-site.sh
       - uses: actions/upload-pages-artifact@v3
         if: github.ref == 'refs/heads/main'
         with:
