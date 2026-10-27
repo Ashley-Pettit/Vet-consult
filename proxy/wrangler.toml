@@ -4,7 +4,8 @@ main = "worker.js"
 compatibility_date = "2026-06-01"
 
 [vars]
-ALLOWED_ORIGINS = "https://ashley-pettit.github.io"
+# The app's addresses: GitHub Pages now, and Bunurong Wildlife Care's own address once it points at GitHub.
+ALLOWED_ORIGINS = "https://ashley-pettit.github.io,https://companion.bunurongwildlifecare.au"
 # Shared test vet for beta testing (everything it makes is marked TEST). The toggle exists only in the beta build.
 TEST_VET = "on"
 # Secret: wrangler secret put ANTHROPIC_API_KEY

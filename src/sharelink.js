@@ -36,7 +36,8 @@ export async function unpackPlan(code) {
   return JSON.parse(new TextDecoder().decode(raw));
 }
 
-const linkBase = (here) => (here && /github\.io$|localhost|127\.0\.0\.1/.test(here.hostname) ? here.origin + here.pathname : SITE_URL);
+// Links point at the address the app is open on (GitHub Pages, the Bunurong Wildlife Care address, or a test server).
+const linkBase = (here) => (here && /github\.io$|(^|\.)bunurongwildlifecare\.au$|localhost|127\.0\.0\.1/.test(here.hostname) ? here.origin + here.pathname : SITE_URL);
 
 /** A full link to the plan on the website (also from inside Claude, so it opens anywhere). */
 export async function planLink(obj, here = typeof location !== 'undefined' ? location : null) {

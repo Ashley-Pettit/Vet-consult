@@ -309,7 +309,7 @@ async function accounts(request, env, path, h) {
 export async function handle(request, env, fetchImpl = fetch) {
   const origin = request.headers.get('origin') || '';
   // Only the app's own address may call this. Override with an ALLOWED_ORIGINS variable if it moves.
-  const allowed = String(env.ALLOWED_ORIGINS || 'https://ashley-pettit.github.io')
+  const allowed = String(env.ALLOWED_ORIGINS || 'https://ashley-pettit.github.io,https://companion.bunurongwildlifecare.au')
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean);
