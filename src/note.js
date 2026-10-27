@@ -1340,7 +1340,7 @@ ${wildlifeSafetyRules()}
   },
   tovet: {
     label: 'For the vet',
-    copy: 'Copy summary',
+    copy: 'Share',
     working: 'A clear summary and your questions.',
     title: 'Summary for the vet visit, from the carer',
     rule: `Write a concise summary a wildlife carer hands to a vet before or during a visit, in clear clinical Australian English with metric units. The vet should be able to read it in under a minute.

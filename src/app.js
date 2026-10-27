@@ -2771,9 +2771,13 @@ function showDoc(d, kind, info = '') {
   renderMakeNext($('make-next-doc'), kind);
   // "For the vet" and the MOP plan lead with a ready-to-send text message.
   const textSec = TEXT_HEADING[kind] ? d.sections.find((x) => TEXT_HEADING[kind].test(x.heading)) : null;
-  $('text-vet').hidden = !textSec;
-  $('text-vet-title').textContent = kind === 'mop' ? 'Text to send the caller' : 'Text to your vet';
-  $('text-vet-body').textContent = textSec ? textSec.text || textSec.items.join(' ') : '';
+  // For the vet, the box always shows, with one obvious button: Share with vet (the text, plus a link to the summary).
+  const forVet = kind === 'tovet';
+  $('text-vet').hidden = !textSec && !forVet;
+  $('text-vet-title').textContent = kind === 'mop' ? 'Text to send the caller' : forVet && !textSec ? 'Send it to your vet' : 'Text to your vet';
+  $('text-vet-body').textContent = textSec ? textSec.text || textSec.items.join(' ') : forVet ? 'One tap sends your vet a link that opens this summary.' : '';
+  $('text-vet-send').textContent = forVet ? 'Share with vet' : 'Send or copy text';
+  $('text-vet-copy').hidden = !forVet || !textSec;
   madeFrom[kind] = { text: els.transcript.value, d, info };
   renderDoc(d, kind);
   if (kind === 'media' && !info) info = 'Draft for review. Nothing here is public until it has been checked and approved.';
@@ -2900,7 +2904,40 @@ function exampleExtra(start) {
   if (isExampleText()) start();
 }
 
-$('text-vet-send').addEventListener('click', async () => {
+// Share with vet: the short message and a link that opens the whole summary in the app, in one go.
+async function shareWithVet(btn) {
+  const d = currentDoc && currentDoc.d;
+  if (!d) return;
+  const textSec = d.sections.find((x) => TEXT_HEADING.tovet.test(x.heading));
+  const message = textSec ? textSec.text || textSec.items.join(' ') : /^summary/i.test(d.title) ? d.title : `Summary for the vet: ${d.title}`;
+  btn.disabled = true;
+  let url;
+  try {
+    url = await shortPlanLink({ v: 1, region: region().code, type: 'doc', kind: 'tovet', d }, CONFIG.proxyUrl);
+  } catch {
+    url = '';
+  } finally {
+    btn.disabled = false;
+  }
+  if (!url) return toast('Couldn’t make a link. Tap Share at the bottom to send it as PDF or text instead.');
+  const text = `${message}\n\nFull summary:`;
+  if (canShare()) {
+    try {
+      await navigator.share({ title: d.title || 'Summary for the vet', text, url });
+      return toast('Sent. The link opens the summary in the app, on any phone.');
+    } catch (e) {
+      if (e && e.name === 'AbortError') return;
+    }
+  }
+  const ok = await copyText(`${text} ${url}`);
+  toast(ok ? 'Copied the message and link. Paste it into a text or email to your vet.' : 'Couldn’t copy. Tap Share at the bottom instead.');
+}
+$('text-vet-copy').addEventListener('click', async () => {
+  const ok = await copyText($('text-vet-body').textContent);
+  toast(ok ? 'Text copied.' : 'Couldn’t copy. Select the text and copy it instead.');
+});
+$('text-vet-send').addEventListener('click', async (e) => {
+  if (currentDoc && currentDoc.kind === 'tovet') return shareWithVet(e.currentTarget);
   const mopVid = currentDoc && currentDoc.kind === 'mop' ? mopVideo(currentDoc.d) : null;
   const text = $('text-vet-body').textContent + (mopVid ? `\n\n${videoLine(mopVid)}` : '');
   if (!$('text-vet-body').textContent) return;
