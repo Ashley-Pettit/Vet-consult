@@ -11,8 +11,8 @@ import { lostNote } from './factcheck.js';
 import { homeDevice, HOME_STEPS } from './homescreen.js';
 import { preparePhoto, MAX_PHOTOS } from './photos.js';
 import { ABOUT_HTML } from './about.js';
-import { lookupSource, sourcesForPrompt, SOURCE_IDS } from './sources.js';
-import { region, setRegion } from './region.js';
+import { lookupSource, sourcesForPrompt, SOURCE_IDS, animalTags } from './sources.js';
+import { region, setRegion, BIRD_FLU_SIGNS } from './region.js';
 import { petBirdSourcesForPrompt } from './sources-petbirds-qld.js';
 import { rangesFor, rangesForAnimal } from './species-ranges.js';
 import { careVideoFor, watchUrl, videoHost, embedUrl, thumbUrl } from './videos.js';
@@ -644,7 +644,7 @@ confirmClear.addEventListener('close', () => {
 // Reference sources for a prompt: the general ones and those for the animals named, not the whole library (a koala
 // plan doesn't need the bird or reptile sources). The built-in examples keep the full list so their stored replies
 // still match; drop that exception at the next re-bake.
-const sourcesFor = (text) => sourcesForPrompt(isExampleText() ? '' : text);
+const sourcesFor = (text) => (isExampleText() ? sourcesForPrompt('', { examples: true }) : sourcesForPrompt(text));
 function isExampleText() {
   return [EXAMPLE_DICTATION, EXAMPLE_BATCH_DICTATION, EXAMPLE_CARER_DICTATION, EXAMPLE_FOSTER_DICTATION, EXAMPLE_INTAKE_DICTATION, EXAMPLE_LOG_DICTATION, EXAMPLE_TOVET_DICTATION, EXAMPLE_MOP_DICTATION, EXAMPLE_JOEY_CARER_DICTATION, EXAMPLE_WOMBAT_VET_DICTATION, EXAMPLE_VET_PLAN_DICTATION, EXAMPLE_FUNDING_DICTATION, EXAMPLE_POLISH_DICTATION, EXAMPLE_MEDIA_DICTATION, EXAMPLE_WITNESS_DICTATION, EXAMPLE_OPINION_DICTATION].some((x) => x.trim() === els.transcript.value.trim());
 }
@@ -1024,7 +1024,7 @@ function applyRole() {
 }
 // A signed-in vet is treated as the vet on a plan (medicines, prescriptions, review notes), even with the switch on
 // Carer: they never see "Ask a vet" on their own plans.
-const actingVet = () => settings.role === 'vet' || account.approved;
+const actingVet = () => settings.role === 'vet' || (__MEDS__ && account.approved);
 // Carer or Vet: the switch on the front screen (any vet can use vet mode), or signing in or out of a vet account.
 function setRole(role) {
   if ((settings.role === 'vet' ? 'vet' : 'carer') === role) return;
@@ -2345,6 +2345,20 @@ function pigeonFact(text) {
   return el('p', { class: 'working-fact pigeon-fact' }, [el('span', { class: 'fact-label', text: 'Did you know?' }), PIGEON_FACT]);
 }
 
+// Bird plans: the signs of H5 bird flu and who to call in the chosen state, folded away until needed.
+function birdFluSection(c) {
+  if (!animalTags(`${c.animal} ${c.species}`).has('bird')) return null;
+  const f = region().birdFlu;
+  return el('details', { class: 'care-sec fold birdflu' }, [
+    el('summary', {}, [el('h2', { text: 'Bird flu: signs to watch for' })]),
+    el('ul', {}, BIRD_FLU_SIGNS.map((x) => el('li', { text: x }))),
+    el('p', {}, [el('strong', { text: 'If you see these: ' }), 'don’t handle the bird any more, keep it away from other animals and people, and report it. Head injuries and poisoning can look the same, so report first.']),
+    el('p', {}, [el('strong', { text: 'Report to: ' }), f.report, '.']),
+    el('p', {}, [el('strong', { text: 'Always report: ' }), f.when, '.']),
+    el('p', { class: 'help' }, [el('a', { href: f.link.url, target: '_blank', rel: 'noopener', text: f.link.text })]),
+  ]);
+}
+
 // Ticks on the on-screen sheet are kept on this device, per plan, so the day's jobs can be ticked on the phone.
 const tickKey = (c) => `css.ticks.${(c.animal || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 60)}`;
 function loadTicks(c) {
@@ -2453,10 +2467,12 @@ function renderCare(c) {
       ])
     : null;
   const r = c.release;
-  const release = r.ready_when.length || r.how.length || r.where
+  const before = r.before || [];
+  const release = before.length || r.ready_when.length || r.how.length || r.where
     ? el('section', { class: 'care-sec release' }, [
         el('h2', { text: 'Release' }),
         r.target_weight ? el('p', { class: 'target-weight' }, [el('strong', { text: 'Target weight: ' }), r.target_weight]) : null,
+        before.length ? el('div', {}, [el('h3', { text: 'Pre-release plan' }), list(before)]) : null,
         r.ready_when.length
           ? el('div', {}, [el('h3', { text: 'Release checklist' }), el('ul', { class: 'checklist' }, r.ready_when.map((x, i) => el('li', {}, [el('input', { type: 'checkbox', id: `rel-${i}` }), el('label', { for: `rel-${i}`, text: x })])))])
           : null,
@@ -2470,6 +2486,7 @@ function renderCare(c) {
       el('p', { class: 'ai-check top', text: careAiNote(c) }),
       c.summary ? el('p', { class: 'care-summary', text: c.summary }) : null,
       pigeonFact(`${c.animal} ${c.species} ${c.summary}`),
+      birdFluSection(c),
       medsSection(c),
       leaveIt(c) ? null : rangesSection(c.species_group, [c.animal, c.summary, c.title, careFrom === 'note' || careFrom === 'saved' ? '' : careFrom === 'library' ? (libraryPlan ? libraryPlan.text : '') : els.transcript.value].filter(Boolean).join(' ')),
       rehydrationSection(c.rehydration),
@@ -3153,7 +3170,8 @@ $('word-note').addEventListener('click', (e) => currentNote() && saveWord(noteMo
 
 /* ---------------- how it works ---------------- */
 
-els.about.innerHTML = ABOUT_HTML; // static, trusted content
+// static, trusted content; the live site leaves out the prescription flows (see __MEDS__ in scripts/build.mjs)
+els.about.innerHTML = __MEDS__ ? ABOUT_HTML : ABOUT_HTML.replace(/<section class="about-sec" data-meds>[\s\S]*?<\/section>/, '');
 // A Back button at the top of How it works.
 els.about.prepend(el('div', { class: 'head-row about-back' }, [el('button', { type: 'button', class: 'link back', onclick: () => closeAbout() }, [
   (() => { const t = document.createElement('template'); t.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>'; return t.content.firstChild; })(),
@@ -3306,7 +3324,9 @@ $('home-install').addEventListener('click', async () => {
 
 /* ---------------- settings tabs: Standard, Vet, Admin ---------------- */
 
-const SET_TABS = ['standard', 'vet', 'admin'];
+// The live site has no vet sign in yet (see __MEDS__), so no Vet tab.
+const SET_TABS = __MEDS__ ? ['standard', 'vet', 'admin'] : ['standard', 'admin'];
+if (!__MEDS__) document.querySelectorAll('[data-meds]').forEach((x) => (x.hidden = true));
 let settingsTab = 'standard';
 function showSettingsTab(name) {
   settingsTab = SET_TABS.includes(name) ? name : 'standard';
@@ -3381,7 +3401,7 @@ let acctOpen = false; // the sign-in form is showing (otherwise just a "Vet sign
 // A Vet badge beside the logo while an approved vet (or the pretend one) is signed in.
 function renderVetBadge() {
   const b = $('vet-badge');
-  b.hidden = !account.approved;
+  b.hidden = !__MEDS__ || !account.approved;
   b.title = account.approved ? `Signed in as ${vetLabel({ by: account.user.name })}` : '';
 }
 function renderAccount() {
@@ -3899,8 +3919,8 @@ function medText(m) {
 }
 
 function medsSection(c) {
-  // Ready-made plans and "leave it where it is" plans have no medicines to sort out.
-  if (careFrom === 'library' || leaveIt(c)) {
+  // Ready-made plans and "leave it where it is" plans have no medicines to sort out; the live site lists them only.
+  if (!__MEDS__ || careFrom === 'library' || leaveIt(c)) {
     return c.medications.length ? el('section', { class: 'care-sec' }, [el('h2', { text: 'Medications' }), el('ul', { class: 'meds' }, c.medications.map(medItem))]) : null;
   }
   const vet = actingVet();

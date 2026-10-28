@@ -930,8 +930,8 @@ export function normaliseCareSheet(raw, knownSources = null) {
     daily_checks: arr(r.daily_checks, 6),
     log_days: Number.isFinite(days) ? Math.min(14, Math.max(1, days)) : 7,
     release: kind === 'wildlife'
-      ? { ready_when: arr(rel.ready_when, 8), target_weight: str(rel.target_weight, 160), how: arr(rel.how, 8), where: str(rel.where, 400) }
-      : { ready_when: [], target_weight: '', how: [], where: '' },
+      ? { before: arr(rel.before, 8), ready_when: arr(rel.ready_when, 8), target_weight: str(rel.target_weight, 160), how: arr(rel.how, 8), where: str(rel.where, 400) }
+      : { before: [], ready_when: [], target_weight: '', how: [], where: '' },
     escalate: { vet: arr(esc.vet, 10), urgent: arr(esc.urgent, 10) },
     feed_calc: feedWithChart(r),
     rehydration: rehydrationOf(r.rehydration),
@@ -951,6 +951,7 @@ export const PLAN_TEXT_PARTS = [
   ['activity', 'Activity and handling'],
   ['care', 'Other care'],
   ['daily_checks', 'Daily tick sheet jobs'],
+  ['release.before', 'Pre-release plan'],
   ['release.ready_when', 'Ready for release when'],
   ['release.how', 'How to release'],
   ['release.where', 'Where to release'],
@@ -1067,9 +1068,14 @@ export function careSheetText(c, lookup = () => null) {
     for (let d = 1; d <= c.log_days; d++) L.push(`Day ${d}: ${c.daily_checks.map((x) => `[ ] ${x}`).join('  ')}`);
     L.push('');
   }
-  if (c.release.ready_when.length || c.release.how.length || c.release.where) {
+  const before = c.release.before || [];
+  if (before.length || c.release.ready_when.length || c.release.how.length || c.release.where) {
     L.push('Release');
     if (c.release.target_weight) L.push(`Target weight: ${c.release.target_weight}`);
+    if (before.length) {
+      L.push('Pre-release plan:');
+      before.forEach((x) => L.push(`- ${x}`));
+    }
     if (c.release.ready_when.length) {
       L.push('Release checklist:');
       c.release.ready_when.forEach((x) => L.push(`[ ] ${x}`));

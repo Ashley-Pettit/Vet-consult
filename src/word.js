@@ -113,8 +113,10 @@ export function careModel(c, lookup, photos = [], video = null) {
   ];
   const tickDays = Math.min(c.log_days || 7, 14);
   if (c.daily_checks.length) blocks.push({ heading: 'Daily tick sheet', text: `On the last page, sized to print and stick on the fridge (${tickDays} days).` });
-  if (c.release.ready_when.length || c.release.how.length || c.release.where) {
+  const before = c.release.before || [];
+  if (before.length || c.release.ready_when.length || c.release.how.length || c.release.where) {
     if (c.release.target_weight) blocks.push({ heading: 'Target release weight', text: c.release.target_weight });
+    blocks.push({ heading: 'Pre-release plan', items: before });
     blocks.push({ heading: 'Release checklist', checks: c.release.ready_when });
     blocks.push({ heading: 'How to release', items: c.release.how });
     blocks.push({ heading: 'Where to release', text: c.release.where });

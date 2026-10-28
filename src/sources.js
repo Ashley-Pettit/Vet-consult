@@ -50,10 +50,13 @@ export function animalTags(text = '') {
 
 /** Compact text block for the prompt, most important first (RSPCA Queensland leads in Queensland).
  *  Given the words, only the general sources and those for the animals named go in: a shorter, quicker prompt. */
-export function sourcesForPrompt(text = '') {
+// examples: the built-in examples get the library as it was at the last bake (no `unbaked` sources), so their stored
+// replies still match. Drop the flags at the next re-bake.
+export function sourcesForPrompt(text = '', { examples = false } = {}) {
   const want = text ? animalTags(text) : new Set();
   const keep = (s) => !want.size || !tagsOf(s).length || tagsOf(s).some((t) => want.has(t));
   return [...currentSources()]
+    .filter((s) => !(examples && s.unbaked))
     .filter(keep)
     .sort((a, b) => sourceRank(a) - sourceRank(b))
     .map((s) => `${s.id} | ${s.scope} | ${s.title} (${s.publisher}) | ${s.points.join(' / ')}`)

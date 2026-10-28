@@ -42,7 +42,7 @@ test('normalise drops invented source ids and keeps release for wildlife only', 
   assert.ok(n.release.ready_when.length > 0);
   const dom = normaliseCareSheet({ ...EXAMPLE_FOSTER_PLAN, release: { ready_when: ['x'], how: ['y'], where: 'z' } }, ids);
   assert.equal(dom.kind, 'domestic');
-  assert.deepEqual(dom.release, { ready_when: [], target_weight: '', how: [], where: '' });
+  assert.deepEqual(dom.release, { before: [], ready_when: [], target_weight: '', how: [], where: '' });
 });
 
 test('plain text plan: release, escalation and Based on, no reporting to the vet', async () => {
@@ -282,4 +282,25 @@ test('photos: age, sex and weight are guessed only when there is a real idea, ma
     assert.match(p, /A guessed weight is never used for doses, the feed calculator/);
   }
   assert.doesNotMatch(buildCarerPlanPrompt('wombat', ''), /a guess from the photo/);
+});
+
+test('pre-release plan is kept for wildlife and shown in the plain text', () => {
+  const n = normaliseCareSheet({ ...EXAMPLE_CARER_PLAN, release: { ...EXAMPLE_CARER_PLAN.release, before: ['Move to the pre-release aviary', 'Less handling'] } });
+  assert.deepEqual(n.release.before, ['Move to the pre-release aviary', 'Less handling']);
+  const t = careSheetText(n);
+  assert.match(t, /Pre-release plan:\n- Move to the pre-release aviary\n- Less handling/);
+});
+
+test('bird flu sources: each state has its own, and the built-in examples leave out sources added since the last bake', async () => {
+  const { sourcesForPrompt } = await import('../../src/sources.js');
+  const { setRegion } = await import('../../src/region.js');
+  const ids = (t, o) => sourcesForPrompt(t, o).split('\n').map((l) => l.split(' | ')[0]);
+  setRegion('vic');
+  assert.ok(ids('sick magpie').includes('agvic-report-sick-dead-wild-birds'));
+  assert.ok(!ids('sick magpie').includes('qld-avian-influenza-signs'));
+  assert.ok(!ids('', { examples: true }).includes('agvic-report-sick-dead-wild-birds'));
+  setRegion('qld');
+  assert.ok(ids('sick magpie').includes('qld-birdflu-wildlife-rehabilitators'));
+  assert.ok(ids('sick magpie').includes('qld-avian-influenza-signs'));
+  setRegion('vic');
 });

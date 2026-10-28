@@ -254,4 +254,32 @@ export const VIC_SOURCES = [
       'Keep wildlife physically separate from domestic animals.',
     ],
   },
+  {
+    id: 'agvic-report-sick-dead-wild-birds',
+    title: 'Avian influenza (bird flu): report sick or dead wild birds and wildlife',
+    publisher: 'Agriculture Victoria',
+    scope: 'vic',
+    unbaked: true,
+    url: 'https://agriculture.vic.gov.au/biosecurity/animal-diseases/poultry-diseases/avian-influenza-bird-flu/report-sick-or-dead-wild-birds-and-wildlife',
+    points: [
+      'Signs of H5 bird flu in wild birds: sudden death; ruffled feathers, depression and closed eyes; unable to stand or fly; diarrhoea; difficulty breathing, coughing or sneezing; and nervous signs such as poor coordination, tremors or swimming in circles.',
+      'Report 5 or more sick or dead wild birds of any species in one place, or even a single sick or dead penguin, pelican, bird of prey, black swan, seal or dolphin, to the Emergency Animal Disease Hotline on 1800 675 888 (24 hours) or the online form.',
+      'Do not touch, move or try to treat sick or dead birds you suspect have bird flu; keep people, pets and other animals away, and photograph the birds and where they are if it is safe.',
+      'Even if it turns out to be something else, report first: it is a nationally notifiable disease.',
+    ],
+  },
+  {
+    id: 'vic-rehab-guidelines-flying-foxes',
+    title: 'Victorian Wildlife Rehabilitation Guidelines Part B Mammals: Chapter 4. Flying-foxes',
+    publisher: 'DEECA',
+    scope: 'vic',
+    unbaked: true,
+    url: 'https://www.wildlife.vic.gov.au/__data/assets/pdf_file/0025/671245/Part-B-Mammals-Chapter-4.pdf',
+    points: [
+      'Only trained people vaccinated against rabies (for Australian bat lyssavirus), wearing protective equipment, rescue, handle, raise or release flying-foxes.',
+      'Hand-reared young are raised with others of their kind (crèche) and go through a pre-release assessment and the chapter’s release checklist before release.',
+      'In Victoria a soft release must be at an existing, established flying-fox camp.',
+      'The grey-headed flying-fox is listed as vulnerable under the Flora and Fauna Guarantee Act 1988.',
+    ],
+  },
 ];

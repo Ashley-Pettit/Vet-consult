@@ -310,5 +310,34 @@ export const QLD_SOURCES = [
       "Release at the find site; if unsuitable, stay within set distances, e.g. 20 m for small skinks, 2 km for large venomous snakes.",
       "Do not release during storms or cold snaps below 10°C at night; release diurnal species mid-morning."
     ]
+  },
+  {
+    "id": "qld-birdflu-wildlife-rehabilitators",
+    "title": "H5 bird flu: information for wildlife rehabilitators",
+    "publisher": "Queensland Government",
+    "scope": "qld",
+    "unbaked": true,
+    "url": "https://www.qld.gov.au/initiative/birdflu/wildlife-rehabilitators",
+    "points": [
+      "H5 bird flu is nationally notifiable: anyone who suspects it has a legal duty to report it straight away to the Emergency Animal Disease Hotline, 1800 675 888.",
+      "It spreads in droppings and breathing secretions, and on contaminated clothing, footwear and equipment, so keep possible cases away from other animals in care.",
+      "Carers are not obliged to take in a suspected case; infected birds have a low chance of recovery.",
+      "Follow the Wildlife Health Australia toolkit for rehabilitators on protective equipment, quarantine and cleaning."
+    ]
+  },
+  {
+    "id": "qld-avian-influenza-signs",
+    "title": "Avian influenza (bird flu): signs and control",
+    "publisher": "Business Queensland (Biosecurity Queensland)",
+    "scope": "qld",
+    "unbaked": true,
+    "url": "https://www.business.qld.gov.au/industries/farms-fishing-forestry/agriculture/alerts/avian-influenza/signs-control",
+    "points": [
+      "Signs in birds: sudden death, often within 24 hours; poor coordination, tremors and swimming in circles; depression, ruffled feathers, breathing trouble and diarrhoea.",
+      "5 or more sick or dead wild birds in one place should be reported for investigation.",
+      "Report to Biosecurity Queensland on 13 25 23 in business hours, or the Emergency Animal Disease Hotline, 1800 675 888, any time.",
+      "Head injury and poisoning can cause the same nervous signs, so report first and let testing decide.",
+      "Avian influenza is restricted and prohibited matter under the Biosecurity Act 2014."
+    ]
   }
 ];

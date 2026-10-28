@@ -75,7 +75,7 @@ export const ABOUT_HTML = `
   <p>Hand them the app and tap <b>Vet</b> at the top. It remembers which one was used last. Shorthand is fine. They get a <b>care plan</b> written for you, and <b>clinical notes</b> to copy straight into their own system, both from the same few words. Tap <b>Carer</b> to switch back.</p>
 </section>
 
-<section class="about-sec">
+<section class="about-sec" data-meds>
   <h2>From plan to prescription</h2>
   <p>Two common ways a care plan and its medicines move between a carer and a vet. Prescriptions need a vet signed in to an approved vet account; everything else works for any vet.</p>
   <div class="flows">

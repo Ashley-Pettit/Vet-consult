@@ -449,7 +449,7 @@
 
     <div class="set-tabs" role="tablist" aria-label="Settings">
       <button type="button" role="tab" class="set-tab" id="tab-standard" aria-controls="pane-standard" aria-selected="true">Standard</button>
-      <button type="button" role="tab" class="set-tab" id="tab-vet" aria-controls="pane-vet" aria-selected="false" tabindex="-1">Vet</button>
+      <button type="button" role="tab" class="set-tab" id="tab-vet" aria-controls="pane-vet" aria-selected="false" tabindex="-1" data-meds>Vet</button>
       <button type="button" role="tab" class="set-tab" id="tab-admin" aria-controls="pane-admin" aria-selected="false" tabindex="-1">Admin</button>
     </div>
 
@@ -468,7 +468,7 @@
       </div>
     </section>
 
-    <section class="set-group" aria-labelledby="set-shelter">
+    <section class="set-group" aria-labelledby="set-shelter" data-meds>
       <h3 class="set-title" id="set-shelter">Shelter details</h3>
       <p class="help">Sent to the vet with Ask a vet about medications, so they can fill in a prescription without asking.</p>
       <div class="field"><label for="shelter-name">Shelter or carer name</label><input id="shelter-name" type="text" maxlength="120" autocomplete="organization"></div>
@@ -625,8 +625,8 @@
           <p class="help">Get a key from <a href="https://platform.claude.com/" target="_blank" rel="noopener">the Claude Console</a>. Only use your own key on a device you control. Not needed in the Claude app.</p>
         </details>
 
-        <h4 class="admin-sub">Vet accounts</h4>
-        <section class="field" id="vets-admin" aria-label="Vet accounts">
+        <h4 class="admin-sub" data-meds>Vet accounts</h4>
+        <section class="field" id="vets-admin" aria-label="Vet accounts" data-meds>
           <p class="help">Check each vet on the register before approving. Approved vets can write prescriptions.</p>
           <label for="admin-key">Admin key</label>
           <input id="admin-key" type="password" autocomplete="off" spellcheck="false" placeholder="The ADMIN_KEY set on Cloudflare">

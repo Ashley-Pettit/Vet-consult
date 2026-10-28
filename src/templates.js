@@ -53,13 +53,17 @@ export const CARER_TONE = `Tone about people: speak positively and respectfully 
 // Dose safety (October 2026 review), live calls only like the tone rule; fold it into note.js at the next re-bake.
 // Care plans: amounts only as given, never worked out for the carer.
 export const CARE_DOSES = `Never work out an amount from a dose per kilogram, a weight or a concentration: give amounts only as they were said (for example "19.4 mL"). If only a per-kilogram dose was given, write "the amount the vet dispensed".`;
+// Feeding detail, the pre-release plan and bird flu (Ash, October 2026), live calls only like the rules above.
+export const CARE_FEEDING = `feeding: for a milk-fed or hand-reared animal, name the product and its supplier, preferring Wombaroo Food Products where Wombaroo makes a suitable product (for example "Wombaroo Possum Milk Replacer <0.8, from Wombaroo Food Products"), and the stage to use and when to change stage. Then say exactly how to feed it, one step per item, using the reference sources and the pack: how much powder to how much warm pre-boiled water (for example "14 g (2 scoops) of powder with 95 mL of warm water makes 100 mL"); mixing it to a paste with half the water first; the temperature to feed at; the teat or syringe to use; how many feeds a day and the amount per feed from the pack table or the feed calculator; how to change stages over several days; and storage (a day in the fridge, 2 weeks frozen, throw out warmed leftovers). If a figure isn't in the sources, say to follow the pack for this stage rather than guessing.`;
+export const CARE_PRE_RELEASE = `release.before (add this "before" list inside "release"; wildlife only): the pre-release plan, at most 5 items, the conditioning steps between care and release, in order (for example: moving to an outdoor or pre-release enclosure, a crèche with others of its kind, building flight or climbing fitness, less handling, natural foods, and the checks it must pass). Be specific to the species; for flying-foxes include: only vaccinated, trained handlers; a crèche with other young; a pre-release flight aviary until it flies strongly; the release weight and size in the sources; and soft release at an established camp with supplementary feeding afterwards. Empty for domestic animals.`;
+export const CARE_BIRD_FLU = `Birds: if any sign of H5 bird flu is described (sudden death of others, poor coordination, tremors, twisted neck, swimming in circles, unable to stand or fly, breathing trouble, ruffled feathers and closed eyes), the summary says plainly to stop handling it, keep it away from other animals and people, and report it now to the Emergency Animal Disease Hotline, 1800 675 888, as the bird flu sources say; put the same in escalate.urgent.`;
 /** The prompt with any live-only rules for its kind added (in the fixed, cached part). */
 export function withLiveRules(prompt) {
   let p = String(prompt);
   const carePlan = CARE_PLAN_KINDS.has(templateKind(p)) || /^You are updating a finished care plan/.test(p);
   if (!carePlan) return p;
   p = p.replace('(for example "I\'m not certain of this, check with your vet")', '(for example "this figure isn\'t certain: check it with your vet")');
-  const rule = `\n- ${CARER_TONE}\n- ${CARE_DOSES}\n`;
+  const rule = `\n- ${CARER_TONE}\n- ${CARE_DOSES}\n- ${CARE_FEEDING}\n- ${CARE_PRE_RELEASE}\n- ${CARE_BIRD_FLU}\n`;
   const mark = p.indexOf(CACHE_SPLIT);
   return mark > 0 ? `${p.slice(0, mark)}${rule}${p.slice(mark)}` : `${rule}${p}`;
 }
