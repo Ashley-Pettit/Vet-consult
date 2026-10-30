@@ -32,6 +32,7 @@ export const AI_MESSAGES = {
   bad_key: 'The API key was rejected. Check it in Settings.',
   signin: 'Your organisation sign-in may have expired. Reload the page to sign in again, then try again. Your dictation is kept.',
   forbidden: 'This connection isn’t allowed to use Claude. Sign in to your organisation again, or check the key in Settings.',
+  proxy_key: 'The shelter’s connection to Claude needs a new key, so nothing can be written right now. Your words are kept. Let your app admin know.',
   rate_limited: 'Claude is busy or the usage limit was reached. Wait a minute, then try again.',
   overloaded: 'Claude is overloaded right now. Try again in a minute.',
   offline: 'You’re offline. Your dictation is kept. Reconnect, then try again.',
@@ -268,7 +269,8 @@ async function callOnce(url, headers, prompt, model, signal, fetchImpl, { viaPro
   }
   if (!res.ok) {
     let code = statusToCode(res.status);
-    if (viaProxy && code === 'bad_key') code = 'forbidden'; // staff have no key to fix
+    // Through the shelter's connection, a rejected or missing key is for the app admin to fix, not the person using it.
+    if (viaProxy && (code === 'bad_key' || (res.status === 500 && body && body.error && body.error.type === 'not_configured'))) code = 'proxy_key';
     throw new AiError(code, AI_MESSAGES[code]);
   }
   const text = textFromMessage(body);

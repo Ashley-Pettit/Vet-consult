@@ -105,7 +105,7 @@ test('proxy: sign-in redirects read as sign-in; a dropped connection reads as a 
     await assert.rejects(blocked.generate('x'), (e) => e.code === 'network');
 
     const denied = await resolveProvider({}, { claude: null, fetch: async () => ({ ok: false, status: 401, type: 'cors', json: async () => ({}) }) });
-    await assert.rejects(denied.generate('x'), (e) => e.code === 'forbidden');
+    await assert.rejects(denied.generate('x'), (e) => e.code === 'proxy_key');
   } finally {
     CONFIG.proxyUrl = saved;
   }
