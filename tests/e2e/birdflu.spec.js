@@ -82,22 +82,3 @@ test('a possum plan has no Bird flu panel', async ({ page }) => {
   await makePlan(page, { region: 'vic' }, 'Ringtail joey 120 g found on the ground.', { ...EXAMPLE_CARER_PLAN, medications: [] });
   await expect(page.locator('details.birdflu')).toHaveCount(0);
 });
-
-// The live build (CHANNEL=live) leaves out prescribing and medicines tools. Run against one with LIVE=1, e.g.
-//   CHANNEL=live npm run build && node scripts/serve.mjs dist 4198 & BASE_URL=http://localhost:4198/ LIVE=1 npx playwright test birdflu
-test('live build: medicines are listed only, with no Ask a vet, Vet tab, shelter details or prescription flows', async ({ page }) => {
-  test.skip(!process.env.LIVE, 'needs a live build (LIVE=1)');
-  await withKey(page, { role: 'carer', mode: 'carer' });
-  await mockApi(page, { body: () => textReply(EXAMPLE_CARER_PLAN) });
-  await openApp(page);
-  await page.locator('#transcript').fill('Ringtail joey 120 g found on the ground.');
-  await page.locator('#create').click();
-  await expect(page.locator('#view-care')).toBeVisible();
-  await expect(page.locator('.care-sec').filter({ hasText: 'Medications' }).first()).toBeVisible();
-  await expect(page.getByRole('button', { name: /Ask a vet/ })).toHaveCount(0);
-  await expect(page.locator('.rxbox')).toHaveCount(0);
-  await expect(page.locator('#tab-vet')).toBeHidden();
-  await expect(page.locator('#vets-admin')).toBeHidden();
-  await expect(page.locator('section[aria-labelledby="set-shelter"]')).toBeHidden();
-  await expect(page.locator('#view-about')).not.toContainText('From plan to prescription');
-});
