@@ -1,0 +1,30 @@
+# Check the Cloudflare proxy from GitHub (this works even where workers.dev is blocked). Sends one tiny request the
+# way the app does and prints the answer's status and error type, never any key. Run it from the Actions tab:
+# "Check proxy" → Run workflow.
+name: Check proxy
+
+on:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ask the proxy for a one-word reply
+        run: |
+          url=https://care-scribe-proxy.ashley-98e.workers.dev
+          for origin in https://ashley-pettit.github.io https://companion.bunurongwildlifecare.au; do
+            code=$(curl -s -o body.json -w '%{http_code}' -X POST "$url" \
+              -H "origin: $origin" -H 'content-type: application/json' \
+              -d '{"model":"claude-haiku-5-5","max_tokens":5,"messages":[{"role":"user","content":"Reply with OK"}]}')
+            echo "From $origin: HTTP $code"
+            jq -c '{error: .error, reply: (.content[0].text // null)}' body.json 2>/dev/null || head -c 300 body.json
+            echo
+          done
+          case "$code" in
+            200) echo "RESULT: the proxy and its Claude key work." ;;
+            401) echo "RESULT: Anthropic rejected the proxy's ANTHROPIC_API_KEY (invalid, deleted or disabled). Replace it in Cloudflare: Workers & Pages > care-scribe-proxy > Settings > Variables and Secrets." ;;
+            403) echo "RESULT: forbidden. If the error type is forbidden_origin, the address isn't in ALLOWED_ORIGINS; if it's permission_error, the key's workspace or organisation isn't allowed (check the Claude Console)." ;;
+            500) echo "RESULT: the proxy has no ANTHROPIC_API_KEY secret (not_configured). Add it in Cloudflare." ;;
+            *) echo "RESULT: unexpected answer, see above." ;;
+          esac
