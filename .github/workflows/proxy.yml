@@ -3,6 +3,10 @@
 # Needs two repository secrets (Settings → Secrets and variables → Actions):
 #   CLOUDFLARE_API_TOKEN   a Cloudflare API token made from the "Edit Cloudflare Workers" template
 #   CLOUDFLARE_ACCOUNT_ID  the Account ID shown on the Cloudflare Workers & Pages overview
+# Optional third secret, to replace the Claude key the proxy uses (from the Claude Console, API keys):
+#   ANTHROPIC_API_KEY      copied to the proxy's ANTHROPIC_API_KEY secret on Cloudflare when this runs.
+#                          Leave it unset to keep the key already on Cloudflare.
+# After deploying, it checks the proxy with one tiny request (same as the "Check proxy" workflow).
 name: Deploy proxy
 
 on:
@@ -16,6 +20,8 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -26,3 +32,24 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: proxy
           command: deploy
+      - name: Put the new Claude key on the proxy
+        if: env.ANTHROPIC_API_KEY != ''
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: proxy
+          # wrangler-action uploads each named secret from this step's environment, then deploys again.
+          command: deploy
+          secrets: |
+            ANTHROPIC_API_KEY
+      - name: Check the proxy answers
+        env:
+          ANTHROPIC_API_KEY: ''
+        run: |
+          sleep 5
+          code=$(curl -s -o body.json -w '%{http_code}' -X POST https://care-scribe-proxy.ashley-98e.workers.dev \
+            -H 'origin: https://ashley-pettit.github.io' -H 'content-type: application/json' \
+            -d '{"model":"claude-haiku-5-5","max_tokens":5,"messages":[{"role":"user","content":"Reply with OK"}]}')
+          echo "HTTP $code"; jq -c '{error: .error, reply: (.content[0].text // null)}' body.json 2>/dev/null || head -c 300 body.json; echo
+          if [ "$code" = 200 ]; then echo "RESULT: the proxy and its Claude key work."; else echo "::error::The proxy answered HTTP $code: see above (401 means the Claude key is invalid)."; exit 1; fi
