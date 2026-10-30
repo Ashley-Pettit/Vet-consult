@@ -302,5 +302,7 @@ test('bird flu sources: each state has its own, and the built-in examples leave 
   setRegion('qld');
   assert.ok(ids('sick magpie').includes('qld-birdflu-wildlife-rehabilitators'));
   assert.ok(ids('sick magpie').includes('qld-avian-influenza-signs'));
+  assert.ok(ids('sick magpie').includes('qld-h5-current-situation'));
+  assert.ok(!ids('sick magpie').includes('agvic-h5-guidance-vets-rehabilitators'));
   setRegion('vic');
 });

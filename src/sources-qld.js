@@ -339,5 +339,19 @@ export const QLD_SOURCES = [
       "Head injury and poisoning can cause the same nervous signs, so report first and let testing decide.",
       "Avian influenza is restricted and prohibited matter under the Biosecurity Act 2014."
     ]
+  },
+  {
+    "id": "qld-h5-current-situation",
+    "title": "Current situation: H5 bird flu",
+    "publisher": "Business Queensland (Biosecurity Queensland)",
+    "scope": "qld",
+    "unbaked": true,
+    "url": "https://www.business.qld.gov.au/industries/farms-fishing-forestry/agriculture/alerts/avian-influenza/current-situation",
+    "points": [
+      "H5 bird flu has been confirmed in wild birds in Queensland, first in a petrel on Moreton Island in July 2026; check this page for the latest detections.",
+      "Wild bird carers avoid contact with domestic birds, especially commercial poultry, for 48 hours before and after handling wild birds.",
+      "There is no known treatment for bird flu in wild birds, and affected animals are unlikely to survive.",
+      "Anyone who suspects bird flu has a legal duty to report it immediately: 1800 675 888."
+    ]
   }
 ];

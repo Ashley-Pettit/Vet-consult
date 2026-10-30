@@ -199,4 +199,22 @@ export const AU_SOURCES = [
       'A pup that missed its mother’s colostrum gets Impact Colostrum Supplement as soon as possible, ideally before milk, at least 2 hours apart from milk feeds and never mixed into the milk.',
     ],
   },
+  {
+    id: 'wha-h5-bird-flu-wildlife',
+    title: 'H5 bird flu (avian influenza) and wildlife: advice and risk mitigation toolbox for wildlife care providers',
+    publisher: 'Wildlife Health Australia',
+    authors: 'none named',
+    date: 'FAQs version 7, October 2026; toolbox v2.0',
+    scope: 'au',
+    unbaked: true,
+    url: 'https://wildlifehealthaustralia.com.au/Resource-Centre/H5-bird-flu',
+    points: [
+      'Signs in birds: difficulty standing, walking or flying; a droopy or puffed-up look; breathing problems; an unusual head or neck posture; and sudden death, especially of many birds. Sudden death is the most important sign.',
+      'Signs in other wildlife: weakness, trouble walking or breathing, seizures or tremors, drooling or a runny nose, and sudden illness or death.',
+      'Most at risk: seabirds, shorebirds, waterbirds, birds of prey, marine mammals around seabird colonies, and scavenging or predatory mammals (for example foxes, quolls and Tasmanian devils); plant-eating marsupials such as kangaroos are at lower risk.',
+      'Wildlife that becomes sick with H5 bird flu generally dies within a few days; treating rare or valuable wildlife is considered case by case, only if the biosecurity risk can be managed.',
+      'Avoid contact with sick or dead wildlife and their surroundings, and report unusual illness or deaths to the Emergency Animal Disease Hotline, 1800 675 888.',
+      'Care providers need a biosecurity plan and H5 protocols for their premises: keep sick birds away from pets and other animals, keep wild birds off feed and water, keep enclosures and equipment clean, and watch animals in care for illness or sudden death.',
+    ],
+  },
 ];

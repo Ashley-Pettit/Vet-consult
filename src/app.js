@@ -12,7 +12,7 @@ import { homeDevice, HOME_STEPS } from './homescreen.js';
 import { preparePhoto, MAX_PHOTOS } from './photos.js';
 import { ABOUT_HTML } from './about.js';
 import { lookupSource, sourcesForPrompt, SOURCE_IDS, animalTags } from './sources.js';
-import { region, setRegion, BIRD_FLU_SIGNS } from './region.js';
+import { region, setRegion, BIRD_FLU_SIGNS, MAMMAL_FLU_SIGNS } from './region.js';
 import { petBirdSourcesForPrompt } from './sources-petbirds-qld.js';
 import { rangesFor, rangesForAnimal } from './species-ranges.js';
 import { careVideoFor, watchUrl, videoHost, embedUrl, thumbUrl } from './videos.js';
@@ -2345,17 +2345,25 @@ function pigeonFact(text) {
   return el('p', { class: 'working-fact pigeon-fact' }, [el('span', { class: 'fact-label', text: 'Did you know?' }), PIGEON_FACT]);
 }
 
-// Bird plans: the signs of H5 bird flu and who to call in the chosen state, folded away until needed.
+// Bird plans, and mammals most at risk (seals, dolphins, foxes, quolls, devils): the signs of H5 bird flu and what
+// to do in the chosen state, folded away until needed.
+const FLU_MAMMAL = /\b(seals?|sea ?lions?|dolphins?|(?<!flying[- ])fox(es)?|quolls?|tasmanian devils?)\b/i;
 function birdFluSection(c) {
-  if (!animalTags(`${c.animal} ${c.species}`).has('bird')) return null;
+  const who = `${c.animal} ${c.species}`;
+  const bird = animalTags(who).has('bird');
+  if (!bird && !FLU_MAMMAL.test(who)) return null;
   const f = region().birdFlu;
+  const signs = bird ? BIRD_FLU_SIGNS : MAMMAL_FLU_SIGNS;
   return el('details', { class: 'care-sec fold birdflu' }, [
     el('summary', {}, [el('h2', { text: 'Bird flu: signs to watch for' })]),
-    el('ul', {}, BIRD_FLU_SIGNS.map((x) => el('li', { text: x }))),
-    el('p', {}, [el('strong', { text: 'If you see these: ' }), 'don’t handle the bird any more, keep it away from other animals and people, and report it. Head injuries and poisoning can look the same, so report first.']),
+    el('p', { class: 'help' }, f.situation),
+    el('ul', {}, signs.map((x) => el('li', { text: x }))),
+    el('p', {}, [el('strong', { text: 'If you see these: ' }), `stop handling the ${bird ? 'bird' : 'animal'}, keep it away from other animals and people, and report it. Head injuries and poisoning can look the same, so report first.`]),
     el('p', {}, [el('strong', { text: 'Report to: ' }), f.report, '.']),
     el('p', {}, [el('strong', { text: 'Always report: ' }), f.when, '.']),
-    el('p', { class: 'help' }, [el('a', { href: f.link.url, target: '_blank', rel: 'noopener', text: f.link.text })]),
+    el('h3', { text: `For carers in ${region().name}` }),
+    el('ul', {}, f.rules.map((x) => el('li', { text: x }))),
+    el('ul', { class: 'help birdflu-links' }, f.links.map((l) => el('li', {}, [el('a', { href: l.url, target: '_blank', rel: 'noopener', text: l.text })]))),
   ]);
 }
 

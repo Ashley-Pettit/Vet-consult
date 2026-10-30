@@ -1701,3 +1701,7 @@ details.care-sec.fold .fold-actions { margin: 10px 0; }
 .meds-acts { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; margin-top: 10px; }
 .meds-acts .btn { min-height: 44px; }
 .meds-sec > .help { margin: 8px 0 0; font-size: 0.86rem; }
+/* Bird flu panel: the state's rules for carers, then the official pages */
+.care-sec.birdflu h3 { margin: 12px 0 4px; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.care-sec.birdflu > p { margin: 8px 0 0; }
+.care-sec.birdflu .birdflu-links { margin-top: 10px; }
