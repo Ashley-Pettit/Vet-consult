@@ -1705,3 +1705,15 @@ details.care-sec.fold .fold-actions { margin: 10px 0; }
 .care-sec.birdflu h3 { margin: 12px 0 4px; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
 .care-sec.birdflu > p { margin: 8px 0 0; }
 .care-sec.birdflu .birdflu-links { margin-top: 10px; }
+
+/* Phones: the Edit / Share bar is pinned to the bottom of the screen. iPhone Safari places a sticky bar against the
+   screen size with its toolbar showing, so once the toolbar shrinks on scroll the bar floated with the page showing
+   underneath it. The page gets room at the bottom so the last lines can scroll clear of the bar. */
+@media (max-width: 719px) {
+  #view-note > .actions, #view-care > .actions, #view-edit > .actions, #view-doc > .actions {
+    position: fixed; left: 0; right: 0; bottom: 0; margin: 0;
+  }
+  body[data-view="note"], body[data-view="care"], body[data-view="edit"], body[data-view="doc"] {
+    padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+  }
+}
