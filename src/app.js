@@ -9,7 +9,8 @@ import { localChecks } from './clinical.js';
 import { dropUnsaidBrands } from './drugs.js';
 import { lostNote } from './factcheck.js';
 import { homeDevice, HOME_STEPS } from './homescreen.js';
-import { preparePhoto, MAX_PHOTOS } from './photos.js';
+import { preparePhoto, MAX_PHOTOS, thumbnailDataUrl } from './photos.js';
+import { cageRecord, withEntry, normaliseLog, qrSvg, entryTime } from './cage.js';
 import { ABOUT_HTML } from './about.js';
 import { lookupSource, sourcesForPrompt, SOURCE_IDS, animalTags } from './sources.js';
 import { region, setRegion, BIRD_FLU_SIGNS, MAMMAL_FLU_SIGNS } from './region.js';
@@ -88,7 +89,7 @@ import {
   feedAmounts,
 } from './note.js';
 import { chartByKey } from './feeding.js';
-import { shortPlanLink, unpackPlan, linkCode, linkId, shortLink, fetchSharedPlan, storePlan, reviewLink, updateSharedPlan } from './sharelink.js';
+import { shortPlanLink, unpackPlan, linkCode, linkId, shortLink, fetchSharedPlan, storePlan, reviewLink, updateSharedPlan, cageLink, cageHash } from './sharelink.js';
 import { vetLabel, drName, medsKey, changedParts } from './plan-changes.js';
 import { account, admin, accountError } from './account.js';
 import { rxFromPlan, rxModel, rxProblems, animalFacts } from './rx.js';
@@ -987,8 +988,8 @@ async function askJson(prompt0, signal, opts = {}) {
 }
 
 const mode = () => document.querySelector('input[name="mode"]:checked')?.value || 'vet';
-const MODES = ['intake', 'log', 'carer', 'tovet', 'mop', 'funding', 'vet', 'polish', 'media', 'witness', 'opinion'];
-const ROLE_MODES = { carer: ['carer', 'tovet', 'mop', 'funding'], vet: ['carer', 'vet', 'polish', 'media', 'witness', 'opinion'] };
+const MODES = ['cage', 'intake', 'log', 'carer', 'tovet', 'mop', 'funding', 'vet', 'polish', 'media', 'witness', 'opinion'];
+const ROLE_MODES = { carer: ['carer', 'tovet', 'mop', 'funding'], vet: ['carer', 'cage', 'vet', 'polish', 'media', 'witness', 'opinion'] };
 // Vets see clinical notes and care plans; Rapid polish and Advanced only with Extra vet tools (Settings > Admin).
 const VET_EXTRAS = ['polish', 'media', 'witness', 'opinion'];
 const roleModes = (role) => (role === 'vet' && settings.vetExtras !== true ? ROLE_MODES.vet.filter((m) => !VET_EXTRAS.includes(m)) : ROLE_MODES[role]);
@@ -1002,6 +1003,7 @@ const MODE_TEXT = {
   polish: { button: 'Polish notes', placeholder: 'Jot your notes. Shorthand is fine.' },
   vet: { button: 'Create SOAP notes', placeholder: 'Talk or type the consult.' },
   carer: { button: 'Create care plan', placeholder: 'The animal, its condition, meds and care needs.' },
+  cage: { button: 'Create intake chart', placeholder: 'Add a photo, then a few words: ID, species, why it’s here, findings and treatment.' },
   intake: { button: 'Create record', placeholder: 'Case number, the animal, where it was found and its condition.' },
   log: { button: 'Create log', placeholder: 'Weight, feeds, meds, toileting and behaviour.' },
   funding: { button: 'Create draft', placeholder: 'The funder, what you need and why, and the costs.' },
@@ -1787,10 +1789,11 @@ async function amend(target, change) {
       const sheet = normaliseCareSheet(mergeAmend(current, reply), fromLibrary ? null : SOURCE_IDS());
       return await carePlanChanged(sheet, 'Updated.');
     } else {
-      const d = normaliseDoc(mergeAmend(current, reply));
+      const d = keepCage(current, normaliseDoc(mergeAmend(current, reply)));
       if (!d.sections.length) throw new AiError('empty', '');
       const keep = savedId;
       showDoc(d, currentDoc.kind);
+      if (d.cage) saveCageChart(d); // the chart on the cage shows the change too
       if (keep && store.updateSaved(keep, { doc: { kind: currentDoc.kind, d }, savedAt: Date.now() })) {
         savedId = keep;
         return toast('Updated your saved copy.');
@@ -1929,7 +1932,7 @@ function openSavedPlan(id, info = '') {
   if (!entry) return;
   libraryPlan = null;
   if (entry.doc) {
-    showDoc(normaliseDoc(entry.doc.d), entry.doc.kind, info);
+    showDoc(keepCage(entry.doc.d, normaliseDoc(entry.doc.d)), entry.doc.kind, info);
     savedId = id;
     return;
   }
@@ -2792,8 +2795,14 @@ function showDoc(d, kind, info = '') {
   savedId = null; // set again straight after when it was opened from Plans
   // An expert opinion isn't kept in Recent: its documents and the vet's words stay with this one opinion.
   if (kind !== 'opinion') remember('doc', { d, kind }, d.title);
+  // Changing an intake chart (same words, Edit) keeps its QR code and what staff have added; new words are a new animal.
+  if (kind === 'cage' && !d.cage && currentDoc && currentDoc.kind === 'cage' && currentDoc.d.cage && madeFrom.cage && madeFrom.cage.text === els.transcript.value) {
+    d.cage = currentDoc.d.cage;
+    saveCageChart(d);
+  }
   currentDoc = { d, kind };
   renderMakeNext($('make-next-doc'), kind);
+  renderCageBox(kind, d);
   // "For the vet" and the MOP plan lead with a ready-to-send text message.
   const textSec = TEXT_HEADING[kind] ? d.sections.find((x) => TEXT_HEADING[kind].test(x.heading)) : null;
   // For the vet, the box always shows, with one obvious button: Share with vet (the text, plus a link to the summary).
@@ -2860,6 +2869,7 @@ function docWordModel() {
 $('doc-back').addEventListener('click', () => showView('record'));
 $('doc-copy').addEventListener('click', () => {
   if (!currentDoc) return;
+  if (currentDoc.kind === 'cage') return shareCageLink();
   // A media statement copies as it would go out once approved, without the vet's private notes.
   if (currentDoc.kind === 'media') {
     return shareOrCopy(mediaReleaseText(currentDoc.d), $('doc-title').textContent.replace(/\u00a0/g, ' '), 'Statement copied, without the private notes. Send it for review before it goes out.', docModel(currentDoc.d, 'Draft media statement, for review'), { type: 'doc', kind: 'media', d: currentDoc.d });
@@ -2869,6 +2879,160 @@ $('doc-copy').addEventListener('click', () => {
 $('doc-new').addEventListener('click', changeDoc);
 // The review bar opens the questions ready to answer, rather than just listing them.
 $('doc-review-open').addEventListener('click', () => currentDoc && openAnswers({ type: 'doc' }, currentDoc.d.check));
+
+/* ---------------- Intake: the cage chart and its QR code ---------------- */
+
+// The chart is kept by the connection with an edit key. The QR code on the cage carries both, so whoever scans it
+// reads the same chart and can add to it; this device keeps them in the document (d.cage) so it opens again later.
+// Entries go on the end of the stored chart: fetched fresh first, so two people adding at once both keep theirs.
+let cageLog = [];
+/** A tidied-up chart keeps its link to the stored chart (normaliseDoc drops anything it doesn't know). */
+const keepCage = (raw, d) => (raw && raw.cage && raw.cage.id ? Object.assign(d, { cage: raw.cage }) : d);
+const chartBy = () => { try { return localStorage.getItem('css.chartBy') || ''; } catch { return ''; } };
+
+function renderCageBox(kind, d) {
+  const box = $('cage-box');
+  box.hidden = kind !== 'cage';
+  if (kind !== 'cage') return;
+  $('cage-by').value = chartBy();
+  const c = d.cage;
+  $('cage-photo').hidden = !(c && c.photo);
+  if (c && c.photo) $('cage-photo').src = c.photo;
+  $('cage-qr').replaceChildren();
+  if (c && c.id) qrSvg(cageLink(c.id, c.key)).then((svg) => currentDoc && currentDoc.d.cage === c && $('cage-qr').replaceChildren(svg));
+  $('cage-acts').hidden = !(c && c.id);
+  $('cage-retry').hidden = true;
+  $('cage-add').hidden = !(c && c.id);
+  $('cage-status').textContent = c && c.id ? 'Print this for the cage. Scanning it opens this chart, and whoever scans it can add to it.' : 'Making the QR code for the cage…';
+  if (!(c && c.id)) {
+    cageLog = [];
+    renderCageLog();
+    makeCageChart(d);
+  } else refreshCageLog(c);
+}
+
+function renderCageLog() {
+  $('cage-log').replaceChildren(...[...cageLog].reverse().map((e) => el('li', {}, [el('time', { datetime: new Date(e.at).toISOString(), text: entryTime(e.at) }), el('span', { text: e.text }), e.by ? el('span', { class: 'by', text: e.by }) : null])));
+}
+
+async function makeCageChart(d) {
+  const photo = sendPhotos()[0] ? await thumbnailDataUrl(sendPhotos()[0].blob).catch(() => null) : null;
+  const j = await storePlan(cageRecord(d, photo, []), CONFIG.proxyUrl, { edit: true });
+  if (!currentDoc || currentDoc.d !== d) return; // moved on to something else meanwhile
+  if (!j) {
+    $('cage-status').textContent = 'Couldn’t make the QR code. Check the internet connection, then try again.';
+    $('cage-retry').hidden = false;
+    return;
+  }
+  d.cage = { id: j.id, key: j.key, photo };
+  remember('doc', { d, kind: 'cage' }, d.title);
+  renderCageBox('cage', d);
+}
+$('cage-retry').addEventListener('click', () => currentDoc && currentDoc.kind === 'cage' && renderCageBox('cage', currentDoc.d));
+
+async function refreshCageLog(c) {
+  try {
+    const { plan } = await fetchSharedPlan(c.id, CONFIG.proxyUrl);
+    if (!currentDoc || currentDoc.d.cage !== c) return;
+    cageLog = normaliseLog(plan.log);
+  } catch (e) {
+    if (e && e.code === 'expired') $('cage-status').textContent = 'This chart has expired (charts are kept 90 days after the last change).';
+  }
+  renderCageLog();
+}
+
+/** Save a changed chart (Edit) over the stored one, keeping its photo and entries. */
+async function saveCageChart(d) {
+  const c = d.cage;
+  try {
+    const { plan } = await fetchSharedPlan(c.id, CONFIG.proxyUrl);
+    await updateSharedPlan(c.id, c.key, cageRecord(d, c.photo, plan.log), CONFIG.proxyUrl);
+  } catch {
+    toast('The chart on the cage couldn’t be updated. Check the internet connection, then try again.');
+  }
+}
+
+$('cage-add').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const text = $('cage-entry').value.trim();
+  const c = currentDoc && currentDoc.d.cage;
+  if (!text || !c) return;
+  const by = $('cage-by').value.trim();
+  try { localStorage.setItem('css.chartBy', by); } catch { /* fine */ }
+  const btn = $('cage-add-btn');
+  btn.disabled = true;
+  try {
+    const { plan } = await fetchSharedPlan(c.id, CONFIG.proxyUrl);
+    const log = withEntry(plan.log, text, by);
+    const ok = await updateSharedPlan(c.id, c.key, { ...plan, log }, CONFIG.proxyUrl);
+    if (!ok) throw new Error('not saved');
+    cageLog = log;
+    $('cage-entry').value = '';
+    renderCageLog();
+    toast('Added to the chart.');
+  } catch {
+    toast('Not added: check the internet connection, then try again. Your words are kept.');
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+function shareCageLink() {
+  const c = currentDoc.d.cage;
+  if (!c) return toast('The QR code isn’t ready yet.');
+  const url = cageLink(c.id, c.key);
+  const title = $('doc-title').textContent.replace(/\u00a0/g, ' ');
+  if (canShare()) return navigator.share({ title, url }).catch(() => {});
+  copyText(url).then((ok) => toast(ok ? 'Chart link copied. Anyone with it can read and add to the chart.' : 'Couldn’t copy the link.'));
+}
+$('cage-link').addEventListener('click', () => {
+  const c = currentDoc && currentDoc.d.cage;
+  if (c) copyText(cageLink(c.id, c.key)).then((ok) => toast(ok ? 'Chart link copied. Anyone with it can read and add to the chart.' : 'Couldn’t copy the link.'));
+});
+
+// The printed card: name, date in, photo and QR code, and the handling warnings, sized for a cage.
+$('cage-print').addEventListener('click', async () => {
+  const d = currentDoc && currentDoc.d;
+  if (!d || !d.cage) return;
+  const qr = await qrSvg(cageLink(d.cage.id, d.cage.key));
+  const careful = d.sections.find((s) => /handle with care/i.test(s.heading));
+  document.getElementById('cage-print-card')?.remove();
+  document.body.append(el('div', { id: 'cage-print-card' }, [
+    el('h1', { text: d.title }),
+    d.subtitle ? el('p', { class: 'cpc-sub', text: d.subtitle }) : null,
+    d.cage.photo ? el('img', { src: d.cage.photo, alt: '' }) : null,
+    qr,
+    careful ? el('ul', {}, (careful.items.length ? careful.items : [careful.text]).map((x) => el('li', { text: x }))) : null,
+    el('p', { class: 'cpc-scan', text: 'Scan for the chart, and to add feeds, weights and medicines given.' }),
+  ]));
+  document.body.dataset.print = 'cage';
+  const done = () => {
+    delete document.body.dataset.print;
+    document.getElementById('cage-print-card')?.remove();
+    window.removeEventListener('afterprint', done);
+  };
+  window.addEventListener('afterprint', done);
+  try {
+    window.print();
+  } catch {
+    done();
+  }
+});
+
+// Scanned from a cage: open the chart, ready to add to. Not saved under Plans: the QR code is where it lives.
+async function openCageLink({ id, key }) {
+  try {
+    const { plan } = await fetchSharedPlan(id, CONFIG.proxyUrl);
+    if (!plan || plan.kind !== 'cage' || !plan.d) throw new Error('not a chart');
+    const d = normaliseDoc(plan.d);
+    d.cage = { id, key, photo: typeof plan.photo === 'string' ? plan.photo : null };
+    cageLog = normaliseLog(plan.log);
+    madeFrom.cage = null;
+    showDoc(d, 'cage', '');
+  } catch (e) {
+    banner(e && e.code === 'expired' ? 'This chart has expired: charts are kept 90 days after the last change.' : e && e.code === 'offline' ? 'Couldn’t open the chart. Check the internet connection, then scan again.' : 'That QR code couldn’t be opened.');
+  }
+}
 
 /* ---------------- make another from the same words ---------------- */
 
@@ -2900,7 +3064,7 @@ const svgIcon = (inner) => {
 function renderMakeNext(box, current) {
   // A vet flicks between the carer plan and clinical notes from the same words, to copy either into their system.
   // Vets: SOAP notes from a care plan (the notes screen has its own Carer plan button), plus the extra tools when on.
-  const pool = settings.role === 'vet' ? [['vet', 'SOAP notes'], ['media', 'Media statement'], ['witness', 'Expert witness statement'], ['opinion', 'Expert opinion']].filter(([m]) => roleModes('vet').includes(m)) : MAKE_NEXT;
+  const pool = settings.role === 'vet' ? [...(current === 'cage' ? [['carer', 'Care plan']] : []), ['vet', 'SOAP notes'], ['media', 'Media statement'], ['witness', 'Expert witness statement'], ['opinion', 'Expert opinion']].filter(([m]) => roleModes('vet').includes(m)) : MAKE_NEXT;
   // A statement for a prosecution and a media statement don't mix: neither offers the other.
   // Nothing is made from an expert opinion's words or documents except the opinion itself.
   const options = current && current !== 'funding' && current !== 'opinion' ? pool.filter(([m]) => m !== current && !(current === 'witness' && m === 'media') && !(current === 'media' && m === 'witness')) : [];
@@ -3810,7 +3974,7 @@ function openSaved(last) {
   if (!last) return;
   if (last.text && !els.transcript.value.trim()) setTranscript(last.text);
   if (last.type === 'care') showCare(normaliseCareSheet(last.data.sheet, null), last.data.from === 'note' ? 'record' : last.data.from);
-  else if (last.type === 'doc') showDoc(normaliseDoc(last.data.d), last.data.kind);
+  else if (last.type === 'doc') showDoc(keepCage(last.data.d, normaliseDoc(last.data.d)), last.data.kind);
   else if (last.type === 'notes') showNotes(last.data.map(normaliseNote), false);
   else if (last.type === 'polish') showPolish(String(last.data.text || ''));
 }
@@ -3887,7 +4051,7 @@ function restoreOpen(s) {
       if (s.notes && s.notes.length) showNotes(s.notes.map(normaliseNote), false);
       savedId = s.savedId || null;
       showCare(normaliseCareSheet(s.care.sheet, null), s.care.from === 'note' && !(s.notes && s.notes.length) ? 'record' : s.care.from, '', true);
-    } else if (s.view === 'doc') showDoc(normaliseDoc(s.doc.d), s.doc.kind);
+    } else if (s.view === 'doc') showDoc(keepCage(s.doc.d, normaliseDoc(s.doc.d)), s.doc.kind);
     else if (s.view === 'polish') showPolish(String(s.text || ''));
     pendingMore = s.more || '';
   } catch (e) {
@@ -4245,6 +4409,7 @@ async function askVetReview(btn, forVet = null) {
 // top), so it's still there after the link is gone. Opening the same link again shows their saved copy, edits and all.
 const SHARED_INFO = 'Shared with you and saved under Plans (the book at the top). Check it with the person who sent it.';
 async function openSharedLink() {
+  if (cageHash(location.hash)) return openCageLink(cageHash(location.hash));
   const code = linkCode(location.hash);
   const short = shortLink(location.hash);
   if (!code && !short) return;

@@ -119,10 +119,10 @@ test.describe('dictation', () => {
     await expect(page.locator('#transcript')).toHaveValue('');
   });
 
-  test('vet has four choices: care plan, clinical notes, rapid polish, and Advanced for media and witness statements', async ({ page }) => {
+  test('vet has five choices: intake, care plan, clinical notes, rapid polish, and Advanced for media and witness statements', async ({ page }) => {
     await openApp(page);
     await expect(page.locator('#types')).toHaveCount(0);
-    await expect(page.locator('#mode label:visible')).toHaveCount(3);
+    await expect(page.locator('#mode label:visible')).toHaveCount(4);
     await expect(page.locator('#adv-tab')).toBeVisible(); // media and witness statements sit under Advanced
     await expect(page.getByRole('radio', { name: 'SOAP notes' })).toBeChecked();
     await expect(page.getByRole('radio', { name: 'Care plan' })).not.toBeChecked();

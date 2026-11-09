@@ -113,3 +113,10 @@ export function linkId(code) {
 
 /** The packed plan in a URL hash ("#p=..."), or null. */
 export const linkCode = (hash = '') => (hash.startsWith('#p=') ? hash.slice(3) : null);
+
+/** The cage chart link in a QR code: "#c=<id>.<key>". Whoever scans it can read the chart and add to it. */
+export const cageLink = (id, key, here = typeof location !== 'undefined' ? location : null) => `${linkBase(here)}#c=${id}.${key}`;
+export function cageHash(hash = '') {
+  const m = /^#c=([a-zA-Z0-9]{10,16})\.([a-zA-Z0-9]{20,32})$/.exec(hash);
+  return m ? { id: m[1], key: m[2] } : null;
+}

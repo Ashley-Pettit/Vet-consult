@@ -1303,6 +1303,21 @@ export const DOC_KINDS = {
 - "due": vet visits, medications and weigh-ins that are due, with timing exactly as stated.
 - Always add a check if any of these are missing: exact rescue location, rescue date, species, weight, ${region().caseLabel}.`,
   },
+  // The vet's intake at the clinic or hospital: a photo and a few words become the chart that lives on the cage (a QR
+  // code opens it, and staff add to it). Short, scannable, and only what was said or can be seen in the photo.
+  cage: {
+    label: 'Intake',
+    copy: 'Share chart',
+    working: 'The cage chart, with a QR code for the cage.',
+    title: 'Intake chart that stays with the animal (a QR code on its cage opens it)',
+    who: 'vet',
+    rule: () => `Write the in-hospital intake chart for this animal, for staff and carers to read at its cage on a phone. Keep it short: every item under 15 words.
+- "title": the animal's name or ID and its species, for example "Possum 24-118: common brushtail possum". "subtitle": "In " and the date (today's date, given at the end, unless another date was said).
+- First section "Patient": a list with exactly these items, in this order, each as "Field: value", writing "Not recorded" when it was not said: "ID" (animal, case or ${region().caseLabel}), "Species", "Sex", "Age class", "Weight", "Found at". If the species comes only from the photo, write it with "(from photo, confirm)".
+- Then these sections, in this order, leaving out any with nothing stated: "Why it's here" (text, one or two sentences), "Findings" (items: exam findings as said; anything seen only in the photo starts "From photo:"), "Treatment given" (items, drugs and doses exactly as said), "Plan" (items, with timing as said), "Feeding and housing" (items), "Handle with care" (items: bites, scratches, stress, and disease risks to people or other animals; for any bat, only vaccinated, trained handlers; for a bird or marine mammal with signs of bird flu, isolate it, wear protective equipment and report on 1800 675 888).
+- "due": medications, weigh-ins and rechecks that are due, with timing exactly as stated.
+- Always add a check if the ID, weight or species is missing, or the species is only from the photo.`,
+  },
   log: {
     label: 'Care log',
     copy: 'Copy log',

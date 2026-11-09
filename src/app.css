@@ -1717,3 +1717,34 @@ details.care-sec.fold .fold-actions { margin: 10px 0; }
     padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
   }
 }
+
+/* Intake: the cage chart, with its QR code, the chart entries staff add, and the printed cage card */
+.cage-box { display: grid; gap: 10px; margin: 0 0 16px; padding: 14px 16px; border-radius: 14px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); }
+.cage-card { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: center; }
+.cage-card:has(.cage-photo[hidden]) { grid-template-columns: minmax(0, 220px); justify-content: center; }
+.cage-photo { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 10px; }
+.cage-qr svg { display: block; width: 100%; height: auto; border-radius: 6px; }
+.cage-qr:empty { display: none; }
+.cage-acts { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.cage-box .help { margin: 0; }
+.cage-log-title { margin: 6px 0 0; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.cage-log { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.cage-log li { display: grid; gap: 2px; padding: 8px 10px; border-radius: 8px; background: var(--bg); }
+.cage-log time, .cage-log .by { font-size: 0.8rem; color: var(--muted); }
+.cage-log:empty::before { content: 'Nothing added yet.'; color: var(--muted); font-size: 0.9rem; }
+.cage-add { display: grid; gap: 6px; }
+.cage-add label { font-weight: 600; }
+.cage-add-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+#cage-print-card { display: none; }
+@media print {
+  body[data-print="cage"] > *:not(#cage-print-card) { display: none !important; }
+  body[data-print="cage"], html:has(body[data-print="cage"]) { background: #fff !important; }
+  body[data-print="cage"] #cage-print-card { display: grid !important; grid-template-columns: 1fr 1fr; gap: 8mm; align-items: start; color: #000; font-family: Arial, Helvetica, sans-serif; max-width: 180mm; }
+  #cage-print-card h1 { grid-column: 1 / -1; margin: 0; font-size: 22pt; }
+  #cage-print-card .cpc-sub { grid-column: 1 / -1; margin: -6mm 0 0; font-size: 12pt; }
+  #cage-print-card img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 3mm; }
+  #cage-print-card svg { width: 100%; height: auto; }
+  #cage-print-card ul { grid-column: 1 / -1; margin: 0; padding-left: 5mm; font-size: 12pt; }
+  #cage-print-card .cpc-scan { grid-column: 1 / -1; margin: 0; font-size: 11pt; }
+}
+.cage-add textarea { min-height: 0; height: auto; resize: vertical; }

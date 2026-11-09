@@ -55,15 +55,15 @@ test('Change plan on a ready-made plan: an admin saves it to the library, withou
   await expect(page.locator('#transcript')).toHaveValue('My own words.');
 });
 
-test('vet tabs read Notes and Care plan; Extra vet tools adds Rapid and Advanced', async ({ page }) => {
+test('vet tabs read Intake, Notes and Care plan; Extra vet tools adds Rapid and Advanced', async ({ page }) => {
   await withKey(page, { role: 'vet', mode: 'vet' });
   await openApp(page);
   const plain = await page.$$eval('#mode > label, #mode > .adv-tab', (ls) => ls.filter((l) => l.offsetParent).map((l) => ({ x: l.getBoundingClientRect().x, v: (l.querySelector('input') || {}).value || 'advanced' })).sort((a, b) => a.x - b.x).map((t) => t.v));
-  expect(plain).toEqual(['vet', 'carer']);
+  expect(plain).toEqual(['cage', 'vet', 'carer']);
   await withKey(page, { role: 'vet', mode: 'vet', vetExtras: true });
   await openApp(page);
   const tabs = await page.$$eval('#mode > label, #mode > .adv-tab', (ls) => ls.filter((l) => l.offsetParent).map((l) => ({ x: l.getBoundingClientRect().x, v: (l.querySelector('input') || {}).value || 'advanced' })).sort((a, b) => a.x - b.x).map((t) => t.v));
-  expect(tabs).toEqual(['vet', 'polish', 'carer', 'advanced']);
+  expect(tabs).toEqual(['cage', 'vet', 'polish', 'carer', 'advanced']);
 });
 
 test('favourites: save a plan with the star, find it at the top of Plans, rename, reopen and remove it', async ({ page }) => {

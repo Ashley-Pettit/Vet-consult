@@ -2,8 +2,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { DOC_KINDS, buildDocPrompt, buildCarerPlanPrompt, normaliseDoc, docText, dueLabel } from '../../src/note.js';
 
-test('document kinds, in picker order (media, expert witness and expert opinion are for vets)', () => {
-  assert.deepEqual(Object.keys(DOC_KINDS), ['intake', 'log', 'mop', 'tovet', 'media', 'witness', 'opinion', 'funding']);
+test('document kinds, in picker order (the intake chart, media, expert witness and expert opinion are for vets)', () => {
+  assert.deepEqual(Object.keys(DOC_KINDS), ['intake', 'cage', 'log', 'mop', 'tovet', 'media', 'witness', 'opinion', 'funding']);
   for (const k of Object.values(DOC_KINDS)) assert.ok(k.label && k.copy && k.working && k.rule);
 });
 
@@ -156,4 +156,14 @@ test('expert opinion: plain words, welfare impacts, real references only, and at
   assert.match(p, /<document title="Council report">/);
   assert.match(p, /The vet is Dr Sam Lee/);
   assert.match(p, /confidential material for this one opinion/);
+});
+
+test('the vet intake chart: a short chart for the cage, with the ID, weight and species flagged when missing', () => {
+  const p = buildDocPrompt('cage', 'brushtail possum, hit by car, 2.1 kg, sore left hind', { photoCount: 1 });
+  assert.match(p, /^You are a scribe for a veterinarian\./);
+  assert.match(p, /intake chart that stays with the animal/i);
+  assert.match(p, /"Patient"/);
+  assert.match(p, /\(from photo, confirm\)/);
+  assert.match(p, /Handle with care/);
+  assert.match(p, /check if the ID, weight or species is missing/);
 });

@@ -8,8 +8,8 @@ test('Carer or Vet is switched on the front screen (no sign in needed), and reme
   await expect(page.locator('input[name=role][value=carer]')).toBeChecked();
   await expect(page.locator('#mode label:visible')).toHaveCount(3); // care plan, to vet, MOP
   await page.locator('#role-seg label', { hasText: 'Vet' }).click();
-  // Vets get SOAP notes and care plans only; Rapid polish and Advanced need Extra vet tools (Settings > Admin).
-  await expect(page.locator('#mode label:visible')).toHaveCount(2);
+  // Vets get intake, SOAP notes and care plans; Rapid polish and Advanced need Extra vet tools (Settings > Admin).
+  await expect(page.locator('#mode label:visible')).toHaveCount(3);
   await expect(page.locator('#adv-tab')).toBeHidden();
   await expect(page.locator('input[name=mode]:checked')).toHaveValue('carer'); // vets start on the care plan
   await page.reload();

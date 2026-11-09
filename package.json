@@ -19,6 +19,7 @@
   "type": "module",
   "dependencies": {
     "docx": "^9.13.0",
-    "pdfmake": "^0.2.15"
+    "pdfmake": "^0.2.15",
+    "qrcode-generator": "^2.0.4"
   }
 }

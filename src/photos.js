@@ -48,3 +48,17 @@ export async function preparePhoto(file) {
   return { blob, mediaType: 'image/jpeg', data: await blobToBase64(blob), url: URL.createObjectURL(blob), name: file.name || 'Photo' };
 }
 
+
+/** A small JPEG of the photo as a data URL (for the cage chart, which is stored with the connection). */
+export async function thumbnailDataUrl(blob, side = 480, quality = 0.72) {
+  const img = await decode(blob);
+  const w = img.width || img.naturalWidth;
+  const h = img.height || img.naturalHeight;
+  const scale = Math.min(1, side / Math.max(w, h));
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.max(1, Math.round(w * scale));
+  canvas.height = Math.max(1, Math.round(h * scale));
+  canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+  if (typeof img.close === 'function') img.close();
+  return canvas.toDataURL('image/jpeg', quality);
+}
