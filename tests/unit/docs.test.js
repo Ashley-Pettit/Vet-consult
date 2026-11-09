@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { DOC_KINDS, buildDocPrompt, buildCarerPlanPrompt, normaliseDoc, docText, dueLabel } from '../../src/note.js';
+import { DOC_KINDS, normaliseDocFor, buildDocPrompt, buildCarerPlanPrompt, normaliseDoc, docText, dueLabel } from '../../src/note.js';
 
 test('document kinds, in picker order (the intake chart, media, expert witness and expert opinion are for vets)', () => {
   assert.deepEqual(Object.keys(DOC_KINDS), ['intake', 'cage', 'log', 'mop', 'tovet', 'media', 'witness', 'opinion', 'funding']);
@@ -158,12 +158,22 @@ test('expert opinion: plain words, welfare impacts, real references only, and at
   assert.match(p, /confidential material for this one opinion/);
 });
 
-test('the vet intake chart: a short chart for the cage, with the ID, weight and species flagged when missing', () => {
+test('the vet intake chart: everything a wildlife cage chart holds, with missing essentials flagged', () => {
   const p = buildDocPrompt('cage', 'brushtail possum, hit by car, 2.1 kg, sore left hind', { photoCount: 1 });
   assert.match(p, /^You are a scribe for a veterinarian\./);
-  assert.match(p, /intake chart that stays with the animal/i);
-  assert.match(p, /"Patient"/);
+  assert.match(p, /cage chart that stays with the animal/i);
+  for (const f of ['"Patient"', 'Admission weight', 'Found at', 'Found by', 'Problem list', '"alerts"', '"meds"', '"feeds"', '"housing"', '"warmth"', '"weigh"', '"monitor"', '"rechecks"', '"release"']) assert.ok(p.includes(f), f);
   assert.match(p, /\(from photo, confirm\)/);
-  assert.match(p, /Handle with care/);
-  assert.match(p, /check if the ID, weight or species is missing/);
+  assert.match(p, /Never work out a dose/);
+  assert.match(p, /lyssavirus/);
+  assert.match(p, /1800 675 888/);
+});
+
+test('the cage chart keeps its treatment sheet when tidied, and only known statuses', () => {
+  const d = normaliseDocFor('cage', { title: 'Possum', sections: [{ heading: 'Patient', items: ['ID: 1'] }], chart: { status: 'quarantine', meds: [{ drug: 'Meloxicam', dose: '0.2 mg/kg', route: 'SC' }, { dose: 'no drug' }], alerts: ['Bites'] } });
+  assert.equal(d.chart.status, 'Quarantine');
+  assert.equal(d.chart.meds.length, 1);
+  assert.deepEqual(d.chart.alerts, ['Bites']);
+  assert.equal(normaliseDocFor('cage', { chart: { status: 'Flying' } }).chart.status, 'In care');
+  assert.equal(normaliseDocFor('intake', { chart: {} }).chart, undefined);
 });

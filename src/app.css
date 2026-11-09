@@ -1736,15 +1736,57 @@ details.care-sec.fold .fold-actions { margin: 10px 0; }
 .cage-add label { font-weight: 600; }
 .cage-add-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
 #cage-print-card { display: none; }
+.cage-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 0; }
+.cage-chips span { padding: 4px 10px; border-radius: 999px; font-size: 0.85rem; font-weight: 700; background: var(--accent-soft); }
+.cage-chips .chip-status.warn { background: color-mix(in srgb, var(--warn, #c98a2b) 25%, transparent); }
+.cage-chips .chip-status.done { background: var(--line); }
+.cage-alerts { padding: 10px 12px; border-radius: 10px; background: color-mix(in srgb, var(--err) 14%, transparent); box-shadow: inset 4px 0 0 var(--err); }
+.cage-alerts h3, .cage-sec h3 { margin: 0 0 6px; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.cage-alerts h3 { color: var(--err); }
+.cage-alerts ul { margin: 0; padding-left: 18px; font-weight: 600; }
+.cage-sheet { display: grid; gap: 12px; }
+.cage-sec p { margin: 4px 0 0; }
+.cage-sec ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+ul.cage-meds-sheet { list-style: none; padding: 0; gap: 8px; }
+.cage-meds-sheet li { display: grid; gap: 2px; padding: 8px 10px; border-radius: 8px; background: var(--bg); }
+.cage-meds-sheet .last, .cage-log .given { font-size: 0.85rem; color: var(--muted); }
+.cage-trend { margin: 0; font-weight: 600; }
+.cage-log .facts { font-weight: 600; }
+.cage-add h3 { margin: 6px 0 2px; font-size: 1rem; }
+.cage-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 10px; }
+.cage-grid .field { display: grid; gap: 4px; margin: 0; }
+.cage-grid label { font-weight: 600; font-size: 0.9rem; }
+@media (min-width: 560px) { .cage-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.cage-meds { margin: 0; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; display: grid; gap: 6px; }
+.cage-meds legend { font-weight: 600; padding: 0 4px; }
+.cage-meds .check { display: flex; gap: 8px; align-items: center; font-weight: 400; min-height: 32px; }
 @media print {
   body[data-print="cage"] > *:not(#cage-print-card) { display: none !important; }
   body[data-print="cage"], html:has(body[data-print="cage"]) { background: #fff !important; }
-  body[data-print="cage"] #cage-print-card { display: grid !important; grid-template-columns: 1fr 1fr; gap: 8mm; align-items: start; color: #000; font-family: Arial, Helvetica, sans-serif; max-width: 180mm; }
-  #cage-print-card h1 { grid-column: 1 / -1; margin: 0; font-size: 22pt; }
-  #cage-print-card .cpc-sub { grid-column: 1 / -1; margin: -6mm 0 0; font-size: 12pt; }
-  #cage-print-card img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 3mm; }
-  #cage-print-card svg { width: 100%; height: auto; }
-  #cage-print-card ul { grid-column: 1 / -1; margin: 0; padding-left: 5mm; font-size: 12pt; }
-  #cage-print-card .cpc-scan { grid-column: 1 / -1; margin: 0; font-size: 11pt; }
+  body[data-print="cage"] #cage-print-card { display: block !important; color: #000; font-family: Arial, Helvetica, sans-serif; font-size: 10pt; }
+  #cage-print-card * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  #cage-print-card .cpc-head { display: grid; grid-template-columns: 1fr 62mm; gap: 6mm; }
+  #cage-print-card h1 { margin: 0; font-size: 18pt; }
+  #cage-print-card .cpc-sub { margin: 1mm 0 3mm; font-size: 11pt; font-weight: 700; }
+  #cage-print-card dl { display: grid; grid-template-columns: max-content 1fr; gap: 1mm 4mm; margin: 0; }
+  #cage-print-card dt { font-weight: 700; }
+  #cage-print-card dd { margin: 0; }
+  #cage-print-card .cpc-why { margin: 3mm 0 0; }
+  #cage-print-card .cpc-pics { display: grid; grid-template-columns: 1fr 1fr; gap: 2mm; align-content: start; }
+  #cage-print-card .cpc-pics img, #cage-print-card .cpc-pics svg { width: 100%; height: auto; aspect-ratio: 1; object-fit: cover; }
+  #cage-print-card .cpc-pics p { grid-column: 1 / -1; margin: 0; font-size: 8pt; text-align: center; }
+  #cage-print-card .cpc-alerts { margin: 4mm 0 0; padding: 2mm 3mm; border: 0.6mm solid #b00020; color: #b00020; font-weight: 700; }
+  #cage-print-card h2 { margin: 4mm 0 1.5mm; font-size: 11pt; text-transform: uppercase; letter-spacing: 0.5px; }
+  #cage-print-card table { width: 100%; border-collapse: collapse; table-layout: auto; }
+  #cage-print-card th, #cage-print-card td { border: 0.3mm solid #888; padding: 1.2mm 1.5mm; text-align: left; vertical-align: top; }
+  #cage-print-card th { background: #eee; font-size: 8.5pt; }
+  #cage-print-card .cpc-grid td { height: 7mm; }
+  #cage-print-card .cpc-record td { height: 8mm; }
+  #cage-print-card .cpc-record th:nth-child(7) { width: 32%; }
+  #cage-print-card .cpc-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(38mm, 1fr)); gap: 4mm; }
+  #cage-print-card .cpc-cols ul { margin: 0; padding-left: 4mm; }
+  /* A named page, so the fridge sheet's landscape page is left alone */
+  #cage-print-card { page: cagechart; }
+  @page cagechart { size: A4 portrait; margin: 10mm; }
 }
 .cage-add textarea { min-height: 0; height: auto; resize: vertical; }

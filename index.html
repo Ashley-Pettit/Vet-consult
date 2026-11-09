@@ -412,15 +412,27 @@
       </div>
       <p class="help" id="cage-status" role="status"></p>
       <div class="cage-acts" id="cage-acts" hidden>
-        <button type="button" class="btn primary" id="cage-print">Print cage card</button>
+        <button type="button" class="btn primary" id="cage-print">Print cage chart</button>
         <button type="button" class="link" id="cage-link">Copy chart link</button>
       </div>
       <button type="button" class="btn ghost" id="cage-retry" hidden>Try again</button>
-      <h2 class="cage-log-title">Chart</h2>
+      <div class="cage-sheet" id="cage-sheet"></div>
+      <h2 class="cage-log-title">Daily record</h2>
+      <p class="cage-trend" id="cage-trend" hidden></p>
       <ol class="cage-log" id="cage-log"></ol>
       <form class="cage-add" id="cage-add" novalidate>
-        <label for="cage-entry">Add to the chart</label>
-        <textarea id="cage-entry" rows="2" maxlength="1000" placeholder="e.g. 410 g. Fed 20 mL, ate well. Meloxicam given."></textarea>
+        <h3>Add to the daily record</h3>
+        <div class="cage-grid">
+          <div class="field"><label for="cage-weight">Weight (g)</label><input id="cage-weight" type="text" inputmode="decimal" autocomplete="off" maxlength="8"></div>
+          <div class="field"><label for="cage-ate">Ate</label><select id="cage-ate"></select></div>
+          <div class="field"><label for="cage-wee">Urine</label><select id="cage-wee"></select></div>
+          <div class="field"><label for="cage-poo">Faeces</label><select id="cage-poo"></select></div>
+          <div class="field"><label for="cage-mood">Demeanour</label><select id="cage-mood"></select></div>
+          <div class="field"><label for="cage-status-pick">Status</label><select id="cage-status-pick"></select></div>
+        </div>
+        <fieldset class="cage-meds" id="cage-meds" hidden><legend>Medicines given now</legend><div id="cage-meds-list"></div></fieldset>
+        <label for="cage-entry">Notes</label>
+        <textarea id="cage-entry" rows="2" maxlength="1000" placeholder="e.g. Wound clean and dry. Climbing well."></textarea>
         <div class="cage-add-row">
           <label class="sr-only" for="cage-by">Your name or initials</label>
           <input id="cage-by" type="text" maxlength="60" autocomplete="name" placeholder="Your initials">
