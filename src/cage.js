@@ -102,3 +102,65 @@ export async function qrSvg(text, doc = document) {
 /** "Mon 9 Nov, 3:10 pm" */
 export const entryTime = (at) =>
   new Date(at).toLocaleString('en-AU', { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
+
+/** A "Field: value" line from the chart's Patient section; empty when it wasn't recorded. */
+export function patientField(d, name) {
+  const p = ((d && d.sections) || []).find((x) => /^patient$/i.test(x.heading));
+  const line = p && p.items.find((x) => x.toLowerCase().startsWith(`${name.toLowerCase()}:`));
+  const v = line ? line.slice(name.length + 1).trim() : '';
+  return /^not recorded$/i.test(v) ? '' : v;
+}
+const FIELDS = ['ID', 'Species', 'Sex', 'Age class', 'Admission weight', 'Body condition', 'Found at', 'Found by', 'Vet'];
+const sectionOf = (d, re) => ((d && d.sections) || []).find((x) => re.test(x.heading));
+const itemsOf = (s) => (s ? (s.items.length ? s.items : s.text ? [s.text] : []) : []);
+export const medName = (m) => [m.drug, m.dose].filter(Boolean).join(' ');
+export const medLabel = (m) => [m.drug, m.dose, m.route].filter(Boolean).join(' ');
+
+/**
+ * Everything on the cage chart, in the order it's read, for the screen, the printed page and the PDF alike, so
+ * they always match: header, patient details, alerts, findings, the treatment sheet, feeding, housing, monitoring,
+ * rechecks, release and the daily record. `days`: the dates for the treatment sheet's tick boxes.
+ */
+export function cageModel(d, log = [], { now = Date.now(), days = 7 } = {}) {
+  const ch = (d && d.chart) || {};
+  const list = (v) => (Array.isArray(v) ? v : []);
+  const entries = normaliseLog(log);
+  const given = lastGiven(entries);
+  const used = /^(patient|why it.s here|findings|problem list|plan)$/i;
+  return {
+    title: (d && d.title) || 'Cage chart',
+    subtitle: (d && d.subtitle) || '',
+    cage: String(ch.cage || '').replace(/^cage\s*/i, ''),
+    status: currentStatus(entries, ch.status || 'In care'),
+    fields: FIELDS.map((k) => [k, patientField(d, k)]).filter(([, v]) => v),
+    why: itemsOf(sectionOf(d, /^why it.s here$/i)).join(' '),
+    findings: itemsOf(sectionOf(d, /^findings$/i)),
+    problems: itemsOf(sectionOf(d, /^problem list$/i)),
+    plan: itemsOf(sectionOf(d, /^plan$/i)),
+    // Charts made before the full layout kept these as sections: still shown, under their own headings.
+    other: ((d && d.sections) || []).filter((s) => !used.test(s.heading)).map((s) => ({ heading: s.heading, items: itemsOf(s) })),
+    alerts: list(ch.alerts),
+    meds: list(ch.meds).map((m) => ({ name: medName(m), label: medLabel(m), route: m.route || '', often: [m.how_often, m.times].filter(Boolean).join(', '), until: String(m.until || '').replace(/^until\s*/i, ''), last: given[medLabel(m)] || null })),
+    feeds: list(ch.feeds).map((f) => ({ what: f.what || '', amount: f.amount || '', how: f.how || '', often: [f.how_often, f.times].filter(Boolean).join(', ') })),
+    water: ch.water || '',
+    housing: [...list(ch.housing), ...(ch.warmth ? [`Warmth: ${ch.warmth}`] : [])],
+    monitoring: [...(ch.weigh ? [`Weigh: ${ch.weigh}`] : []), ...list(ch.monitor)],
+    rechecks: list(ch.rechecks),
+    release: [...list(ch.release), ...(ch.target_weight ? [`Target weight: ${ch.target_weight}`] : []), ...(patientField(d, 'Found at') ? [`Release at: ${patientField(d, 'Found at')}`] : [])],
+    trend: weightTrend(grams(patientField(d, 'Admission weight')), entries),
+    log: [...entries].reverse(),
+    days: Array.from({ length: days }, (_, i) => new Date(now + i * 864e5).toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric' })),
+  };
+}
+
+/** One daily record entry's facts, in the record's column order. */
+export const entryCells = (e) => ({
+  when: entryTime(e.at),
+  by: e.by,
+  weight: e.weight_g != null ? showWeight(e.weight_g) : '',
+  ate: e.ate,
+  wee: e.wee,
+  poo: e.poo,
+  mood: e.mood,
+  notes: [e.meds.length ? `Given: ${e.meds.join('; ')}` : '', e.status ? `Status: ${e.status}` : '', e.text].filter(Boolean).join('. '),
+});

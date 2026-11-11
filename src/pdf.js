@@ -294,3 +294,72 @@ function tickSheet(ts, title, { OLIVE, TERRA, TINT, t, first }) {
 function sheetRows(ts) {
   return ts.items.map((x) => (typeof x === 'string' ? { label: x, cell: /\bweigh|weight\b/i.test(x) ? 'g' : 'box' } : x));
 }
+
+/**
+ * The cage chart as a one-page A4 PDF, laid out like the printed page and the chart on screen (model: cageModel in
+ * cage.js): header with patient details, photo and QR code, alerts, findings, the treatment sheet with a tick box per
+ * day, feeding, housing, monitoring, rechecks, release, and a blank daily record to fill in by hand.
+ */
+export async function buildCagePdf(m, { photo = null, link = '' } = {}) {
+  const RED = '#B00020';
+  const LINE = '#9A9A9A';
+  const HEAD = '#ECECEC';
+  const h3 = (text) => ({ text: text.toUpperCase(), bold: true, fontSize: 9.5, characterSpacing: 0.5, margin: [0, 7, 0, 3] });
+  const ul = (xs) => ({ ul: xs, fontSize: 9, margin: [0, 0, 0, 0] });
+  const grid = (head, rows, widths, height = 0) => ({
+    table: {
+      headerRows: 1,
+      widths,
+      heights: (i) => (i === 0 || !height ? 'auto' : height),
+      body: [head.map((h) => ({ text: h, bold: true, fontSize: 8, fillColor: HEAD })), ...rows.map((r) => r.map((x) => ({ text: x, fontSize: 9 })))],
+    },
+    layout: { hLineColor: LINE, vLineColor: LINE, hLineWidth: () => 0.6, vLineWidth: () => 0.6, paddingTop: () => 3, paddingBottom: () => 3 },
+  });
+  const cols = (parts) => {
+    const kids = parts.filter(([, xs]) => xs.length).map(([h, xs]) => ({ stack: [h3(h), ul(xs)] }));
+    return kids.length ? { columns: kids, columnGap: 12 } : null;
+  };
+  const days = m.days;
+  const content = [
+    {
+      columns: [
+        {
+          width: '*',
+          stack: [
+            { text: m.title, bold: true, fontSize: 17 },
+            { text: [[m.subtitle, m.cage && `Cage ${m.cage}`].filter(Boolean).join(' · '), `  ·  Status: ${m.status}`].join(''), bold: true, fontSize: 10.5, margin: [0, 3, 0, 6] },
+            ...(m.fields.length ? [{ table: { widths: ['auto', '*'], body: m.fields.map(([k, v]) => [{ text: k, bold: true, fontSize: 9.5 }, { text: v, fontSize: 9.5 }]) }, layout: 'noBorders' }] : []),
+            ...(m.why ? [{ text: m.why, fontSize: 9.5, margin: [0, 6, 0, 0] }] : []),
+          ],
+        },
+        {
+          width: 170,
+          stack: [
+            { columns: [photo ? { image: photo, fit: [82, 82] } : { text: '' }, link ? { qr: link, fit: 82, eccLevel: 'M' } : { text: '' }], columnGap: 6 },
+            { text: 'Scan for the chart and to add to the record', fontSize: 7, alignment: 'center', color: '#5B5B5B', margin: [0, 3, 0, 0] },
+          ],
+        },
+      ],
+      columnGap: 14,
+    },
+    m.alerts.length ? { table: { widths: ['*'], body: [[{ text: [{ text: 'ALERTS: ', bold: true }, m.alerts.join(' · ')], color: RED, bold: true, fontSize: 9.5 }]] }, layout: { hLineColor: RED, vLineColor: RED, hLineWidth: () => 1.5, vLineWidth: () => 1.5, paddingTop: () => 4, paddingBottom: () => 4 }, margin: [0, 8, 0, 0] } : null,
+    cols([['Findings', m.findings], ['Problem list', m.problems], ['Plan', m.plan], ...m.other.map((o) => [o.heading, o.items])]),
+    h3('Treatment sheet (initial when given)'),
+    m.meds.length
+      ? grid(['Medicine and dose', 'Route', 'How often', ...days], m.meds.map((x) => [x.name, x.route, [x.often, x.until && `until ${x.until}`].filter(Boolean).join(', '), ...days.map(() => '')]), ['*', 32, 70, ...days.map(() => 26)], 18)
+      : { text: 'No medicines ordered.', fontSize: 9, color: '#5B5B5B' },
+    ...(m.feeds.length ? [h3('Feeding'), grid(['What', 'Amount', 'How', 'How often'], m.feeds.map((f) => [f.what, f.amount, f.how, f.often]), ['*', 70, 70, 100])] : []),
+    m.water ? { text: [{ text: 'Water: ', bold: true }, m.water], fontSize: 9, margin: [0, 4, 0, 0] } : null,
+    cols([['Housing', m.housing], ['Monitoring', m.monitoring], ['Rechecks', m.rechecks], ['Release when', m.release]]),
+    h3('Daily record'),
+    grid(['When', 'By', 'Weight', 'Ate', 'Urine', 'Faeces', 'Demeanour', 'Notes'], Array.from({ length: 6 }, () => Array(8).fill('')), [62, 30, 40, 30, 32, 38, 52, '*'], 22),
+  ].filter(Boolean);
+  const doc = { pageSize: 'A4', pageOrientation: 'portrait', pageMargins: [28, 28, 28, 28], content, defaultStyle: { font: 'Roboto', color: INK, lineHeight: 1.15 }, info: { title: `${m.title}: cage chart` } };
+  return new Promise((resolve, reject) => {
+    try {
+      pdfMake.createPdf(doc).getBlob((blob) => resolve(blob));
+    } catch (e) {
+      reject(e);
+    }
+  });
+}

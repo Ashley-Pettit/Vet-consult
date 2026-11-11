@@ -77,8 +77,11 @@ test('vet intake: a photo and a few words make the chart and a QR code for the c
 
   // The QR code and the photo, stored with the connection (photo small, no edit key inside the chart).
   const box = page.locator('#cage-box');
-  await expect(box.locator('#cage-qr svg')).toBeVisible();
-  await expect(box.locator('#cage-photo')).toBeVisible();
+  await expect(box.locator('.cp-qr svg')).toBeVisible();
+  await expect(box.locator('.cp-pics img')).toBeVisible();
+  // The chart replaces the usual document layout, laid out like the printout.
+  await expect(page.locator('#doc')).toBeHidden();
+  await expect(box.locator('.cp-title')).toHaveText(chart.title);
   const stored = store.db.abcdEFGH2345.plan;
   expect(stored.kind).toBe('cage');
   expect(stored.photo).toMatch(/^data:image\/jpeg;base64,/);
@@ -86,12 +89,14 @@ test('vet intake: a photo and a few words make the chart and a QR code for the c
   await expect(box.getByRole('button', { name: 'Print cage chart' })).toBeVisible();
 
   // What staff read first: status, cage, alerts, then the treatment sheet, feeding, housing, monitoring and release.
-  await expect(box.locator('.cage-chips')).toContainText('Intensive care');
-  await expect(box.locator('.cage-chips')).toContainText('Cage ICU 3');
-  await expect(box.locator('.cage-alerts')).toContainText('Bites and scratches');
-  await expect(box.locator('.cage-meds-sheet')).toContainText('Meloxicam 5 mg/mL 0.2 mg/kg');
-  await expect(box.locator('.cage-meds-sheet')).toContainText('Not given yet');
-  for (const t of ['Feeding', 'Housing', 'Monitoring', 'Rechecks and procedures', 'Release']) await expect(box.locator('.cage-sec h3', { hasText: t })).toBeVisible();
+  await expect(box.locator('.cp-status')).toHaveText('Intensive care');
+  await expect(box.locator('.cp-sub')).toContainText('Cage ICU 3');
+  await expect(box.locator('.cp-fields')).toContainText('Cowes Rd, Inverloch');
+  await expect(box.locator('.cp-alerts')).toContainText('Bites and scratches');
+  const sheet = box.getByRole('region', { name: 'Treatment sheet' });
+  await expect(sheet).toContainText('Meloxicam 5 mg/mL 0.2 mg/kg');
+  await expect(sheet).toContainText('Not yet');
+  for (const t of ['Problem list', 'Feeding', 'Housing', 'Monitoring', 'Rechecks', 'Release when', 'Daily record']) await expect(box.locator('.cage-paper h3', { hasText: t }).first()).toBeVisible();
 
   // The vet records the first round: weight, ate, the medicine ticked as given, and a note.
   await box.getByLabel('Weight (g)').fill('2050');
@@ -100,10 +105,12 @@ test('vet intake: a photo and a few words make the chart and a QR code for the c
   await box.getByLabel('Notes', { exact: true }).fill('Quiet but alert.');
   await box.getByPlaceholder('Your initials').fill('Dr A');
   await box.getByRole('button', { name: 'Add', exact: true }).click();
-  await expect(box.locator('#cage-log li')).toHaveCount(1);
-  await expect(box.locator('#cage-log')).toContainText('2.05 kg · Ate: Most');
-  await expect(box.locator('#cage-log')).toContainText('Given: Meloxicam 5 mg/mL 0.2 mg/kg SC');
-  await expect(box.locator('.cage-meds-sheet')).toContainText('by Dr A');
+  const record = box.getByRole('region', { name: 'Daily record' });
+  await expect(record.locator('tbody tr')).toHaveCount(1);
+  await expect(record.locator('tbody tr').first()).toContainText('2.05 kg');
+  await expect(record.locator('tbody tr').first()).toContainText('Most');
+  await expect(record).toContainText('Given: Meloxicam 5 mg/mL 0.2 mg/kg SC');
+  await expect(box.getByRole('region', { name: 'Treatment sheet' })).toContainText('Dr A');
   await expect(box.locator('#cage-trend')).toContainText('2.1 kg at admission, 2.05 kg now (-2.4%)');
 
   // A carer scans the QR on the cage with their own phone: the chart, the photo and what's been added, ready to add to.
@@ -113,45 +120,44 @@ test('vet intake: a photo and a few words make the chart and a QR code for the c
   await store.route(carer);
   await carer.goto(`./#c=abcdEFGH2345.${'k'.repeat(24)}`);
   await expect(carer.locator('#doc-title')).toHaveText(chart.title);
-  await expect(carer.locator('#cage-log')).toContainText('Quiet but alert.');
-  await expect(carer.locator('#cage-photo')).toBeVisible();
-  await expect(carer.locator('.cage-alerts')).toContainText('Bites and scratches');
+  await expect(carer.getByRole('region', { name: 'Daily record' })).toContainText('Quiet but alert.');
+  await expect(carer.locator('.cp-pics img')).toBeVisible();
+  await expect(carer.locator('.cp-alerts')).toContainText('Bites and scratches');
   await carer.getByLabel('Urine', { exact: true }).selectOption('Yes');
   await carer.getByLabel('Status', { exact: true }).selectOption('Pre-release');
   await carer.getByLabel('Notes', { exact: true }).fill('Climbing in the aviary.');
   await carer.getByRole('button', { name: 'Add', exact: true }).click();
-  await expect(carer.locator('#cage-log li')).toHaveCount(2);
-  await expect(carer.locator('#cage-log li').first()).toContainText('Climbing in the aviary.'); // newest first
-  await expect(carer.locator('.cage-chips')).toContainText('Pre-release');
+  const rows = carer.getByRole('region', { name: 'Daily record' }).locator('tbody tr');
+  await expect(rows).toHaveCount(2);
+  await expect(rows.first()).toContainText('Climbing in the aviary.'); // newest first
+  await expect(carer.locator('.cp-status')).toHaveText('Pre-release');
   expect(store.db.abcdEFGH2345.plan.log.map((e) => e.text)).toEqual(['Quiet but alert.', 'Climbing in the aviary.']);
   expect(store.db.abcdEFGH2345.plan.log[1].status).toBe('Pre-release');
   await ctx.close();
 });
 
-test('the printed cage chart has the header, photo, QR code, alerts, a 7-day treatment sheet and a blank daily record', async ({ page }) => {
+test('the printed cage chart matches the screen: header, photo, QR code, alerts, a 7-day treatment sheet and a blank daily record; phones get it as a PDF', async ({ page }, info) => {
   const store = chartStore();
   await withKey(page, { role: 'vet', mode: 'cage' });
   await mockApi(page, { body: () => textReply(chart) });
   await store.route(page);
-  await page.addInitScript(() => { window.print = () => { window.__printed = document.getElementById('cage-print-card')?.innerHTML || ''; }; });
+  await page.addInitScript(() => { window.print = () => { window.__printed = document.getElementById('cage-print-card')?.innerHTML || ''; }; navigator.canShare = undefined; });
   await openApp(page);
   await page.locator('#add-gallery').setInputFiles({ name: 'possum.png', mimeType: 'image/png', buffer: PNG });
   await page.locator('#crop-dlg').getByRole('button', { name: 'Use whole photo' }).click(); // each photo offers a crop first
   await expect(page.locator('#photo-list .thumb')).toHaveCount(1);
   await page.locator('#transcript').fill('Brushtail possum 24-118, hit by car.');
   await page.locator('#create').click();
-  await expect(page.locator('#cage-qr svg')).toBeVisible();
+  await expect(page.locator('.cp-qr svg')).toBeVisible();
+  if (info.project.name === 'phone') {
+    const [dl] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Print cage chart' }).click()]);
+    expect(dl.suggestedFilename()).toMatch(/cage chart\.pdf$/);
+    return;
+  }
   await page.getByRole('button', { name: 'Print cage chart' }).click();
   const printed = await page.evaluate(() => window.__printed);
-  expect(printed).toContain(chart.title);
-  expect(printed).toContain('<svg');
-  expect(printed).toContain('<img');
-  expect(printed).toContain('ALERTS');
-  expect(printed).toContain('Bites and scratches');
-  expect(printed).toContain('Treatment sheet');
-  expect(printed).toContain('Meloxicam 5 mg/mL 0.2 mg/kg');
-  expect(printed).toContain('Daily record');
-  expect(printed).toContain('Cage ICU 3');
+  expect(printed).toContain('cage-paper is-print'); // the same layout as on screen
+  for (const t of [chart.title, '<svg', '<img', 'ALERTS', 'Bites and scratches', 'Treatment sheet (initial when given)', 'Meloxicam 5 mg/mL 0.2 mg/kg', 'Daily record', 'Cage ICU 3', 'Release when']) expect(printed).toContain(t);
 });
 
 test('without a connection, the chart still shows and says the QR code couldn’t be made, with Try again', async ({ page }) => {

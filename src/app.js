@@ -10,7 +10,7 @@ import { dropUnsaidBrands } from './drugs.js';
 import { lostNote } from './factcheck.js';
 import { homeDevice, HOME_STEPS } from './homescreen.js';
 import { preparePhoto, MAX_PHOTOS, thumbnailDataUrl } from './photos.js';
-import { cageRecord, withEntry, normaliseLog, qrSvg, entryTime, ATE, WEE, POO, MOOD, STATUSES, currentStatus, grams, showWeight, weightTrend, lastGiven } from './cage.js';
+import { cageRecord, withEntry, normaliseLog, qrSvg, entryTime, ATE, WEE, POO, MOOD, STATUSES, grams, showWeight, cageModel, entryCells, medLabel } from './cage.js';
 import { ABOUT_HTML } from './about.js';
 import { lookupSource, sourcesForPrompt, SOURCE_IDS, animalTags } from './sources.js';
 import { region, setRegion, BIRD_FLU_SIGNS, MAMMAL_FLU_SIGNS } from './region.js';
@@ -23,6 +23,7 @@ import { docModel, careModel, noteModel, wordFileName, THEMES } from './word.js'
 // PDF printouts (same layout as Word): the website loads the PDF maker only when PDF is tapped. The version inside
 // Claude is one file that loads all at once, so it leaves PDF out to stay quick to open.
 const buildPdf = __NO_PDF__ ? null : async (...args) => (await import('./pdf.js')).buildPdf(...args);
+const buildCagePdf = __NO_PDF__ ? null : async (...args) => (await import('./pdf.js')).buildCagePdf(...args);
 // The Word library is big: it loads only the first time someone asks for a Word file.
 let wordLib = null;
 const buildWord = async (...args) => {
@@ -50,7 +51,6 @@ import {
   buildDocPrompt,
   normaliseDoc,
   normaliseDocFor,
-  normaliseCageChart,
   docText,
   mediaReleaseText,
   dueLabel,
@@ -2895,13 +2895,6 @@ const keepCage = (raw, d) => (raw && raw.cage && raw.cage.id ? Object.assign(d, 
 /** The chart without its link key and photo: what Claude sees when it's changed. */
 const withoutCage = (d) => (d && d.cage ? (({ cage, ...rest }) => rest)(d) : d);
 const chartBy = () => { try { return localStorage.getItem('css.chartBy') || ''; } catch { return ''; } };
-const patientField = (d, name) => {
-  const p = d.sections.find((x) => /^patient$/i.test(x.heading));
-  const line = p && p.items.find((x) => x.toLowerCase().startsWith(`${name.toLowerCase()}:`));
-  const v = line ? line.slice(name.length + 1).trim() : '';
-  return /^not recorded$/i.test(v) ? '' : v;
-};
-const medLabel = (m) => [m.drug, m.dose, m.route].filter(Boolean).join(' ');
 const opts = (sel, list, blank) => sel.replaceChildren(el('option', { value: '', text: blank }), ...list.map((x) => el('option', { value: x, text: x })));
 opts($('cage-ate'), ATE, '–');
 opts($('cage-wee'), WEE, '–');
@@ -2912,83 +2905,77 @@ opts($('cage-status-pick'), STATUSES, 'No change');
 function renderCageBox(kind, d) {
   const box = $('cage-box');
   box.hidden = kind !== 'cage';
+  // The chart replaces the usual document layout: its own title, details and sections, laid out like the printout.
+  $('view-doc').dataset.kind = kind;
   if (kind !== 'cage') return;
   $('cage-by').value = chartBy();
   const c = d.cage;
-  $('cage-photo').hidden = !(c && c.photo);
-  if (c && c.photo) $('cage-photo').src = c.photo;
-  $('cage-qr').replaceChildren();
-  if (c && c.id) qrSvg(cageLink(c.id, c.key)).then((svg) => currentDoc && currentDoc.d.cage === c && $('cage-qr').replaceChildren(svg));
   $('cage-acts').hidden = !(c && c.id);
   $('cage-retry').hidden = true;
   $('cage-add').hidden = !(c && c.id);
-  $('cage-status').textContent = c && c.id ? 'Print this for the cage. Scanning it opens this chart, and whoever scans it can add to the daily record.' : 'Making the QR code for the cage…';
+  $('cage-status').textContent = c && c.id ? 'Print it for the cage. Scanning its QR code opens this chart, and whoever scans it can add to the daily record.' : 'Making the QR code for the cage…';
   const meds = (d.chart && d.chart.meds) || [];
   $('cage-meds').hidden = !meds.length;
   $('cage-meds-list').replaceChildren(...meds.map((m, i) => el('label', { class: 'check' }, [el('input', { type: 'checkbox', value: medLabel(m), id: `cage-med-${i}` }), ` ${medLabel(m)}`])));
-  if (!(c && c.id)) {
-    cageLog = [];
-    renderCageSheet(d);
-    makeCageChart(d);
-  } else {
-    renderCageSheet(d);
-    refreshCageLog(c);
-  }
+  if (!(c && c.id)) cageLog = [];
+  renderCageSheet(d);
+  if (c && c.id) refreshCageLog(c);
+  else makeCageChart(d);
 }
 
-// The chart's working parts, as staff read them at the cage: status and alerts first, then the treatment sheet
-// (with when each medicine was last given, and by whom), feeding, housing, monitoring, rechecks and release.
-function renderCageSheet(d) {
-  const ch = d.chart || normaliseCageChart({});
-  const status = currentStatus(cageLog, ch.status);
-  const given = lastGiven(cageLog);
-  const sec = (title, kids) => (kids.filter(Boolean).length ? el('section', { class: 'cage-sec' }, [el('h3', { text: title }), ...kids]) : null);
-  const items = (xs) => (xs.length ? el('ul', {}, xs.map((x) => el('li', { text: x }))) : null);
-  const line = (k, v) => (v ? el('p', {}, [el('strong', { text: `${k}: ` }), v]) : null);
-  const done = ['Released', 'Transferred', 'Died', 'Euthanased'].includes(status);
-  $('cage-sheet').replaceChildren(...[
-    el('p', { class: 'cage-chips' }, [
-      el('span', { class: `chip-status${done ? ' done' : /intensive|quarantine|isolation/i.test(status) ? ' warn' : ''}`, text: status }),
-      ch.cage ? el('span', { class: 'chip-cage', text: `Cage ${ch.cage.replace(/^cage\s*/i, '')}` }) : null,
-    ]),
-    ch.alerts.length ? el('section', { class: 'cage-alerts', role: 'note', 'aria-label': 'Alerts' }, [el('h3', { text: 'Alerts' }), items(ch.alerts)]) : null,
-    sec('Treatment sheet', [
-      ch.meds.length
-        ? el('ul', { class: 'cage-meds-sheet' }, ch.meds.map((m) => {
-            const g = given[medLabel(m)];
-            return el('li', {}, [
-              el('strong', { text: [m.drug, m.dose].filter(Boolean).join(' ') }),
-              el('span', { text: [m.route, m.how_often, m.times, m.until && `until ${m.until.replace(/^until\s*/i, '')}`].filter(Boolean).join(' · ') }),
-              el('span', { class: 'last', text: g ? `Last given ${entryTime(g.at)}${g.by ? ` by ${g.by}` : ''}` : 'Not given yet on this chart' }),
-            ]);
-          }))
-        : el('p', { class: 'muted', text: 'No medicines ordered.' }),
-    ]),
-    sec('Feeding', [
-      ch.feeds.length ? el('ul', {}, ch.feeds.map((f) => el('li', {}, [el('strong', { text: f.what }), ' ', [f.amount, f.how, f.how_often, f.times].filter(Boolean).join(' · ')]))) : null,
-      line('Water', ch.water),
-    ]),
-    sec('Housing', [items(ch.housing), line('Warmth', ch.warmth)]),
-    sec('Monitoring', [line('Weigh', ch.weigh), items(ch.monitor)]),
-    sec('Rechecks and procedures', [items(ch.rechecks)]),
-    sec('Release', [line('Target weight', ch.target_weight), items(ch.release), line('Release at', patientField(d, 'Found at'))]),
-  ].filter(Boolean));
-  renderCageLog(d);
-}
-
-function renderCageLog(d = currentDoc && currentDoc.d) {
-  const t = d ? weightTrend(grams(patientField(d, 'Admission weight')), cageLog) : null;
-  $('cage-trend').hidden = !(t && t.count > 1);
-  if (t && t.count > 1) $('cage-trend').textContent = `Weight: ${showWeight(t.first)} at admission, ${showWeight(t.last)} now (${t.change > 0 ? '+' : ''}${t.change}%).`;
-  $('cage-log').replaceChildren(...[...cageLog].reverse().map((e) => {
-    const facts = [e.weight_g != null && showWeight(e.weight_g), e.ate && `Ate: ${e.ate}`, e.wee && `Urine: ${e.wee}`, e.poo && `Faeces: ${e.poo}`, e.mood && e.mood, e.status && `Status: ${e.status}`].filter(Boolean);
-    return el('li', {}, [
-      el('time', { datetime: new Date(e.at).toISOString(), text: `${entryTime(e.at)}${e.by ? ` · ${e.by}` : ''}` }),
-      facts.length ? el('span', { class: 'facts', text: facts.join(' · ') }) : null,
-      e.meds.length ? el('span', { class: 'given', text: `Given: ${e.meds.join('; ')}` }) : null,
-      e.text ? el('span', { text: e.text }) : null,
+// The chart on screen is laid out like the printed cage chart (same model, same order, same paper look), with the
+// daily record filled in and, on the treatment sheet, when each medicine was last given and by whom.
+function cagePaper(m, { print = false, photo = null, qr = null } = {}) {
+  const cols = (parts) => {
+    const kids = parts.filter(([, xs]) => xs.length).map(([h, xs]) => el('div', {}, [el('h3', { text: h }), el('ul', {}, xs.map((x) => el('li', { text: x })))]));
+    return kids.length ? el('div', { class: 'cp-cols' }, kids) : null;
+  };
+  const table = (label, head, rows, cls = '') =>
+    el('div', { class: 'cp-scroll', role: 'region', tabindex: '0', 'aria-label': label }, [
+      el('table', { class: `cp-table ${cls}` }, [el('thead', {}, [el('tr', {}, head.map((h) => el('th', { scope: 'col', text: h })))]), el('tbody', {}, rows.map((r) => el('tr', {}, r.map((x) => el('td', { text: x })))))]),
     ]);
-  }));
+  const done = ['Released', 'Transferred', 'Died', 'Euthanased'].includes(m.status);
+  const recordHead = ['When', 'By', 'Weight', 'Ate', 'Urine', 'Faeces', 'Demeanour', 'Notes'];
+  const recordRows = print
+    ? Array.from({ length: 6 }, () => recordHead.map(() => ''))
+    : m.log.map((e) => { const c = entryCells(e); return [c.when, c.by, c.weight, c.ate, c.wee, c.poo, c.mood, c.notes]; });
+  return el('div', { class: `cage-paper${print ? ' is-print' : ''}` }, [
+    // Title, details and reason sit beside the photo and QR code; on a phone the details go full width below them.
+    el('div', { class: 'cp-head' }, [
+      el('div', { class: 'cp-id' }, [
+        el(print ? 'h1' : 'p', { class: 'cp-title', text: m.title }),
+        el('p', { class: 'cp-sub' }, [
+          [m.subtitle, m.cage && `Cage ${m.cage}`].filter(Boolean).join(' · '),
+          el('span', { class: `cp-status${done ? ' done' : /intensive|quarantine|isolation/i.test(m.status) ? ' warn' : ''}`, text: m.status }),
+        ]),
+      ]),
+      m.fields.length ? el('dl', { class: 'cp-fields' }, m.fields.flatMap(([k, v]) => [el('dt', { text: k }), el('dd', { text: v })])) : null,
+      m.why ? el('p', { class: 'cp-why', text: m.why }) : null,
+      photo || qr ? el('div', { class: 'cp-pics' }, [photo ? el('img', { src: photo, alt: print ? '' : 'Photo of the animal' }) : null, qr, qr ? el('p', { text: 'Scan for the chart and to add to the record' }) : null]) : null,
+    ]),
+    m.alerts.length ? el('div', { class: 'cp-alerts', role: 'note' }, [el('strong', { text: 'ALERTS: ' }), m.alerts.join(' · ')]) : null,
+    cols([['Findings', m.findings], ['Problem list', m.problems], ['Plan', m.plan], ...m.other.map((o) => [o.heading, o.items])]),
+    el('h3', { class: 'cp-h', text: print ? 'Treatment sheet (initial when given)' : 'Treatment sheet' }),
+    m.meds.length
+      ? print
+        ? table('Treatment sheet', ['Medicine and dose', 'Route', 'How often', ...m.days], m.meds.map((x) => [x.name, x.route, [x.often, x.until && `until ${x.until}`].filter(Boolean).join(', '), ...m.days.map(() => '')]), 'cp-grid')
+        : table('Treatment sheet', ['Medicine and dose', 'Route', 'How often', 'Until', 'Last given'], m.meds.map((x) => [x.name, x.route, x.often, x.until, x.last ? `${entryTime(x.last.at)}${x.last.by ? `, ${x.last.by}` : ''}` : 'Not yet']))
+      : el('p', { class: 'cp-none', text: 'No medicines ordered.' }),
+    m.feeds.length || m.water ? el('h3', { class: 'cp-h', text: 'Feeding' }) : null,
+    m.feeds.length ? table('Feeding', ['What', 'Amount', 'How', 'How often'], m.feeds.map((f) => [f.what, f.amount, f.how, f.often])) : null,
+    m.water ? el('p', { class: 'cp-line' }, [el('strong', { text: 'Water: ' }), m.water]) : null,
+    cols([['Housing', m.housing], ['Monitoring', m.monitoring], ['Rechecks', m.rechecks], ['Release when', m.release]]),
+    el('h3', { class: 'cp-h', text: 'Daily record' }),
+    !print && m.trend && m.trend.count > 1 ? el('p', { class: 'cp-trend', id: 'cage-trend', text: `Weight: ${showWeight(m.trend.first)} at admission, ${showWeight(m.trend.last)} now (${m.trend.change > 0 ? '+' : ''}${m.trend.change}%).` }) : null,
+    recordRows.length ? table('Daily record', recordHead, recordRows, `cp-record${print ? ' cp-grid' : ''}`) : el('p', { class: 'cp-none', text: 'Nothing recorded yet.' }),
+  ]);
+}
+
+function renderCageSheet(d) {
+  const c = d.cage;
+  const qr = el('div', { class: 'cp-qr' });
+  if (c && c.id) qrSvg(cageLink(c.id, c.key)).then((svg) => qr.replaceChildren(svg));
+  $('cage-sheet').replaceChildren(cagePaper(cageModel(d, cageLog), { photo: c && c.photo, qr: c && c.id ? qr : null }));
 }
 
 async function makeCageChart(d) {
@@ -3079,43 +3066,18 @@ $('cage-link').addEventListener('click', () => {
   if (c) copyText(cageLink(c.id, c.key)).then((ok) => toast(ok ? 'Chart link copied. Anyone with it can read the chart and add to it.' : 'Couldn’t copy the link.'));
 });
 
-// The printed chart for the cage door: the header, photo and QR code, alerts, the treatment sheet with a tick box
-// for each of the next 7 days, feeding, housing and monitoring, and a blank daily record to fill in by hand when
-// there's no phone to hand. It's the paper back-up of the same chart.
-$('cage-print').addEventListener('click', async () => {
+// The printed chart for the cage door: the same layout as on screen, with a tick box for each medicine on each of
+// the next 7 days and a blank daily record to fill in by hand when there's no phone to hand. Phones get it as a PDF
+// (to print or share from there), as their print preview doesn't lay pages out reliably; computers print it straight.
+$('cage-print').addEventListener('click', async (ev) => {
   const d = currentDoc && currentDoc.d;
   if (!d || !d.cage) return;
-  const ch = d.chart || normaliseCageChart({});
-  const qr = await qrSvg(cageLink(d.cage.id, d.cage.key));
-  const days = Array.from({ length: 7 }, (_, i) => new Date(Date.now() + i * 864e5).toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric' }));
-  const fields = ['ID', 'Species', 'Sex', 'Age class', 'Admission weight', 'Found at', 'Vet'].map((k) => [k, patientField(d, k)]).filter(([, v]) => v);
-  const table = (head, rows, cls = '') => el('table', { class: cls }, [el('thead', {}, [el('tr', {}, head.map((h) => el('th', { text: h })))]), el('tbody', {}, rows.map((r) => el('tr', {}, r.map((x) => el('td', { text: x })))))]);
-  const why = d.sections.find((x) => /why it.s here/i.test(x.heading));
+  const m = cageModel(d, cageLog);
+  const link = cageLink(d.cage.id, d.cage.key);
+  if (onPhone() && buildCagePdf && !inClaude) return cagePdf(m, d.cage.photo, link, ev.currentTarget);
+  const qr = await qrSvg(link);
   document.getElementById('cage-print-card')?.remove();
-  document.body.append(el('div', { id: 'cage-print-card' }, [
-    el('div', { class: 'cpc-head' }, [
-      el('div', {}, [
-        el('h1', { text: d.title }),
-        el('p', { class: 'cpc-sub', text: [d.subtitle, ch.cage && `Cage ${ch.cage.replace(/^cage\s*/i, '')}`, `Status: ${currentStatus(cageLog, ch.status)}`].filter(Boolean).join(' · ') }),
-        el('dl', {}, fields.flatMap(([k, v]) => [el('dt', { text: k }), el('dd', { text: v })])),
-        why ? el('p', { class: 'cpc-why', text: why.text || why.items.join('; ') }) : null,
-      ]),
-      el('div', { class: 'cpc-pics' }, [d.cage.photo ? el('img', { src: d.cage.photo, alt: '' }) : null, qr, el('p', { text: 'Scan for the chart and to add to the record' })]),
-    ]),
-    ch.alerts.length ? el('div', { class: 'cpc-alerts' }, [el('strong', { text: 'ALERTS: ' }), ch.alerts.join(' · ')]) : null,
-    ch.meds.length ? el('h2', { text: 'Treatment sheet (initial when given)' }) : null,
-    ch.meds.length ? table(['Medicine and dose', 'Route', 'How often', ...days], ch.meds.map((m) => [[m.drug, m.dose].filter(Boolean).join(' '), m.route, [m.how_often, m.times].filter(Boolean).join(', '), ...days.map(() => '')]), 'cpc-grid') : null,
-    ch.feeds.length ? el('h2', { text: 'Feeding' }) : null,
-    ch.feeds.length ? table(['What', 'Amount', 'How', 'How often'], ch.feeds.map((f) => [f.what, f.amount, f.how, [f.how_often, f.times].filter(Boolean).join(', ')])) : null,
-    el('div', { class: 'cpc-cols' }, [
-      ch.housing.length || ch.warmth ? el('div', {}, [el('h2', { text: 'Housing' }), el('ul', {}, [...ch.housing, ...(ch.warmth ? [`Warmth: ${ch.warmth}`] : [])].map((x) => el('li', { text: x })))]) : null,
-      ch.weigh || ch.monitor.length ? el('div', {}, [el('h2', { text: 'Monitoring' }), el('ul', {}, [...(ch.weigh ? [`Weigh: ${ch.weigh}`] : []), ...ch.monitor].map((x) => el('li', { text: x })))]) : null,
-      ch.rechecks.length ? el('div', {}, [el('h2', { text: 'Rechecks' }), el('ul', {}, ch.rechecks.map((x) => el('li', { text: x })))]) : null,
-      ch.release.length || ch.target_weight ? el('div', {}, [el('h2', { text: 'Release when' }), el('ul', {}, [...ch.release, ...(ch.target_weight ? [`Target weight: ${ch.target_weight}`] : [])].map((x) => el('li', { text: x })))]) : null,
-    ]),
-    el('h2', { text: 'Daily record' }),
-    table(['Date and time', 'Weight', 'Ate', 'Urine', 'Faeces', 'Demeanour', 'Notes', 'Initials'], Array.from({ length: 6 }, () => Array(8).fill('')), 'cpc-grid cpc-record'),
-  ]));
+  document.body.append(el('div', { id: 'cage-print-card' }, [cagePaper(m, { print: true, photo: d.cage.photo, qr })]));
   document.body.dataset.print = 'cage';
   const theme = document.documentElement.dataset.theme;
   document.documentElement.dataset.theme = 'light';
@@ -3132,6 +3094,30 @@ $('cage-print').addEventListener('click', async () => {
     done();
   }
 });
+async function cagePdf(m, photo, link, btn) {
+  const label = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Making the chart…';
+  try {
+    const blob = await buildCagePdf(m, { photo, link });
+    const filename = `${wordFileName(m.title).replace(/\.docx$/i, '')} cage chart.pdf`;
+    const file = typeof File === 'function' ? new File([blob], filename, { type: 'application/pdf' }) : null;
+    if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], title: m.title });
+        return;
+      } catch (e) {
+        if (e && e.name === 'AbortError') return;
+      }
+    }
+    await deliverWord(blob, filename, 'Saved. Open the PDF and print it from there.');
+  } catch {
+    toast('Couldn’t make the cage chart. Try again.');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = label;
+  }
+}
 
 // Scanned from a cage: open the chart, ready to add to. Not saved under Plans: the QR code is where it lives.
 async function openCageLink({ id, key }) {
