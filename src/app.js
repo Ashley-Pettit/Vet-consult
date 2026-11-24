@@ -88,6 +88,7 @@ import {
   normaliseCareSheet,
   rehydrationTable,
   caseNumberIn,
+  MAX_PLAN_PHOTOS,
   rehydrationNote,
   rehydrationIntro,
   mlCell,
@@ -1959,8 +1960,17 @@ function libraryChanged(sheet) {
     $('care-reset').hidden = false;
     toast('Saved to the ready-made plan on this device.');
   } else {
-    remember('care', { sheet, from: 'library' }, sheet.animal);
-    toast('Updated. The ready-made plan itself is unchanged.');
+    // Their own version, under Plans > Saved; the ready-made plan stays as it was.
+    const name = `${planName()} (my version)`.slice(0, 80);
+    const entry = { id: `p${Date.now().toString(36)}`, name, sheet, savedAt: Date.now(), fromLibrary: libraryPlan ? libraryPlan.id : null };
+    if (!store.savePlan(entry)) {
+      remember('care', { sheet, from: 'library' }, sheet.animal);
+      return toast('This device is out of space, so it’s kept in Recent only. Remove a saved plan to save it.');
+    }
+    libraryPlan = null;
+    savedId = entry.id;
+    showCare(sheet, 'saved', '', true);
+    toast('Saved as your own version under Plans. The ready-made plan is unchanged.');
   }
 }
 $('open-library').addEventListener('click', openLibrary);
@@ -2479,7 +2489,12 @@ function feedSection(c) {
 }
 
 // The photos sent with this plan, for the Word printout (JPEG bytes).
-const wordPhotos = () => sendPhotos().map((p) => Uint8Array.from(atob(p.data), (ch) => ch.charCodeAt(0)));
+const b64Bytes = (b64) => Uint8Array.from(atob(b64), (ch) => ch.charCodeAt(0));
+// Photos for a printout: the plan's own, then this recording's (only for a plan made from it just now).
+const wordPhotos = () => [
+  ...(document.body.dataset.view === 'care' && careSheet && careSheet.photos ? careSheet.photos : []),
+  ...(document.body.dataset.view !== 'care' || careFrom === 'record' || careFrom === 'note' ? sendPhotos().map((p) => p.data) : []),
+].map(b64Bytes);
 
 // A kind word about pigeons, for vets only, as Bunurong Wildlife Care asked.
 const PIGEON_FACT = 'Pigeons are sweet, kind and accepting of each other, and they cope really well in care (if you leave them alone). They often thrive once released, with a good chance of a happy life in the wild.';
@@ -2596,6 +2611,7 @@ function renderCare(c) {
   $('care-case-label').textContent = region().caseLabel;
   $('care-case').placeholder = region().casePlaceholder || '';
   $('care-case').value = c.case_number || '';
+  renderCarePhotos(c);
   $('care-back-label').textContent = careFrom === 'note' ? 'Back to note' : careFrom === 'library' || careFrom === 'saved' ? 'Back to plans' : 'Back';
   $('care-back-2').textContent = 'Edit plan';
   // Tick sheet: one row per daily job, one column per day, big boxes. Printable on its own for the fridge.
@@ -2776,9 +2792,53 @@ $('care-case').addEventListener('change', () => {
   const v = $('care-case').value.trim().slice(0, 40);
   if (v === (careSheet.case_number || '')) return;
   const { case_number, ...rest } = careSheet;
-  careSheet = v ? { ...rest, case_number: v } : rest;
-  if (careFrom !== 'library' && careFrom !== 'saved') remember('care', { sheet: careSheet, from: careFrom }, careSheet.animal);
-  if (updateSavedPlan(careSheet)) toast('Case number saved with your plan.');
+  keepPlanChange(v ? { ...rest, case_number: v } : rest, 'Case number saved with your plan.');
+});
+
+// A small change made on the plan itself (case number, photos): kept with the plan wherever it lives.
+function keepPlanChange(sheet, done) {
+  careSheet = sheet;
+  if (careFrom === 'library') return libraryChanged(sheet);
+  if (careFrom !== 'saved') remember('care', { sheet, from: careFrom }, sheet.animal);
+  if (updateSavedPlan(sheet)) toast(done);
+}
+
+// Photos on the plan: kept with it (on this device) and printed in the Word printout. Not sent in links or to the AI.
+function renderCarePhotos(c) {
+  const list = $('care-photo-list');
+  const pics = c.photos || [];
+  list.replaceChildren(
+    ...pics.map((b64, i) => {
+      const del = el('button', { type: 'button', class: 'plan-photo-del', 'aria-label': `Remove photo ${i + 1}`, title: 'Remove photo', onclick: () => removeCarePhoto(i) });
+      del.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+      return el('li', {}, [el('img', { src: `data:image/jpeg;base64,${b64}`, alt: `Photo ${i + 1} of the animal` }), del]);
+    }),
+  );
+  list.hidden = !pics.length;
+  $('care-photos').hidden = settings.photosOn === false && !pics.length;
+  $('care-photo-label').hidden = pics.length >= MAX_PLAN_PHOTOS || settings.photosOn === false;
+}
+function removeCarePhoto(i) {
+  if (!careSheet || !careSheet.photos) return;
+  const photos = careSheet.photos.filter((_, j) => j !== i);
+  const { photos: _, ...rest } = careSheet;
+  keepPlanChange(photos.length ? { ...rest, photos } : rest, 'Photo removed.');
+  renderCarePhotos(careSheet);
+}
+$('care-photo-add').addEventListener('change', async (e) => {
+  const file = e.target.files && e.target.files[0];
+  e.target.value = '';
+  if (!file || !careSheet) return;
+  if (!isPhoto(file)) return toast('That isn’t a photo: try a JPEG, PNG or HEIC.');
+  try {
+    const p = await preparePhoto(file);
+    const small = (await thumbnailDataUrl(p.blob, 1000, 0.78)).split(',')[1];
+    URL.revokeObjectURL(p.url);
+    keepPlanChange({ ...careSheet, photos: [...(careSheet.photos || []), small].slice(0, MAX_PLAN_PHOTOS) }, 'Photo added. It prints in the Word printout.');
+    renderCarePhotos(careSheet);
+  } catch {
+    toast('Couldn’t read that photo. Try another, or take a screenshot of it.');
+  }
 });
 $('care-case').addEventListener('keydown', (e) => e.key === 'Enter' && e.currentTarget.blur());
 // Copy offers Share (the phone's share sheet) or Copy as text. Without sharing (some computers), it just copies.

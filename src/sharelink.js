@@ -17,8 +17,14 @@ async function pipe(bytes, stream) {
 }
 
 /** The plan (any JSON) as a link fragment: "z" + deflated, or "j" + plain where the browser can't compress. */
+// Photos stay on the device: a link or shared copy carries the plan's words only.
+const lean = (obj) => {
+  if (!obj || !obj.sheet || !obj.sheet.photos) return obj;
+  const { photos, ...sheet } = obj.sheet;
+  return { ...obj, sheet };
+};
 export async function packPlan(obj) {
-  const bytes = new TextEncoder().encode(JSON.stringify(obj));
+  const bytes = new TextEncoder().encode(JSON.stringify(lean(obj)));
   if (typeof CompressionStream === 'function') {
     try {
       return 'z' + toB64url(await pipe(bytes, new CompressionStream('deflate-raw')));
@@ -56,7 +62,7 @@ const ID = /^[a-zA-Z0-9]{10,16}$/;
 export async function storePlan(obj, proxyUrl, { edit = false } = {}, fetchImpl = typeof fetch === 'function' ? fetch : null) {
   if (!proxyUrl || !fetchImpl) return null;
   try {
-    const r = await fetchImpl(`${api(proxyUrl)}${edit ? '?edit=1' : ''}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(obj), signal: timeout(10000) });
+    const r = await fetchImpl(`${api(proxyUrl)}${edit ? '?edit=1' : ''}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(lean(obj)), signal: timeout(10000) });
     const j = r.ok ? await r.json() : null;
     return j && typeof j.id === 'string' && ID.test(j.id) && (!edit || typeof j.key === 'string') ? j : null;
   } catch {
@@ -92,7 +98,7 @@ export async function fetchSharedPlan(id, proxyUrl, fetchImpl = fetch) {
 /** Save changes to an editable stored plan. Returns the new updated time, or null if it couldn't be saved. */
 export async function updateSharedPlan(id, key, obj, proxyUrl, fetchImpl = fetch) {
   try {
-    const r = await fetchImpl(`${api(proxyUrl)}/${encodeURIComponent(id)}`, { method: 'PUT', headers: { 'content-type': 'application/json', 'x-edit-key': key }, body: JSON.stringify(obj), signal: timeout(10000) });
+    const r = await fetchImpl(`${api(proxyUrl)}/${encodeURIComponent(id)}`, { method: 'PUT', headers: { 'content-type': 'application/json', 'x-edit-key': key }, body: JSON.stringify(lean(obj)), signal: timeout(10000) });
     return r.ok ? (await r.json()).updated : null;
   } catch {
     return null;

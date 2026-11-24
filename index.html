@@ -286,6 +286,12 @@
         <label for="care-case" id="care-case-label">Wildlife Victoria case number</label>
         <input id="care-case" type="text" maxlength="40" autocomplete="off" autocapitalize="characters" spellcheck="false" enterkeyhint="done" placeholder="For example 26-04417">
       </div>
+      <div class="plan-photos" id="care-photos">
+        <ul class="plan-photo-list" id="care-photo-list" aria-label="Photos on this plan"></ul>
+        <label class="btn small ghost plan-photo-add" id="care-photo-label"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><span>Add a photo</span>
+          <input type="file" id="care-photo-add" accept="image/jpeg,image/png,image/heic,image/heif,image/webp" class="sr-only">
+        </label>
+      </div>
     </div>
     <p id="care-banner" class="banner" data-tone="info" hidden></p>
     <section id="care-endorse" class="endorse" aria-live="polite" hidden>
@@ -304,9 +310,9 @@
       <button type="button" class="btn ghost" id="care-edit">Edit text</button>
       <button type="button" class="link" id="care-reset" hidden>Reset to original</button>
     </div>
-    <button type="button" class="btn ghost word-btn" id="word-care"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 11v6M9 14l3 3 3-3"/></svg>Word printout</button>
-    <div class="actions">
+    <div class="actions care-actions">
       <button type="button" class="btn ghost" id="care-back-2">Edit plan</button>
+      <button type="button" class="btn ghost word-btn" id="word-care"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 11v6M9 14l3 3 3-3"/></svg><span>Word printout</span></button>
       <button type="button" class="btn primary" id="care-copy">Share plan</button>
     </div>
   </section>

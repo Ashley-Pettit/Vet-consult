@@ -873,8 +873,9 @@ export const mlCell = (v) => (v == null ? '–' : `${v} mL`);
 
 /** A care plan as the AI sees it in a Change: the rehydration figures on screen are included, so it can change them. */
 export function careForAmend(c) {
-  const rows = tableRows(rehydrationTable(c.rehydration));
-  return rows ? { ...c, rehydration: { ...c.rehydration, table: rows } } : c;
+  const lean = withoutPhotos(c);
+  const rows = tableRows(rehydrationTable(lean.rehydration));
+  return rows ? { ...lean, rehydration: { ...lean.rehydration, table: rows } } : lean;
 }
 /**
  * After a Change: a rehydration table sent back unchanged is just a copy, so the app works the amounts out again
@@ -894,6 +895,16 @@ export function settleRehydration(before, after) {
   if (sameRows(r1.table, tableRows(rehydrationTable(plain)))) return drop();
   return after;
 }
+
+/** Photos kept with a plan (JPEG, base64, no data: prefix): at most 3, each under about 400 KB. */
+export const MAX_PLAN_PHOTOS = 3;
+const planPhotos = (v) => (Array.isArray(v) ? v.filter((x) => typeof x === 'string' && /^\/9j\/[A-Za-z0-9+/=]+$/.test(x) && x.length < 560000).slice(0, MAX_PLAN_PHOTOS) : []);
+/** A plan without its photos: what goes to the AI and into share links. */
+export const withoutPhotos = (c) => {
+  if (!c || !c.photos) return c;
+  const { photos, ...rest } = c;
+  return rest;
+};
 
 /** A case or job number said or typed in the words (for example "Wildlife Victoria case 26-04417"), or ''. */
 export function caseNumberIn(text) {
@@ -1000,6 +1011,7 @@ export function normaliseCareSheet(raw, knownSources = null) {
   return {
     animal: str(r.animal, 80),
     ...(str(r.case_number, 40) ? { case_number: str(r.case_number, 40) } : {}),
+    ...(planPhotos(r.photos).length ? { photos: planPhotos(r.photos) } : {}),
     species: str(r.species, 80),
     kind,
     summary: str(r.summary, 1200),

@@ -1848,3 +1848,27 @@ details.care-sec.fold .fold-actions { margin: 10px 0; }
 .edit-ai .btn { display: inline-flex; align-items: center; gap: 8px; }
 .edit-ai .btn svg { width: 20px; height: 20px; }
 .edit-ai .help { margin: 0; }
+
+/* The plan's three actions at the bottom: Edit plan, Word printout, Share plan. */
+.care-actions { grid-template-columns: 1fr 1fr 1fr; }
+.care-actions .btn { padding-left: 8px; padding-right: 8px; min-width: 0; }
+.care-actions .word-btn { width: auto; }
+@media (max-width: 560px) {
+  .care-actions { gap: 8px; }
+  .care-actions .btn { font-size: 0.92rem; letter-spacing: 0.02em; padding-left: 6px; padding-right: 6px; }
+  .care-actions .word-btn svg { display: none; }
+}
+@media (min-width: 720px) { #view-care > .care-actions { grid-template-columns: auto auto auto; justify-content: end; } }
+/* Photos on the plan: small thumbnails with a remove button, and Add a photo. */
+.plan-photos { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 12px 0 0; }
+.plan-photo-list { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.plan-photo-list[hidden] { display: none; }
+.plan-photo-list li { position: relative; }
+.plan-photo-list img { display: block; width: 84px; height: 84px; object-fit: cover; border-radius: 10px; border: 1px solid var(--line); }
+.plan-photo-del { position: absolute; top: -8px; right: -8px; display: grid; place-items: center; width: 28px; height: 28px; padding: 0; border: 0; border-radius: 50%; background: var(--ink); color: var(--bg); cursor: pointer; }
+.plan-photo-del svg { width: 14px; height: 14px; }
+.plan-photo-add { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+.plan-photo-add svg { width: 18px; height: 18px; }
+.plan-photo-add[hidden] { display: none; }
+@media print { .plan-photo-del, .plan-photo-add { display: none !important; } }
+@media (max-width: 380px) { .care-actions .btn { white-space: normal; line-height: 1.15; } }

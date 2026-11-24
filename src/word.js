@@ -111,7 +111,7 @@ export function careModel(c, lookup, photos = [], video = null) {
     ...feedBlocks(c.feed_calc),
     { heading: 'Activity and handling', items: c.activity },
     { heading: 'Other care', items: c.care },
-    { heading: 'What the photo shows', items: c.photo_findings || [], tone: 'photo', photos },
+    { heading: c.photo_findings && c.photo_findings.length ? 'What the photo shows' : 'Photos', items: c.photo_findings || [], tone: 'photo', photos },
   ];
   const tickDays = Math.min(c.log_days || 7, 14);
   if (c.daily_checks.length) blocks.push({ heading: 'Daily tick sheet', text: `On the last page, sized to print and stick on the fridge (${tickDays} days).` });
