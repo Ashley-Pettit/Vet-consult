@@ -39,6 +39,36 @@ const META = {
   'lib-frogmouth-adult': ['frogmouth', 'Tawny frogmouth', 'Adult', 'about 400 g'],
   'lib-bluetongue-juvenile': ['bluetongue', 'Eastern blue-tongue lizard', 'Juvenile', 'about 30 g'],
   'lib-bluetongue-adult': ['bluetongue', 'Eastern blue-tongue lizard', 'Adult', 'about 400 g'],
+  'lib-erosella-nestling': ['erosella', 'Eastern rosella', 'Nestling', 'about 40 g'],
+  'lib-erosella-fledgling': ['erosella', 'Eastern rosella', 'Fledgling', 'about 95 g'],
+  'lib-erosella-adult': ['erosella', 'Eastern rosella', 'Adult', 'about 105 g'],
+  'lib-lorikeet-nestling': ['lorikeet', 'Rainbow lorikeet', 'Nestling', 'about 70 g'],
+  'lib-lorikeet-adult': ['lorikeet', 'Rainbow lorikeet', 'Adult', 'about 130 g'],
+  'lib-woodduck-duckling': ['woodduck', 'Australian wood duck', 'Downy duckling', 'about 40 g'],
+  'lib-woodduck-older': ['woodduck', 'Australian wood duck', 'Feathering duckling', 'about 350 g'],
+  'lib-woodduck-adult': ['woodduck', 'Australian wood duck', 'Adult', 'about 800 g'],
+  'lib-shearwater-fledgling': ['shearwater', 'Short-tailed shearwater', 'Grounded fledgling', 'about 550 g'],
+  'lib-shearwater-adult': ['shearwater', 'Short-tailed shearwater', 'Adult (beach-washed)', 'about 550 g'],
+  'lib-crosella-nestling': ['crosella', 'Crimson rosella', 'Nestling', 'about 60 g'],
+  'lib-crosella-adult': ['crosella', 'Crimson rosella', 'Adult', 'about 130 g'],
+  'lib-heron-nestling': ['heron', 'White-faced heron', 'Nestling', 'about 300 g'],
+  'lib-heron-adult': ['heron', 'White-faced heron', 'Adult', 'about 550 g'],
+  'lib-swallow-nestling': ['swallow', 'Welcome swallow', 'Nestling', 'about 10 g'],
+  'lib-swallow-adult': ['swallow', 'Welcome swallow', 'Adult', 'about 15 g'],
+  'lib-forestbat-adult': ['forestbat', 'Little forest bat', 'Adult (vaccinated carers only)', 'about 4 g'],
+  'lib-lbcormorant-adult': ['lbcormorant', 'Little black cormorant', 'Adult', 'about 800 g'],
+  'lib-turtle-hatchling': ['turtle', 'Common long-necked turtle', 'Hatchling', 'about 8 g'],
+  'lib-turtle-adult': ['turtle', 'Common long-necked turtle', 'Adult', 'about 1 kg'],
+  'lib-boobook-owlet': ['boobook', 'Southern boobook', 'Owlet', 'about 180 g'],
+  'lib-boobook-adult': ['boobook', 'Southern boobook', 'Adult', 'about 250 g'],
+  'lib-blackwallaby-unfurred': ['blackwallaby', 'Black wallaby', 'Unfurred joey', 'about 250 g'],
+  'lib-blackwallaby-furred': ['blackwallaby', 'Black wallaby', 'Furred pouch joey', 'about 1.5 kg'],
+  'lib-blackwallaby-atfoot': ['blackwallaby', 'Black wallaby', 'Young at foot', 'about 6 kg'],
+  'lib-galah-nestling': ['galah', 'Galah', 'Nestling', 'about 150 g'],
+  'lib-galah-adult': ['galah', 'Galah', 'Adult', 'about 330 g'],
+  'lib-wattlebird-nestling': ['wattlebird', 'Red wattlebird', 'Nestling', 'about 60 g'],
+  'lib-wattlebird-adult': ['wattlebird', 'Red wattlebird', 'Adult', 'about 110 g'],
+  'lib-bfcormorant-adult': ['bfcormorant', 'Black-faced cormorant', 'Adult', 'about 1.6 kg'],
 };
 
 const scen = JSON.parse(fs.readFileSync(APP + 'scripts/qa/scenarios.library.json', 'utf8'));
@@ -48,6 +78,12 @@ for (const f of fs.readdirSync(SIM + 'prompts').filter((x) => x.endsWith('.json'
   if (d.scenario && d.scenario.startsWith('lib-')) keyFor[d.scenario] = f.slice(0, -5);
 }
 const json = (t) => JSON.parse(t.slice(t.indexOf('{'), t.lastIndexOf('}') + 1));
+// Plans already built keep their sheet when their reply isn't on this machine (replies live in qa-out/, not in git).
+const built = {};
+try {
+  const prev = (await import(APP + 'src/library-plans.js?' + Date.now())).default;
+  for (const a of prev.animals) for (const pl of a.plans) built[pl.id] = pl.sheet;
+} catch {}
 const animals = [];
 const missing = [];
 for (const [id, [aid, name, stage, weight]] of Object.entries(META)) {
@@ -55,6 +91,12 @@ for (const [id, [aid, name, stage, weight]] of Object.entries(META)) {
   const key = keyFor[id];
   const file = key && SIM + 'replies/' + key + '.txt';
   if (!s || !file || !fs.existsSync(file)) {
+    if (s && built[id]) {
+      let a = animals.find((x) => x.id === aid);
+      if (!a) animals.push((a = { id: aid, name, plans: [] }));
+      a.plans.push({ id, stage, weight, text: s.text, sheet: built[id] });
+      continue;
+    }
     missing.push(id);
     continue;
   }

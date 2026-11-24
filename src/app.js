@@ -1911,9 +1911,11 @@ async function openLibrary() {
   const note = $('library-note');
   note.hidden = region().code === 'vic';
   note.textContent = 'These plans follow Victorian guidance. Check Queensland rules and contacts before you use one.';
+  // A to Z, each with the words it can be found by: its name, other names and stages.
+  const animals = [...library.animals].sort((x, y) => x.name.localeCompare(y.name));
   $('library-list').replaceChildren(
-    ...library.animals.map((a) =>
-      el('section', { class: 'lib-animal' }, [
+    ...animals.map((a) =>
+      el('section', { class: 'lib-animal', 'data-find': [a.name, ...a.plans.flatMap((p) => [p.stage, p.sheet.species, p.sheet.animal])].join(' ').toLowerCase() }, [
         el('h2', { text: a.name }),
         el('ul', { class: 'lib-plans' }, a.plans.map((p) =>
           el('li', {}, [
@@ -1927,6 +1929,8 @@ async function openLibrary() {
       ]),
     ),
   );
+  $('lib-find').value = '';
+  findLibrary();
   renderSaved();
   renderRecent();
   // Opens on Saved when there's something saved, otherwise Recent, otherwise the ready-made plans.
@@ -1974,6 +1978,18 @@ function libraryChanged(sheet) {
   }
 }
 $('open-library').addEventListener('click', openLibrary);
+// Find an animal among the ready-made plans: every word typed must match its name, other names or stages.
+function findLibrary() {
+  const words = $('lib-find').value.toLowerCase().split(/\s+/).filter(Boolean);
+  let shown = 0;
+  for (const s of $('library-list').querySelectorAll('.lib-animal')) {
+    const hit = words.every((w) => s.dataset.find.includes(w));
+    s.hidden = !hit;
+    if (hit) shown += 1;
+  }
+  $('lib-none').hidden = shown > 0;
+}
+$('lib-find').addEventListener('input', findLibrary);
 
 /* ---------------- saved plans (favourites) ---------------- */
 

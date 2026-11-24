@@ -1872,3 +1872,7 @@ details.care-sec.fold .fold-actions { margin: 10px 0; }
 .plan-photo-add[hidden] { display: none; }
 @media print { .plan-photo-del, .plan-photo-add { display: none !important; } }
 @media (max-width: 380px) { .care-actions .btn { white-space: normal; line-height: 1.15; } }
+
+/* Ready-made plans: find an animal. */
+.lib-find { margin: 4px 0 14px; }
+.lib-animal[hidden] { display: none; }
