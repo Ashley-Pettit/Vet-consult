@@ -91,7 +91,7 @@ import {
   feedAmounts,
 } from './note.js';
 import { chartByKey } from './feeding.js';
-import { shortPlanLink, unpackPlan, linkCode, linkId, shortLink, fetchSharedPlan, storePlan, reviewLink, updateSharedPlan, cageLink, cageHash } from './sharelink.js';
+import { appLink, shortPlanLink, unpackPlan, linkCode, linkId, shortLink, fetchSharedPlan, storePlan, reviewLink, updateSharedPlan, cageLink, cageHash } from './sharelink.js';
 import { vetLabel, drName, medsKey, changedParts } from './plan-changes.js';
 import { account, admin, accountError } from './account.js';
 import { rxFromPlan, rxModel, rxProblems, animalFacts } from './rx.js';
@@ -3457,6 +3457,20 @@ function closeAbout() {
   showView(lastView === 'working' ? 'record' : lastView);
 }
 els.openAbout.addEventListener('click', () => (els.views.about.hidden ? openAbout() : closeAbout()));
+// Share this app (top left): the phone's share sheet, or copy the link where there isn't one (most computers, inside Claude).
+$('share-app').addEventListener('click', async () => {
+  const url = appLink();
+  if (canShare()) {
+    try {
+      await navigator.share({ title: 'Wildlife Welfare Companion', text: 'Wildlife care plans, intake records, care logs and vet notes. By Bunurong Wildlife Care.', url });
+      return;
+    } catch (e) {
+      if (e && e.name === 'AbortError') return; // they closed the share sheet
+    }
+  }
+  const ok = await copyText(url);
+  toast(ok ? 'Link to the app copied. Paste it into a text, email or WhatsApp.' : 'Couldn’t copy the link.');
+});
 els.about.addEventListener('click', (e) => {
   const t = e.target.closest('[data-action]');
   if (!t) return;
