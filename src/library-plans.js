@@ -4739,7 +4739,7 @@ export default {
       "case_number": "",
       "species": "Short-tailed shearwater (Ardenna tenuirostris)",
       "kind": "wildlife",
-      "summary": "This short-tailed shearwater fledgling, about 550 g, was found grounded inland in April, fully feathered and alert. Young shearwaters are often drawn inland by lights on their first flight to sea, so the goal is a short stay: check it is uninjured and waterproof, then release it at the coast as soon as possible.",
+      "summary": "This short-tailed shearwater fledgling, about 550 g, was found grounded inland in autumn, fully feathered and alert. Young shearwaters are often drawn inland by lights on their first flight to sea, so the goal is a short stay: check it is uninjured and waterproof, then release it at the coast as soon as possible.",
       "photo_findings": [],
       "medications": [],
       "plan": [
@@ -5699,12 +5699,12 @@ export default {
    ]
   },
   {
-   "id": "forestbat",
-   "name": "Little forest bat",
+   "id": "microbat",
+   "name": "Microbats (vaccinated carers only)",
    "plans": [
     {
      "id": "lib-forestbat-adult",
-     "stage": "Adult (vaccinated carers only)",
+     "stage": "Little forest bat, adult",
      "weight": "about 4 g",
      "text": "Ready-made plan: an adult little forest bat (microbat), about 4 g, in care and recovering, with no injuries needing treatment and no medicines. For vaccinated, trained carers only. Write a standard plan another carer can follow for a bat like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
@@ -5810,16 +5810,235 @@ export default {
        "vic-rehab-guidelines-part-a"
       ]
      }
+    },
+    {
+     "id": "lib-largeforestbat-adult",
+     "stage": "Large forest bat, adult",
+     "weight": "about 7 g",
+     "text": "Ready-made plan: an adult large forest bat (microbat), about 7 g, in care and recovering, with no injuries needing treatment and no medicines. For vaccinated, trained carers only. Write a standard plan another carer can follow for a bat like this, from today until release. Use day and week numbers, not calendar dates.",
+     "sheet": {
+      "animal": "Adult large forest bat",
+      "case_number": "",
+      "species": "Large forest bat (Vespadelus darlingtoni)",
+      "kind": "wildlife",
+      "summary": "This adult large forest bat, a microbat of about 7 g, is recovering in care with no injuries needing treatment, with a vaccinated, trained carer. The goal is a short stay: keep it warm, hydrated and eating insects, check it flies well, and release it at dusk where it was found.",
+      "photo_findings": [],
+      "medications": [],
+      "plan": [
+       {
+        "when": "Day 1",
+        "tasks": [
+         "Warm it slowly and give water before offering any food."
+        ]
+       },
+       {
+        "when": "Days 2 to 5",
+        "tasks": [
+         "Once it is eating well, give it a nightly flight in a closed room or flight tent to check and build its flying."
+        ]
+       }
+      ],
+      "housing": [
+       "Only rabies-vaccinated, trained carers wearing protective gloves may handle it, as any bat can carry Australian bat lyssavirus, which can kill people.",
+       "Keep it in a small, escape-proof container with a soft cloth or pouch hung inside to crawl into and hang from, in a quiet, dark room at the temperature the app shows for microbats, with a warm end and a cooler end.",
+       "Keep it away from pets and other animals, and clean the cloth and container every day."
+      ],
+      "feeding": [
+       "Feed small live mealworms with the heads pinched off, plus other small live insects such as moths, flies and fly pupae; microbats eat only insects.",
+       "Feed it only once it is warm and has had water, as a cold bat cannot digest food.",
+       "Offer insects one at a time from blunt tweezers in the evening, then leave a few mealworms in a smooth-sided dish overnight; weigh it each evening to check it is eating enough.",
+       "Offer water as small drops from a fine syringe held at its mouth for it to lap at its own pace, at each feed and once more during the night."
+      ],
+      "activity": [
+       "Handle it as little as possible, always with gloves, cupping it gently with its wings folded.",
+       "If you are bitten or scratched, wash the wound with soap and water for at least 15 minutes, put on an antiseptic such as iodine, and see a doctor urgently, even if you are vaccinated."
+      ],
+      "care": [
+       "If it came in during the cold months, ask an experienced microbat carer whether it should stay in care until spring, as bats in winter are often in torpor."
+      ],
+      "daily_checks": [
+       "Weighed in the evening",
+       "Insects eaten",
+       "Water offered",
+       "Container clean",
+       "Alert and responsive"
+      ],
+      "log_days": 7,
+      "feed_calc": {
+       "applies": false,
+       "what": "",
+       "weight_g": 7,
+       "stage": "Adult",
+       "percent_body_weight_per_day": null,
+       "feeds_per_day": null,
+       "basis": "Adult eating live insects; no measured amount is given.",
+       "sure": true
+      },
+      "release": {
+       "ready_when": [
+        "Flies strongly and turns well in a closed room or flight tent",
+        "Eating well and holding its weight",
+        "Healthy and needing no more care"
+       ],
+       "target_weight": "About 7 g, holding at or above its arrival weight",
+       "how": [
+        "Release it within 24 hours of it being ready.",
+        "Release it at dusk on a mild, still, dry evening when insects are flying, never during the day or in rain or wind.",
+        "Hold it up on a tree trunk or branch near where it was found and let it crawl off and fly when ready."
+       ],
+       "where": "Release it exactly where it was found (recorded with GPS coordinates or a Melways reference), near its roost, or if that spot is unsuitable, at the closest suitable place within its home range."
+      },
+      "escalate": {
+       "vet": [
+        "Not eating, or losing weight",
+        "Not flying, or flying lopsided",
+        "Holes or tears in the wing membranes",
+        "Weak, cold or very slow to respond after warming"
+       ],
+       "urgent": [
+        "Collapsed or cannot hold its head up: give nothing by mouth on the way",
+        "Struggling to breathe",
+        "Caught by a cat: a vet the same day, even if no wound can be seen",
+        "Anyone bitten or scratched: first aid and a doctor straight away"
+       ]
+      },
+      "rehydration": {
+       "needed": false,
+       "weight_g": null,
+       "dehydration_pct": null,
+       "steps": []
+      },
+      "species_group": "microbat",
+      "next_visit": "",
+      "sources": [
+       "vic-ablv-better-health",
+       "vic-cop-welfare-wildlife-rehabilitation",
+       "vic-release-requirements",
+       "vic-rehabilitator-authorisation-conditions",
+       "vic-shelter-foster-carer-authorisation",
+       "vic-rehab-guidelines-part-a"
+      ]
+     }
+    },
+    {
+     "id": "lib-microbat-unknown",
+     "stage": "Unidentified microbat, adult",
+     "weight": "about 5 to 10 g",
+     "text": "Ready-made plan: an adult microbat of a species not yet identified, about 5 to 10 g, in care and recovering, with no injuries needing treatment and no medicines. For vaccinated, trained carers only. Write a standard plan another carer can follow for a microbat like this, from today until release. Use day and week numbers, not calendar dates.",
+     "sheet": {
+      "animal": "Adult microbat (species not yet known)",
+      "case_number": "",
+      "species": "Microbat, species to be identified",
+      "kind": "wildlife",
+      "summary": "This adult microbat, about 5 to 10 g, is recovering in care with no injuries needing treatment, with a vaccinated, trained carer. The goal is to have its species confirmed, keep it warm, hydrated and eating insects, and release it at dusk where it was found once it flies well.",
+      "photo_findings": [],
+      "medications": [],
+      "plan": [
+       {
+        "when": "Day 1",
+        "tasks": [
+         "Warm it slowly and give water before offering any food.",
+         "Send clear photos of its face, ears and tail to an experienced microbat carer to confirm the species, as care and release timing can differ."
+        ]
+       },
+       {
+        "when": "Days 2 to 5",
+        "tasks": [
+         "Once it is eating well, give it a nightly flight in a closed room or flight tent to check and build its flying."
+        ]
+       }
+      ],
+      "housing": [
+       "Only rabies-vaccinated, trained carers wearing protective gloves may handle it, as any bat can carry Australian bat lyssavirus, which can kill people.",
+       "Keep it in a small, escape-proof container with a soft cloth or pouch hung inside to crawl into and hang from, in a quiet, dark room at the temperature the app shows for microbats, with a warm end and a cooler end.",
+       "Keep it away from pets and other animals, and clean the cloth and container every day."
+      ],
+      "feeding": [
+       "Feed small live mealworms with the heads pinched off, plus other small live insects such as moths, flies and fly pupae; microbats eat only insects.",
+       "Feed it only once it is warm and has had water, as a cold bat cannot digest food.",
+       "Offer insects one at a time from blunt tweezers in the evening, then leave a few mealworms in a smooth-sided dish overnight; weigh it each evening to check it is eating enough.",
+       "Offer water as small drops from a fine syringe held at its mouth for it to lap at its own pace, at each feed and once more during the night."
+      ],
+      "activity": [
+       "Handle it as little as possible, always with gloves, cupping it gently with its wings folded.",
+       "If you are bitten or scratched, wash the wound with soap and water for at least 15 minutes, put on an antiseptic such as iodine, and see a doctor urgently, even if you are vaccinated."
+      ],
+      "care": [
+       "If it came in during the cold months, ask an experienced microbat carer whether it should stay in care until spring, as bats in winter are often in torpor."
+      ],
+      "daily_checks": [
+       "Weighed in the evening",
+       "Insects eaten",
+       "Water offered",
+       "Container clean",
+       "Alert and responsive"
+      ],
+      "log_days": 7,
+      "feed_calc": {
+       "applies": false,
+       "what": "",
+       "weight_g": null,
+       "stage": "Adult",
+       "percent_body_weight_per_day": null,
+       "feeds_per_day": null,
+       "basis": "Adult eating live insects; no measured amount is given.",
+       "sure": true
+      },
+      "release": {
+       "ready_when": [
+        "Flies strongly and turns well in a closed room or flight tent",
+        "Eating well and holding its weight",
+        "Healthy and needing no more care"
+       ],
+       "target_weight": "Holding at or above its arrival weight",
+       "how": [
+        "Release it within 24 hours of it being ready.",
+        "Release it at dusk on a mild, still, dry evening when insects are flying, never during the day or in rain or wind.",
+        "Hold it up on a tree trunk or branch near where it was found and let it crawl off and fly when ready."
+       ],
+       "where": "Release it exactly where it was found (recorded with GPS coordinates or a Melways reference), near its roost, or if that spot is unsuitable, at the closest suitable place within its home range."
+      },
+      "escalate": {
+       "vet": [
+        "Not eating, or losing weight",
+        "Not flying, or flying lopsided",
+        "Holes or tears in the wing membranes",
+        "Weak, cold or very slow to respond after warming"
+       ],
+       "urgent": [
+        "Collapsed or cannot hold its head up: give nothing by mouth on the way",
+        "Struggling to breathe",
+        "Caught by a cat: a vet the same day, even if no wound can be seen",
+        "Anyone bitten or scratched: first aid and a doctor straight away"
+       ]
+      },
+      "rehydration": {
+       "needed": false,
+       "weight_g": null,
+       "dehydration_pct": null,
+       "steps": []
+      },
+      "species_group": "microbat",
+      "next_visit": "",
+      "sources": [
+       "vic-ablv-better-health",
+       "vic-cop-welfare-wildlife-rehabilitation",
+       "vic-release-requirements",
+       "vic-rehabilitator-authorisation-conditions",
+       "vic-shelter-foster-carer-authorisation",
+       "vic-rehab-guidelines-part-a"
+      ]
+     }
     }
    ]
   },
   {
-   "id": "lbcormorant",
-   "name": "Little black cormorant",
+   "id": "cormorant",
+   "name": "Cormorants",
    "plans": [
     {
      "id": "lib-lbcormorant-adult",
-     "stage": "Adult",
+     "stage": "Little black cormorant, adult",
      "weight": "about 800 g",
      "text": "Ready-made plan: an adult little black cormorant, about 800 g, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a cormorant like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
@@ -5928,6 +6147,121 @@ export default {
        "vic-h5-bird-flu-wildlife-rehabilitators",
        "wombaroo-native-birds-feeding-guidelines",
        "vic-rehab-guidelines-waterbirds-marine"
+      ]
+     }
+    },
+    {
+     "id": "lib-bfcormorant-adult",
+     "stage": "Black-faced cormorant, adult",
+     "weight": "about 1.6 kg",
+     "text": "Ready-made plan: an adult black-faced cormorant, about 1.6 kg, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a cormorant like this, from today until release. Use day and week numbers, not calendar dates.",
+     "sheet": {
+      "animal": "Adult black-faced cormorant",
+      "case_number": "",
+      "species": "Black-faced cormorant (Phalacrocorax fuscescens)",
+      "kind": "wildlife",
+      "summary": "This adult black-faced cormorant, about 1.6 kg, is recovering in care with no injuries needing treatment. It is a marine bird, so the goal is care with an experienced seabird carer, keeping it eating fish, rebuilding its swimming and flight, and returning it to its coast as soon as it is fit.",
+      "photo_findings": [],
+      "medications": [],
+      "plan": [
+       {
+        "when": "Days 1 to 3",
+        "tasks": [
+         "Keep it in a quiet, lined enclosure with a perch while it settles and starts eating."
+        ]
+       },
+       {
+        "when": "Once eating well",
+        "tasks": [
+         "Give it daily swims in a salt-water pool, then move it to an aviary with a salt-water pool and high perches to rebuild swimming and flight."
+        ]
+       }
+      ],
+      "housing": [
+       "Marine birds need specialist housing and lots of fish, so it should be cared for by an experienced seabird shelter in the region where it was found.",
+       "Keep it in a quiet, covered enclosure with a soft, non-slip floor (rubber matting or raked sand, never bare concrete) and a sturdy perch where it can spread its wings to dry, at the temperature the app shows for adult seabirds; change soiled floor material at least three times a day.",
+       "Give it a salt-water pool deep enough to swim and dive without scraping its feet, with an easy way out, and keep it apart from other birds and any pet birds’ air space.",
+       "Bird flu is in wild seabirds along the Victorian coast, so wear disposable gloves, a surgical or N95 mask and eye protection when handling it or cleaning, use fresh gloves for each animal and wash your hands with soap afterwards."
+      ],
+      "feeding": [
+       "Feed whole fish such as pilchards, whitebait or small mullet, as black-faced cormorants catch fish at sea.",
+       "The guidance gives no set amount for cormorants, so offer fish twice a day in the amount it clears, and weigh what you give and what is left; pilchards are richer than whiting or squid, so it needs less of them by weight.",
+       "Drop fish into its pool or a dish of water so it learns to pick it up; never force food into its beak.",
+       "Thaw frozen fish in the fridge or under cold running water, never in hot water, use it the same day and throw out leftovers; frozen fish loses vitamin B1, so give a seabird vitamin tablet (such as Vetafarm Sea Bird Tablets) tucked into a fish every day, as a lack causes fits and weakness.",
+       "Keep fresh water available at all times and change it daily."
+      ],
+      "activity": [
+       "Handle it with a towel over its body and your hand around its neck behind the head, and never hold its beak shut for more than a few seconds, as cormorants have no outside nostrils and cannot breathe with the beak closed.",
+       "Keep pets, children and noise well away, and do not try to tame it."
+      ],
+      "care": [
+       "Never use oil-based ointments or creams on it, as they ruin its feathers and delay release."
+      ],
+      "daily_checks": [
+       "Fish eaten recorded",
+       "Fresh water given",
+       "Swimming normally",
+       "Floor changed three times",
+       "Breathing quiet"
+      ],
+      "log_days": 14,
+      "feed_calc": {
+       "applies": false,
+       "what": "",
+       "weight_g": 1600,
+       "stage": "Adult",
+       "percent_body_weight_per_day": null,
+       "feeds_per_day": null,
+       "basis": "Adult feeding itself on fish; no measured amount is given.",
+       "sure": true
+      },
+      "release": {
+       "ready_when": [
+        "Swims, dives and dries its wings normally",
+        "Flies strongly from the pool to a high perch",
+        "Eating well and holding its weight",
+        "Healthy, needing no more care, and wary of people"
+       ],
+       "target_weight": "About 1.6 kg, holding at or above its arrival weight",
+       "how": [
+        "Release it within 24 hours of it being ready.",
+        "Choose a calm, mild morning with a gentle sea, never extreme weather.",
+        "Carry it in a lined, ventilated box, open it at the water’s edge on the coast, and step well back."
+       ],
+       "where": "Release it where it was found on the coast (recorded with GPS coordinates or a Melways reference), or if that spot is unsuitable, at the closest suitable place within its home range; Victorian rules do not allow release anywhere else."
+      },
+      "escalate": {
+       "vet": [
+        "Not eating, or losing weight two days running",
+        "Diarrhoea for more than a day",
+        "Feathers staying soaked or it shivers after swimming",
+        "Wobbly or having small fits, which can mean a lack of vitamin B1"
+       ],
+       "urgent": [
+        "Weak, collapsed or cannot hold its head up: give nothing by mouth on the way",
+        "Tremors, a twisted neck, poor balance or swimming in circles, which can be bird flu: ring the Emergency Animal Disease Watch Hotline on 1800 675 888 straight away",
+        "Struggling to breathe",
+        "Fishing line or a hook coming from its mouth: never pull it"
+       ]
+      },
+      "rehydration": {
+       "needed": false,
+       "weight_g": null,
+       "dehydration_pct": null,
+       "steps": []
+      },
+      "species_group": "waterbird",
+      "next_visit": "",
+      "sources": [
+       "vic-rehab-guidelines-waterbirds-marine",
+       "vic-cop-welfare-wildlife-rehabilitation",
+       "vic-release-requirements",
+       "vic-rehabilitator-authorisation-conditions",
+       "vic-shelter-foster-carer-authorisation",
+       "agvic-report-sick-dead-wild-birds",
+       "vic-h5-bird-flu-wildlife-rehabilitators",
+       "vic-h5n1-guidance-rehabilitators",
+       "wombaroo-native-birds-feeding-guidelines"
       ]
      }
     }
@@ -7274,127 +7608,6 @@ export default {
        "vic-shelter-foster-carer-authorisation",
        "vic-rehab-guidelines-part-a",
        "vic-h5-bird-flu-wildlife-rehabilitators",
-       "wombaroo-native-birds-feeding-guidelines"
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "bfcormorant",
-   "name": "Black-faced cormorant",
-   "plans": [
-    {
-     "id": "lib-bfcormorant-adult",
-     "stage": "Adult",
-     "weight": "about 1.6 kg",
-     "text": "Ready-made plan: an adult black-faced cormorant, about 1.6 kg, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a cormorant like this, from today until release. Use day and week numbers, not calendar dates.",
-     "sheet": {
-      "animal": "Adult black-faced cormorant",
-      "case_number": "",
-      "species": "Black-faced cormorant (Phalacrocorax fuscescens)",
-      "kind": "wildlife",
-      "summary": "This adult black-faced cormorant, about 1.6 kg, is recovering in care with no injuries needing treatment. It is a marine bird, so the goal is care with an experienced seabird carer, keeping it eating fish, rebuilding its swimming and flight, and returning it to its coast as soon as it is fit.",
-      "photo_findings": [],
-      "medications": [],
-      "plan": [
-       {
-        "when": "Days 1 to 3",
-        "tasks": [
-         "Keep it in a quiet, lined enclosure with a perch while it settles and starts eating."
-        ]
-       },
-       {
-        "when": "Once eating well",
-        "tasks": [
-         "Give it daily swims in a salt-water pool, then move it to an aviary with a salt-water pool and high perches to rebuild swimming and flight."
-        ]
-       }
-      ],
-      "housing": [
-       "Marine birds need specialist housing and lots of fish, so it should be cared for by an experienced seabird shelter in the region where it was found.",
-       "Keep it in a quiet, covered enclosure with a soft, non-slip floor (rubber matting or raked sand, never bare concrete) and a sturdy perch where it can spread its wings to dry, at the temperature the app shows for adult seabirds; change soiled floor material at least three times a day.",
-       "Give it a salt-water pool deep enough to swim and dive without scraping its feet, with an easy way out, and keep it apart from other birds and any pet birds’ air space.",
-       "Bird flu is in wild seabirds along the Victorian coast, so wear disposable gloves, a surgical or N95 mask and eye protection when handling it or cleaning, use fresh gloves for each animal and wash your hands with soap afterwards."
-      ],
-      "feeding": [
-       "Feed whole fish such as pilchards, whitebait or small mullet, as black-faced cormorants catch fish at sea.",
-       "The guidance gives no set amount for cormorants, so offer fish twice a day in the amount it clears, and weigh what you give and what is left; pilchards are richer than whiting or squid, so it needs less of them by weight.",
-       "Drop fish into its pool or a dish of water so it learns to pick it up; never force food into its beak.",
-       "Thaw frozen fish in the fridge or under cold running water, never in hot water, use it the same day and throw out leftovers; frozen fish loses vitamin B1, so give a seabird vitamin tablet (such as Vetafarm Sea Bird Tablets) tucked into a fish every day, as a lack causes fits and weakness.",
-       "Keep fresh water available at all times and change it daily."
-      ],
-      "activity": [
-       "Handle it with a towel over its body and your hand around its neck behind the head, and never hold its beak shut for more than a few seconds, as cormorants have no outside nostrils and cannot breathe with the beak closed.",
-       "Keep pets, children and noise well away, and do not try to tame it."
-      ],
-      "care": [
-       "Never use oil-based ointments or creams on it, as they ruin its feathers and delay release."
-      ],
-      "daily_checks": [
-       "Fish eaten recorded",
-       "Fresh water given",
-       "Swimming normally",
-       "Floor changed three times",
-       "Breathing quiet"
-      ],
-      "log_days": 14,
-      "feed_calc": {
-       "applies": false,
-       "what": "",
-       "weight_g": 1600,
-       "stage": "Adult",
-       "percent_body_weight_per_day": null,
-       "feeds_per_day": null,
-       "basis": "Adult feeding itself on fish; no measured amount is given.",
-       "sure": true
-      },
-      "release": {
-       "ready_when": [
-        "Swims, dives and dries its wings normally",
-        "Flies strongly from the pool to a high perch",
-        "Eating well and holding its weight",
-        "Healthy, needing no more care, and wary of people"
-       ],
-       "target_weight": "About 1.6 kg, holding at or above its arrival weight",
-       "how": [
-        "Release it within 24 hours of it being ready.",
-        "Choose a calm, mild morning with a gentle sea, never extreme weather.",
-        "Carry it in a lined, ventilated box, open it at the water’s edge on the coast, and step well back."
-       ],
-       "where": "Release it where it was found on the coast (recorded with GPS coordinates or a Melways reference), or if that spot is unsuitable, at the closest suitable place within its home range; Victorian rules do not allow release anywhere else."
-      },
-      "escalate": {
-       "vet": [
-        "Not eating, or losing weight two days running",
-        "Diarrhoea for more than a day",
-        "Feathers staying soaked or it shivers after swimming",
-        "Wobbly or having small fits, which can mean a lack of vitamin B1"
-       ],
-       "urgent": [
-        "Weak, collapsed or cannot hold its head up: give nothing by mouth on the way",
-        "Tremors, a twisted neck, poor balance or swimming in circles, which can be bird flu: ring the Emergency Animal Disease Watch Hotline on 1800 675 888 straight away",
-        "Struggling to breathe",
-        "Fishing line or a hook coming from its mouth: never pull it"
-       ]
-      },
-      "rehydration": {
-       "needed": false,
-       "weight_g": null,
-       "dehydration_pct": null,
-       "steps": []
-      },
-      "species_group": "waterbird",
-      "next_visit": "",
-      "sources": [
-       "vic-rehab-guidelines-waterbirds-marine",
-       "vic-cop-welfare-wildlife-rehabilitation",
-       "vic-release-requirements",
-       "vic-rehabilitator-authorisation-conditions",
-       "vic-shelter-foster-carer-authorisation",
-       "agvic-report-sick-dead-wild-birds",
-       "vic-h5-bird-flu-wildlife-rehabilitators",
-       "vic-h5n1-guidance-rehabilitators",
        "wombaroo-native-birds-feeding-guidelines"
       ]
      }

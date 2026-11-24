@@ -358,5 +358,17 @@
   "role": "carer",
   "mode": "carer",
   "text": "Ready-made plan: an adult black-faced cormorant, about 1.6 kg, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a cormorant like this, from today until release. Use day and week numbers, not calendar dates."
+ },
+ {
+  "id": "lib-largeforestbat-adult",
+  "role": "carer",
+  "mode": "carer",
+  "text": "Ready-made plan: an adult large forest bat (microbat), about 7 g, in care and recovering, with no injuries needing treatment and no medicines. For vaccinated, trained carers only. Write a standard plan another carer can follow for a bat like this, from today until release. Use day and week numbers, not calendar dates."
+ },
+ {
+  "id": "lib-microbat-unknown",
+  "role": "carer",
+  "mode": "carer",
+  "text": "Ready-made plan: an adult microbat of a species not yet identified, about 5 to 10 g, in care and recovering, with no injuries needing treatment and no medicines. For vaccinated, trained carers only. Write a standard plan another carer can follow for a microbat like this, from today until release. Use day and week numbers, not calendar dates."
  }
 ]

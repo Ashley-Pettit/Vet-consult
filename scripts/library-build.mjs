@@ -55,8 +55,10 @@ const META = {
   'lib-heron-adult': ['heron', 'White-faced heron', 'Adult', 'about 550 g'],
   'lib-swallow-nestling': ['swallow', 'Welcome swallow', 'Nestling', 'about 10 g'],
   'lib-swallow-adult': ['swallow', 'Welcome swallow', 'Adult', 'about 15 g'],
-  'lib-forestbat-adult': ['forestbat', 'Little forest bat', 'Adult (vaccinated carers only)', 'about 4 g'],
-  'lib-lbcormorant-adult': ['lbcormorant', 'Little black cormorant', 'Adult', 'about 800 g'],
+  'lib-forestbat-adult': ['microbat', 'Microbats (vaccinated carers only)', 'Little forest bat, adult', 'about 4 g'],
+  'lib-largeforestbat-adult': ['microbat', 'Microbats (vaccinated carers only)', 'Large forest bat, adult', 'about 7 g'],
+  'lib-microbat-unknown': ['microbat', 'Microbats (vaccinated carers only)', 'Unidentified microbat, adult', 'about 5 to 10 g'],
+  'lib-lbcormorant-adult': ['cormorant', 'Cormorants', 'Little black cormorant, adult', 'about 800 g'],
   'lib-turtle-hatchling': ['turtle', 'Common long-necked turtle', 'Hatchling', 'about 8 g'],
   'lib-turtle-adult': ['turtle', 'Common long-necked turtle', 'Adult', 'about 1 kg'],
   'lib-boobook-owlet': ['boobook', 'Southern boobook', 'Owlet', 'about 180 g'],
@@ -68,7 +70,7 @@ const META = {
   'lib-galah-adult': ['galah', 'Galah', 'Adult', 'about 330 g'],
   'lib-wattlebird-nestling': ['wattlebird', 'Red wattlebird', 'Nestling', 'about 60 g'],
   'lib-wattlebird-adult': ['wattlebird', 'Red wattlebird', 'Adult', 'about 110 g'],
-  'lib-bfcormorant-adult': ['bfcormorant', 'Black-faced cormorant', 'Adult', 'about 1.6 kg'],
+  'lib-bfcormorant-adult': ['cormorant', 'Cormorants', 'Black-faced cormorant, adult', 'about 1.6 kg'],
 };
 
 const scen = JSON.parse(fs.readFileSync(APP + 'scripts/qa/scenarios.library.json', 'utf8'));
