@@ -34,6 +34,7 @@ export const REGIONS = {
     phone: '03 8400 7300',
     tel: '+61384007300',
     caseLabel: 'Wildlife Victoria case number',
+    casePlaceholder: 'For example 26-04417',
     primary: 'Victorian Government (DEECA) guidance and the Victorian code of practice',
     sources: [...VIC_SOURCES, ...AU_SOURCES],
     // Bird flu (H5) for Victoria, from Agriculture Victoria and DEECA (checked October 2026). Update the situation line as it changes.
@@ -65,6 +66,7 @@ export const REGIONS = {
     phone: '1300 ANIMAL (1300 264 625)',
     tel: '+611300264625',
     caseLabel: 'RSPCA Queensland case or job number',
+    casePlaceholder: 'Type the case or job number',
     primary: 'RSPCA Queensland guidance, then the Queensland code of practice and Queensland Government guidance',
     sources: [...QLD_SOURCES, ...AU_SOURCES],
     // Bird flu (H5) for Queensland, from the Queensland Government and Biosecurity Queensland (checked October 2026).

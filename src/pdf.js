@@ -141,7 +141,7 @@ export async function buildPdf(model, { preparedBy = '', date = new Date(), temp
 
   // The page-one heading: document type, title, details on a tinted line, the AI note.
   const meta = [['Date', formatDate(date)], ...(preparedBy ? [['Prepared by', preparedBy]] : []), ...(model.meta || []).filter((m) => !(m[0] === 'Vet' && m[1] === preparedBy))].filter((m) => m[1]);
-  const title = cleanTitle(model.title, model.docType);
+  const title = [model.lead, cleanTitle(model.title, model.docType)].filter(Boolean).join(' · ');
   const content = [];
   if (!model.fridgeOnly) {
     content.push(
@@ -166,9 +166,10 @@ export async function buildPdf(model, { preparedBy = '', date = new Date(), temp
       const parts = [heading(b.heading)];
       if (b.note && b.noteFirst) parts.push({ text: b.note, italics: true, color: TERRA, fontSize: 9, margin: [0, 0, 0, 4] });
       if (b.text) String(b.text).split(/\n+/).forEach((x) => parts.push({ text: x, margin: [0, 0, 0, 5] }));
-      (b.items || []).forEach((x) => parts.push(item(x)));
+      if (!b.itemsAfter) (b.items || []).forEach((x) => parts.push(item(x)));
       (b.checks || []).forEach((x) => parts.push(check(x)));
       if (b.table) parts.push(table(b.table));
+      if (b.itemsAfter) (b.items || []).forEach((x) => parts.push(item(x)));
       (b.labels || []).forEach((l) => parts.push(label(l)));
       if (b.note && !b.noteFirst) parts.push({ text: b.note, italics: true, color: MUTED, fontSize: 8, margin: [0, 2, 0, 0] });
       // A heading never sits alone at the bottom of a page.

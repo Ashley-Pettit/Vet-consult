@@ -1,6 +1,6 @@
 // What goes into each Word printout (plain data, no Word library), so the app can prepare a printout without loading
 // the Word library. The library itself (word-docx.js) loads only when someone actually asks for a Word file.
-import { dueLabel, formatDate, NOT_RECORDED, rehydrationTable, REHYDRATION_NOTE, careAiNote, feedAmounts } from './note.js';
+import { dueLabel, formatDate, NOT_RECORDED, rehydrationTable, rehydrationNote, rehydrationIntro, mlCell, careAiNote, feedAmounts } from './note.js';
 import { chartByKey } from './feeding.js';
 import { rangesFor, rangesForAnimal } from './species-ranges.js';
 import { region } from './region.js';
@@ -55,9 +55,11 @@ function rehydrationBlocks(r) {
   const t = rehydrationTable(r);
   return [{
     heading: 'Rehydration',
-    ...(t ? { table: { head: ['Day', 'Total', 'Every 4 hours', 'Every 6 hours'], rows: t.days.map((d) => [String(d.day), `${d.total} mL`, `${d.every4h} mL`, `${d.every6h} mL`]) } } : {}),
+    text: t ? rehydrationIntro(r, t) : 'Add the animal’s weight to work out the amounts.',
+    ...(t ? { table: { head: ['Day', 'Total', 'Every 4 hours', 'Every 6 hours'], rows: t.days.map((d) => [String(d.day), mlCell(d.total), mlCell(d.every4h), mlCell(d.every6h)]) } } : {}),
     items: r.steps,
-    note: `${t ? `For ${r.weight_g} g, ${t.assumed ? `assuming ${t.deficit}% dehydrated` : `${t.deficit}% dehydrated`}. ` : ''}${REHYDRATION_NOTE}`,
+    itemsAfter: true,
+    note: rehydrationNote(t),
   }];
 }
 
@@ -77,7 +79,7 @@ function feedBlocks(f) {
     const rows = pts.sort((x, y) => x[0] - y[0]).map(([g, ...rest]) => [g === w ? `${fmt(g)} (now)` : fmt(g), ...rest]);
     return [{
       heading: 'Feed calculator',
-      text: `${a && a.perDay ? `For ${f.weight_g} g: about ${a.perDay} mL a day of ${a.product}, as ${a.feeds} feeds of about ${a.perFeed} mL. ` : ''}Feed ${f.feeds} times a day. Weigh daily and read the amount for the new weight from the chart below (in between two weights, use an amount in between).`,
+      text: `${a && a.perDay ? `For ${f.weight_g} g: about ${a.perDay} mL a day of ${a.product}, as ${a.feeds} feeds of about ${a.perFeed} mL.\n` : ''}Feed ${f.feeds} times a day. Weigh daily and read the amount for the new weight from the chart below (in between two weights, use an amount in between).`,
       table: { head: ['Weight', 'Milk a day', 'Milk'], rows, widths: [2200, 2400, PAGE_W - 4600] },
       note: `From the Wombaroo growth chart for the ${chart.label} (${chart.source.title}${chart.source.section ? `, ${chart.source.section}` : ''}).`,
     }];
@@ -91,7 +93,7 @@ function feedBlocks(f) {
   return [{
     heading: 'Feed calculator',
     table: { head: ['', 'Amount'], rows, widths: [2600, PAGE_W - 2600] },
-    note: `${f.sure ? '' : 'Not sure of this figure for this species and age. Check it with your vet or the feeding guide first. '}Weigh daily and re-work the amounts: weight in grams × ${f.pct} ÷ 100 = mL a day.`,
+    note: `${f.sure ? '' : 'Not sure of this figure for this species and age. Check it with your vet or the feeding guide first.\n'}Weigh daily and re-work the amounts: weight in grams × ${f.pct} ÷ 100 = mL a day.`,
   }];
 }
 
@@ -99,7 +101,7 @@ export function careModel(c, lookup, photos = [], video = null) {
   const meds = c.medications.map((m) => [m.name, m.how, m.how_often, m.how_long]);
   const blocks = [
     { heading: 'Summary', text: c.summary, tone: 'summary' },
-    ...(meds.length ? [{ heading: c.prescribed ? `Medications: prescribed by ${c.prescribed.by}` : 'Medications', table: { head: ['Medication', 'How', 'How often', 'How long'], rows: meds, widths: [2600, 2600, 2400, PAGE_W - 7600] }, note: c.medications.map((m) => (m.tip ? `${m.name}: ${m.tip}` : '')).filter(Boolean).join('  ') || undefined }] : []),
+    ...(meds.length ? [{ heading: c.prescribed ? `Medications: prescribed by ${c.prescribed.by}` : 'Medications', table: { head: ['Medication', 'How', 'How often', 'How long'], rows: meds, widths: [2600, 2600, 2400, PAGE_W - 7600] }, note: c.medications.map((m) => (m.tip ? `${m.name}: ${m.tip}` : '')).filter(Boolean).join('\n') || undefined }] : []),
     ...((Number(c.log_days) || 0) <= 1 && !c.medications.length && !c.plan.length ? [] : rangesBlocks(c.species_group, [c.animal, c.summary].filter(Boolean).join(' '))),
     ...rehydrationBlocks(c.rehydration),
     // The day-by-day plan as one table, rather than a scatter of small headed sections.
@@ -127,6 +129,8 @@ export function careModel(c, lookup, photos = [], video = null) {
   return {
     docType: 'Care plan',
     title: c.animal ? `Care plan: ${c.animal}` : 'Care plan',
+    // The case number leads the title on the printout (and the file name), the way shelters file them.
+    ...(c.kind === 'wildlife' && c.case_number ? { lead: c.case_number } : {}),
     aiNote: careAiNote(c),
     // The care video, as a link on the printout.
     watch: video && (video.id || video.url) ? { ...video, url: watchUrl(video) } : null,

@@ -250,7 +250,7 @@ export async function buildWord(model, { preparedBy = '', date = new Date(), tem
   // The document type is already the coloured line above the title, so it isn't repeated here.
   const meta = [['Date', formatDate(date)], ...(preparedBy ? [['Prepared by', preparedBy]] : []), ...(model.meta || []).filter((m) => !(m[0] === 'Vet' && m[1] === preparedBy))].filter((m) => m[1]);
   // "Care plan: Ringtail joey" under a CARE PLAN label says it twice: keep just the animal or subject.
-  const title = cleanTitle(model.title, model.docType);
+  const title = [model.lead, cleanTitle(model.title, model.docType)].filter(Boolean).join(' · ');
   const body = [
     new Paragraph({ indent: IN, spacing: { before: 120, after: 0 }, children: [new TextRun({ text: String(model.docType).toUpperCase(), font: HEAD_FONT, bold: true, size: 20, color: TERRA, characterSpacing: 40 })] }),
     new Paragraph({ indent: IN, spacing: { after: model.subtitle ? 40 : 160 }, children: [new TextRun({ text: title, font: HEAD_FONT, bold: true, size: 40, color: INK })] }),
@@ -270,11 +270,13 @@ export async function buildWord(model, { preparedBy = '', date = new Date(), tem
     body.push(heading(b.heading));
     if (b.note && b.noteFirst) body.push(new Paragraph({ indent: IN, spacing: { after: 80 }, children: [run(b.note, { italics: true, color: TERRA, size: 19 })] }));
     if (b.text) String(b.text).split(/\n+/).forEach((t) => body.push(b.table ? new Paragraph({ indent: IN, keepNext: true, keepLines: true, spacing: { after: 120, line: 312 }, children: [run(t)] }) : para(t)));
-    if (b.items) b.items.forEach((t) => body.push(itemPara(t)));
+    if (b.items && !b.itemsAfter) b.items.forEach((t) => body.push(itemPara(t)));
     if (b.checks) b.checks.forEach((t) => body.push(check(t)));
     if (b.table) body.push(table(b.table.head, b.table.rows, b.table.widths), new Paragraph({ spacing: { after: 60 }, children: [] }));
+    if (b.items && b.itemsAfter) b.items.forEach((t) => body.push(itemPara(t)));
     if (b.labels) b.labels.forEach((l) => body.push(medLabel(l), new Paragraph({ spacing: { after: 120 }, children: [] })));
-    if (b.note && !b.noteFirst) body.push(new Paragraph({ indent: IN, spacing: { before: 60 }, children: [run(b.note, { italics: true, color: MUTED, size: 18 })] }));
+    // One line per part of a note (each medicine's tip, say), not one run-on paragraph.
+    if (b.note && !b.noteFirst) String(b.note).split(/\n+/).forEach((t, i) => body.push(new Paragraph({ indent: IN, spacing: { before: i ? 30 : 60 }, children: [run(t, { italics: true, color: MUTED, size: 18 })] })));
   }
   if (model.sources && model.sources.length) {
     body.push(heading('Based on'));

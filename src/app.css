@@ -280,7 +280,8 @@ dialog form { display: flex; flex-direction: column; gap: 18px; padding: 20px; }
 }
 a { color: var(--accent); text-underline-offset: 3px; }
 @media (min-width: 720px) {
-  #view-note .actions {
+  /* On a computer, Edit plan / Share stay at the bottom of the window, so there's no scrolling to the end to change it. */
+  #view-note .actions, #view-care > .actions, #view-doc > .actions, #view-edit > .actions {
     position: sticky; bottom: 0; padding: 14px 0 calc(14px + env(safe-area-inset-bottom, 0px));
     background: linear-gradient(to top, var(--bg) 75%, transparent);
   }
@@ -1809,3 +1810,8 @@ details.care-sec.fold .fold-actions { margin: 10px 0; }
   #cage-print-card { page: cagechart; }
   @page cagechart { size: A4 portrait; margin: 10mm; }
 }
+
+/* Case number under the care plan's intro line: short, so it reads as a form field, not the plan. */
+.case-box { margin: 10px 0 0; max-width: 320px; }
+.case-box input { padding: 10px 12px; font-variant-numeric: tabular-nums; }
+@media print { .case-box input { border: 0; padding: 0; } .case-box input:placeholder-shown { display: none; } .case-box:has(input:placeholder-shown) { display: none; } }

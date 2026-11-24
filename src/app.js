@@ -73,6 +73,8 @@ import {
   buildNotesAnswerPrompt,
   buildAmendPrompt,
   mergeAmend,
+  mergeCareAmend,
+  syncCareWeights,
   PLAN_TEXT_PARTS,
   planToText,
   textToPlan,
@@ -82,7 +84,12 @@ import {
   normaliseResult,
   normaliseCareSheet,
   rehydrationTable,
-  REHYDRATION_NOTE,
+  caseNumberIn,
+  rehydrationNote,
+  rehydrationIntro,
+  mlCell,
+  careForAmend,
+  settleRehydration,
   careSheetText,
   pmsSections,
   toPlainText,
@@ -1167,14 +1174,19 @@ document.querySelectorAll('input[name="mode"]').forEach((r) =>
 
 async function createNote() {
   if (busy) return;
-  const text = els.transcript.value.trim();
+  // Words still being heard count too: tapping while talking sends everything said, not just what has landed.
+  const heard = dictation.state !== 'idle' ? els.interim.textContent.trim() : '';
+  const text = els.transcript.value.trim() || heard;
   if (!text) return;
   busy = true;
   els.create.disabled = true;
   endKeyboardVoice();
   if (dictation.state !== 'idle') {
+    const before = els.transcript.value;
     dictation.stop();
     await waitForIdle();
+    // The phone didn't finish those last words in time: keep them as heard rather than drop them.
+    if (heard && els.transcript.value === before) setTranscript(appendSegment(els.transcript.value, heard));
   }
   const finalText = els.transcript.value.trim() || text;
   try {
@@ -1722,10 +1734,12 @@ $('more-go').addEventListener('click', async (e) => {
   if (!moreVoice || moreVoice.state === 'idle') return;
   e.preventDefault();
   const pending = $('more-interim').textContent.trim();
+  const before = moreText.value;
   moreVoice.stop();
   const t0 = Date.now();
-  while (moreVoice.state !== 'idle' && Date.now() - t0 < 1800) await new Promise((res) => setTimeout(res, 60));
-  if (pending && !moreText.value.includes(pending)) moreText.value = appendSegment(moreText.value, pending);
+  while (moreVoice.state !== 'idle' && Date.now() - t0 < 2500) await new Promise((res) => setTimeout(res, 60));
+  // Only if the phone never finished those last words: otherwise they'd go in twice.
+  if (pending && moreText.value === before) moreText.value = appendSegment(moreText.value, pending);
   if (moreText.value.trim() || (amendTarget && mopDirectionText())) more.close('go');
 });
 $('more-cancel').addEventListener('click', () => more.close());
@@ -1832,7 +1846,7 @@ async function amend(target, change) {
   try {
     const run = async () => {
       if (!(await ensureProvider())) throw new AiError('forbidden', NO_CLAUDE);
-      return runWorking(isCare ? 'Updating the plan' : `Updating the ${what}`, 'Making your change and keeping the rest.', (signal) => askJson(buildAmendPrompt(what, withoutCage(current), change), signal));
+      return runWorking(isCare ? 'Updating the plan' : `Updating the ${what}`, 'Making your change and keeping the rest.', (signal) => askJson(buildAmendPrompt(what, isCare ? careForAmend(current) : withoutCage(current), change), signal));
     };
     // Always the chosen model (Detailed by default): a change has to reach every place it applies, which the fast model can miss.
     const reply = await run();
@@ -1843,7 +1857,7 @@ async function amend(target, change) {
     if (!fromLibrary && !fromSaved) setTranscript(appendSegment(els.transcript.value, `Change: ${change}`));
     // Only the changed parts come back: merge them into what's on screen.
     if (isCare) {
-      const sheet = normaliseCareSheet(mergeAmend(current, reply), fromLibrary ? null : SOURCE_IDS());
+      const sheet = settleRehydration(current, syncCareWeights(current, normaliseCareSheet(mergeCareAmend(careForAmend(current), reply), fromLibrary ? null : SOURCE_IDS())));
       return await carePlanChanged(sheet, 'Updated.');
     } else {
       const d = keepCage(current, normaliseDocFor(currentDoc.kind, mergeAmend(current, reply)));
@@ -2166,15 +2180,15 @@ function rehydrationSection(r) {
     el('h2', { text: 'Rehydration' }),
     t
       ? el('div', { class: 'tbl', role: 'region', tabindex: '0', 'aria-label': 'Rehydration amounts' }, [
-          el('p', { class: 'help', text: `For ${r.weight_g} g, ${t.assumed ? `assuming ${t.deficit}% dehydrated (the protocol’s starting point)` : `${t.deficit}% dehydrated`}.` }),
+          el('p', { class: 'help', text: rehydrationIntro(r, t) }),
           el('table', { class: 'rehydrate-table' }, [
             el('thead', {}, [el('tr', {}, ['Day', 'Total', 'Every 4 hours', 'Every 6 hours'].map((h) => el('th', { scope: 'col', text: h })))]),
-            el('tbody', {}, t.days.map((d) => el('tr', {}, [el('th', { scope: 'row', text: String(d.day) }), el('td', { text: `${d.total} mL` }), el('td', { text: `${d.every4h} mL` }), el('td', { text: `${d.every6h} mL` })]))),
+            el('tbody', {}, t.days.map((d) => el('tr', {}, [el('th', { scope: 'row', text: String(d.day) }), el('td', { text: mlCell(d.total) }), el('td', { text: mlCell(d.every4h) }), el('td', { text: mlCell(d.every6h) })]))),
           ]),
         ])
       : el('p', { class: 'help', text: 'Add the animal’s weight to work out the amounts.' }),
     r.steps.length ? el('ul', {}, r.steps.map((x) => el('li', { text: x }))) : null,
-    el('p', { class: 'rehydrate-note', text: REHYDRATION_NOTE }),
+    el('p', { class: 'rehydrate-note', text: rehydrationNote(t) }),
   ]);
 }
 
@@ -2508,6 +2522,11 @@ function renderCare(c) {
   const sec = (title, items, cls) => (items.length ? el('section', { class: 'care-sec ' + (cls || '') }, [el('h2', { text: title }), list(items)]) : null);
   const name = c.animal || currentNote()?.patient.name || '';
   els.careTitle.textContent = keepBrackets(c.kind === 'wildlife' ? `Care plan: ${name || 'wildlife in care'}` : `Caring for ${name || 'your animal'} at home`);
+  // The case number box, for wildlife: filled from the words if it was said, otherwise typed in.
+  $('care-case-box').hidden = c.kind !== 'wildlife';
+  $('care-case-label').textContent = region().caseLabel;
+  $('care-case').placeholder = region().casePlaceholder || '';
+  $('care-case').value = c.case_number || '';
   $('care-back-label').textContent = careFrom === 'note' ? 'Back to note' : careFrom === 'library' || careFrom === 'saved' ? 'Back to plans' : 'Back';
   $('care-back-2').textContent = 'Edit plan';
   // Tick sheet: one row per daily job, one column per day, big boxes. Printable on its own for the fridge.
@@ -2610,6 +2629,11 @@ function renderCare(c) {
 
 function showCare(sheet, from, info = '', keepSaved = false) {
   resetFeedback();
+  // A case number said or typed in the words fills the box, if the plan didn't pick it up already.
+  if ((from === 'record' || from === 'note') && sheet.kind === 'wildlife' && !sheet.case_number) {
+    const found = caseNumberIn(els.transcript.value);
+    if (found) sheet = { ...sheet, case_number: found };
+  }
   // The Save star belongs to this plan: a new plan starts unsaved (a saved one opened from Plans sets it first).
   if (from !== 'saved' && !keepSaved) savedId = null;
   // Vets get a discharge pack; its clinical summary is written when the pack is asked for (examples: straight away).
@@ -2677,6 +2701,17 @@ $('copy-top').addEventListener('click', () => els.copy.click());
 $('care-back').addEventListener('click', () => (careFrom === 'library' || careFrom === 'saved' ? openLibrary() : showView(careFrom === 'note' ? 'note' : 'record')));
 // A plan made straight from the carer's words can take more info in place; one made from a vet note goes back to it.
 $('care-back-2').addEventListener('click', changePlan);
+// A typed case number stays with the plan: on the saved copy, in Recent, and on everything shared or printed from it.
+$('care-case').addEventListener('change', () => {
+  if (!careSheet) return;
+  const v = $('care-case').value.trim().slice(0, 40);
+  if (v === (careSheet.case_number || '')) return;
+  const { case_number, ...rest } = careSheet;
+  careSheet = v ? { ...rest, case_number: v } : rest;
+  if (careFrom !== 'library' && careFrom !== 'saved') remember('care', { sheet: careSheet, from: careFrom }, careSheet.animal);
+  if (updateSavedPlan(careSheet)) toast('Case number saved with your plan.');
+});
+$('care-case').addEventListener('keydown', (e) => e.key === 'Enter' && e.currentTarget.blur());
 // Copy offers Share (the phone's share sheet) or Copy as text. Without sharing (some computers), it just copies.
 const canShare = () => typeof navigator.share === 'function';
 let pendingSend = null;
@@ -2707,7 +2742,7 @@ function shareOrCopy(text, title, copiedMsg, wordModel = null, linkData = null) 
 async function shareWord(model, title) {
   try {
     const blob = await buildWord(model, { preparedBy: settings.clinician, template: settings.template });
-    const filename = wordFileName(model.title);
+    const filename = wordFileName([model.lead, model.title].filter(Boolean).join(' '));
     const file = typeof File === 'function' ? new File([blob], filename, { type: blob.type || 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' }) : null;
     if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
       try {
@@ -2727,7 +2762,7 @@ async function sharePdf(model, title) {
   toast('Making the PDF…');
   try {
     const blob = await buildPdf(model, { preparedBy: settings.clinician, template: settings.template });
-    const filename = wordFileName(model.title).replace(/\.docx$/i, '.pdf');
+    const filename = wordFileName([model.lead, model.title].filter(Boolean).join(' ')).replace(/\.docx$/i, '.pdf');
     const file = typeof File === 'function' ? new File([blob], filename, { type: 'application/pdf' }) : null;
     if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
       try {
@@ -3483,7 +3518,7 @@ async function saveWord(model, btn) {
   btn.lastChild.textContent = 'Making printout…';
   try {
     const blob = await buildWord(model, { preparedBy: settings.clinician, template: settings.template });
-    await deliverWord(blob, wordFileName(model.title));
+    await deliverWord(blob, wordFileName([model.lead, model.title].filter(Boolean).join(' ')));
   } catch {
     toast('Couldn’t make the printout. Try again.');
   } finally {
