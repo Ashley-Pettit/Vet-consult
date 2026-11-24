@@ -9,7 +9,7 @@ import { localChecks } from './clinical.js';
 import { dropUnsaidBrands } from './drugs.js';
 import { lostNote } from './factcheck.js';
 import { homeDevice, HOME_STEPS } from './homescreen.js';
-import { preparePhoto, MAX_PHOTOS, thumbnailDataUrl } from './photos.js';
+import { preparePhoto, isPhoto, MAX_PHOTOS, thumbnailDataUrl } from './photos.js';
 import { cageRecord, withEntry, normaliseLog, qrSvg, entryTime, ATE, WEE, POO, MOOD, STATUSES, grams, showWeight, cageModel, entryCells, medLabel } from './cage.js';
 import { ABOUT_HTML } from './about.js';
 import { lookupSource, sourcesForPrompt, SOURCE_IDS, animalTags } from './sources.js';
@@ -756,9 +756,22 @@ function renderPhotos() {
 }
 
 // Take photo opens the camera straight away; Gallery picks existing photos.
-async function addPhotos(input) {
-  const files = [...input.files].slice(0, MAX_PHOTOS - photos.length);
+function addPhotos(input) {
+  const files = [...input.files];
   input.value = '';
+  return addPhotoFiles(files);
+}
+let addingPhotos = false;
+async function addPhotoFiles(list) {
+  const files = list.slice(0, MAX_PHOTOS - photos.length);
+  addingPhotos = true;
+  try {
+    await addEach(files);
+  } finally {
+    addingPhotos = false;
+  }
+}
+async function addEach(files) {
   for (const [i, f] of files.entries()) {
     // Big phone photos can take a few seconds to shrink: show that something is happening.
     const busyTile = el('div', { class: 'photo-busy', role: 'status' }, [el('span', { class: 'photo-spin', 'aria-hidden': 'true' }), files.length > 1 ? `Processing photo ${i + 1} of ${files.length}…` : 'Processing photo…']);
@@ -853,6 +866,48 @@ function cropPhoto(photo) {
 }
 els.photoInput.addEventListener('change', () => addPhotos(els.photoInput));
 $('add-gallery').addEventListener('change', () => addPhotos($('add-gallery')));
+
+// Drag photos in from the computer (File Explorer, Finder or the desktop) onto the main screen.
+// A dropped file never opens in the tab, so a stray drop can't lose what's been typed.
+const draggingFiles = (e) => [...(e.dataTransfer?.types || [])].includes('Files');
+const canDropPhotos = () => document.body.dataset.view === 'record' && settings.photosOn !== false && !busy && !addingPhotos && !document.querySelector('dialog[open]');
+let dragDepth = 0;
+function endDrag() {
+  dragDepth = 0;
+  delete document.body.dataset.drop;
+}
+window.addEventListener('dragenter', (e) => {
+  if (!draggingFiles(e)) return;
+  e.preventDefault();
+  dragDepth += 1;
+  if (dragDepth > 1 || !canDropPhotos()) return;
+  const full = photos.length >= MAX_PHOTOS;
+  $('composer').dataset.dropHint = full ? `Already ${MAX_PHOTOS} photos: remove one to add another` : 'Drop photos here to add them';
+  document.body.dataset.drop = full ? 'full' : 'on';
+});
+window.addEventListener('dragover', (e) => {
+  if (!draggingFiles(e)) return;
+  e.preventDefault();
+  e.dataTransfer.dropEffect = canDropPhotos() ? 'copy' : 'none';
+});
+window.addEventListener('dragleave', (e) => {
+  if (!draggingFiles(e)) return;
+  dragDepth = Math.max(0, dragDepth - 1);
+  if (!dragDepth) endDrag();
+});
+window.addEventListener('drop', (e) => {
+  if (!draggingFiles(e)) return;
+  e.preventDefault();
+  endDrag();
+  if (!canDropPhotos()) return;
+  const dropped = [...e.dataTransfer.files];
+  const pics = dropped.filter(isPhoto);
+  if (!pics.length) return toast('Only photos can be dropped here: JPEG, PNG, HEIC or WebP.');
+  const room = MAX_PHOTOS - photos.length;
+  if (room <= 0) return toast(`That’s the most photos (${MAX_PHOTOS}). Remove one to add another.`);
+  if (pics.length > room || pics.length < dropped.length) toast(pics.length > room ? `Adding the first ${room}: up to ${MAX_PHOTOS} photos fit.` : 'Added the photos. Other files were left out.');
+  addPhotoFiles(pics);
+});
 /* ---------------- talking to Claude ---------------- */
 
 // Run one request on a particular model, whatever is chosen in Settings (Haiku for quick updates, Opus for retries).

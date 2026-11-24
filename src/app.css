@@ -1272,6 +1272,13 @@ body[data-mic="listening"] .composer, body[data-mic="starting"] .composer { bord
 .composer-bar { display: flex; align-items: center; gap: 2px; padding: 4px 6px 6px 4px; border-top: 1px solid var(--line); }
 .composer-tools { display: flex; gap: 2px; }
 .composer-tools[hidden] { display: none; }
+/* Dragging photos in from the computer: the box lights up with a drop hint over it. */
+body[data-drop] #composer { position: relative; border-color: transparent; box-shadow: none; outline: 2px dashed var(--accent); outline-offset: 0; }
+body[data-drop] #composer::after {
+  content: attr(data-drop-hint); position: absolute; inset: 0; display: grid; place-items: center; padding: 12px; text-align: center;
+  border-radius: 12px; background: var(--surface, var(--bg)); opacity: 0.95; color: var(--ink); font-size: 1.05rem; font-weight: 700; pointer-events: none;
+}
+body[data-drop="full"] #composer { outline-color: var(--muted); }
 .tool-btn { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 999px; color: var(--muted); cursor: pointer; }
 .tool-btn:hover, .tool-btn:focus-within { color: var(--ink); background: var(--accent-soft); }
 .tool-btn:focus-within { outline: 3px solid var(--accent); outline-offset: -3px; }

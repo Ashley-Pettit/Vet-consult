@@ -30,10 +30,12 @@ async function decode(file) {
   }
 }
 
+// Some phones (and Windows, for HEIC) give photos no type, so the file name counts too.
+export const isPhoto = (file) => Boolean(file) && (/^image\//.test(file.type) || /\.(jpe?g|png|heic|heif|webp|gif)$/i.test(file.name || ''));
+
 /** Resize to a JPEG no larger than 1280 px on the long side. */
 export async function preparePhoto(file) {
-  // Some phones give HEIC photos no type, so the file name counts too.
-  if (!file || !(/^image\//.test(file.type) || /\.(jpe?g|png|heic|heif|webp|gif)$/i.test(file.name || ''))) throw new Error('not_image');
+  if (!isPhoto(file)) throw new Error('not_image');
   const img = await decode(file);
   const w = img.width || img.naturalWidth;
   const h = img.height || img.naturalHeight;
