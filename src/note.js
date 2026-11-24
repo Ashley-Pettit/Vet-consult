@@ -1126,7 +1126,7 @@ export function careSheetText(c, lookup = () => null) {
     L.push('Rehydration');
     const t = rehydrationTable(c.rehydration);
     if (t) {
-      L.push(rehydrationIntro(c.rehydration, t).replace(/\.$/, ':'));
+      L.push(rehydrationIntro(c.rehydration, t).replace(' (the protocol’s starting point)', '').replace(/\.$/, ':'));
       t.days.forEach((d) =>
         L.push(t.custom
           ? `- Day ${d.day}: ${mlCell(d.total)} in total: ${mlCell(d.every4h)} every 4 hours, or ${mlCell(d.every6h)} every 6 hours`
