@@ -4,6 +4,7 @@ import {
   AlignmentType, BorderStyle, Document, ExternalHyperlink, Footer, Header, ImageRun, LevelFormat, Packer, PageNumber,
   Paragraph, ShadingType, Table, TableCell, TableLayoutType, TableRow, TextRun, VerticalAlign, WidthType,
 } from 'docx';
+import JSZip from 'jszip';
 import { LOGO_PNG_BASE64 } from './brand-logo.js';
 import { dueLabel, formatDate, NOT_RECORDED, rehydrationTable, REHYDRATION_NOTE, careAiNote, feedAmounts } from './note.js';
 import { chartByKey } from './feeding.js';
@@ -309,8 +310,20 @@ export async function buildWord(model, { preparedBy = '', date = new Date(), tem
     },
     sections,
   });
-  return Packer.toBlob(doc);
+  return withoutFolders(await Packer.toBlob(doc));
 }
+
+// The Word file repacked the way Word itself writes one: [Content_Types].xml first and no empty folder entries
+// (Word on phones, OneDrive and Teams can refuse a .docx with them). The files inside are unchanged.
+async function withoutFolders(blob) {
+  const src = await JSZip.loadAsync(await blob.arrayBuffer());
+  const paths = Object.keys(src.files).filter((k) => !src.files[k].dir);
+  paths.sort((a, b) => (b === '[Content_Types].xml') - (a === '[Content_Types].xml'));
+  const out = new JSZip();
+  for (const k of paths) out.file(k, await src.files[k].async('uint8array'), { createFolders: false, date: src.files[k].date });
+  return out.generateAsync({ type: 'blob', mimeType: DOCX_TYPE, compression: 'DEFLATE', compressionOptions: { level: 6 } });
+}
+const DOCX_TYPE = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
 
 // A landscape page for the fridge: one row per daily job, a big box per day.
 function tickSheetSection(t, title) {
