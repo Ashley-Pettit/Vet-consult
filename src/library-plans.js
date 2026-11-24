@@ -7613,6 +7613,3786 @@ export default {
      }
     }
    ]
+  },
+  {
+   "id": "penguin",
+   "name": "Little penguin",
+   "plans": [
+    {
+     "id": "lib-penguin-juvenile",
+     "stage": "Underweight juvenile",
+     "weight": "about 700 g",
+     "text": "Ready-made plan: a juvenile little penguin, about 700 g, underweight but alert, found on a beach. No injuries and no medicines. Write a standard plan another carer can follow for a penguin like this, from today until release. Use day and week numbers, not calendar dates.",
+     "sheet": {
+      "animal": "Underweight juvenile little penguin",
+      "case_number": "",
+      "species": "Little penguin (Eudyptula minor)",
+      "kind": "wildlife",
+      "summary": "This juvenile little penguin, about 700 g, was found on a beach underweight but alert, with no injuries. Penguins need a facility set up for them, so the goal is to keep it safe and cool and get it quickly to an experienced penguin rehabilitation centre, such as Phillip Island Nature Parks, which takes penguins from across Victoria.",
+      "photo_findings": [],
+      "medications": [],
+      "plan": [
+       {
+        "when": "Day 1",
+        "tasks": [
+         "Ring Wildlife Victoria on 03 8400 7300 or the penguin rehabilitation centre to arrange transfer, and check it shows no signs of bird flu before bringing it in."
+        ]
+       },
+       {
+        "when": "Until transfer",
+        "tasks": [
+         "Keep it in a cool, quiet box and give no food or water unless the centre says to."
+        ]
+       }
+      ],
+      "housing": [
+       "Keep it in a ventilated box lined with a towel, in a dark, quiet room at about 26°C, cooler than for other birds, as penguins overheat easily out of the water.",
+       "Keep it apart from pets and other birds, and change the towel whenever it is soiled, as droppings ruin waterproofing.",
+       "Bird flu is in wild seabirds along the Victorian coast, so wear disposable gloves (which also keep skin oils off its feathers), a surgical or N95 mask and eye protection when handling it, and wash your hands with soap afterwards."
+      ],
+      "feeding": [
+       "Give no food or water before the rehabilitation centre has checked it, unless they tell you to.",
+       "At the centre, little penguins are fed small fish such as pilchards and whitebait, and squid, with a seabird vitamin tablet; an adult eats about 140 to 180 g a day, and thin, growing or sick birds need up to 50% more."
+      ],
+      "activity": [
+       "Handle it as little as possible, gently, holding its body with gloved hands and keeping its beak away from your face, as penguins bite."
+      ],
+      "care": [
+       "Never use oil-based ointments or creams on it; even a thumbnail-sized patch of oil can kill a little penguin, so any oil on it needs the centre straight away.",
+       "Anyone who has handled a seabird that might have bird flu should keep away from backyard poultry and pet birds for 48 hours."
+      ],
+      "daily_checks": [
+       "Alert and responsive",
+       "Box clean and dry",
+       "Cool, not panting",
+       "Breathing quiet"
+      ],
+      "log_days": 2,
+      "feed_calc": {
+       "applies": false,
+       "what": "",
+       "weight_g": 700,
+       "stage": "Juvenile, underweight",
+       "percent_body_weight_per_day": null,
+       "feeds_per_day": null,
+       "basis": "Fed by the penguin rehabilitation centre, not before transfer.",
+       "sure": true
+      },
+      "release": {
+       "ready_when": [
+        "At a healthy weight, as judged by the rehabilitation centre",
+        "Waterproof and swimming strongly",
+        "Healthy and needing no more care"
+       ],
+       "target_weight": "About 1 kg or more for a little penguin",
+       "how": [
+        "The rehabilitation centre decides when it is ready and releases it.",
+        "Release is at dusk at the coast, near a penguin colony, in calm weather."
+       ],
+       "where": "Released by the rehabilitation centre on the coast where it was found (recorded with GPS coordinates or a Melways reference), or the closest suitable stretch of coast near a little penguin colony."
+      },
+      "escalate": {
+       "vet": [
+        "Getting weaker, or not standing",
+        "Feathers wet, soaked or oily",
+        "Discharge from the eyes or nostrils"
+       ],
+       "urgent": [
+        "Collapsed or not responding: give nothing by mouth on the way",
+        "Panting or holding its flippers out, which means it is too hot: move it somewhere cooler straight away",
+        "Tremors, a twisted neck or poor balance, which can be bird flu: ring the Emergency Animal Disease Watch Hotline on 1800 675 888 straight away",
+        "Struggling to breathe"
+       ]
+      },
+      "rehydration": {
+       "needed": false,
+       "weight_g": null,
+       "dehydration_pct": null,
+       "steps": []
+      },
+      "species_group": "penguin",
+      "next_visit": "",
+      "sources": [
+       "vic-rehab-guidelines-waterbirds-marine",
+       "vic-cop-welfare-wildlife-rehabilitation",
+       "vic-release-requirements",
+       "vic-rehabilitator-authorisation-conditions",
+       "vic-shelter-foster-carer-authorisation",
+       "agvic-report-sick-dead-wild-birds",
+       "vic-h5-bird-flu-wildlife-rehabilitators",
+       "vic-h5n1-guidance-rehabilitators",
+       "wombaroo-native-birds-feeding-guidelines"
+      ]
+     }
+    },
+    {
+     "id": "lib-penguin-adult",
+     "stage": "Adult",
+     "weight": "about 1.1 kg",
+     "text": "Ready-made plan: an adult little penguin, about 1.1 kg, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a penguin like this, from today until release. Use day and week numbers, not calendar dates.",
+     "sheet": {
+      "animal": "Adult little penguin",
+      "case_number": "",
+      "species": "Little penguin (Eudyptula minor)",
+      "kind": "wildlife",
+      "summary": "This adult little penguin, about 1.1 kg, is recovering in care with no injuries needing treatment. Penguins need a facility set up for them, so the goal is to keep it safe and cool and transfer it to an experienced penguin rehabilitation centre, such as Phillip Island Nature Parks, which returns it to the sea once it is fit.",
+      "photo_findings": [],
+      "medications": [],
+      "plan": [
+       {
+        "when": "Day 1",
+        "tasks": [
+         "Ring Wildlife Victoria on 03 8400 7300 or the penguin rehabilitation centre to arrange transfer, and check it shows no signs of bird flu before bringing it in."
+        ]
+       },
+       {
+        "when": "Until transfer",
+        "tasks": [
+         "Keep it in a cool, quiet box and give no food or water unless the centre says to."
+        ]
+       }
+      ],
+      "housing": [
+       "Keep it in a ventilated box lined with a towel, in a dark, quiet room at about 26°C, cooler than for other birds, as penguins overheat easily out of the water.",
+       "Keep it apart from pets and other birds, and change the towel whenever it is soiled, as droppings ruin waterproofing.",
+       "Bird flu is in wild seabirds along the Victorian coast, so wear disposable gloves (which also keep skin oils off its feathers), a surgical or N95 mask and eye protection when handling it, and wash your hands with soap afterwards."
+      ],
+      "feeding": [
+       "Give no food or water before the rehabilitation centre has checked it, unless they tell you to.",
+       "At the centre, little penguins are fed small fish such as pilchards and whitebait, and squid, with a seabird vitamin tablet; an adult eats about 140 to 180 g a day."
+      ],
+      "activity": [
+       "Handle it as little as possible, gently, holding its body with gloved hands and keeping its beak away from your face, as penguins bite."
+      ],
+      "care": [
+       "A moulting penguin looks scruffy and stays ashore for weeks; it is normal and only needs rescue if it is in danger, such as on a busy beach or where dogs run.",
+       "Never use oil-based ointments or creams on it; even a thumbnail-sized patch of oil can kill a little penguin, so any oil on it needs the centre straight away."
+      ],
+      "daily_checks": [
+       "Alert and responsive",
+       "Box clean and dry",
+       "Cool, not panting",
+       "Breathing quiet"
+      ],
+      "log_days": 2,
+      "feed_calc": {
+       "applies": false,
+       "what": "",
+       "weight_g": 1100,
+       "stage": "Adult",
+       "percent_body_weight_per_day": null,
+       "feeds_per_day": null,
+       "basis": "Fed by the penguin rehabilitation centre, not before transfer.",
+       "sure": true
+      },
+      "release": {
+       "ready_when": [
+        "At a healthy weight, as judged by the rehabilitation centre",
+        "Waterproof and swimming strongly",
+        "Healthy and needing no more care"
+       ],
+       "target_weight": "About 1.1 kg, holding at or above its arrival weight",
+       "how": [
+        "The rehabilitation centre decides when it is ready and releases it.",
+        "Release is at dusk at the coast, near a penguin colony, in calm weather."
+       ],
+       "where": "Released by the rehabilitation centre on the coast where it was found (recorded with GPS coordinates or a Melways reference), close to its colony."
+      },
+      "escalate": {
+       "vet": [
+        "Getting weaker, or not standing",
+        "Feathers wet, soaked or oily",
+        "Discharge from the eyes or nostrils"
+       ],
+       "urgent": [
+        "Collapsed or not responding: give nothing by mouth on the way",
+        "Panting or holding its flippers out, which means it is too hot: move it somewhere cooler straight away",
+        "Tremors, a twisted neck or poor balance, which can be bird flu: ring the Emergency Animal Disease Watch Hotline on 1800 675 888 straight away",
+        "Struggling to breathe"
+       ]
+      },
+      "rehydration": {
+       "needed": false,
+       "weight_g": null,
+       "dehydration_pct": null,
+       "steps": []
+      },
+      "species_group": "penguin",
+      "next_visit": "",
+      "sources": [
+       "vic-rehab-guidelines-waterbirds-marine",
+       "vic-cop-welfare-wildlife-rehabilitation",
+       "vic-release-requirements",
+       "vic-rehabilitator-authorisation-conditions",
+       "vic-shelter-foster-carer-authorisation",
+       "agvic-report-sick-dead-wild-birds",
+       "vic-h5-bird-flu-wildlife-rehabilitators",
+       "vic-h5n1-guidance-rehabilitators",
+       "wombaroo-native-birds-feeding-guidelines"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "kookaburra",
+   "name": "Laughing kookaburra",
+   "plans": [
+    {
+     "id": "lib-kookaburra-nestling",
+     "stage": "Nestling",
+     "weight": "about 200 g",
+     "text": "Ready-made plan: an orphaned laughing kookaburra nestling, about 200 g, with pin feathers coming through. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a nestling like this, from today until release. Use day and week numbers, not calendar dates.",
+     "sheet": {
+      "animal": "Orphaned laughing kookaburra nestling",
+      "case_number": "",
+      "species": "Laughing kookaburra (Dacelo novaeguineae)",
+      "kind": "wildlife",
+      "summary": "This orphaned laughing kookaburra nestling, about 200 g with pin feathers coming through, is healthy and ready to be hand-reared. Kookaburra chicks only leave the hollow once they can fly, so the goal is to raise it to a strong, wild, self-feeding young kookaburra and release it where it was found.",
+      "photo_findings": [],
+      "medications": [],
+      "plan": [
+       {
+        "when": "About weeks 1 to 2 (to about 4 weeks old)",
+        "tasks": [
+         "Lower the heat bit by bit as its feathers cover its body."
+        ]
+       },
+       {
+        "when": "About week 3 (fledging, around 5 weeks old)",
+        "tasks": [
+         "Move it to a large cage with perches and start leaving chopped food and insects in a dish."
+        ]
+       },
+       {
+        "when": "About weeks 4 to 7",
+        "tasks": [
+         "Move it to an outdoor flight aviary and give live insects and whole mice so it learns to catch and kill prey.",
+         "Stop hand-feeding once it feeds itself and holds its weight; kookaburras are independent at about 10 weeks old."
+        ]
+       }
+      ],
+      "housing": [
+       "Sit it in a small artificial nest, such as a container lined with tissue that holds it upright, inside a heated box at the temperature the app shows for its stage, with room to move away from the heat; lower the heat bit by bit as its feathers open.",
+       "Keep it in a quiet room on its own, in a separate air space from any pet birds, with its own dishes and cleaning gear, as serious diseases pass between wild and pet birds through the air.",
+       "Change the nest lining whenever it is soiled and remove droppings after each feed.",
+       "Wear gloves, a surgical or N95 mask and eye protection when handling it or cleaning, use fresh gloves for each animal and wash your hands with soap afterwards, as wild birds in Victoria can carry psittacosis and bird flu."
+      ],
+      "feeding": [
+       "Feed Wombaroo Insectivore Rearing Mix made up as moist pellets, the rearing food for orphan kookaburras, with chopped mice or pinkie rats, crickets and a few mealworms; cut prey so no sharp bone ends stick out, and add no vitamins or supplements.",
+       "Give the amount in the feed calculator each day, split across the feeds; the Wombaroo kookaburra chart gives about 30 g a day at 160 g and 40 g a day at 240 g.",
+       "Give about 5 feeds a day, every 3 hours from about 6 am to 6 pm, with no overnight feeds; the guide gives no set interval, so check the timing with an experienced bird carer.",
+       "Offer pieces from blunt tweezers into its gaping beak, letting it swallow each one before the next, and never squirt food in with a syringe, as birds easily inhale it.",
+       "Thaw frozen prey fully in the fridge, use it the same day, never refreeze thawed food, keep made-up Wombaroo food no more than a day in the fridge (or 2 weeks frozen) and throw out leftovers.",
+       "After each feed, drip a few drops of water slowly at the tip of its beak and let it swallow; once it feeds itself, keep a shallow dish of fresh water, changed daily."
+      ],
+      "activity": [
+       "Hold its head gently but firmly when handling it, as kookaburras can injure people with their beak; gaping is a normal threat display.",
+       "Handle it only for feeds and weighing, without talking to it or letting visitors see it, so it does not become tame.",
+       "If another young kookaburra is in care with an experienced bird carer, raising them together helps it grow up knowing its own kind."
+      ],
+      "care": [
+       "Weigh it every morning at the same time, before the first feed, and enter the weight so the feed calculator stays right.",
+       "Bringing up a small pellet of fur, bone and insect parts is normal for this bird, not vomiting."
+      ],
+      "daily_checks": [
+       "Morning weight recorded",
+       "Gaping well at feeds",
+       "Droppings normal",
+       "Nest clean and warm",
+       "Feathers growing"
+      ],
+      "log_days": 14,
+      "feed_calc": {
+       "applies": true,
+       "what": "Insectivore Rearing Mix moist pellets and mice",
+       "weight_g": 200,
+       "stage": "Nestling in pin feathers (about 2 to 3 weeks old)",
+       "percent_body_weight_per_day": 17.5,
+       "feeds_per_day": 5,
+       "basis": "Wombaroo kookaburra chart: about 30 g a day at 160 g and 40 g a day at 240 g. Feeds a day not given.",
+       "sure": false
+      },
+      "release": {
+       "ready_when": [
+        "Catches and kills live prey and holds its weight",
+        "Flies strongly and lands well the length of the aviary",
+        "Full, healthy plumage and needing no more care",
+        "Wary of people"
+       ],
+       "target_weight": "About 350 g for a laughing kookaburra",
+       "how": [
+        "Release it within 24 hours of it being ready.",
+        "Choose a calm, mild morning, never extreme weather, so it has the day to settle.",
+        "Carry it in a lined, ventilated box, open it near trees, and step well back."
+       ],
+       "where": "Release it where it was found (recorded with GPS coordinates or a Melways reference), or if that spot is unsuitable, at the closest suitable place within its home range; Victorian rules do not allow release anywhere else."
+      },
+      "escalate": {
+       "vet": [
+        "Will not gape or refuses two feeds in a row",
+        "Weight drops, or stays the same for two days",
+        "Watery or oddly coloured droppings for more than a day",
+        "Weak or bent legs, which can mean a diet problem"
+       ],
+       "urgent": [
+        "Cold, cannot hold its head up or has collapsed: give nothing by mouth on the way",
+        "Food bubbling from its nostrils, or struggling to breathe",
+        "Tremors, a twisted neck or poor balance, which can be bird flu: also ring the Emergency Animal Disease Watch Hotline on 1800 675 888",
+        "Caught by a cat or dog: a vet the same day, even if no wound can be seen"
+       ]
+      },
+      "rehydration": {
+       "needed": false,
+       "weight_g": null,
+       "dehydration_pct": null,
+       "steps": []
+      },
+      "species_group": "kookaburra",
+      "next_visit": "",
+      "sources": [
+       "vic-cop-welfare-wildlife-rehabilitation",
+       "vic-release-requirements",
+       "vic-rehabilitator-authorisation-conditions",
+       "vic-shelter-foster-carer-authorisation",
+       "vic-rehab-guidelines-part-a",
+       "vic-h5-bird-flu-wildlife-rehabilitators",
+       "wombaroo-native-birds-feeding-guidelines",
+       "wires-helping-chicks"
+      ]
+     }
+    },
+    {
+     "id": "lib-kookaburra-adult",
+     "stage": "Adult",
+     "weight": "about 350 g",
+     "text": "Ready-made plan: an adult laughing kookaburra, about 350 g, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a kookaburra like this, from today until release. Use day and week numbers, not calendar dates.",
+     "sheet": {
+      "animal": "Adult laughing kookaburra",
+      "case_number": "",
+      "species": "Laughing kookaburra (Dacelo novaeguineae)",
+      "kind": "wildlife",
+      "summary": "This adult laughing kookaburra, about 350 g, is recovering in care with no injuries needing treatment. The goal is to keep it calm and eating well, rebuild its flying and hunting, and return it to its family group where it was found as soon as it is fit.",
+      "photo_findings": [],
+      "medications": [],
+      "plan": [
+       {
+        "when": "Days 1 to 3",
+        "tasks": [
+         "Keep it in a quiet, covered hospital cage with a low perch while it settles and starts eating."
+        ]
+       },
+       {
+        "when": "Once eating well and moving normally",
+        "tasks": [
+         "Move it to an outdoor flight aviary and give live insects and whole mice so it is hunting again before release."
+        ]
+       }
+      ],
+      "housing": [
+       "Keep it in a covered cage with a sturdy natural branch perch, in a quiet, dim room at the temperature the app shows for adult birds.",
+       "Keep it in a quiet room on its own, in a separate air space from any pet birds, with its own dishes and cleaning gear, as serious diseases pass between wild and pet birds through the air.",
+       "Clean the floor and dishes every day.",
+       "Wear gloves, a surgical or N95 mask and eye protection when handling it or cleaning, use fresh gloves for each animal and wash your hands with soap afterwards, as wild birds in Victoria can carry psittacosis and bird flu."
+      ],
+      "feeding": [
+       "Feed whole prey such as mice and day-old chicks, cut so no sharp bone ends stick out, with crickets, mealworms and Wombaroo Insectivore Meat Mix (10 g of powder with 20 g of minced meat).",
+       "An adult kookaburra of this size needs about 40 g of food a day; weigh what you give and what is left so you know it is eating.",
+       "Put the food on a low platform or in a shallow dish it can see from its perch.",
+       "Thaw frozen prey fully in the fridge, use it the same day, never refreeze thawed food, keep made-up Wombaroo food no more than a day in the fridge (or 2 weeks frozen) and throw out leftovers.",
+       "Keep fresh water in a shallow dish at all times and change it daily."
+      ],
+      "activity": [
+       "Hold its head gently but firmly when handling it, as kookaburras can injure people with their beak; gaping is a normal threat display.",
+       "Handle it as little as possible and keep pets, children and noise well away; do not try to tame it."
+      ],
+      "care": [
+       "Bringing up a small pellet of fur, bone and insect parts is normal for this bird, not vomiting.",
+       "If you develop a fever, headache or cough, tell your doctor you work with wild birds."
+      ],
+      "daily_checks": [
+       "Food eaten recorded",
+       "Fresh water given",
+       "Perching steadily",
+       "Droppings look normal",
+       "Breathing quiet"
+      ],
+      "log_days": 14,
+      "feed_calc": {
+       "applies": false,
+       "what": "",
+       "weight_g": 350,
+       "stage": "Adult",
+       "percent_body_weight_per_day": null,
+       "feeds_per_day": null,
+       "basis": "Adult feeding itself; the Wombaroo guide gives about 40 g a day for a 350 g kookaburra.",
+       "sure": true
+      },
+      "release": {
+       "ready_when": [
+        "Flies strongly and lands well the length of the aviary",
+        "Catches live prey and holds its weight",
+        "Feathers in good condition and needing no more care",
+        "Alert and wary of people"
+       ],
+       "target_weight": "About 350 g, holding at or above its arrival weight",
+       "how": [
+        "Release it within 24 hours of it being ready.",
+        "Choose a calm, mild morning, never extreme weather.",
+        "Carry it in a lined, ventilated box, open it near trees, and step well back.",
+        "Kookaburras live in family groups that hold a territory, so release it where it was found, where its family lives."
+       ],
+       "where": "Release it where it was found (recorded with GPS coordinates or a Melways reference), or if that spot is unsuitable, at the closest suitable place within its home range; Victorian rules do not allow release anywhere else."
+      },
+      "escalate": {
+       "vet": [
+        "Not eating, or losing weight two days running",
+        "Watery or oddly coloured droppings for more than a day",
+        "Not flying properly once in the flight aviary",
+        "Discharge from the eyes or nostrils"
+       ],
+       "urgent": [
+        "Fluffed up, sleepy on the floor or collapsed: give nothing by mouth on the way",
+        "Struggling to breathe, or tail bobbing with each breath",
+        "Tremors, a twisted neck or poor balance, which can be bird flu: also ring the Emergency Animal Disease Watch Hotline on 1800 675 888",
+        "Bleeding or a new injury"
+       ]
+      },
+      "rehydration": {
+       "needed": false,
+       "weight_g": null,
+       "dehydration_pct": null,
+       "steps": []
+      },
+      "species_group": "kookaburra",
+      "next_visit": "",
+      "sources": [
+       "vic-cop-welfare-wildlife-rehabilitation",
+       "vic-release-requirements",
+       "vic-rehabilitator-authorisation-conditions",
+       "vic-shelter-foster-carer-authorisation",
+       "vic-rehab-guidelines-part-a",
+       "vic-h5-bird-flu-wildlife-rehabilitators",
+       "wombaroo-native-birds-feeding-guidelines"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "silvergull",
+   "name": "Silver gull",
+   "plans": [
+    {
+     "id": "lib-silvergull-chick",
+     "stage": "Downy chick",
+     "weight": "about 100 g",
+     "text": "Ready-made plan: an orphaned silver gull chick, about 100 g, covered in down. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a chick like this, from today until release. Use day and week numbers, not calendar dates.",
+     "sheet": {
+      "animal": "Orphaned silver gull chick",
+      "case_number": "",
+      "species": "Silver gull (Chroicocephalus novaehollandiae)",
+      "kind": "wildlife",
+      "summary": "This orphaned silver gull chick, about 100 g, is covered in down and healthy. The goal is to raise it to a strong, waterproof young gull that feeds itself, and release it with other silver gulls where it was found.",
+      "photo_findings": [],
+      "medications": [],
+      "plan": [
+       {
+        "when": "Days 1 to 7",
+        "tasks": [
+         "Start dropping food into a shallow dish at each feed so it learns to pick it up itself."
+        ]
+       },
+       {
+        "when": "About weeks 2 to 3 (feathers replacing the down)",
+        "tasks": [
+         "Move it to a larger pen with a shallow pool and switch off the heat once it is feathered.",
+         "Stop hand-feeding once it eats from the dish on its own and holds its weight."
+        ]
+       },
+       {
+        "when": "About weeks 4 to 6 (flying)",
+        "tasks": [
+         "Move it to an outdoor aviary with a pool, ideally with other young gulls, to build flight and waterproofing."
+        ]
+       }
+      ],
+      "housing": [
+       "Keep it in a lined box with a heat source at one end at the temperature the app shows for its stage, so it can move closer or away; panting or holding its wings out means it is too hot.",
+       "Use rubber matting or raked sand on the floor, never bare concrete, and change soiled floor material at least three times a day, as droppings ruin waterproofing and cause foot sores.",
+       "Keep it in a quiet room on its own, in a separate air space from any pet birds, with its own dishes and cleaning gear, as serious diseases pass between wild and pet birds through the air.",
+       "Bird flu is in wild seabirds and waterbirds along the Victorian coast, so wear disposable gloves, a surgical or N95 mask and eye protection when handling it or cleaning, use fresh gloves for each animal and wash your hands with soap afterwards."
+      ],
+      "feeding": [
+       "Feed small pieces of fish such as whitebait and pilchard, with Wombaroo Insectivore Meat Mix (10 g of powder with 20 g of minced fish) and small insects, as silver gulls eat fish, insects and other small animals.",
+       "Give the amount in the feed calculator each day, split across the feeds; there is no gull chart, so watch its weight closely.",
+       "Give about 5 feeds a day, every 3 hours from about 6 am to 6 pm, with no overnight feeds.",
+       "Offer pieces from blunt tweezers held low in front of it, then drop them into a shallow dish so it learns to pick them up; never squirt food into its beak.",
+       "Thaw frozen fish in the fridge or under cold running water, never in hot water, use it the same day and throw out leftovers; frozen fish loses vitamin B1, so give a seabird vitamin tablet (such as Vetafarm Sea Bird Tablets) tucked into a fish every day, as a lack causes fits and weakness.",
+       "Keep a shallow dish of fresh water it can dip its bill into but not climb into, changed daily; never put it in water while it is downy, as it chills easily."
+      ],
+      "activity": [
+       "Handle it only for weighing and cleaning, quickly and gently, without talking to it or letting visitors see it, so it does not become tame.",
+       "If other young silver gulls are in care with an experienced seabird carer, raising them together helps it grow up knowing its own kind."
+      ],
+      "care": [
+       "Weigh it every morning at the same time, before the first feed, and enter the weight so the feed calculator stays right.",
+       "Never use oil-based ointments or creams on it, as they ruin waterproofing and delay release."
+      ],
+      "daily_checks": [
+       "Morning weight recorded",
+       "Eating well",
+       "Droppings normal",
+       "Floor clean and dry",
+       "Warm, not panting"
+      ],
+      "log_days": 14,
+      "feed_calc": {
+       "applies": true,
+       "what": "Fish and Insectivore Meat Mix",
+       "weight_g": 100,
+       "stage": "Downy chick",
+       "percent_body_weight_per_day": 25,
+       "feeds_per_day": 5,
+       "basis": "Best estimate for a growing gull chick; growing birds need up to 50% more than adults. No gull chart given.",
+       "sure": false
+      },
+      "release": {
+       "ready_when": [
+        "Feeds itself and holds its weight",
+        "Flies strongly the length of the aviary",
+        "Waterproof, staying dry after swimming",
+        "Wary of people"
+       ],
+       "target_weight": "About 280 g for a silver gull",
+       "how": [
+        "Release it within 24 hours of it being ready.",
+        "Choose a calm, mild morning, never extreme weather.",
+        "Release it where other silver gulls gather, as flocking birds settle best into an existing group."
+       ],
+       "where": "Release it where it was found (recorded with GPS coordinates or a Melways reference), or if that spot is unsuitable, at the closest suitable place within its home range; Victorian rules do not allow release anywhere else."
+      },
+      "escalate": {
+       "vet": [
+        "Refuses food, or loses weight two days running",
+        "Watery or oddly coloured droppings for more than a day",
+        "Weak or splayed legs",
+        "Wobbly or having small fits, which can mean a lack of vitamin B1"
+       ],
+       "urgent": [
+        "Cold, cannot hold its head up or has collapsed: give nothing by mouth on the way",
+        "Tremors, a twisted neck, poor balance or swimming in circles, which can be bird flu: ring the Emergency Animal Disease Watch Hotline on 1800 675 888 straight away",
+        "Struggling to breathe",
+        "Caught by a cat or dog: a vet the same day, even if no wound can be seen"
+       ]
+      },
+      "rehydration": {
+       "needed": false,
+       "weight_g": null,
+       "dehydration_pct": null,
+       "steps": []
+      },
+      "species_group": "seabird",
+      "next_visit": "",
+      "sources": [
+       "vic-rehab-guidelines-waterbirds-marine",
+       "vic-cop-welfare-wildlife-rehabilitation",
+       "vic-release-requirements",
+       "vic-rehabilitator-authorisation-conditions",
+       "vic-shelter-foster-carer-authorisation",
+       "agvic-report-sick-dead-wild-birds",
+       "vic-h5-bird-flu-wildlife-rehabilitators",
+       "vic-h5n1-guidance-rehabilitators",
+       "wombaroo-native-birds-feeding-guidelines",
+       "wires-helping-chicks"
+      ]
+     }
+    },
+    {
+     "id": "lib-silvergull-adult",
+     "stage": "Adult",
+     "weight": "about 280 g",
+     "text": "Ready-made plan: an adult silver gull, about 280 g, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a gull like this, from today until release. Use day and week numbers, not calendar dates.",
+     "sheet": {
+      "animal": "Adult silver gull",
+      "case_number": "",
+      "species": "Silver gull (Chroicocephalus novaehollandiae)",
+      "kind": "wildlife",
+      "summary": "This adult silver gull, about 280 g, is recovering in care with no injuries needing treatment. The goal is to keep it calm and eating, check its flight and waterproofing, and return it to its flock where it was found as soon as it is fit.",
+      "photo_findings": [],
+      "medications": [],
+      "plan": [
+       {
+        "when": "Days 1 to 3",
+        "tasks": [
+         "Keep it in a quiet, lined pen while it settles and starts eating."
+        ]
+       },
+       {
+        "when": "Once eating well",
+        "tasks": [
+         "Move it to an outdoor aviary with a pool to rebuild flight and check its waterproofing."
+        ]
+       }
+      ],
+      "housing": [
+       "Keep it in a quiet, covered pen at the temperature the app shows for adult seabirds, with a shallow pool once it is settled.",
+       "Use rubber matting or raked sand on the floor, never bare concrete, and change soiled floor material at least three times a day, as droppings ruin waterproofing and cause foot sores.",
+       "Keep it in a quiet room on its own, in a separate air space from any pet birds, with its own dishes and cleaning gear, as serious diseases pass between wild and pet birds through the air.",
+       "Bird flu is in wild seabirds and waterbirds along the Victorian coast, so wear disposable gloves, a surgical or N95 mask and eye protection when handling it or cleaning, use fresh gloves for each animal and wash your hands with soap afterwards."
+      ],
+      "feeding": [
+       "Feed whole small fish such as whitebait and pilchards, with Wombaroo Insectivore Meat Mix and insects; never bread or chips, which have little nutrition and can grow mould.",
+       "The guidance gives no set amount for gulls, so offer a little more than it clears twice a day, and weigh what you give and what is left.",
+       "Put food in a shallow dish or drop it into its pool.",
+       "Thaw frozen fish in the fridge or under cold running water, never in hot water, use it the same day and throw out leftovers; frozen fish loses vitamin B1, so give a seabird vitamin tablet (such as Vetafarm Sea Bird Tablets) tucked into a fish every day, as a lack causes fits and weakness.",
+       "Keep fresh water available at all times and change it daily."
+      ],
+      "activity": [
+       "Handle it as little as possible, wrapped in a towel with its wings folded and its beak held away from your face."
+      ],
+      "care": [
+       "Never use oil-based ointments or creams on it, as they ruin waterproofing and delay release."
+      ],
+      "daily_checks": [
+       "Food eaten recorded",
+       "Fresh water given",
+       "Floor changed",
+       "Droppings look normal",
+       "Breathing quiet"
+      ],
+      "log_days": 14,
+      "feed_calc": {
+       "applies": false,
+       "what": "",
+       "weight_g": 280,
+       "stage": "Adult",
+       "percent_body_weight_per_day": null,
+       "feeds_per_day": null,
+       "basis": "Adult feeding itself; no measured amount is given.",
+       "sure": true
+      },
+      "release": {
+       "ready_when": [
+        "Flies strongly the length of the aviary",
+        "Waterproof, staying dry after swimming",
+        "Eating well and holding its weight",
+        "Healthy and wary of people"
+       ],
+       "target_weight": "About 280 g, holding at or above its arrival weight",
+       "how": [
+        "Release it within 24 hours of it being ready.",
+        "Choose a calm, mild morning, never extreme weather.",
+        "Release it where other silver gulls gather, as flocking birds settle best into an existing group."
+       ],
+       "where": "Release it where it was found (recorded with GPS coordinates or a Melways reference), or if that spot is unsuitable, at the closest suitable place within its home range; Victorian rules do not allow release anywhere else."
+      },
+      "escalate": {
+       "vet": [
+        "Not eating, or losing weight two days running",
+        "Diarrhoea for more than a day",
+        "Feathers soaking through when it swims",
+        "Limping or sores on its feet"
+       ],
+       "urgent": [
+        "Weak, collapsed or cannot hold its head up: give nothing by mouth on the way",
+        "Tremors, a twisted neck, poor balance or swimming in circles, which can be bird flu: ring the Emergency Animal Disease Watch Hotline on 1800 675 888 straight away",
+        "Struggling to breathe",
+        "Fishing line or a hook from its mouth: never pull it"
+       ]
+      },
+      "rehydration": {
+       "needed": false,
+       "weight_g": null,
+       "dehydration_pct": null,
+       "steps": []
+      },
+      "species_group": "seabird",
+      "next_visit": "",
+      "sources": [
+       "vic-rehab-guidelines-waterbirds-marine",
+       "vic-cop-welfare-wildlife-rehabilitation",
+       "vic-release-requirements",
+       "vic-rehabilitator-authorisation-conditions",
+       "vic-shelter-foster-carer-authorisation",
+       "agvic-report-sick-dead-wild-birds",
+       "vic-h5-bird-flu-wildlife-rehabilitators",
+       "vic-h5n1-guidance-rehabilitators",
+       "wombaroo-native-birds-feeding-guidelines"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "kingparrot",
+   "name": "Australian king-parrot",
+   "plans": [
+    {
+     "id": "lib-kingparrot-nestling",
+     "stage": "Nestling",
+     "weight": "about 120 g",
+     "text": "Ready-made plan: an orphaned Australian king-parrot nestling, about 120 g, with pin feathers coming through. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a nestling like this, from today until release. Use day and week numbers, not calendar dates.",
+     "sheet": {
+      "animal": "Orphaned Australian king-parrot nestling",
+      "case_number": "",
+      "species": "Australian king-parrot (Alisterus scapularis)",
+      "kind": "wildlife",
+      "summary": "This orphaned Australian king-parrot nestling, about 120 g with pin feathers coming through, is healthy and ready to be hand-reared. The goal is to raise it to a strong, wild, self-feeding young bird and release it with a local flock where it was found.",
+      "photo_findings": [],
+      "medications": [],
+      "plan": [
+       {
+        "when": "About weeks 1 to 2",
+        "tasks": [
+         "Thicken the formula step by step as its pin feathers open, dropping to 3 to 4 feeds a day."
+        ]
+       },
+       {
+        "when": "About weeks 3 to 5 (fully feathered)",
+        "tasks": [
+         "Move it to a sturdy cage with low perches and start offering soaked seed and soft food in a dish.",
+         "Drop to 1 to 2 hand-feeds a day as it eats more on its own."
+        ]
+       },
+       {
+        "when": "About weeks 6 to 8",
+        "tasks": [
+         "Stop hand-feeding once it eats on its own and holds its weight; check the weaning timing with an experienced bird carer, as young king-parrots can be slow to wean.",
+         "Move it to an outdoor flight aviary to build flying fitness, ideally with other young king-parrots."
+        ]
+       }
+      ],
+      "housing": [
+       "Keep it in a small container lined with paper towel, like a nest, inside a heated box at the temperature the app shows for its stage, with room to move away from the heat; lower the heat bit by bit as its feathers cover its body.",
+       "Keep it in a quiet room on its own, in a separate air space from any pet birds, with its own dishes and cleaning gear, as serious diseases pass between wild and pet birds through the air.",
+       "Change the lining whenever it is soiled and clean up droppings after each feed.",
+       "Wear gloves, a surgical or N95 mask and eye protection when handling it or cleaning, and wash your hands with soap afterwards, as wild parrots in Victoria often carry psittacosis; disinfect dishes and cages with Virkon S at 2% left on for at least 10 minutes, as beak and feather disease survives ordinary cleaners."
+      ],
+      "feeding": [
+       "Feed Passwell Hand Rearing Food or Wombaroo Granivore Rearing Mix, the hand-rearing formula for parrots and cockatoos, mixed at 1 g of powder to 3 mL of water while it is in pin feathers, then thicker (1 g to 2.5 mL, then 1 g to 2 mL) as its feathers open.",
+       "Give the amount in the feed calculator each day, split evenly across the feeds, which is up to about 10% of its body weight at each feed, stopping when the crop is comfortably full. An adult king-parrot eats about 20 to 25 g of food a day, so expect it to work up towards that as it weans.",
+       "Give 5 feeds a day, about 6 am, 10 am, 2 pm, 6 pm and 10 pm, then leave it about 6 hours overnight so the crop empties fully at least once a day.",
+       "Feed it from a small spoon with the sides bent up, letting it pump and swallow at its own pace, and stop if food comes out of its nostrils; never squirt food into its open beak with a syringe, as it can inhale it.",
+       "Mix each feed fresh with pre-boiled water at about 50°C, let it stand 2 minutes, feed it at 38 to 40°C (test it on your wrist) and throw out what is left.",
+       "Wipe its beak and face clean with a warm damp cloth after each feed so formula does not dry on its feathers.",
+       "It gets its fluid from the formula, so it needs no water dish until it starts eating on its own.",
+       "Once it is fully feathered, offer soaked or sprouted seed, defrosted peas and corn mixed with Parrot Soft Food, and natural foods such as seeding grasses, eucalypt and acacia seed, native fruits and berries in a shallow dish, and cut back hand-feeds as it eats more by itself."
+      ],
+      "activity": [
+       "Handle it only for feeds, weighing and cleaning, quickly and gently, and do not talk to it or let visitors see it, as young parrots tame very easily.",
+       "If another young Australian king-parrot is in care with an experienced bird carer, raising them together helps it grow up knowing its own kind.",
+       "From the aviary stage, give it natural foods such as seeding grasses, eucalypt and acacia seed, native fruits and berries and fresh branches to forage and chew."
+      ],
+      "care": [
+       "Weigh it every morning at the same time, before the first feed, and enter the weight so the feed calculator stays right.",
+       "Keep a daily record of its weight, feeds and progress; your authorisation requires records to be kept for 3 years."
+      ],
+      "daily_checks": [
+       "Morning weight recorded",
+       "Crop empty overnight",
+       "Droppings look normal",
+       "Nest clean and warm",
+       "Feathers growing well"
+      ],
+      "log_days": 14,
+      "feed_calc": {
+       "applies": true,
+       "what": "Passwell Hand Rearing Food or Granivore Rearing Mix",
+       "weight_g": 120,
+       "stage": "Nestling in pin feathers (eyes open)",
+       "percent_body_weight_per_day": 50,
+       "feeds_per_day": 5,
+       "basis": "Wombaroo parrot hand-rearing table: up to 10% of body weight a feed, 5 feeds a day at pin-feather stage.",
+       "sure": false
+      },
+      "release": {
+       "ready_when": [
+        "Eats seed and natural foods on its own and holds its weight",
+        "Flies strongly and lands well the length of the aviary",
+        "Full, healthy feathers with no signs of feather or beak disease",
+        "Wary of people"
+       ],
+       "target_weight": "About 220 g for an Australian king-parrot",
+       "how": [
+        "Release it within 24 hours of it being ready.",
+        "Choose a calm, mild morning, never extreme weather, so it has the day to settle.",
+        "Carry it in a lined, ventilated box, open it near trees and cover, and step well back.",
+        "King-parrots move in pairs and small groups, so release it where local king-parrots are feeding, with any it was raised with."
+       ],
+       "where": "Release it where it was found (recorded with GPS coordinates or a Melways reference), or if that spot is unsuitable, at the closest suitable place within its home range; Victorian rules do not allow release anywhere else."
+      },
+      "escalate": {
+       "vet": [
+        "Crop still full in the morning, or slow to empty between feeds",
+        "Weight drops, or stays the same for two days",
+        "Watery or oddly coloured droppings for more than a day",
+        "Feathers that look pinched, curled or bloody, or a beak that looks overgrown, which can mean beak and feather disease"
+       ],
+       "urgent": [
+        "Cold, cannot hold its head up or has collapsed: give nothing by mouth on the way",
+        "Food bubbling from its nostrils, or struggling to breathe",
+        "Tremors, a twisted neck or poor balance, which can be bird flu: also ring the Emergency Animal Disease Watch Hotline on 1800 675 888",
+        "Caught by a cat or dog: a vet the same day, even if no wound can be seen"
+       ]
+      },
+      "rehydration": {
+       "needed": false,
+       "weight_g": null,
+       "dehydration_pct": null,
+       "steps": []
+      },
+      "species_group": "bird",
+      "next_visit": "",
+      "sources": [
+       "vic-cop-welfare-wildlife-rehabilitation",
+       "vic-release-requirements",
+       "vic-rehabilitator-authorisation-conditions",
+       "vic-shelter-foster-carer-authorisation",
+       "vic-rehab-guidelines-part-a",
+       "vic-h5-bird-flu-wildlife-rehabilitators",
+       "wombaroo-native-birds-feeding-guidelines",
+       "wires-helping-chicks"
+      ]
+     }
+    },
+    {
+     "id": "lib-kingparrot-adult",
+     "stage": "Adult",
+     "weight": "about 220 g",
+     "text": "Ready-made plan: an adult Australian king-parrot, about 220 g, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a king-parrot like this, from today until release. Use day and week numbers, not calendar dates.",
+     "sheet": {
+      "animal": "Adult Australian king-parrot",
+      "case_number": "",
+      "species": "Australian king-parrot (Alisterus scapularis)",
+      "kind": "wildlife",
+      "summary": "This adult Australian king-parrot, about 220 g, is recovering in care with no injuries needing treatment. The goal is to keep it calm and eating well, rebuild its flying fitness and return it to its flock where it was found as soon as it is fit.",
+      "photo_findings": [],
+      "medications": [],
+      "plan": [
+       {
+        "when": "Days 1 to 3",
+        "tasks": [
+         "Keep it in a covered hospital cage while it settles."
+        ]
+       },
+       {
+        "when": "Once eating well and moving normally",
+        "tasks": [
+         "Move it to an outdoor flight aviary to rebuild flying fitness."
+        ]
+       }
+      ],
+      "housing": [
+       "Keep it in a sturdy covered cage with natural branch perches, in a quiet, dim room at the temperature the app shows for adult birds.",
+       "Keep it in a quiet room on its own, in a separate air space from any pet birds, with its own dishes and cleaning gear, as serious diseases pass between wild and pet birds through the air.",
+       "Use an aviary with weathered or vinegar-washed wire, as new galvanised wire can poison parrots with zinc. Clean the floor and dishes daily.",
+       "Wear gloves, a surgical or N95 mask and eye protection when handling it or cleaning, and wash your hands with soap afterwards, as wild parrots in Victoria often carry psittacosis; disinfect dishes and cages with Virkon S at 2% left on for at least 10 minutes, as beak and feather disease survives ordinary cleaners."
+      ],
+      "feeding": [
+       "Offer a small parrot seed mix (not one heavy in sunflower or other oily seed) with natural foods such as eucalypt and acacia seed, native fruits and berries and blossom, plus defrosted peas and corn and a little apple; never avocado, bread or dairy.",
+       "An adult king-parrot eats about 20 to 25 g of food a day; weigh what you put in and what is left so you know it is eating.",
+       "Put the food in shallow dishes on the floor and near a perch, and top it up every morning.",
+       "Keep fresh water in a shallow dish at all times and change it every day.",
+       "Once in the aviary, offer most of its food as natural seed heads, cones and branches so it is foraging for itself before release."
+      ],
+      "activity": [
+       "Handle it as little, as quickly and as gently as possible, wrapped in a towel, and do not try to tame it.",
+       "Give it fresh branches to chew every few days, and keep pets, children and noise well away from its cage."
+      ],
+      "care": [
+       "If you develop a fever, headache or cough, tell your doctor you work with wild birds."
+      ],
+      "daily_checks": [
+       "Food eaten, dish topped up",
+       "Fresh water given",
+       "Perching steadily",
+       "Droppings look normal",
+       "Breathing quiet"
+      ],
+      "log_days": 14,
+      "feed_calc": {
+       "applies": false,
+       "what": "",
+       "weight_g": 220,
+       "stage": "Adult",
+       "percent_body_weight_per_day": null,
+       "feeds_per_day": null,
+       "basis": "Adult eating seed and natural foods; no measured milk or formula amount.",
+       "sure": true
+      },
+      "release": {
+       "ready_when": [
+        "Flies strongly and lands well the length of the aviary",
+        "Eating natural foods and holding its weight",
+        "Feathers in good condition and needing no more care",
+        "Alert and wary of people"
+       ],
+       "target_weight": "About 220 g, holding at or above its arrival weight",
+       "how": [
+        "Release it within 24 hours of it being ready.",
+        "Choose a calm, mild morning, never extreme weather.",
+        "Carry it in a lined, ventilated box, open it near trees and cover, and step well back.",
+        "Release it where local king-parrots are feeding, as they settle best near their own kind."
+       ],
+       "where": "Release it where it was found (recorded with GPS coordinates or a Melways reference), or if that spot is unsuitable, at the closest suitable place within its home range; Victorian rules do not allow release anywhere else."
+      },
+      "escalate": {
+       "vet": [
+        "Not eating, or losing weight two days running",
+        "Watery or oddly coloured droppings for more than a day",
+        "Not flying properly once in the flight aviary",
+        "Feathers that look pinched, curled or bloody, or a beak that looks overgrown, which can mean beak and feather disease"
+       ],
+       "urgent": [
+        "Fluffed up, sleepy on the floor or collapsed: give nothing by mouth on the way",
+        "Struggling to breathe, or tail bobbing with each breath",
+        "Tremors, a twisted neck or poor balance, which can be bird flu: also ring the Emergency Animal Disease Watch Hotline on 1800 675 888",
+        "Bleeding or a new injury"
+       ]
+      },
+      "rehydration": {
+       "needed": false,
+       "weight_g": null,
+       "dehydration_pct": null,
+       "steps": []
+      },
+      "species_group": "bird",
+      "next_visit": "",
+      "sources": [
+       "vic-cop-welfare-wildlife-rehabilitation",
+       "vic-release-requirements",
+       "vic-rehabilitator-authorisation-conditions",
+       "vic-shelter-foster-carer-authorisation",
+       "vic-rehab-guidelines-part-a",
+       "vic-h5-bird-flu-wildlife-rehabilitators",
+       "wombaroo-native-birds-feeding-guidelines"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "swan",
+   "name": "Black swan",
+   "plans": [
+    {
+     "id": "lib-swan-cygnet",
+     "stage": "Downy cygnet",
+     "weight": "about 300 g",
+     "text": "Ready-made plan: an orphaned black swan cygnet, about 300 g, covered in grey down, a couple of weeks old. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a cygnet like this, from today until release. Use day and week numbers, not calendar dates.",
+     "sheet": {
+      "animal": "Orphaned black swan cygnet",
+      "case_number": "",
+      "species": "Black swan (Cygnus atratus)",
+      "kind": "wildlife",
+      "summary": "This orphaned black swan cygnet, about 300 g and a couple of weeks old, is covered in grey down and healthy. The goal is to raise it on a grazing diet to a strong, waterproof young swan that flies, and release it with other black swans where it was found.",
+      "photo_findings": [],
+      "medications": [],
+      "plan": [
+       {
+        "when": "Now to about 7 weeks old",
+        "tasks": [
+         "Step protein down bit by bit so most of its diet is grass and water plants, as too much protein during fast growth causes angel wing."
+        ]
+       },
+       {
+        "when": "As feathers replace the down",
+        "tasks": [
+         "Give it a shallow pool with an easy ramp out, keeping the heat source until it is fully feathered."
+        ]
+       },
+       {
+        "when": "Once fully feathered",
+        "tasks": [
+         "Move it to a large outdoor enclosure with grass and a big pool, ideally with other cygnets, and switch off the heat."
+        ]
+       }
+      ],
+      "housing": [
+       "Keep it in a lined brooder pen with a heat source at one end at the temperature the app shows for cygnets, so it can move closer or away; panting or holding its wings out means it is too hot.",
+       "Line the floor with a soft, non-slip towel to protect its feet and down, and change the bedding twice a day.",
+       "Keep it in a quiet room on its own, in a separate air space from any pet birds, with its own dishes and cleaning gear, as serious diseases pass between wild and pet birds through the air.",
+       "Psittacosis is common in Victorian waterfowl and bird flu is in wild waterbirds such as black swans, so wear gloves, a surgical or N95 mask and eye protection when handling it or cleaning, and wash your hands with soap afterwards."
+      ],
+      "feeding": [
+       "Feed mostly soft fresh green grass (unsprayed) with roots and soil, water plants and chopped greens, with a little Passwell Crumbles while it is small, as black swans are grazers.",
+       "The guidance gives no set amount for cygnets, so keep food in front of it all day and offer a little more than it eats.",
+       "Float chopped greens and water plants in a shallow dish of water and put grass sods on the floor, refreshing them several times a day; it feeds itself, so never syringe food into its bill.",
+       "Offer clean fresh water at all times in a dish it can dip its whole bill into but not climb into, changed at least once a day; never leave it in water while it is downy, as it chills easily.",
+       "Do not add vitamin or mineral supplements, and never feed bread, which has little nutrition and can grow mould that causes aspergillosis."
+      ],
+      "activity": [
+       "Handle it only when needed, gently, cupped in both hands with its wings folded.",
+       "Raise it with other cygnets if any are in care, and do not talk to or cuddle it, so it keeps its natural fear of people."
+      ],
+      "care": [
+       "Weigh it every day at the same time and record its weight and how much it eats; it should gain steadily.",
+       "Never use oil-based ointments or creams on it, as they ruin waterproofing and delay release."
+      ],
+      "daily_checks": [
+       "Weighed and recorded",
+       "Grazing and drinking",
+       "Wings held neatly",
+       "Bedding changed twice",
+       "Droppings look normal"
+      ],
+      "log_days": 14,
+      "feed_calc": {
+       "applies": false,
+       "what": "Grass, water plants and Passwell Crumbles",
+       "weight_g": 300,
+       "stage": "Downy cygnet",
+       "percent_body_weight_per_day": null,
+       "feeds_per_day": null,
+       "basis": "Cygnets feed themselves; the guidance gives no body-weight amount.",
+       "sure": true
+      },
+      "release": {
+       "ready_when": [
+        "Fully feathered, with waterproof feathers that stay dry after swimming",
+        "Flies strongly",
+        "Grazes on its own and is wary of people",
+        "Healthy and needing no more care"
+       ],
+       "target_weight": "About 5 kg (adult size) for a black swan",
+       "how": [
+        "Release it within 24 hours of it being ready.",
+        "Choose a calm, mild day and release it in daylight, avoiding extreme weather.",
+        "Release it at the water’s edge near other black swans, as flocking birds settle best into an existing group."
+       ],
+       "where": "Release it where it was found, using the GPS or Melways record kept with it, or if that spot is unsuitable, at the closest suitable wetland within its home range."
+      },
+      "escalate": {
+       "vet": [
+        "Loses weight, or does not gain for two days in a row",
+        "Eats little or nothing, or has diarrhoea",
+        "Wing tips droop or twist outwards (early angel wing)",
+        "Legs splay or it limps"
+       ],
+       "urgent": [
+        "Cold, floppy or cannot hold its head up: give nothing by mouth on the way",
+        "Tremors, a twisted neck, poor balance or swimming in circles, which can be bird flu: ring the Emergency Animal Disease Watch Hotline on 1800 675 888 straight away",
+        "Struggling to breathe",
+        "Caught by a dog or fox: a vet the same day, even if no wound can be seen"
+       ]
+      },
+      "rehydration": {
+       "needed": false,
+       "weight_g": null,
+       "dehydration_pct": null,
+       "steps": []
+      },
+      "species_group": "waterbird",
+      "next_visit": "",
+      "sources": [
+       "vic-cop-welfare-wildlife-rehabilitation",
+       "vic-release-requirements",
+       "vic-rehabilitator-authorisation-conditions",
+       "vic-shelter-foster-carer-authorisation",
+       "vic-rehab-guidelines-part-a",
+       "vic-h5-bird-flu-wildlife-rehabilitators",
+       "wombaroo-native-birds-feeding-guidelines",
+       "vic-rehab-guidelines-waterbirds-marine",
+       "wires-helping-chicks"
+      ]
+     }
+    },
+    {
+     "id": "lib-swan-adult",
+     "stage": "Adult",
+     "weight": "about 5.5 kg",
+     "text": "Ready-made plan: an adult black swan, about 5.5 kg, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a swan like this, from today until release. Use day and week numbers, not calendar dates.",
+     "sheet": {
+      "animal": "Adult black swan",
+      "case_number": "",
+      "species": "Black swan (Cygnus atratus)",
+      "kind": "wildlife",
+      "summary": "This adult black swan, about 5.5 kg, is recovering in care with no injuries needing treatment. The goal is to keep it calm and grazing well, check its flight and waterproofing, and return it to its wetland as soon as it is fit.",
+      "photo_findings": [],
+      "medications": [],
+      "plan": [
+       {
+        "when": "Days 1 to 3",
+        "tasks": [
+         "Keep it in a quiet, lined pen while it settles and starts eating."
+        ]
+       },
+       {
+        "when": "Once eating well and moving normally",
+        "tasks": [
+         "Move it to a large outdoor enclosure with grass and a pool big enough to swim in, to check its waterproofing and flight."
+        ]
+       }
+      ],
+      "housing": [
+       "Keep it in a quiet pen with a soft, non-slip floor, never bare concrete, at the temperature the app shows for adult waterbirds, and change the bedding twice a day.",
+       "Once settled, give it a pool deep enough to swim without scraping its feet, with an easy ramp out and a dry, soft area to rest.",
+       "Keep it in a quiet room on its own, in a separate air space from any pet birds, with its own dishes and cleaning gear, as serious diseases pass between wild and pet birds through the air.",
+       "Bird flu is in wild waterbirds such as black swans along the Victorian coast, and psittacosis is common in waterfowl, so wear gloves, a surgical or N95 mask and eye protection when handling it or cleaning, and wash your hands with soap afterwards."
+      ],
+      "feeding": [
+       "Feed mostly fresh green grass (unsprayed), grass sods and water plants, as black swans are grazers; too much high-protein food harms them.",
+       "The guidance gives no set amount for swans, so keep grass and water plants in front of it all day and weigh what is left to see what it eats.",
+       "Float water plants and chopped greens in its pool or a deep dish of water, and put grass sods on the floor to graze.",
+       "Keep clean fresh water at all times in a container deep enough to dip its whole head, changed at least once a day.",
+       "Never feed bread, which has little nutrition and can grow mould that causes aspergillosis."
+      ],
+      "activity": [
+       "Handle it only when needed, with two people if possible, wrapping it in a large towel with its wings folded against its body, as swans can hit hard with their wings; keep away from the water’s edge while catching it."
+      ],
+      "care": [
+       "A moulting swan cannot fly for several weeks and stays on the water; this is normal, and it only needs rescue if it is in danger.",
+       "Never use oil-based ointments or creams on it, as they ruin waterproofing and delay release."
+      ],
+      "daily_checks": [
+       "Grazing and eating",
+       "Fresh water given",
+       "Bedding changed twice",
+       "Droppings look normal",
+       "Standing and walking well"
+      ],
+      "log_days": 14,
+      "feed_calc": {
+       "applies": false,
+       "what": "",
+       "weight_g": 5500,
+       "stage": "Adult",
+       "percent_body_weight_per_day": null,
+       "feeds_per_day": null,
+       "basis": "Adult grazing and feeding itself; no measured amount is needed.",
+       "sure": true
+      },
+      "release": {
+       "ready_when": [
+        "Swims strongly and stays dry after swimming",
+        "Flies, unless it is in its normal moult",
+        "Grazing on its own and holding its weight",
+        "Healthy, needing no more care, and wary of people"
+       ],
+       "target_weight": "About 5.5 kg, holding at or above its arrival weight",
+       "how": [
+        "Release it within 24 hours of it being ready.",
+        "Choose a calm, mild day and release it in daylight, avoiding extreme weather.",
+        "Release it at the water’s edge near other black swans."
+       ],
+       "where": "Release it where it was found, using the GPS or Melways record kept with it, or if that spot is unsuitable, at the closest suitable wetland within its home range."
+      },
+      "escalate": {
+       "vet": [
+        "Not eating, or losing weight two days running",
+        "Diarrhoea for more than a day",
+        "Feathers soaking through when it swims",
+        "Limping or sores on its feet"
+       ],
+       "urgent": [
+        "Weak, collapsed or cannot hold its head up: give nothing by mouth on the way",
+        "Tremors, a twisted neck, poor balance or swimming in circles, which can be bird flu: ring the Emergency Animal Disease Watch Hotline on 1800 675 888 straight away",
+        "Struggling to breathe",
+        "Fishing line or a hook from its mouth: never pull it"
+       ]
+      },
+      "rehydration": {
+       "needed": false,
+       "weight_g": null,
+       "dehydration_pct": null,
+       "steps": []
+      },
+      "species_group": "waterbird",
+      "next_visit": "",
+      "sources": [
+       "vic-cop-welfare-wildlife-rehabilitation",
+       "vic-release-requirements",
+       "vic-rehabilitator-authorisation-conditions",
+       "vic-shelter-foster-carer-authorisation",
+       "vic-rehab-guidelines-part-a",
+       "vic-h5-bird-flu-wildlife-rehabilitators",
+       "wombaroo-native-birds-feeding-guidelines",
+       "vic-rehab-guidelines-waterbirds-marine"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "corella",
+   "name": "Little corella",
+   "plans": [
+    {
+     "id": "lib-corella-nestling",
+     "stage": "Nestling",
+     "weight": "about 200 g",
+     "text": "Ready-made plan: an orphaned little corella nestling, about 200 g, with pin feathers coming through. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a nestling like this, from today until release. Use day and week numbers, not calendar dates.",
+     "sheet": {
+      "animal": "Orphaned little corella nestling",
+      "case_number": "",
+      "species": "Little corella (Cacatua sanguinea)",
+      "kind": "wildlife",
+      "summary": "This orphaned little corella nestling, about 200 g with pin feathers coming through, is healthy and ready to be hand-reared. The goal is to raise it to a strong, wild, self-feeding young bird and release it with a local flock where it was found.",
+      "photo_findings": [],
+      "medications": [],
+      "plan": [
+       {
+        "when": "About weeks 1 to 3",
+        "tasks": [
+         "Thicken the formula step by step as its pin feathers open, dropping to 3 to 4 feeds a day."
+        ]
+       },
+       {
+        "when": "About weeks 4 to 6 (fully feathered)",
+        "tasks": [
+         "Move it to a sturdy cage with low perches and start offering soaked seed and soft food in a dish.",
+         "Drop to 1 to 2 hand-feeds a day as it eats more on its own."
+        ]
+       },
+       {
+        "when": "About weeks 7 to 9",
+        "tasks": [
+         "Stop hand-feeding once it eats on its own and holds its weight; corellas usually take several weeks longer to wean than smaller parrots.",
+         "Move it to an outdoor flight aviary to build flying fitness, ideally with other young corellas."
+        ]
+       }
+      ],
+      "housing": [
+       "Keep it in a small container lined with paper towel, like a nest, inside a heated box at the temperature the app shows for its stage, with room to move away from the heat; lower the heat bit by bit as its feathers cover its body.",
+       "Keep it in a quiet room on its own, in a separate air space from any pet birds, with its own dishes and cleaning gear, as serious diseases pass between wild and pet birds through the air.",
+       "Change the lining whenever it is soiled and clean up droppings after each feed.",
+       "Wear gloves, a surgical or N95 mask and eye protection when handling it or cleaning, and wash your hands with soap afterwards, as wild parrots in Victoria often carry psittacosis; disinfect dishes and cages with Virkon S at 2% left on for at least 10 minutes, as beak and feather disease survives ordinary cleaners."
+      ],
+      "feeding": [
+       "Feed Passwell Hand Rearing Food or Wombaroo Granivore Rearing Mix, the hand-rearing formula for parrots and cockatoos, mixed at 1 g of powder to 3 mL of water while it is in pin feathers, then thicker (1 g to 2.5 mL, then 1 g to 2 mL) as its feathers open.",
+       "Give the amount in the feed calculator each day, split evenly across the feeds, which is up to about 10% of its body weight at each feed, stopping when the crop is comfortably full. An adult little corella eats about 30 to 40 g of food a day, so expect it to work up towards that as it weans.",
+       "Give 5 feeds a day, about 6 am, 10 am, 2 pm, 6 pm and 10 pm, then leave it about 6 hours overnight so the crop empties fully at least once a day.",
+       "Feed it from a small spoon with the sides bent up, letting it pump and swallow at its own pace, and stop if food comes out of its nostrils; never squirt food into its open beak with a syringe, as it can inhale it.",
+       "Mix each feed fresh with pre-boiled water at about 50°C, let it stand 2 minutes, feed it at 38 to 40°C (test it on your wrist) and throw out what is left.",
+       "Wipe its beak and face clean with a warm damp cloth after each feed so formula does not dry on its feathers.",
+       "It gets its fluid from the formula, so it needs no water dish until it starts eating on its own.",
+       "Once it is fully feathered, offer soaked or sprouted seed, defrosted peas and corn mixed with Parrot Soft Food, and seeding grasses, grass sods with roots, and native seed heads in a shallow dish, and cut back hand-feeds as it eats more by itself."
+      ],
+      "activity": [
+       "Handle it only for feeds, weighing and cleaning, quickly and gently, and do not talk to it or let visitors see it, as young parrots tame very easily.",
+       "If another young little corella is in care with an experienced bird carer, raising them together helps it grow up knowing its own kind.",
+       "From the aviary stage, give it seeding grasses, grass sods with roots, and native seed heads and fresh branches to forage and chew."
+      ],
+      "care": [
+       "Weigh it every morning at the same time, before the first feed, and enter the weight so the feed calculator stays right.",
+       "Keep a daily record of its weight, feeds and progress; your authorisation requires records to be kept for 3 years."
+      ],
+      "daily_checks": [
+       "Morning weight recorded",
+       "Crop empty overnight",
+       "Droppings look normal",
+       "Nest clean and warm",
+       "Feathers growing well"
+      ],
+      "log_days": 14,
+      "feed_calc": {
+       "applies": true,
+       "what": "Passwell Hand Rearing Food or Granivore Rearing Mix",
+       "weight_g": 200,
+       "stage": "Nestling in pin feathers (eyes open)",
+       "percent_body_weight_per_day": 50,
+       "feeds_per_day": 5,
+       "basis": "Wombaroo parrot hand-rearing table: up to 10% of body weight a feed, 5 feeds a day at pin-feather stage.",
+       "sure": false
+      },
+      "release": {
+       "ready_when": [
+        "Eats seed and natural foods on its own and holds its weight",
+        "Flies strongly and lands well the length of the aviary",
+        "Full, healthy feathers with no signs of feather or beak disease",
+        "Wary of people"
+       ],
+       "target_weight": "About 400 g for a little corella",
+       "how": [
+        "Release it within 24 hours of it being ready.",
+        "Choose a calm, mild morning, never extreme weather, so it has the day to settle.",
+        "Carry it in a lined, ventilated box, open it near trees and cover, and step well back.",
+        "Little corellas live in big flocks, so release it where a local flock is feeding, with any corellas it was raised with."
+       ],
+       "where": "Release it where it was found (recorded with GPS coordinates or a Melways reference), or if that spot is unsuitable, at the closest suitable place within its home range; Victorian rules do not allow release anywhere else."
+      },
+      "escalate": {
+       "vet": [
+        "Crop still full in the morning, or slow to empty between feeds",
+        "Weight drops, or stays the same for two days",
+        "Watery or oddly coloured droppings for more than a day",
+        "Feathers that look pinched, curled or bloody, or a beak that looks overgrown, which can mean beak and feather disease"
+       ],
+       "urgent": [
+        "Cold, cannot hold its head up or has collapsed: give nothing by mouth on the way",
+        "Food bubbling from its nostrils, or struggling to breathe",
+        "Tremors, a twisted neck or poor balance, which can be bird flu: also ring the Emergency Animal Disease Watch Hotline on 1800 675 888",
+        "Caught by a cat or dog: a vet the same day, even if no wound can be seen"
+       ]
+      },
+      "rehydration": {
+       "needed": false,
+       "weight_g": null,
+       "dehydration_pct": null,
+       "steps": []
+      },
+      "species_group": "bird",
+      "next_visit": "",
+      "sources": [
+       "vic-cop-welfare-wildlife-rehabilitation",
+       "vic-release-requirements",
+       "vic-rehabilitator-authorisation-conditions",
+       "vic-shelter-foster-carer-authorisation",
+       "vic-rehab-guidelines-part-a",
+       "vic-h5-bird-flu-wildlife-rehabilitators",
+       "wombaroo-native-birds-feeding-guidelines",
+       "wires-helping-chicks"
+      ]
+     }
+    },
+    {
+     "id": "lib-corella-adult",
+     "stage": "Adult",
+     "weight": "about 400 g",
+     "text": "Ready-made plan: an adult little corella, about 400 g, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a corella like this, from today until release. Use day and week numbers, not calendar dates.",
+     "sheet": {
+      "animal": "Adult little corella",
+      "case_number": "",
+      "species": "Little corella (Cacatua sanguinea)",
+      "kind": "wildlife",
+      "summary": "This adult little corella, about 400 g, is recovering in care with no injuries needing treatment. The goal is to keep it calm and eating well, rebuild its flying fitness and return it to its flock where it was found as soon as it is fit.",
+      "photo_findings": [],
+      "medications": [],
+      "plan": [
+       {
+        "when": "Days 1 to 3",
+        "tasks": [
+         "Keep it in a covered hospital cage while it settles."
+        ]
+       },
+       {
+        "when": "Once eating well and moving normally",
+        "tasks": [
+         "Move it to an outdoor flight aviary to rebuild flying fitness."
+        ]
+       }
+      ],
+      "housing": [
+       "Keep it in a sturdy covered cage with natural branch perches, in a quiet, dim room at the temperature the app shows for adult birds.",
+       "Keep it in a quiet room on its own, in a separate air space from any pet birds, with its own dishes and cleaning gear, as serious diseases pass between wild and pet birds through the air.",
+       "Use an aviary with weathered or vinegar-washed wire, as new galvanised wire can poison parrots with zinc. Clean the floor and dishes daily.",
+       "Wear gloves, a surgical or N95 mask and eye protection when handling it or cleaning, and wash your hands with soap afterwards, as wild parrots in Victoria often carry psittacosis; disinfect dishes and cages with Virkon S at 2% left on for at least 10 minutes, as beak and feather disease survives ordinary cleaners."
+      ],
+      "feeding": [
+       "Offer budgie or small parrot seed mix (not one heavy in sunflower or other oily seed) with seeding grasses and grass sods with roots to dig in, plus defrosted peas and corn mixed with Parrot Soft Food; never avocado, bread or dairy.",
+       "An adult little corella eats about 30 to 40 g of food a day; weigh what you put in and what is left so you know it is eating.",
+       "Put the food in shallow dishes on the floor and near a perch, and top it up every morning.",
+       "Keep fresh water in a shallow dish at all times and change it every day.",
+       "Once in the aviary, offer most of its food as natural seed heads, cones and branches so it is foraging for itself before release."
+      ],
+      "activity": [
+       "Handle it as little and as quickly as possible, wrapped in a towel with your hand behind its head, as corellas bite hard; do not try to tame it.",
+       "Give it fresh branches to chew every few days, and keep pets, children and noise well away from its cage."
+      ],
+      "care": [
+       "If you develop a fever, headache or cough, tell your doctor you work with wild birds."
+      ],
+      "daily_checks": [
+       "Food eaten, dish topped up",
+       "Fresh water given",
+       "Perching steadily",
+       "Droppings look normal",
+       "Breathing quiet"
+      ],
+      "log_days": 14,
+      "feed_calc": {
+       "applies": false,
+       "what": "",
+       "weight_g": 400,
+       "stage": "Adult",
+       "percent_body_weight_per_day": null,
+       "feeds_per_day": null,
+       "basis": "Adult eating seed and natural foods; no measured milk or formula amount.",
+       "sure": true
+      },
+      "release": {
+       "ready_when": [
+        "Flies strongly and lands well the length of the aviary",
+        "Eating natural foods and holding its weight",
+        "Feathers in good condition and needing no more care",
+        "Alert and wary of people"
+       ],
+       "target_weight": "About 400 g, holding at or above its arrival weight",
+       "how": [
+        "Release it within 24 hours of it being ready.",
+        "Choose a calm, mild morning, never extreme weather.",
+        "Carry it in a lined, ventilated box, open it near trees and cover, and step well back.",
+        "Release it where a local flock of little corellas is feeding, as flocking birds settle best into an existing group."
+       ],
+       "where": "Release it where it was found (recorded with GPS coordinates or a Melways reference), or if that spot is unsuitable, at the closest suitable place within its home range; Victorian rules do not allow release anywhere else."
+      },
+      "escalate": {
+       "vet": [
+        "Not eating, or losing weight two days running",
+        "Watery or oddly coloured droppings for more than a day",
+        "Not flying properly once in the flight aviary",
+        "Feathers that look pinched, curled or bloody, or a beak that looks overgrown, which can mean beak and feather disease"
+       ],
+       "urgent": [
+        "Fluffed up, sleepy on the floor or collapsed: give nothing by mouth on the way",
+        "Struggling to breathe, or tail bobbing with each breath",
+        "Tremors, a twisted neck or poor balance, which can be bird flu: also ring the Emergency Animal Disease Watch Hotline on 1800 675 888",
+        "Bleeding or a new injury"
+       ]
+      },
+      "rehydration": {
+       "needed": false,
+       "weight_g": null,
+       "dehydration_pct": null,
+       "steps": []
+      },
+      "species_group": "bird",
+      "next_visit": "",
+      "sources": [
+       "vic-cop-welfare-wildlife-rehabilitation",
+       "vic-release-requirements",
+       "vic-rehabilitator-authorisation-conditions",
+       "vic-shelter-foster-carer-authorisation",
+       "vic-rehab-guidelines-part-a",
+       "vic-h5-bird-flu-wildlife-rehabilitators",
+       "wombaroo-native-birds-feeding-guidelines"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "raven",
+   "name": "Australian raven",
+   "plans": [
+    {
+     "id": "lib-raven-nestling",
+     "stage": "Nestling",
+     "weight": "about 300 g",
+     "text": "Ready-made plan: an orphaned Australian raven nestling, about 300 g, with pin feathers coming through. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a nestling like this, from today until release. Use day and week numbers, not calendar dates.",
+     "sheet": {
+      "animal": "Orphaned Australian raven nestling",
+      "case_number": "",
+      "species": "Australian raven (Corvus coronoides)",
+      "kind": "wildlife",
+      "summary": "This orphaned Australian raven nestling, about 300 g with pin feathers coming through, is healthy and ready to be hand-reared. The goal is to raise it to a strong, wild, self-feeding young raven and release it where it was found.",
+      "photo_findings": [],
+      "medications": [],
+      "plan": [
+       {
+        "when": "About weeks 1 to 2",
+        "tasks": [
+         "Lower the heat bit by bit as its feathers open and cover its body."
+        ]
+       },
+       {
+        "when": "About weeks 3 to 4 (climbing out of the nest)",
+        "tasks": [
+         "Move it to a larger cage with low perches and start leaving food and a shallow water dish in the cage."
+        ]
+       },
+       {
+        "when": "About weeks 5 to 8",
+        "tasks": [
+         "Move it to an outdoor aviary big enough to fly, with soil and leaf litter to forage in.",
+         "Stop hand-feeding once it feeds itself fully and holds its weight."
+        ]
+       }
+      ],
+      "housing": [
+       "Sit it in a small artificial nest, such as a container lined with tissue that holds it upright, inside a heated box at the temperature the app shows for its stage, with room to move away from the heat; lower the heat bit by bit as its feathers open.",
+       "Keep it in a quiet room on its own, in a separate air space from any pet birds, with its own dishes and cleaning gear, as serious diseases pass between wild and pet birds through the air.",
+       "Change the nest lining whenever it is soiled and remove droppings after each feed.",
+       "Wear gloves, a surgical or N95 mask and eye protection when handling it or cleaning, use fresh gloves for each animal and wash your hands with soap afterwards, as wild birds in Victoria can carry psittacosis and bird flu."
+      ],
+      "feeding": [
+       "Feed Wombaroo Insectivore Rearing Mix made up as moist pellets, the rearing food for orphan ravens, with earthworms, crickets and pieces of mouse; add no vitamins or supplements, and no bread, dairy, avocado or plain mince.",
+       "Give the amount in the feed calculator each day, split across the feeds; there is no raven chick chart, so it follows the magpie chart, which reaches about 50 g a day at 220 g.",
+       "Give about 6 feeds a day, every 2 to 3 hours from about 6 am to 8 pm, with no overnight feeds; check the timing with an experienced bird carer.",
+       "Offer pieces from blunt tweezers into its gaping beak, letting it swallow each one before the next, and never squirt food in with a syringe, as birds easily inhale it.",
+       "Thaw frozen prey fully in the fridge, use it the same day, never refreeze thawed food, keep made-up Wombaroo food no more than a day in the fridge (or 2 weeks frozen) and throw out leftovers.",
+       "After each feed, drip a few drops of water slowly at the tip of its beak and let it swallow; it needs no water dish until it climbs out of the nest.",
+       "Once it starts pecking, offer pellets, worms, insects and a little chopped mixed vegetable in a shallow dish, building live food up before release."
+      ],
+      "activity": [
+       "Handle it only for feeds and weighing, quickly and gently, without talking to it or letting visitors see it, as young ravens tame easily.",
+       "From the aviary stage, hide food in leaf litter and soil so it learns to forage on the ground."
+      ],
+      "care": [
+       "Weigh it every morning at the same time, before the first feed, and enter the weight so the feed calculator stays right.",
+       "Bringing up a small pellet of fur, bone and insect parts is normal for this bird, not vomiting."
+      ],
+      "daily_checks": [
+       "Morning weight recorded",
+       "Gaping well at feeds",
+       "Droppings normal",
+       "Nest clean and warm",
+       "Feathers growing"
+      ],
+      "log_days": 14,
+      "feed_calc": {
+       "applies": true,
+       "what": "Insectivore Rearing Mix moist pellets",
+       "weight_g": 300,
+       "stage": "Nestling in pin feathers",
+       "percent_body_weight_per_day": 23,
+       "feeds_per_day": 6,
+       "basis": "Wombaroo magpie chart used as the nearest guide (about 50 g a day at 220 g); no raven chick chart given.",
+       "sure": false
+      },
+      "release": {
+       "ready_when": [
+        "Feeds itself fully and holds its weight",
+        "Flies strongly and lands well the length of the aviary",
+        "Full, healthy plumage and needing no more care",
+        "Wary of people"
+       ],
+       "target_weight": "About 550 to 650 g for an Australian raven",
+       "how": [
+        "Release it within 24 hours of it being ready.",
+        "Choose a calm, mild morning, never extreme weather, so it has the day to settle.",
+        "Carry it in a lined, ventilated box, open it near trees and open ground, and step well back."
+       ],
+       "where": "Release it where it was found (recorded with GPS coordinates or a Melways reference), or if that spot is unsuitable, at the closest suitable place within its home range; Victorian rules do not allow release anywhere else."
+      },
+      "escalate": {
+       "vet": [
+        "Will not gape or refuses two feeds in a row",
+        "Weight drops, or stays the same for two days",
+        "Watery or oddly coloured droppings for more than a day",
+        "Weak, splayed or bent legs, which can mean a diet problem"
+       ],
+       "urgent": [
+        "Cold, cannot hold its head up or has collapsed: give nothing by mouth on the way",
+        "Food bubbling from its nostrils, or struggling to breathe",
+        "Tremors, a twisted neck or poor balance, which can be bird flu: also ring the Emergency Animal Disease Watch Hotline on 1800 675 888",
+        "Caught by a cat or dog: a vet the same day, even if no wound can be seen"
+       ]
+      },
+      "rehydration": {
+       "needed": false,
+       "weight_g": null,
+       "dehydration_pct": null,
+       "steps": []
+      },
+      "species_group": "bird",
+      "next_visit": "",
+      "sources": [
+       "vic-cop-welfare-wildlife-rehabilitation",
+       "vic-release-requirements",
+       "vic-rehabilitator-authorisation-conditions",
+       "vic-shelter-foster-carer-authorisation",
+       "vic-rehab-guidelines-part-a",
+       "vic-h5-bird-flu-wildlife-rehabilitators",
+       "wombaroo-native-birds-feeding-guidelines",
+       "wires-helping-chicks"
+      ]
+     }
+    },
+    {
+     "id": "lib-raven-adult",
+     "stage": "Adult",
+     "weight": "about 650 g",
+     "text": "Ready-made plan: an adult Australian raven, about 650 g, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a raven like this, from today until release. Use day and week numbers, not calendar dates.",
+     "sheet": {
+      "animal": "Adult Australian raven",
+      "case_number": "",
+      "species": "Australian raven (Corvus coronoides)",
+      "kind": "wildlife",
+      "summary": "This adult Australian raven, about 650 g, is recovering in care with no injuries needing treatment. The goal is to keep it calm and eating well, rebuild its flying fitness and return it to where it was found as soon as it is fit.",
+      "photo_findings": [],
+      "medications": [],
+      "plan": [
+       {
+        "when": "Days 1 to 3",
+        "tasks": [
+         "Keep it in a covered hospital cage with a low perch while it settles."
+        ]
+       },
+       {
+        "when": "Once eating well and moving normally",
+        "tasks": [
+         "Move it to an outdoor flight aviary to rebuild flying fitness."
+        ]
+       }
+      ],
+      "housing": [
+       "Keep it in a sturdy covered cage with natural branch perches, in a quiet, dim room at the temperature the app shows for adult birds.",
+       "Keep it in a quiet room on its own, in a separate air space from any pet birds, with its own dishes and cleaning gear, as serious diseases pass between wild and pet birds through the air.",
+       "Clean the floor and dishes every day.",
+       "Wear gloves, a surgical or N95 mask and eye protection when handling it or cleaning, use fresh gloves for each animal and wash your hands with soap afterwards, as wild birds in Victoria can carry psittacosis and bird flu."
+      ],
+      "feeding": [
+       "Feed Wombaroo Insectivore Meat Mix (10 g of powder with 20 g of minced meat), with mice, earthworms, insects and some chopped mixed vegetables, as ravens eat both animal and plant food.",
+       "An adult raven needs about 70 g of food a day; weigh what you give and what is left so you know it is eating.",
+       "Put the food in a shallow dish on the floor, where ravens like to feed.",
+       "Thaw frozen prey fully in the fridge, use it the same day, never refreeze thawed food, keep made-up Wombaroo food no more than a day in the fridge (or 2 weeks frozen) and throw out leftovers.",
+       "Keep fresh water in a shallow dish at all times and change it daily."
+      ],
+      "activity": [
+       "Handle it as little and as quickly as possible, wrapped in a towel, and do not try to tame it.",
+       "Ravens are clever and get bored, so give it leaf litter, sticks and hidden food to forage for."
+      ],
+      "care": [
+       "Bringing up a small pellet of fur, bone and insect parts is normal for this bird, not vomiting.",
+       "If you develop a fever, headache or cough, tell your doctor you work with wild birds."
+      ],
+      "daily_checks": [
+       "Food eaten recorded",
+       "Fresh water given",
+       "Perching steadily",
+       "Droppings look normal",
+       "Breathing quiet"
+      ],
+      "log_days": 14,
+      "feed_calc": {
+       "applies": false,
+       "what": "",
+       "weight_g": 650,
+       "stage": "Adult",
+       "percent_body_weight_per_day": null,
+       "feeds_per_day": null,
+       "basis": "Adult feeding itself; the Wombaroo guide gives about 70 g a day for a 550 g raven.",
+       "sure": true
+      },
+      "release": {
+       "ready_when": [
+        "Flies strongly and lands well the length of the aviary",
+        "Eating well and holding its weight",
+        "Feathers in good condition and needing no more care",
+        "Alert and wary of people"
+       ],
+       "target_weight": "About 650 g, holding at or above its arrival weight",
+       "how": [
+        "Release it within 24 hours of it being ready.",
+        "Choose a calm, mild morning, never extreme weather.",
+        "Carry it in a lined, ventilated box, open it near trees and open ground, and step well back."
+       ],
+       "where": "Release it where it was found (recorded with GPS coordinates or a Melways reference), or if that spot is unsuitable, at the closest suitable place within its home range; Victorian rules do not allow release anywhere else."
+      },
+      "escalate": {
+       "vet": [
+        "Not eating, or losing weight two days running",
+        "Watery or oddly coloured droppings for more than a day",
+        "Not flying properly once in the flight aviary",
+        "Discharge from the eyes or nostrils"
+       ],
+       "urgent": [
+        "Fluffed up, sleepy on the floor or collapsed: give nothing by mouth on the way",
+        "Struggling to breathe, or tail bobbing with each breath",
+        "Tremors, a twisted neck or poor balance, which can be bird flu: also ring the Emergency Animal Disease Watch Hotline on 1800 675 888",
+        "Bleeding or a new injury"
+       ]
+      },
+      "rehydration": {
+       "needed": false,
+       "weight_g": null,
+       "dehydration_pct": null,
+       "steps": []
+      },
+      "species_group": "bird",
+      "next_visit": "",
+      "sources": [
+       "vic-cop-welfare-wildlife-rehabilitation",
+       "vic-release-requirements",
+       "vic-rehabilitator-authorisation-conditions",
+       "vic-shelter-foster-carer-authorisation",
+       "vic-rehab-guidelines-part-a",
+       "vic-h5-bird-flu-wildlife-rehabilitators",
+       "wombaroo-native-birds-feeding-guidelines"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "tern",
+   "name": "Crested tern",
+   "plans": [
+    {
+     "id": "lib-tern-chick",
+     "stage": "Downy chick",
+     "weight": "about 100 g",
+     "text": "Ready-made plan: an orphaned crested tern chick, about 100 g, covered in down. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a chick like this, from today until release. Use day and week numbers, not calendar dates.",
+     "sheet": {
+      "animal": "Orphaned crested tern chick",
+      "case_number": "",
+      "species": "Greater crested tern (Thalasseus bergii)",
+      "kind": "wildlife",
+      "summary": "This orphaned crested tern chick, about 100 g, is covered in down and healthy. Terns are marine birds that need specialist care, so the goal is to raise it with an experienced seabird carer until it catches fish on its own, then release it near a tern colony on the coast where it was found.",
+      "photo_findings": [],
+      "medications": [],
+      "plan": [
+       {
+        "when": "Day 1",
+        "tasks": [
+         "Pass it to an experienced seabird carer, as marine birds need specialist housing and lots of fish."
+        ]
+       },
+       {
+        "when": "About weeks 2 to 4 (feathering)",
+        "tasks": [
+         "Start dropping whole fish into a shallow dish and then a pool so it learns to pick them up itself."
+        ]
+       },
+       {
+        "when": "About weeks 5 to 8 (flying)",
+        "tasks": [
+         "Move it to a large aviary with a salt-water pool to build flight and waterproofing, and put live fish in the pool so it learns to catch them."
+        ]
+       }
+      ],
+      "housing": [
+       "Keep it in a lined box with a heat source at one end at the temperature the app shows for its stage, so it can move closer or away.",
+       "Use rubber matting or raked sand on the floor, never bare concrete, and change soiled floor material at least three times a day, as droppings ruin waterproofing and cause foot sores.",
+       "Keep it apart from other birds and any pet birds’ air space, with its own equipment.",
+       "Bird flu is in wild seabirds and waterbirds along the Victorian coast, so wear disposable gloves, a surgical or N95 mask and eye protection when handling it or cleaning, use fresh gloves for each animal and wash your hands with soap afterwards."
+      ],
+      "feeding": [
+       "Feed small whole fish such as whitebait, as crested terns feed their chicks whole fish.",
+       "Give the amount in the feed calculator each day, split across the feeds; there is no tern chart, so watch its weight closely.",
+       "Give about 5 feeds a day, every 3 hours from about 6 am to 6 pm, with no overnight feeds.",
+       "Offer each fish head first from blunt tweezers so it swallows it easily, and never force food into its beak.",
+       "Thaw frozen fish in the fridge or under cold running water, never in hot water, use it the same day and throw out leftovers; frozen fish loses vitamin B1, so give a seabird vitamin tablet (such as Vetafarm Sea Bird Tablets) tucked into a fish every day, as a lack causes fits and weakness.",
+       "Keep a shallow dish of fresh water it can dip its bill into but not climb into, changed daily; never put it in water while it is downy, as it chills easily."
+      ],
+      "activity": [
+       "Handle it only for weighing and cleaning, quickly and gently, keeping its beak away from your face, and do not let it become used to people."
+      ],
+      "care": [
+       "Weigh it every morning at the same time, before the first feed, and enter the weight so the feed calculator stays right.",
+       "Never use oil-based ointments or creams on it, as they ruin waterproofing and delay release."
+      ],
+      "daily_checks": [
+       "Morning weight recorded",
+       "Fish eaten",
+       "Droppings normal",
+       "Floor clean and dry",
+       "Warm, not panting"
+      ],
+      "log_days": 14,
+      "feed_calc": {
+       "applies": true,
+       "what": "Small whole fish (whitebait)",
+       "weight_g": 100,
+       "stage": "Downy chick",
+       "percent_body_weight_per_day": 30,
+       "feeds_per_day": 5,
+       "basis": "Best estimate for a growing fish-eating chick; there is no tern chart in the guidance.",
+       "sure": false
+      },
+      "release": {
+       "ready_when": [
+        "Catches live fish on its own and holds its weight",
+        "Flies strongly the length of the aviary",
+        "Waterproof, staying dry after swimming",
+        "Wary of people"
+       ],
+       "target_weight": "About 350 g for a crested tern",
+       "how": [
+        "Release it within 24 hours of it being ready.",
+        "Choose a calm, mild morning, never extreme weather.",
+        "Release it on the coast near a crested tern colony or where terns gather, as flocking birds settle best into an existing group."
+       ],
+       "where": "Release it on the coast where it was found (recorded with GPS coordinates or a Melways reference), or the closest suitable place within its range."
+      },
+      "escalate": {
+       "vet": [
+        "Refuses fish, or loses weight two days running",
+        "Watery or oddly coloured droppings for more than a day",
+        "Weak or splayed legs",
+        "Wobbly or having small fits, which can mean a lack of vitamin B1"
+       ],
+       "urgent": [
+        "Cold, cannot hold its head up or has collapsed: give nothing by mouth on the way",
+        "Tremors, a twisted neck, poor balance or swimming in circles, which can be bird flu: ring the Emergency Animal Disease Watch Hotline on 1800 675 888 straight away",
+        "Struggling to breathe",
+        "Caught by a cat or dog: a vet the same day, even if no wound can be seen"
+       ]
+      },
+      "rehydration": {
+       "needed": false,
+       "weight_g": null,
+       "dehydration_pct": null,
+       "steps": []
+      },
+      "species_group": "seabird",
+      "next_visit": "",
+      "sources": [
+       "vic-rehab-guidelines-waterbirds-marine",
+       "vic-cop-welfare-wildlife-rehabilitation",
+       "vic-release-requirements",
+       "vic-rehabilitator-authorisation-conditions",
+       "vic-shelter-foster-carer-authorisation",
+       "agvic-report-sick-dead-wild-birds",
+       "vic-h5-bird-flu-wildlife-rehabilitators",
+       "vic-h5n1-guidance-rehabilitators",
+       "wombaroo-native-birds-feeding-guidelines",
+       "wires-helping-chicks"
+      ]
+     }
+    },
+    {
+     "id": "lib-tern-adult",
+     "stage": "Adult",
+     "weight": "about 350 g",
+     "text": "Ready-made plan: an adult crested tern, about 350 g, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a tern like this, from today until release. Use day and week numbers, not calendar dates.",
+     "sheet": {
+      "animal": "Adult crested tern",
+      "case_number": "",
+      "species": "Greater crested tern (Thalasseus bergii)",
+      "kind": "wildlife",
+      "summary": "This adult crested tern, about 350 g, is recovering in care with no injuries needing treatment. Terns are marine birds that need specialist care, so the goal is a stay with an experienced seabird carer, keeping it eating fish and waterproof, and returning it to the coast where it was found as soon as it is fit.",
+      "photo_findings": [],
+      "medications": [],
+      "plan": [
+       {
+        "when": "Days 1 to 3",
+        "tasks": [
+         "Pass it to an experienced seabird carer, and keep it in a quiet, lined pen while it settles and starts eating."
+        ]
+       },
+       {
+        "when": "Once eating well",
+        "tasks": [
+         "Give it daily swims in a salt-water pool, then move it to a large aviary to rebuild flight and waterproofing."
+        ]
+       }
+      ],
+      "housing": [
+       "Keep it in a quiet, covered pen at the temperature the app shows for adult seabirds.",
+       "Use rubber matting or raked sand on the floor, never bare concrete, and change soiled floor material at least three times a day, as droppings ruin waterproofing and cause foot sores.",
+       "Give it a salt-water pool deep enough to swim without scraping its feet once settled, and keep it apart from other birds and pet birds’ air space.",
+       "Bird flu is in wild seabirds and waterbirds along the Victorian coast, so wear disposable gloves, a surgical or N95 mask and eye protection when handling it or cleaning, use fresh gloves for each animal and wash your hands with soap afterwards."
+      ],
+      "feeding": [
+       "Feed small whole fish such as whitebait and small pilchards, as crested terns dive for small fish.",
+       "The guidance gives no set amount for terns, so offer a little more than it clears twice a day, and weigh what you give and what is left.",
+       "Drop fish into a shallow dish of water or its pool; if it will not feed itself at first, an experienced seabird carer can hand-feed it.",
+       "Thaw frozen fish in the fridge or under cold running water, never in hot water, use it the same day and throw out leftovers; frozen fish loses vitamin B1, so give a seabird vitamin tablet (such as Vetafarm Sea Bird Tablets) tucked into a fish every day, as a lack causes fits and weakness.",
+       "Keep fresh water available at all times and change it daily."
+      ],
+      "activity": [
+       "Handle it as little as possible, wrapped in a towel with its wings folded and its sharp beak held away from your face."
+      ],
+      "care": [
+       "Never use oil-based ointments or creams on it, as they ruin waterproofing and delay release."
+      ],
+      "daily_checks": [
+       "Fish eaten recorded",
+       "Fresh water given",
+       "Floor changed",
+       "Droppings look normal",
+       "Breathing quiet"
+      ],
+      "log_days": 14,
+      "feed_calc": {
+       "applies": false,
+       "what": "",
+       "weight_g": 350,
+       "stage": "Adult",
+       "percent_body_weight_per_day": null,
+       "feeds_per_day": null,
+       "basis": "Adult feeding on fish; no measured amount is given.",
+       "sure": true
+      },
+      "release": {
+       "ready_when": [
+        "Flies strongly the length of the aviary",
+        "Waterproof, staying dry after swimming",
+        "Eating well and holding its weight",
+        "Healthy and wary of people"
+       ],
+       "target_weight": "About 350 g, holding at or above its arrival weight",
+       "how": [
+        "Release it within 24 hours of it being ready.",
+        "Choose a calm, mild morning, never extreme weather.",
+        "Release it on the coast where terns gather, as flocking birds settle best into an existing group."
+       ],
+       "where": "Release it on the coast where it was found (recorded with GPS coordinates or a Melways reference), or the closest suitable place within its range."
+      },
+      "escalate": {
+       "vet": [
+        "Not eating, or losing weight two days running",
+        "Diarrhoea for more than a day",
+        "Feathers soaking through when it swims",
+        "Sores on its feet"
+       ],
+       "urgent": [
+        "Weak, collapsed or cannot hold its head up: give nothing by mouth on the way",
+        "Tremors, a twisted neck, poor balance or swimming in circles, which can be bird flu: ring the Emergency Animal Disease Watch Hotline on 1800 675 888 straight away",
+        "Struggling to breathe",
+        "Fishing line or a hook from its mouth: never pull it"
+       ]
+      },
+      "rehydration": {
+       "needed": false,
+       "weight_g": null,
+       "dehydration_pct": null,
+       "steps": []
+      },
+      "species_group": "seabird",
+      "next_visit": "",
+      "sources": [
+       "vic-rehab-guidelines-waterbirds-marine",
+       "vic-cop-welfare-wildlife-rehabilitation",
+       "vic-release-requirements",
+       "vic-rehabilitator-authorisation-conditions",
+       "vic-shelter-foster-carer-authorisation",
+       "agvic-report-sick-dead-wild-birds",
+       "vic-h5-bird-flu-wildlife-rehabilitators",
+       "vic-h5n1-guidance-rehabilitators",
+       "wombaroo-native-birds-feeding-guidelines"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "sugarglider",
+   "name": "Sugar glider",
+   "plans": [
+    {
+     "id": "lib-sugarglider-joey",
+     "stage": "Furred joey",
+     "weight": "about 40 g",
+     "text": "Ready-made plan: an orphaned sugar glider joey, about 40 g, furred with eyes open, drinking milk. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a joey like this, from today until release. Use day and week numbers, not calendar dates.",
+     "sheet": {
+      "animal": "Orphaned sugar glider joey",
+      "case_number": "",
+      "species": "Sugar glider (Petaurus breviceps)",
+      "kind": "wildlife",
+      "summary": "This orphaned sugar glider joey, about 40 g, is furred with its eyes open and is still drinking milk, and is healthy. Sugar gliders live in family groups, so the goal is to raise it with other young gliders through an experienced carer, wean it and release the group together where it was found.",
+      "photo_findings": [],
+      "medications": [],
+      "plan": [
+       {
+        "when": "Weeks 1 to 2",
+        "tasks": [
+         "Join it with other sugar glider joeys of a similar age through an experienced glider carer, so they are raised and released together.",
+         "Start offering small pieces of solid food in a dish each evening."
+        ]
+       },
+       {
+        "when": "About weeks 3 to 5 (around 100 to 120 days old)",
+        "tasks": [
+         "Lower the milk bit by bit as it eats more solid food, stopping by about 120 days old, when it should weigh about 75 to 90 g."
+        ]
+       },
+       {
+        "when": "Once weaned",
+        "tasks": [
+         "Move the group to an outdoor pre-release enclosure with branches, foliage and a nest box, as long stays in care give small gliders poor outcomes."
+        ]
+       }
+      ],
+      "housing": [
+       "Keep it in a soft cloth pouch inside a secure, gap-free enclosure, at the temperature the app shows for its stage, in a quiet, dark room away from pets and noise.",
+       "Gliders are expert escapers, so tie pouches so it cannot be caught in the knot and check every gap and door is closed.",
+       "Give it branches to climb and glide between as it grows, and a nest box to sleep in by day.",
+       "Wear gloves when cleaning up droppings and urine and wash your hands after handling, as possums and gliders can carry leptospirosis, salmonella and Q fever."
+      ],
+      "feeding": [
+       "Feed Wombaroo Possum Milk Replacer >0.8, a milk made for possum and glider joeys; never cow’s milk, which causes diarrhoea.",
+       "Give the amount in the feed calculator each day, split across the feeds; the Wombaroo glider chart gives about 3 mL a day at 12 g, rising to about 9 mL a day at 54 g, then falling to none by about 120 days.",
+       "Give 3 feeds a day, about 7 am, 3 pm and 10 pm.",
+       "Feed it from a small syringe or an eye dropper, one drop at a time so it can lap and swallow at its own pace, and stop if milk comes out of its nose.",
+       "Mix 25 g of powder (3½ scoops) with 80 mL of pre-boiled water at about 50°C to make 100 mL, never stronger or weaker; keep made-up milk in the fridge no more than a day (or frozen in small portions up to 2 weeks, never refrozen), warm it to about 30°C and throw out leftovers.",
+       "As it starts eating, offer Wombaroo Small Carnivore Food (up to a fifth of its diet), small pieces of fruit sprinkled with Wombaroo High Protein Supplement, native flowers and live insects gut-loaded with vitamins, in a dish each evening.",
+       "Put out a shallow dish of fresh water, changed daily, once it is eating solids, and offer extra water between feeds in hot weather."
+      ],
+      "activity": [
+       "Handle it only for feeds, weighing and cleaning, gently and briefly, so it stays wild.",
+       "Hide food and flowers among the branches so it forages at night as it would in the wild."
+      ],
+      "care": [
+       "Weigh it every morning on scales that read to 0.1 g, before the first feed, and enter the weight so the feed calculator stays right.",
+       "If it ever comes in cold, warm it gradually over 2 to 3 hours before giving any milk or food."
+      ],
+      "daily_checks": [
+       "Morning weight recorded",
+       "All milk feeds taken",
+       "Droppings normal",
+       "Pouch clean and dry",
+       "Enclosure escape-proof"
+      ],
+      "log_days": 14,
+      "feed_calc": {
+       "applies": true,
+       "what": "Wombaroo Possum Milk Replacer >0.8",
+       "weight_g": 40,
+       "stage": "Over 0.8 of pouch life, furred, eyes open (about 85 to 90 days)",
+       "percent_body_weight_per_day": 17.5,
+       "feeds_per_day": 3,
+       "basis": "Wombaroo sugar glider chart: about 7 mL a day at 40 g, between 3 mL at 12 g and 9 mL at 54 g.",
+       "sure": false
+      },
+      "release": {
+       "ready_when": [
+        "Fully weaned and holding its weight on natural foods",
+        "Climbs and glides confidently",
+        "Healthy, with a full coat, and needing no more care",
+        "Wary of people and keeps with its group"
+       ],
+       "target_weight": "About 90 to 135 g for a sugar glider",
+       "how": [
+        "Release it within 24 hours of it being ready, together with the group it was raised with.",
+        "Release at dusk in mild, settled weather, never during the day.",
+        "Fix a temporary nest box in a tree at the release spot and place the group in it, as sugar gliders depend on tree hollows."
+       ],
+       "where": "Release it where it was found, using the GPS or Melways record of that spot; if the spot is unsuitable, use the closest suitable place within its home range without crossing a boundary it would not normally cross, and if there is no such place it cannot be released elsewhere."
+      },
+      "escalate": {
+       "vet": [
+        "Diarrhoea, or droppings runny for more than a day.",
+        "Refusing feeds, or losing weight two days running.",
+        "Patches of hair loss or crusty skin.",
+        "Not gaining weight for three days."
+       ],
+       "urgent": [
+        "Cold, floppy or unable to hold its head up: give nothing by mouth on the way to the vet.",
+        "Coughing, noisy breathing or milk coming from the nose after a feed.",
+        "Wobbly, trembling or having fits.",
+        "Caught by a cat or dog: a vet the same day, even if no wound can be seen."
+       ]
+      },
+      "rehydration": {
+       "needed": false,
+       "weight_g": null,
+       "dehydration_pct": null,
+       "steps": []
+      },
+      "species_group": "glider",
+      "next_visit": "",
+      "sources": [
+       "vic-release-requirements",
+       "vic-cop-welfare-wildlife-rehabilitation",
+       "vic-shelter-foster-carer-authorisation",
+       "vic-rehabilitator-authorisation-conditions",
+       "vic-rehab-guidelines-part-a",
+       "wombaroo-milk-replacers-feeding-guide",
+       "wombaroo-marsupial-milk-how-to-feed",
+       "wires-possums"
+      ]
+     }
+    },
+    {
+     "id": "lib-sugarglider-adult",
+     "stage": "Adult",
+     "weight": "about 120 g",
+     "text": "Ready-made plan: an adult sugar glider, about 120 g, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a glider like this, from today until release. Use day and week numbers, not calendar dates.",
+     "sheet": {
+      "animal": "Adult sugar glider",
+      "case_number": "",
+      "species": "Sugar glider (Petaurus breviceps)",
+      "kind": "wildlife",
+      "summary": "This adult sugar glider, about 120 g, is recovering in care with no injuries needing treatment. Long stays in care do small gliders no good, so the goal is a short stay, keeping it calm and eating, and returning it at dusk to its family group where it was found as soon as it is fit.",
+      "photo_findings": [],
+      "medications": [],
+      "plan": [
+       {
+        "when": "Days 1 to 3",
+        "tasks": [
+         "Keep it in a small, secure enclosure with a pouch while it settles and starts eating."
+        ]
+       },
+       {
+        "when": "Once eating well",
+        "tasks": [
+         "Move it to a larger, gap-free enclosure with branches to climb and glide, to check it moves and glides normally."
+        ]
+       }
+      ],
+      "housing": [
+       "Keep it in a secure, gap-free enclosure with a cloth pouch or nest box to sleep in by day, at the temperature the app shows for gliders, in a quiet, dark room away from pets and noise.",
+       "Gliders are expert escapers, so tie pouches so it cannot be caught in the knot and check every gap and door is closed.",
+       "Clean out droppings and old food every morning.",
+       "Wear gloves when cleaning up droppings and urine and wash your hands after handling, as possums and gliders can carry leptospirosis, salmonella and Q fever."
+      ],
+      "feeding": [
+       "Feed Wombaroo Small Carnivore Food (up to a fifth of its diet), small pieces of fruit sprinkled with Wombaroo High Protein Supplement, native flowers and blossom, and live insects such as mealworms and crickets gut-loaded with vitamins, as sugar gliders eat sap, nectar and insects.",
+       "The guidance gives no set amount for sugar gliders, so offer a little more than it clears each night and weigh what is left.",
+       "Put the food out at dusk in a dish fixed high in the enclosure, and hide some among the branches.",
+       "Keep a shallow dish of fresh water at all times, changed daily."
+      ],
+      "activity": [
+       "Handle it as little as possible, gently and briefly, with gloves, as gliders can bite."
+      ],
+      "care": [
+       "If it ever comes in cold, warm it gradually over 2 to 3 hours before giving any milk or food."
+      ],
+      "daily_checks": [
+       "Food eaten recorded",
+       "Fresh water given",
+       "Droppings normal",
+       "Pouch clean and dry",
+       "Enclosure escape-proof"
+      ],
+      "log_days": 7,
+      "feed_calc": {
+       "applies": false,
+       "what": "",
+       "weight_g": 120,
+       "stage": "Adult",
+       "percent_body_weight_per_day": null,
+       "feeds_per_day": null,
+       "basis": "Adult feeding itself; no measured amount is given.",
+       "sure": true
+      },
+      "release": {
+       "ready_when": [
+        "Eating well and holding its weight",
+        "Climbs and glides confidently",
+        "Healthy, with a full coat, and needing no more care",
+        "Wary of people"
+       ],
+       "target_weight": "About 120 g, holding at or above its arrival weight",
+       "how": [
+        "Release it within 24 hours of it being ready.",
+        "Release at dusk in mild, settled weather, never during the day.",
+        "Place it in a temporary nest box fixed in a tree at the release spot, as sugar gliders depend on tree hollows."
+       ],
+       "where": "Release it where it was found, using the GPS or Melways record of that spot; if the spot is unsuitable, use the closest suitable place within its home range without crossing a boundary it would not normally cross, and if there is no such place it cannot be released elsewhere."
+      },
+      "escalate": {
+       "vet": [
+        "Not eating, or losing weight two days running.",
+        "Diarrhoea for more than a day.",
+        "Patches of hair loss or crusty skin.",
+        "Not climbing or gliding normally."
+       ],
+       "urgent": [
+        "Cold, floppy or unable to hold its head up: give nothing by mouth on the way to the vet.",
+        "Struggling to breathe.",
+        "Wobbly, trembling or having fits.",
+        "Bleeding or a new injury."
+       ]
+      },
+      "rehydration": {
+       "needed": false,
+       "weight_g": null,
+       "dehydration_pct": null,
+       "steps": []
+      },
+      "species_group": "glider",
+      "next_visit": "",
+      "sources": [
+       "vic-release-requirements",
+       "vic-cop-welfare-wildlife-rehabilitation",
+       "vic-shelter-foster-carer-authorisation",
+       "vic-rehabilitator-authorisation-conditions",
+       "vic-rehab-guidelines-part-a",
+       "wombaroo-milk-replacers-feeding-guide",
+       "wombaroo-marsupial-milk-how-to-feed",
+       "wires-possums"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "kingfisher",
+   "name": "Sacred kingfisher",
+   "plans": [
+    {
+     "id": "lib-kingfisher-nestling",
+     "stage": "Nestling",
+     "weight": "about 25 g",
+     "text": "Ready-made plan: an orphaned sacred kingfisher nestling, about 25 g, with pin feathers coming through. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a nestling like this, from today until release. Use day and week numbers, not calendar dates.",
+     "sheet": {
+      "animal": "Orphaned sacred kingfisher nestling",
+      "case_number": "",
+      "species": "Sacred kingfisher (Todiramphus sanctus)",
+      "kind": "wildlife",
+      "summary": "This orphaned sacred kingfisher nestling, about 25 g with pin feathers coming through, is healthy and ready to be hand-reared. The goal is to raise it to a strong, wild young kingfisher that catches its own food and release it where it was found.",
+      "photo_findings": [],
+      "medications": [],
+      "plan": [
+       {
+        "when": "Days 1 to 7",
+        "tasks": [
+         "Lower the heat bit by bit as its feathers open and cover its body."
+        ]
+       },
+       {
+        "when": "About week 2 (feathered)",
+        "tasks": [
+         "Move it to a cage with low perches and start leaving live insects in a smooth-sided dish."
+        ]
+       },
+       {
+        "when": "About weeks 3 to 4",
+        "tasks": [
+         "Move it to a flight aviary with perches over open ground and give live insects so it learns to swoop on them.",
+         "Stop hand-feeding once it catches its own food and holds its weight."
+        ]
+       }
+      ],
+      "housing": [
+       "Sit it in a small artificial nest, such as a container lined with tissue that holds it upright, inside a heated box at the temperature the app shows for its stage, with room to move away from the heat; lower the heat bit by bit as its feathers open. Kingfishers are easily stressed, so keep it covered and very quiet.",
+       "Keep it in a quiet room on its own, in a separate air space from any pet birds, with its own dishes and cleaning gear, as serious diseases pass between wild and pet birds through the air.",
+       "Change the nest lining whenever it is soiled and remove droppings after each feed.",
+       "Wear gloves, a surgical or N95 mask and eye protection when handling it or cleaning, use fresh gloves for each animal and wash your hands with soap afterwards, as wild birds in Victoria can carry psittacosis and bird flu."
+      ],
+      "feeding": [
+       "Feed Wombaroo Insectivore Rearing Mix made up as moist pellets, with small crickets, mealworms, woodies and other small insects, as sacred kingfishers eat insects, small lizards and crustaceans.",
+       "Give the amount in the feed calculator each day, split across the feeds; there is no kingfisher chart, so watch its weight closely.",
+       "Feed it about every 45 minutes from dawn to dusk while it gapes, with no overnight feeds; young insect-eating chicks ideally feed often, so check the timing with an experienced bird carer.",
+       "Offer small pieces from fine blunt tweezers into its gaping beak, letting it swallow each one before the next, and never squirt food in with a syringe, as birds easily inhale it.",
+       "Thaw frozen prey fully in the fridge, use it the same day, never refreeze thawed food, keep made-up Wombaroo food no more than a day in the fridge (or 2 weeks frozen) and throw out leftovers.",
+       "At each feed, drip a little water slowly at the tip of its beak and let it swallow; it needs no water dish until it feeds itself."
+      ],
+      "activity": [
+       "Handle it only for feeds and weighing, quickly and gently, without talking to it or letting visitors see it, so it does not become tame; gaping is a normal threat display."
+      ],
+      "care": [
+       "Weigh it every morning at the same time, on scales that read to 0.1 g, before the first feed, and enter the weight so the feed calculator stays right.",
+       "Bringing up a small pellet of fur, bone and insect parts is normal for this bird, not vomiting.",
+       "Sacred kingfishers are summer visitors to Victoria; if it is nearly ready late in the season, check the release timing with an experienced bird carer."
+      ],
+      "daily_checks": [
+       "Morning weight recorded",
+       "Gaping well at feeds",
+       "Droppings normal",
+       "Nest clean and warm",
+       "Feathers growing"
+      ],
+      "log_days": 14,
+      "feed_calc": {
+       "applies": true,
+       "what": "Insectivore Rearing Mix moist pellets and insects",
+       "weight_g": 25,
+       "stage": "Nestling in pin feathers",
+       "percent_body_weight_per_day": 40,
+       "feeds_per_day": 16,
+       "basis": "Best estimate for a small insect-eating nestling; there is no kingfisher chart in the guidance.",
+       "sure": false
+      },
+      "release": {
+       "ready_when": [
+        "Catches live insects on its own and holds its weight",
+        "Flies strongly and lands well the length of the aviary",
+        "Full, healthy plumage and needing no more care",
+        "Wary of people"
+       ],
+       "target_weight": "About 45 g for a sacred kingfisher",
+       "how": [
+        "Release it within 24 hours of it being ready.",
+        "Choose a warm, calm morning, never extreme weather, so it has the day to settle.",
+        "Carry it in a lined, ventilated box, open it near trees beside open ground or water, and step well back."
+       ],
+       "where": "Release it where it was found (recorded with GPS coordinates or a Melways reference), or if that spot is unsuitable, at the closest suitable place within its home range; Victorian rules do not allow release anywhere else."
+      },
+      "escalate": {
+       "vet": [
+        "Will not gape or refuses two feeds in a row",
+        "Weight drops, or stays the same for a day",
+        "Watery or oddly coloured droppings",
+        "Weak or bent legs, which can mean a diet problem"
+       ],
+       "urgent": [
+        "Cold, cannot hold its head up or has collapsed: give nothing by mouth on the way",
+        "Food bubbling from its nostrils, or struggling to breathe",
+        "Tremors, a twisted neck or poor balance, which can be bird flu: also ring the Emergency Animal Disease Watch Hotline on 1800 675 888",
+        "Caught by a cat or dog: a vet the same day, even if no wound can be seen"
+       ]
+      },
+      "rehydration": {
+       "needed": false,
+       "weight_g": null,
+       "dehydration_pct": null,
+       "steps": []
+      },
+      "species_group": "bird",
+      "next_visit": "",
+      "sources": [
+       "vic-cop-welfare-wildlife-rehabilitation",
+       "vic-release-requirements",
+       "vic-rehabilitator-authorisation-conditions",
+       "vic-shelter-foster-carer-authorisation",
+       "vic-rehab-guidelines-part-a",
+       "vic-h5-bird-flu-wildlife-rehabilitators",
+       "wombaroo-native-birds-feeding-guidelines",
+       "wires-helping-chicks"
+      ]
+     }
+    },
+    {
+     "id": "lib-kingfisher-adult",
+     "stage": "Adult",
+     "weight": "about 45 g",
+     "text": "Ready-made plan: an adult sacred kingfisher, about 45 g, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a kingfisher like this, from today until release. Use day and week numbers, not calendar dates.",
+     "sheet": {
+      "animal": "Adult sacred kingfisher",
+      "case_number": "",
+      "species": "Sacred kingfisher (Todiramphus sanctus)",
+      "kind": "wildlife",
+      "summary": "This adult sacred kingfisher, about 45 g, is recovering in care with no injuries needing treatment. Kingfishers stress easily, so the goal is a short, quiet stay, keeping it eating, rebuilding its flight and returning it to where it was found as soon as it is fit.",
+      "photo_findings": [],
+      "medications": [],
+      "plan": [
+       {
+        "when": "Days 1 to 3",
+        "tasks": [
+         "Keep it in a small covered box or hospital cage with a low perch while it settles and starts eating."
+        ]
+       },
+       {
+        "when": "Once eating well",
+        "tasks": [
+         "Move it to a flight aviary with perches over open ground, and give live insects so it is swooping on prey again before release."
+        ]
+       }
+      ],
+      "housing": [
+       "Keep it in a small, covered cage with a low natural perch, in a very quiet, dim room at the temperature the app shows for adult birds, as kingfishers are easily stressed.",
+       "Keep it in a quiet room on its own, in a separate air space from any pet birds, with its own dishes and cleaning gear, as serious diseases pass between wild and pet birds through the air.",
+       "Change the floor lining and clean dishes every day.",
+       "Wear gloves, a surgical or N95 mask and eye protection when handling it or cleaning, use fresh gloves for each animal and wash your hands with soap afterwards, as wild birds in Victoria can carry psittacosis and bird flu."
+      ],
+      "feeding": [
+       "Feed live insects such as crickets, mealworms and woodies, with small pieces of Wombaroo Insectivore Meat Mix, as sacred kingfishers eat insects, small lizards and crustaceans.",
+       "The guidance gives no set amount for kingfishers, so offer a little more than it clears and weigh what you give and what is left.",
+       "Put live insects in a smooth-sided dish below its perch, where it can see and swoop on them.",
+       "Thaw frozen prey fully in the fridge, use it the same day, never refreeze thawed food, keep made-up Wombaroo food no more than a day in the fridge (or 2 weeks frozen) and throw out leftovers.",
+       "Keep fresh water in a shallow dish at all times and change it daily."
+      ],
+      "activity": [
+       "Handle it as little and as quickly as possible, cupped gently in a towel; gaping is a normal threat display."
+      ],
+      "care": [
+       "Bringing up a small pellet of fur, bone and insect parts is normal for this bird, not vomiting.",
+       "Sacred kingfishers are summer visitors to Victoria; if it is nearly ready late in the season, check the release timing with an experienced bird carer."
+      ],
+      "daily_checks": [
+       "Insects eaten",
+       "Fresh water given",
+       "Perching steadily",
+       "Droppings look normal",
+       "Breathing quiet"
+      ],
+      "log_days": 7,
+      "feed_calc": {
+       "applies": false,
+       "what": "",
+       "weight_g": 45,
+       "stage": "Adult",
+       "percent_body_weight_per_day": null,
+       "feeds_per_day": null,
+       "basis": "Adult feeding itself on live insects; no measured amount is given.",
+       "sure": true
+      },
+      "release": {
+       "ready_when": [
+        "Flies strongly and lands well the length of the aviary",
+        "Catching live insects and holding its weight",
+        "Feathers in good condition and needing no more care",
+        "Alert and wary of people"
+       ],
+       "target_weight": "About 45 g, holding at or above its arrival weight",
+       "how": [
+        "Release it within 24 hours of it being ready.",
+        "Choose a warm, calm morning, never extreme weather.",
+        "Carry it in a lined, ventilated box, open it near trees beside open ground or water, and step well back."
+       ],
+       "where": "Release it where it was found (recorded with GPS coordinates or a Melways reference), or if that spot is unsuitable, at the closest suitable place within its home range; Victorian rules do not allow release anywhere else."
+      },
+      "escalate": {
+       "vet": [
+        "Not eating by the end of day 1",
+        "Losing weight",
+        "Watery or oddly coloured droppings",
+        "Not flying properly once in the aviary"
+       ],
+       "urgent": [
+        "Fluffed up, sleepy on the floor or collapsed: give nothing by mouth on the way",
+        "Struggling to breathe, or tail bobbing with each breath",
+        "Tremors, a twisted neck or poor balance, which can be bird flu: also ring the Emergency Animal Disease Watch Hotline on 1800 675 888",
+        "Bleeding or a new injury"
+       ]
+      },
+      "rehydration": {
+       "needed": false,
+       "weight_g": null,
+       "dehydration_pct": null,
+       "steps": []
+      },
+      "species_group": "bird",
+      "next_visit": "",
+      "sources": [
+       "vic-cop-welfare-wildlife-rehabilitation",
+       "vic-release-requirements",
+       "vic-rehabilitator-authorisation-conditions",
+       "vic-shelter-foster-carer-authorisation",
+       "vic-rehab-guidelines-part-a",
+       "vic-h5-bird-flu-wildlife-rehabilitators",
+       "wombaroo-native-birds-feeding-guidelines"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "mtbrushtail",
+   "name": "Mountain brushtail possum",
+   "plans": [
+    {
+     "id": "lib-mtbrushtail-joey",
+     "stage": "Furred joey",
+     "weight": "about 500 g",
+     "text": "Ready-made plan: an orphaned mountain brushtail possum (bobuck) joey, about 500 g, furred with eyes open, drinking milk. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a joey like this, from today until release. Use day and week numbers, not calendar dates.",
+     "sheet": {
+      "animal": "Orphaned mountain brushtail possum joey",
+      "case_number": "",
+      "species": "Mountain brushtail possum, also called bobuck (Trichosurus cunninghami)",
+      "kind": "wildlife",
+      "summary": "This orphaned mountain brushtail possum (bobuck) joey, about 500 g, is furred with its eyes open and is still drinking milk, and is healthy. The goal is to wean it on to natural browse, then release it at dusk where it was found once it holds its weight on a fully natural diet.",
+      "photo_findings": [],
+      "medications": [],
+      "plan": [
+       {
+        "when": "Weeks 1 to 4",
+        "tasks": [
+         "Offer more browse and flowers each evening and lower the milk bit by bit as it eats more, stopping once it holds its weight on solids."
+        ]
+       },
+       {
+        "when": "Once fully weaned",
+        "tasks": [
+         "Move it to a large outdoor pre-release enclosure with branches to climb, a nest box and natural shelter."
+        ]
+       },
+       {
+        "when": "At least 2 weeks in the pre-release enclosure",
+        "tasks": [
+         "Keep it there on a fully natural diet until it holds its weight, as possums must do this before release."
+        ]
+       }
+      ],
+      "housing": [
+       "Keep it in a secure, well-ventilated indoor enclosure in a quiet room, at the enclosure temperature the app shows for its stage, with a pouch or nest box to sleep in by day.",
+       "Give it sturdy branches to climb, as brushtails live in trees and shelter in hollows.",
+       "Keep it apart from other wildlife until its health is known.",
+       "Wear gloves when cleaning up droppings and urine and wash your hands after handling, as possums and gliders can carry leptospirosis, salmonella and Q fever."
+      ],
+      "feeding": [
+       "Feed plenty of fresh native browse, such as wattle and eucalypt leaves, with native flowers and blossom, plus a little Wombaroo High Protein Supplement or Small Carnivore Food while it weans, as brushtails are omnivores.",
+       "Give Wombaroo Possum Milk Replacer >0.8 at the amount in the feed calculator; there is no mountain brushtail chart, so this follows the common brushtail chart, which weans from about 40 mL a day to none over about 40 days.",
+       "Give 2 milk feeds a day, morning and evening, from a bottle with a teat hole of about 1 mm or lapped from a shallow dish, letting it take it at its own pace, and stop if milk comes out of its nose.",
+       "Mix 25 g of powder (3½ scoops) with 80 mL of pre-boiled water at about 50°C to make 100 mL, never stronger or weaker; keep made-up milk in the fridge no more than a day (or frozen in small portions up to 2 weeks, never refrozen), warm it to about 30°C and throw out leftovers.",
+       "Put out enough browse at dusk that a little is left by morning, wedged upright or fixed high in the enclosure, and clear out the old browse each day.",
+       "Keep a shallow, heavy dish of fresh water in the enclosure, changed every day."
+      ],
+      "activity": [
+       "Handle it gently and only when needed, such as for weighing or moving enclosures, so it stays wild and wary of people.",
+       "Hide browse and flowers around the branches so it forages at night as it would in the wild."
+      ],
+      "care": [
+       "Weigh it every day at the same time, before its first milk feed, and record it so the feed calculator stays right and any weight loss during weaning is picked up early.",
+       "If it ever comes in cold, warm it gradually over 2 to 3 hours before giving any milk or food."
+      ],
+      "daily_checks": [
+       "Weighed and recorded",
+       "Milk feeds taken",
+       "Browse eaten overnight",
+       "Droppings firm",
+       "Nest box clean"
+      ],
+      "log_days": 14,
+      "feed_calc": {
+       "applies": true,
+       "what": "Wombaroo Possum Milk Replacer >0.8",
+       "weight_g": 500,
+       "stage": "Weaning, eating some browse",
+       "percent_body_weight_per_day": 7,
+       "feeds_per_day": 2,
+       "basis": "Wombaroo common brushtail weaning chart (40 mL a day at the start of weaning) used as the nearest guide; no mountain brushtail chart given.",
+       "sure": false
+      },
+      "release": {
+       "ready_when": [
+        "Fully weaned and holding steady weight on a fully natural diet",
+        "Full, healthy coat and needing no more care",
+        "Climbs confidently and uses its nest box",
+        "Wary of people and predators"
+       ],
+       "target_weight": "",
+       "how": [
+        "Release within 24 hours of it being ready, in mild, settled weather.",
+        "Release at dusk, as it is nocturnal; never release it during the day.",
+        "Take it to the site in a quiet, well-ventilated, lined box.",
+        "Fix a temporary nest box in a tree at the release spot, as brushtails depend on hollows for shelter."
+       ],
+       "where": "Release it where it was found, using the GPS or Melways record of that spot; if the spot is unsuitable, use the closest suitable place within its home range without crossing a boundary it would not normally cross, and if there is no such place it cannot be released elsewhere."
+      },
+      "escalate": {
+       "vet": [
+        "Diarrhoea, or droppings runny for more than a day.",
+        "Refusing feeds, or losing weight two days running.",
+        "Patches of hair loss or crusty skin.",
+        "Not eating browse after a week of weaning."
+       ],
+       "urgent": [
+        "Cold, floppy or unable to hold its head up: give nothing by mouth on the way to the vet.",
+        "Coughing, noisy breathing or milk coming from the nose after a feed.",
+        "On the ground in the heat, panting or drooling (heat stress).",
+        "Caught by a cat or dog: a vet the same day, even if no wound can be seen."
+       ]
+      },
+      "rehydration": {
+       "needed": false,
+       "weight_g": null,
+       "dehydration_pct": null,
+       "steps": []
+      },
+      "species_group": "brushtail",
+      "next_visit": "",
+      "sources": [
+       "vic-release-requirements",
+       "vic-cop-welfare-wildlife-rehabilitation",
+       "vic-shelter-foster-carer-authorisation",
+       "vic-rehabilitator-authorisation-conditions",
+       "vic-rehab-guidelines-part-a",
+       "wombaroo-milk-replacers-feeding-guide",
+       "wombaroo-marsupial-milk-how-to-feed",
+       "wires-possums"
+      ]
+     }
+    },
+    {
+     "id": "lib-mtbrushtail-adult",
+     "stage": "Adult",
+     "weight": "about 3.5 kg",
+     "text": "Ready-made plan: an adult mountain brushtail possum (bobuck), about 3.5 kg, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a possum like this, from today until release. Use day and week numbers, not calendar dates.",
+     "sheet": {
+      "animal": "Adult mountain brushtail possum",
+      "case_number": "",
+      "species": "Mountain brushtail possum, also called bobuck (Trichosurus cunninghami)",
+      "kind": "wildlife",
+      "summary": "This adult mountain brushtail possum (bobuck), about 3.5 kg, is recovering in care with no injuries needing treatment. The goal is to keep it calm and eating natural browse, and return it at dusk to where it was found as soon as it is fit.",
+      "photo_findings": [],
+      "medications": [],
+      "plan": [
+       {
+        "when": "Days 1 to 3",
+        "tasks": [
+         "Keep it in a quiet, secure enclosure with a nest box while it settles and starts eating."
+        ]
+       },
+       {
+        "when": "Once eating well",
+        "tasks": [
+         "Move it to a larger enclosure with branches to climb, to check it climbs and moves normally."
+        ]
+       }
+      ],
+      "housing": [
+       "Keep it in a secure, well-ventilated enclosure in a quiet room or sheltered outdoor area, at the temperature the app shows for brushtails, with a nest box or hollow log to sleep in by day.",
+       "Give it sturdy branches to climb, as brushtails live in trees and shelter in hollows.",
+       "Keep it apart from other wildlife and pets, and clean out droppings and old browse every morning.",
+       "Wear gloves when cleaning up droppings and urine and wash your hands after handling, as possums and gliders can carry leptospirosis, salmonella and Q fever."
+      ],
+      "feeding": [
+       "Feed plenty of fresh native browse, such as wattle and eucalypt leaves, with native flowers and blossom, as mountain brushtails eat mostly leaves.",
+       "Put out enough browse at dusk that a little is left by morning, wedged upright or fixed high in the enclosure.",
+       "Keep a shallow, heavy dish of fresh water in the enclosure, changed every day."
+      ],
+      "activity": [
+       "Handle it as little as possible, with thick gloves and a towel, as brushtails scratch and bite hard; never hold it by the tail alone."
+      ],
+      "care": [
+       "Weigh it once or twice a week and record its weight and what it eats."
+      ],
+      "daily_checks": [
+       "Browse eaten overnight",
+       "Fresh water given",
+       "Droppings firm",
+       "Nest box clean",
+       "Climbing well"
+      ],
+      "log_days": 14,
+      "feed_calc": {
+       "applies": false,
+       "what": "",
+       "weight_g": 3500,
+       "stage": "Adult",
+       "percent_body_weight_per_day": null,
+       "feeds_per_day": null,
+       "basis": "Adult eating browse; no measured amount is needed.",
+       "sure": true
+      },
+      "release": {
+       "ready_when": [
+        "Eating well and holding steady weight on natural browse",
+        "Full, healthy coat and needing no more care",
+        "Climbs confidently",
+        "Wary of people"
+       ],
+       "target_weight": "About 3.5 kg, holding at or above its arrival weight",
+       "how": [
+        "Release within 24 hours of it being ready, in mild, settled weather.",
+        "Release at dusk, as it is nocturnal; never release it during the day.",
+        "Take it to the site in a quiet, well-ventilated, lined box.",
+        "Fix a temporary nest box in a tree at the release spot, as brushtails depend on hollows for shelter."
+       ],
+       "where": "Release it where it was found, using the GPS or Melways record of that spot; if the spot is unsuitable, use the closest suitable place within its home range without crossing a boundary it would not normally cross, and if there is no such place it cannot be released elsewhere."
+      },
+      "escalate": {
+       "vet": [
+        "Not eating, or losing weight two days running.",
+        "Diarrhoea for more than a day.",
+        "Patches of hair loss or crusty skin.",
+        "Not climbing normally."
+       ],
+       "urgent": [
+        "Collapsed, floppy or unable to hold its head up: give nothing by mouth on the way.",
+        "Struggling to breathe.",
+        "On the ground in the heat, panting or drooling (heat stress).",
+        "Bleeding or a new injury."
+       ]
+      },
+      "rehydration": {
+       "needed": false,
+       "weight_g": null,
+       "dehydration_pct": null,
+       "steps": []
+      },
+      "species_group": "brushtail",
+      "next_visit": "",
+      "sources": [
+       "vic-release-requirements",
+       "vic-cop-welfare-wildlife-rehabilitation",
+       "vic-shelter-foster-carer-authorisation",
+       "vic-rehabilitator-authorisation-conditions",
+       "vic-rehab-guidelines-part-a",
+       "wombaroo-milk-replacers-feeding-guide",
+       "wombaroo-marsupial-milk-how-to-feed",
+       "wires-possums"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "rnwallaby",
+   "name": "Red-necked wallaby",
+   "plans": [
+    {
+     "id": "lib-rnwallaby-unfurred",
+     "stage": "Unfurred joey",
+     "weight": "about 350 g",
+     "text": "Ready-made plan: an orphaned red-necked (Bennett's) wallaby joey, about 350 g, unfurred with eyes open and ears up. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a joey like this, from today until release. Use day and week numbers, not calendar dates.",
+     "sheet": {
+      "animal": "Orphaned red-necked wallaby joey",
+      "case_number": "",
+      "species": "Red-necked wallaby, also called Bennett's wallaby (Notamacropus rufogriseus)",
+      "kind": "wildlife",
+      "summary": "This orphaned red-necked (Bennett's) wallaby joey, about 350 g, is unfurred with its eyes open and ears up, and is healthy. The goal is to raise it through pouch life and weaning with other young wallabies, then release it fit and wild where it was found.",
+      "photo_findings": [],
+      "medications": [],
+      "plan": [
+       {
+        "when": "Weeks 1 to 2",
+        "tasks": [
+         "Join it with other red-necked wallaby joeys of a similar age through an experienced macropod carer, so they are raised and released together.",
+         "Give Impact Colostrum Supplement in its milk this first week."
+        ]
+       },
+       {
+        "when": "About week 3 (around 170 days old, about 560 g, fine fur)",
+        "tasks": [
+         "Change over to Kangaroo Milk Replacer 0.6 bit by bit over 10 to 20 days, keeping the total amount the same, and drop to 5 feeds a day.",
+         "Start offering fresh grass with roots in the pouch."
+        ]
+       },
+       {
+        "when": "About week 7 (around 200 days old, about 930 g)",
+        "tasks": [
+         "Change over to Kangaroo Milk Replacer >0.7 bit by bit over 10 to 20 days, and drop to 4 feeds a day."
+        ]
+       },
+       {
+        "when": "About weeks 10 to 18 (220 to 280 days old)",
+        "tasks": [
+         "Drop to 3, then 2, feeds a day as it starts toileting itself and leaves the pouch, and move it to a grassy outdoor enclosure with its group."
+        ]
+       }
+      ],
+      "housing": [
+       "Keep it in a fabric pouch inside a heated box at the temperature the app shows for its stage (about 32°C now), in a warm, dark, quiet place away from pets, noise and smells, with the heat source never touching it.",
+       "Line the pouch with soft cotton liners and change them whenever soiled, so its skin stays clean and dry.",
+       "Wash your hands before and after every feed and clean-up, wear gloves and a mask when handling droppings, and disinfect bottles and equipment, as wallabies can carry Q fever, salmonella and ringworm without looking sick; Q fever and tetanus vaccination give carers the best protection."
+      ],
+      "feeding": [
+       "Feed Wombaroo Kangaroo Milk Replacer 0.4, a low-lactose milk made for kangaroos and wallabies; never cow’s milk, which gives joeys diarrhoea.",
+       "Give the amount in the feed calculator each day, split evenly across the feeds; the red-necked wallaby chart rises from about 47 mL a day at 320 g to about 60 mL a day at 470 g.",
+       "Give 6 feeds a day, about every 4 hours from 6 am to 10 pm.",
+       "Feed it in its pouch, letting it suck at its own pace through a small teat with a hole of about 1 mm so the milk drips slowly, and stop if milk comes out of its nose.",
+       "Mix 18 g of powder (2½ scoops) with 90 mL of pre-boiled water at about 50°C to make 100 mL, in sterilised bottles; warm it to about 30°C, keep made-up milk in the fridge no more than a day (or frozen up to 2 weeks, never refrozen) and throw out leftovers.",
+       "After every feed, gently wipe its bottom and genitals with a warm damp cloth until it wees and poos, as it cannot go on its own yet.",
+       "It needs no extra water while in the pouch on milk; if it seems dehydrated, give water between feeds, never mixed into the milk."
+      ],
+      "activity": [
+       "Handle it gently and briefly, and if it calls out, breathes fast, pants or grinds its teeth, stop and let it settle in its pouch, as stress lowers a joey’s resistance to disease.",
+       "Keep it away from pets and visitors and avoid making a pet of it, so it stays wary of people and dogs."
+      ],
+      "care": [
+       "Weigh it every morning before the first feed and enter the weight so the feed calculator stays right.",
+       "Its age is estimated from its size and fur; if it seems younger or older than this plan assumes, check its milk stage with your vet or an experienced macropod carer."
+      ],
+      "daily_checks": [
+       "Weigh before morning feed",
+       "All milk feeds taken",
+       "Toileted after each feed",
+       "Pouch liners clean",
+       "Warm and settled"
+      ],
+      "log_days": 14,
+      "feed_calc": {
+       "applies": true,
+       "what": "Wombaroo Kangaroo Milk Replacer 0.4",
+       "weight_g": 350,
+       "stage": "Age Factor 0.4, about 145 days, unfurred",
+       "percent_body_weight_per_day": 14.3,
+       "feeds_per_day": 6,
+       "basis": "Worked out from DEECA Table 6.10 for red-necked wallabies (about 50 mL a day at 350 g); the percentage falls as it grows.",
+       "sure": false
+      },
+      "release": {
+       "ready_when": [
+        "Fully weaned (at about 370 days old) and off the bottle for at least a month",
+        "Healthy, moving well and grazing and browsing on its own",
+        "At a good weight for its age, as checked by an experienced macropod carer",
+        "Wary of people and dogs and keeps with its group"
+       ],
+       "target_weight": "",
+       "how": [
+        "Release it within 24 hours of being ready, together with the group it was raised with.",
+        "Choose mild weather and the time of day wallabies are normally out feeding, avoiding heat and storms.",
+        "Move it calmly in a covered, well-ventilated crate with its head covered, keeping the trip short.",
+        "If a vet sedates it for the trip, stay and watch until it is fully awake, to protect it from predators."
+       ],
+       "where": "Release it where it was found (record that spot with GPS coordinates), or if that is unsuitable, at the closest suitable spot within its home range without crossing a boundary it would not normally cross."
+      },
+      "escalate": {
+       "vet": [
+        "Diarrhoea, or droppings runny for more than a day.",
+        "Refusing feeds, or losing weight two days running.",
+        "Patches of hair loss, crusty or scaly skin.",
+        "Not gaining weight for three days."
+       ],
+       "urgent": [
+        "Cold, floppy or unable to hold its head up: give nothing by mouth on the way to the vet.",
+        "Coughing, noisy breathing or milk coming from the nose after a feed.",
+        "Stiff, wobbly or weak after a fright, chase or handling (possible capture myopathy).",
+        "Bloated, hard belly or straining."
+       ]
+      },
+      "rehydration": {
+       "needed": false,
+       "weight_g": null,
+       "dehydration_pct": null,
+       "steps": []
+      },
+      "species_group": "macropod",
+      "next_visit": "",
+      "sources": [
+       "vic-release-requirements",
+       "vic-cop-welfare-wildlife-rehabilitation",
+       "vic-shelter-foster-carer-authorisation",
+       "vic-rehabilitator-authorisation-conditions",
+       "vic-rehab-guidelines-part-a",
+       "wombaroo-milk-replacers-feeding-guide",
+       "wombaroo-marsupial-milk-how-to-feed",
+       "wires-kangaroos-and-wallabies",
+       "wires-extreme-heat-factsheet"
+      ]
+     }
+    },
+    {
+     "id": "lib-rnwallaby-furred",
+     "stage": "Furred pouch joey",
+     "weight": "about 2 kg",
+     "text": "Ready-made plan: an orphaned red-necked (Bennett's) wallaby joey, about 2 kg, fully furred, spending most of its time in the pouch and drinking milk. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a joey like this, from today until release. Use day and week numbers, not calendar dates.",
+     "sheet": {
+      "animal": "Orphaned red-necked wallaby joey",
+      "case_number": "",
+      "species": "Red-necked wallaby, also called Bennett's wallaby (Notamacropus rufogriseus)",
+      "kind": "wildlife",
+      "summary": "This orphaned red-necked (Bennett's) wallaby joey, about 2 kg, is fully furred and still spends most of its time in the pouch drinking milk, and is healthy. The goal is to raise it through the rest of pouch life and weaning with other young wallabies, then release it fit and wild.",
+      "photo_findings": [],
+      "medications": [],
+      "plan": [
+       {
+        "when": "Weeks 1 to 2",
+        "tasks": [
+         "Join it with other red-necked wallaby joeys of a similar age through an experienced macropod carer, so they are raised and released together."
+        ]
+       },
+       {
+        "when": "About weeks 2 to 6 (around 240 to 280 days old, out of the pouch more)",
+        "tasks": [
+         "Drop to 3, then 2, milk feeds a day and move it with its group to a large, secure grassy outdoor enclosure with shelter and shade."
+        ]
+       },
+       {
+        "when": "About weeks 7 to 18 (around 290 to 370 days old)",
+        "tasks": [
+         "Wean it: lower the milk bit by bit, giving the last bottle at about 370 days old, when weaning should end on native browse.",
+         "Give no bottles at all in the month between weaning and release."
+        ]
+       }
+      ],
+      "housing": [
+       "Keep it in a fabric pouch hung in a quiet, dark spot, at the temperature the app shows for this stage, away from pets, noise and smells.",
+       "Line the pouch with soft cotton liners and change them whenever soiled.",
+       "Give it a safe, grassy area to hop and explore for longer each day as it leaves the pouch more, with the pouch hung where it can climb back in.",
+       "Wash your hands before and after every feed and clean-up, wear gloves and a mask when handling droppings, and disinfect bottles and equipment, as wallabies can carry Q fever, salmonella and ringworm without looking sick; Q fever and tetanus vaccination give carers the best protection."
+      ],
+      "feeding": [
+       "Feed Wombaroo Kangaroo Milk Replacer >0.7, a low-lactose milk made for kangaroos and wallabies; never cow’s milk, which gives joeys diarrhoea.",
+       "Give the amount in the feed calculator each day, split evenly across the feeds; the red-necked wallaby chart rises from about 72 mL a day at 930 g to about 155 mL a day at 2.75 kg.",
+       "Give 4 feeds a day, about 6 am, 11 am, 4 pm and 9 pm.",
+       "Feed it in or just out of its pouch, letting it suck at its own pace through a teat with a hole of about 1 mm so the milk drips slowly, and stop if milk comes out of its nose.",
+       "Mix 25 g of powder (3½ scoops) with 80 mL of pre-boiled water at about 50°C to make 100 mL, in sterilised bottles; warm it to about 30°C, keep made-up milk in the fridge no more than a day (or frozen up to 2 weeks, never refrozen) and throw out leftovers.",
+       "If it does not wee and poo by itself after a feed, gently wipe its bottom with a warm damp cloth until it goes; red-necked wallabies usually start toileting on their own at about this size.",
+       "Put out a shallow dish of fresh water, changed every day, for it to lap when it is out of the pouch.",
+       "Offer fresh grass with roots and soil, hay, native browse and macropod pellets such as Wombaroo Kangaroo Pellets every day; never cattle or sheep pellets, which can contain coccidiostats that are fatal to wallabies, and no seed mixes, short chaff or bread, as sharp pieces injure the gums and lead to lumpy jaw."
+      ],
+      "activity": [
+       "Handle it gently and briefly, and if it calls out, breathes fast, pants or grinds its teeth, stop and let it settle in its pouch, as stress lowers a joey’s resistance to disease.",
+       "Lift it out of the pouch by easing it out back first, never by its tail or legs alone.",
+       "Keep it away from pets and visitors and avoid making a pet of it, so it stays wary of people and dogs."
+      ],
+      "care": [
+       "Never chase it, tie its legs or hold it down to catch it, especially on hot days, as stress and struggling can bring on capture myopathy, which can kill.",
+       "Weigh it every morning before the first feed and enter the weight so the feed calculator stays right."
+      ],
+      "daily_checks": [
+       "Weigh before morning feed",
+       "All milk feeds taken",
+       "Droppings soft to firm",
+       "Pouch liners clean",
+       "Bright and hopping well"
+      ],
+      "log_days": 14,
+      "feed_calc": {
+       "applies": true,
+       "what": "Wombaroo Kangaroo Milk Replacer >0.7",
+       "weight_g": 2000,
+       "stage": "Age Factor >0.7, about 240 days, fully furred",
+       "percent_body_weight_per_day": 6,
+       "feeds_per_day": 4,
+       "basis": "Worked out from DEECA Table 6.10 for red-necked wallabies (about 120 mL a day at 2 kg); the percentage falls as it grows.",
+       "sure": false
+      },
+      "release": {
+       "ready_when": [
+        "Fully weaned (at about 370 days old) and off the bottle for at least a month",
+        "Healthy, moving well and grazing and browsing on its own",
+        "At a good weight for its age, as checked by an experienced macropod carer",
+        "Wary of people and dogs and keeps with its group"
+       ],
+       "target_weight": "",
+       "how": [
+        "Release it within 24 hours of being ready, together with the group it was raised with.",
+        "Choose mild weather and the time of day wallabies are normally out feeding, avoiding heat and storms.",
+        "Move it calmly in a covered, well-ventilated crate with its head covered, keeping the trip short.",
+        "If a vet sedates it for the trip, stay and watch until it is fully awake, to protect it from predators."
+       ],
+       "where": "Release it where it was found (record that spot with GPS coordinates), or if that is unsuitable, at the closest suitable spot within its home range without crossing a boundary it would not normally cross."
+      },
+      "escalate": {
+       "vet": [
+        "Diarrhoea, or droppings runny for more than a day.",
+        "Refusing feeds, or losing weight two days running.",
+        "Patches of hair loss, crusty or scaly skin.",
+        "Cloudy eyes."
+       ],
+       "urgent": [
+        "Cold, floppy or unable to hold its head up: give nothing by mouth on the way to the vet.",
+        "Coughing, noisy breathing or milk coming from the nose after a feed.",
+        "Stiff, wobbly or weak after a fright, chase or handling (possible capture myopathy).",
+        "Drooling, panting or lying down and slow to get up on a hot day (heat stress)."
+       ]
+      },
+      "rehydration": {
+       "needed": false,
+       "weight_g": null,
+       "dehydration_pct": null,
+       "steps": []
+      },
+      "species_group": "macropod",
+      "next_visit": "",
+      "sources": [
+       "vic-release-requirements",
+       "vic-cop-welfare-wildlife-rehabilitation",
+       "vic-shelter-foster-carer-authorisation",
+       "vic-rehabilitator-authorisation-conditions",
+       "vic-rehab-guidelines-part-a",
+       "wombaroo-milk-replacers-feeding-guide",
+       "wombaroo-marsupial-milk-how-to-feed",
+       "wires-kangaroos-and-wallabies",
+       "wires-extreme-heat-factsheet"
+      ]
+     }
+    },
+    {
+     "id": "lib-rnwallaby-atfoot",
+     "stage": "Young at foot",
+     "weight": "about 8 kg",
+     "text": "Ready-made plan: a young-at-foot red-necked (Bennett's) wallaby, about 8 kg, grazing and being weaned off milk. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a wallaby like this, from today until release. Use day and week numbers, not calendar dates.",
+     "sheet": {
+      "animal": "Young red-necked wallaby",
+      "case_number": "",
+      "species": "Red-necked wallaby, also called Bennett's wallaby (Notamacropus rufogriseus)",
+      "kind": "wildlife",
+      "summary": "This young-at-foot red-necked (Bennett's) wallaby, about 8 kg, is grazing and being weaned off milk, and is healthy. The goal is to finish weaning it with its group in a large outdoor enclosure and release it fit and wild where it was found.",
+      "photo_findings": [],
+      "medications": [],
+      "plan": [
+       {
+        "when": "Now to about week 6",
+        "tasks": [
+         "Keep lowering the milk bit by bit, going to 1 feed a day, as it eats more grass and browse; weaning should end on native browse."
+        ]
+       },
+       {
+        "when": "About week 7 (around 370 days old)",
+        "tasks": [
+         "Give the last bottle, and give no bottles at all in the month between weaning and release."
+        ]
+       },
+       {
+        "when": "Last month before release",
+        "tasks": [
+         "Keep people contact to the minimum needed for its care, so it is wary of people when released."
+        ]
+       }
+      ],
+      "housing": [
+       "Keep it with its group in a large, secure grassy outdoor enclosure with shelter, shade and some shrubby cover.",
+       "Make the fences high and solid enough that it cannot jump out or see dogs through them, as a fright can bring on capture myopathy.",
+       "Clean up droppings and old food every day and keep the area free of sharp objects.",
+       "Wash your hands before and after every feed and clean-up, wear gloves and a mask when handling droppings, and disinfect bottles and equipment, as wallabies can carry Q fever, salmonella and ringworm without looking sick; Q fever and tetanus vaccination give carers the best protection."
+      ],
+      "feeding": [
+       "Feed plenty of fresh grass with roots and soil, hay, native browse and macropod pellets such as Wombaroo Kangaroo Pellets; never cattle or sheep pellets, which can contain coccidiostats that are fatal to wallabies, and no seed mixes, short chaff or bread, as sharp pieces injure the gums and lead to lumpy jaw.",
+       "Give the amount of Kangaroo Milk Replacer >0.7 in the feed calculator, as 1 to 2 feeds a day, lowering it steadily; the red-necked wallaby chart falls from about 140 mL a day at 290 days to 30 mL at 350 days, with none by 370 days.",
+       "Give the milk from a bottle with a teat, letting it drink at its own pace, and stop if milk comes out of its nose.",
+       "Mix 25 g of powder (3½ scoops) with 80 mL of pre-boiled water at about 50°C to make 100 mL, warm it to about 30°C and throw out leftovers.",
+       "Keep fresh water in a heavy, shallow dish it cannot tip over, changed every day."
+      ],
+      "activity": [
+       "Handle it only when needed, quietly and briefly, and never chase it, tie its legs or hold it down, especially on hot days, as stress and struggling can bring on capture myopathy, which can kill.",
+       "Keep pets and visitors away from its enclosure, so it stays wary of people and dogs."
+      ],
+      "care": [
+       "Weigh it once a week, by walking it calmly onto scales or into a weighing bag, and record its weight and progress."
+      ],
+      "daily_checks": [
+       "Grass and browse eaten",
+       "Milk feed taken",
+       "Water dish full",
+       "Droppings firm pellets",
+       "Moving and grazing well"
+      ],
+      "log_days": 14,
+      "feed_calc": {
+       "applies": true,
+       "what": "Wombaroo Kangaroo Milk Replacer >0.7",
+       "weight_g": 8000,
+       "stage": "Weaning, about 310 days",
+       "percent_body_weight_per_day": 1.25,
+       "feeds_per_day": 2,
+       "basis": "Worked out from DEECA Table 6.10 for red-necked wallabies (about 100 mL a day partway through weaning); it falls to none by 370 days.",
+       "sure": false
+      },
+      "release": {
+       "ready_when": [
+        "Fully weaned (at about 370 days old) and off the bottle for at least a month",
+        "Healthy, moving well and grazing and browsing on its own",
+        "At a good weight for its age, as checked by an experienced macropod carer",
+        "Wary of people and dogs and keeps with its group"
+       ],
+       "target_weight": "",
+       "how": [
+        "Release it within 24 hours of being ready, together with the group it was raised with.",
+        "Choose mild weather and the time of day wallabies are normally out feeding, avoiding heat and storms.",
+        "Move it calmly in a covered, well-ventilated crate with its head covered, keeping the trip short.",
+        "If a vet sedates it for the trip, stay and watch until it is fully awake, to protect it from predators."
+       ],
+       "where": "Release it where it was found (record that spot with GPS coordinates), or if that is unsuitable, at the closest suitable spot within its home range without crossing a boundary it would not normally cross."
+      },
+      "escalate": {
+       "vet": [
+        "Diarrhoea, or soft droppings for more than a day.",
+        "Losing weight, or not eating grass and browse.",
+        "A lump or swelling on the jaw, or drooling while eating (possible lumpy jaw).",
+        "Patches of hair loss, crusty or scaly skin."
+       ],
+       "urgent": [
+        "Weak, wobbly or lying down and slow to get up.",
+        "Stiff, wobbly or weak after a fright, chase or handling (possible capture myopathy).",
+        "Drooling, panting or lying down on a hot day (heat stress).",
+        "Caught by a dog or hurt jumping the fence: a vet the same day."
+       ]
+      },
+      "rehydration": {
+       "needed": false,
+       "weight_g": null,
+       "dehydration_pct": null,
+       "steps": []
+      },
+      "species_group": "macropod",
+      "next_visit": "",
+      "sources": [
+       "vic-release-requirements",
+       "vic-cop-welfare-wildlife-rehabilitation",
+       "vic-shelter-foster-carer-authorisation",
+       "vic-rehabilitator-authorisation-conditions",
+       "vic-rehab-guidelines-part-a",
+       "wombaroo-milk-replacers-feeding-guide",
+       "wombaroo-marsupial-milk-how-to-feed",
+       "wires-kangaroos-and-wallabies",
+       "wires-extreme-heat-factsheet"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "blotched",
+   "name": "Blotched blue-tongue lizard",
+   "plans": [
+    {
+     "id": "lib-blotched-juvenile",
+     "stage": "Juvenile",
+     "weight": "about 30 g",
+     "text": "Ready-made plan: a juvenile blotched blue-tongue lizard, about 30 g. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a lizard like this, from today until release. Use day and week numbers, not calendar dates.",
+     "sheet": {
+      "animal": "Juvenile blotched blue-tongue lizard",
+      "case_number": "",
+      "species": "Blotched blue-tongue lizard (Tiliqua nigrolutea)",
+      "kind": "wildlife",
+      "summary": "This juvenile blotched blue-tongue lizard, about 30 g, is healthy. The goal is to keep it warm, well fed and growing, and release it where it was found once the weather is warm enough.",
+      "photo_findings": [],
+      "medications": [],
+      "plan": [
+       {
+        "when": "Day 1",
+        "tasks": [
+         "Weigh it on scales accurate to 0.1 g and write down the weight as its starting weight.",
+         "Check inside the ear openings and around the front legs for ticks, as a heavy tick load causes blood loss and can make a blue-tongue look wobbly or unwell."
+        ]
+       },
+       {
+        "when": "End of week 1, then once a week",
+        "tasks": [
+         "Weigh it again and compare with the starting weight."
+        ]
+       }
+      ],
+      "housing": [
+       "Keep it on its own in a secure, escape-proof enclosure with a hide, in a room away from other lizards and pet reptiles with no shared air, as blue-tongue nidovirus spreads very easily between lizards.",
+       "Set up a warm basking spot at one end and a cooler end at the other so it can move between them, matching the temperatures the app shows for blue-tongues (a body temperature of about 28 to 32°C, with basking at 30 to 40°C); keep it in that range the whole time, as a lizard in care must not go into winter shutdown (brumation).",
+       "Give a UV lamp on a 12-hour light and 12-hour dark cycle, shining straight onto the basking area with no glass or plastic in between (these block UV, and metal mesh cuts it by a third to a half), and replace the lamp on the maker’s schedule.",
+       "Give the enclosure its own equipment, clean it daily with detergent and then Virkon or F10 while wearing gloves, and wash your hands thoroughly after every handling, as all reptiles can carry salmonella (most risky for children under 10 and people with weak immunity)."
+      ],
+      "feeding": [
+       "Feed small gut-loaded live insects dusted with calcium, plus finely chopped vegetables sprinkled with a reptile supplement; avoid pet food and too many mealworms.",
+       "Offer about 5 to 10% of its body weight at each meal, which is about 1.5 to 3 g for a 30 g lizard, and work the amount out again from each weekly weight as it grows.",
+       "Offer meals in the warm part of the day, only once it has basked and warmed up fully, as a cold lizard cannot digest food.",
+       "Choose insects small enough for it to swallow easily, put food in a shallow dish on the warm side and remove anything uneaten the same day.",
+       "Keep fresh water in a very shallow dish it can climb out of easily, and change it daily."
+      ],
+      "activity": [
+       "Handle it as little and as quickly as possible: hold it gently behind the head and support the hips and back legs, never by the tail, as it can drop its tail.",
+       "Add leaf litter, bark and a flat rock to explore and bask on, and scatter some insects so it forages as it would in the wild.",
+       "Keep it away from pets and noise, and do not try to tame it."
+      ],
+      "care": [
+       "If it drops its tail, keep it in a fly-free enclosure for two weeks and put nothing on the stump."
+      ],
+      "daily_checks": [
+       "Basking spot warm",
+       "UV light on 12 hours",
+       "Food eaten recorded",
+       "Water dish fresh",
+       "Enclosure cleaned"
+      ],
+      "log_days": 14,
+      "feed_calc": {
+       "applies": false,
+       "what": "",
+       "weight_g": 30,
+       "stage": "Juvenile, self-feeding",
+       "percent_body_weight_per_day": null,
+       "feeds_per_day": null,
+       "basis": "Young lizard eating insects and vegetables by itself, not a measured milk feed.",
+       "sure": true
+      },
+      "release": {
+       "ready_when": [
+        "Eating well by itself and holding or gaining weight.",
+        "Alert and active, moving normally, hiding and wary of people.",
+        "Clear eyes and nose, quiet breathing and normal droppings.",
+        "The forecast is 20°C or more for three days running; in autumn or winter this usually means staying in care, kept warm, until spring."
+       ],
+       "target_weight": "",
+       "how": [
+        "Release it within 24 hours of it being ready, on a warm, calm day.",
+        "Carry it in a small lined, well-ventilated box.",
+        "Release it in the warm part of the day while blue-tongues are active, never in extreme heat, cold, wind or rain.",
+        "Place it beside dense cover such as leaf litter, a log or thick ground plants and let it walk off on its own."
+       ],
+       "where": "Release it exactly where it was found (recorded by GPS coordinates or a Melways reference), or at the closest suitable spot within its home range, and never anywhere else."
+      },
+      "escalate": {
+       "vet": [
+        "Weight changes by more than 10% from its starting weight.",
+        "Not eating for a week while kept at the right temperature.",
+        "Runny or bloody droppings, or no droppings for over a week.",
+        "Bubbles or discharge from the nose or mouth, or noisy breathing."
+       ],
+       "urgent": [
+        "Limp, floppy or not responding even when warm: give nothing by mouth on the way.",
+        "Open-mouth breathing or gasping.",
+        "Bleeding, a burn, or a new wound.",
+        "Caught by a cat or dog: a vet the same day, even if no wound can be seen."
+       ]
+      },
+      "rehydration": {
+       "needed": false,
+       "weight_g": null,
+       "dehydration_pct": null,
+       "steps": []
+      },
+      "species_group": "bluetongue",
+      "next_visit": "",
+      "sources": [
+       "vic-cop-welfare-wildlife-rehabilitation",
+       "vic-release-requirements",
+       "vic-shelter-foster-carer-authorisation",
+       "vic-authorisation-guide-first-aid",
+       "vic-rehab-guidelines-part-a"
+      ]
+     }
+    },
+    {
+     "id": "lib-blotched-adult",
+     "stage": "Adult",
+     "weight": "about 500 g",
+     "text": "Ready-made plan: an adult blotched blue-tongue lizard, about 500 g, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a lizard like this, from today until release. Use day and week numbers, not calendar dates.",
+     "sheet": {
+      "animal": "Adult blotched blue-tongue lizard",
+      "case_number": "",
+      "species": "Blotched blue-tongue lizard (Tiliqua nigrolutea)",
+      "kind": "wildlife",
+      "summary": "This adult blotched blue-tongue lizard, about 500 g, is recovering in care with no injuries needing treatment. The goal is to keep it warm, eating and healthy, and release it where it was found once the weather is warm enough.",
+      "photo_findings": [],
+      "medications": [],
+      "plan": [
+       {
+        "when": "Day 1",
+        "tasks": [
+         "Weigh it and write down the weight as its starting weight.",
+         "Check inside the ear openings and around the front legs for ticks, as a heavy tick load causes blood loss and can make a blue-tongue look wobbly or unwell."
+        ]
+       },
+       {
+        "when": "End of week 1, then once a week",
+        "tasks": [
+         "Weigh it again and compare with the starting weight."
+        ]
+       }
+      ],
+      "housing": [
+       "Keep it on its own in a secure, escape-proof enclosure with a hide, in a room away from other lizards and pet reptiles with no shared air, as blue-tongue nidovirus spreads very easily between lizards.",
+       "Set up a warm basking spot at one end and a cooler end at the other so it can move between them, matching the temperatures the app shows for blue-tongues (a body temperature of about 28 to 32°C, with basking at 30 to 40°C); keep it in that range the whole time, as a lizard in care must not go into winter shutdown (brumation).",
+       "Give a UV lamp on a 12-hour light and 12-hour dark cycle, shining straight onto the basking area with no glass or plastic in between (these block UV, and metal mesh cuts it by a third to a half), and replace the lamp on the maker’s schedule.",
+       "Give the enclosure its own equipment, clean it daily with detergent and then Virkon or F10 while wearing gloves, and wash your hands thoroughly after every handling, as all reptiles can carry salmonella (most risky for children under 10 and people with weak immunity)."
+      ],
+      "feeding": [
+       "Feed gut-loaded live insects dusted with calcium, snails and chopped vegetables and flowers sprinkled with a reptile supplement; avoid pet food and too many mealworms.",
+       "Offer about 5 to 10% of its body weight at each meal, which is about 25 to 50 g for a 500 g lizard.",
+       "Offer meals in the warm part of the day, only once it has basked and warmed up fully, as a cold lizard cannot digest food.",
+       "Put food in a shallow dish on the warm side and remove anything uneaten the same day.",
+       "Keep fresh water in a shallow dish it can climb out of easily, and change it daily."
+      ],
+      "activity": [
+       "Handle it as little and as quickly as possible: hold it gently behind the head and support the hips and back legs, never by the tail, as it can drop its tail.",
+       "Add leaf litter, bark and a flat rock to explore and bask on, and scatter some insects so it forages as it would in the wild.",
+       "Keep it away from pets and noise, and do not try to tame it."
+      ],
+      "care": [
+       "If it drops its tail, keep it in a fly-free enclosure for two weeks and put nothing on the stump."
+      ],
+      "daily_checks": [
+       "Basking spot warm",
+       "UV light on 12 hours",
+       "Food eaten recorded",
+       "Water dish fresh",
+       "Enclosure cleaned"
+      ],
+      "log_days": 14,
+      "feed_calc": {
+       "applies": false,
+       "what": "",
+       "weight_g": 500,
+       "stage": "Adult",
+       "percent_body_weight_per_day": null,
+       "feeds_per_day": null,
+       "basis": "Adult lizard eating insects and vegetables by itself, not a measured milk feed.",
+       "sure": true
+      },
+      "release": {
+       "ready_when": [
+        "Eating well by itself and holding or gaining weight.",
+        "Alert and active, moving normally, hiding and wary of people.",
+        "Clear eyes and nose, quiet breathing and normal droppings.",
+        "The forecast is 20°C or more for three days running; in autumn or winter this usually means staying in care, kept warm, until spring."
+       ],
+       "target_weight": "About 500 g, holding at or above its arrival weight",
+       "how": [
+        "Release it within 24 hours of it being ready, on a warm, calm day.",
+        "Carry it in a small lined, well-ventilated box.",
+        "Release it in the warm part of the day while blue-tongues are active, never in extreme heat, cold, wind or rain.",
+        "Place it beside dense cover such as leaf litter, a log or thick ground plants and let it walk off on its own."
+       ],
+       "where": "Release it exactly where it was found (recorded by GPS coordinates or a Melways reference), or at the closest suitable spot within its home range, and never anywhere else."
+      },
+      "escalate": {
+       "vet": [
+        "Weight changes by more than 10% from its starting weight.",
+        "Not eating for a week while kept at the right temperature.",
+        "Runny or bloody droppings, or no droppings for over a week.",
+        "Bubbles or discharge from the nose or mouth, or noisy breathing."
+       ],
+       "urgent": [
+        "Limp, floppy or not responding even when warm: give nothing by mouth on the way.",
+        "Open-mouth breathing or gasping.",
+        "Bleeding, a burn, or a new wound.",
+        "Caught by a cat or dog: a vet the same day, even if no wound can be seen."
+       ]
+      },
+      "rehydration": {
+       "needed": false,
+       "weight_g": null,
+       "dehydration_pct": null,
+       "steps": []
+      },
+      "species_group": "bluetongue",
+      "next_visit": "",
+      "sources": [
+       "vic-cop-welfare-wildlife-rehabilitation",
+       "vic-release-requirements",
+       "vic-shelter-foster-carer-authorisation",
+       "vic-authorisation-guide-first-aid",
+       "vic-rehab-guidelines-part-a"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "sccockatoo",
+   "name": "Sulphur-crested cockatoo",
+   "plans": [
+    {
+     "id": "lib-sccockatoo-nestling",
+     "stage": "Nestling",
+     "weight": "about 350 g",
+     "text": "Ready-made plan: an orphaned sulphur-crested cockatoo nestling, about 350 g, with pin feathers coming through. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a nestling like this, from today until release. Use day and week numbers, not calendar dates.",
+     "sheet": {
+      "animal": "Orphaned sulphur-crested cockatoo nestling",
+      "case_number": "",
+      "species": "Sulphur-crested cockatoo (Cacatua galerita)",
+      "kind": "wildlife",
+      "summary": "This orphaned sulphur-crested cockatoo nestling, about 350 g with pin feathers coming through, is healthy and ready to be hand-reared. The goal is to raise it to a strong, wild, self-feeding young bird and release it with a local flock where it was found.",
+      "photo_findings": [],
+      "medications": [],
+      "plan": [
+       {
+        "when": "About weeks 1 to 4",
+        "tasks": [
+         "Thicken the formula step by step as its pin feathers open, dropping to 3 to 4 feeds a day."
+        ]
+       },
+       {
+        "when": "About weeks 5 to 7 (fully feathered)",
+        "tasks": [
+         "Move it to a sturdy cage with low perches and start offering soaked seed and soft food in a dish.",
+         "Drop to 1 to 2 hand-feeds a day as it eats more on its own."
+        ]
+       },
+       {
+        "when": "About weeks 8 to 10",
+        "tasks": [
+         "Stop hand-feeding once it eats on its own and holds its weight; sulphur-crested cockatoos are usually weaned at about 16 weeks old.",
+         "Move it to an outdoor flight aviary to build flying fitness, ideally with other young cockatoos."
+        ]
+       }
+      ],
+      "housing": [
+       "Keep it in a small container lined with paper towel, like a nest, inside a heated box at the temperature the app shows for its stage, with room to move away from the heat; lower the heat bit by bit as its feathers cover its body.",
+       "Keep it in a quiet room on its own, in a separate air space from any pet birds, with its own dishes and cleaning gear, as serious diseases pass between wild and pet birds through the air.",
+       "Change the lining whenever it is soiled and clean up droppings after each feed.",
+       "Wear gloves, a surgical or N95 mask and eye protection when handling it or cleaning, and wash your hands with soap afterwards, as wild parrots in Victoria often carry psittacosis; disinfect dishes and cages with Virkon S at 2% left on for at least 10 minutes, as beak and feather disease survives ordinary cleaners."
+      ],
+      "feeding": [
+       "Feed Passwell Hand Rearing Food or Wombaroo Granivore Rearing Mix, the hand-rearing formula for parrots and cockatoos, mixed at 1 g of powder to 3 mL of water while it is in pin feathers, then thicker (1 g to 2.5 mL, then 1 g to 2 mL) as its feathers open.",
+       "Give the amount in the feed calculator each day, split evenly across the feeds, which is up to about 10% of its body weight at each feed, stopping when the crop is comfortably full. The Wombaroo guide for sulphur-crested cockatoos starts at about 2 mL a feed at hatching and peaks at about four 40 mL feeds a day at 4 weeks old.",
+       "Give 5 feeds a day, about 6 am, 10 am, 2 pm, 6 pm and 10 pm, then leave it about 6 hours overnight so the crop empties fully at least once a day.",
+       "Feed it from a small spoon with the sides bent up, letting it pump and swallow at its own pace, and stop if food comes out of its nostrils; never squirt food into its open beak with a syringe, as it can inhale it.",
+       "Mix each feed fresh with pre-boiled water at about 50°C, let it stand 2 minutes, feed it at 38 to 40°C (test it on your wrist) and throw out what is left.",
+       "Wipe its beak and face clean with a warm damp cloth after each feed so formula does not dry on its feathers.",
+       "It gets its fluid from the formula, so it needs no water dish until it starts eating on its own.",
+       "Once it is fully feathered, offer soaked or sprouted seed, defrosted peas and corn mixed with Parrot Soft Food, and seeding grasses, gum nuts, sheoak and banksia cones in a shallow dish, and cut back hand-feeds as it eats more by itself."
+      ],
+      "activity": [
+       "Handle it only for feeds, weighing and cleaning, quickly and gently, and do not talk to it or let visitors see it, as young parrots tame very easily.",
+       "If another young sulphur-crested cockatoo is in care with an experienced bird carer, raising them together helps it grow up knowing its own kind.",
+       "From the aviary stage, give it seeding grasses, gum nuts, sheoak and banksia cones and fresh branches to forage and chew."
+      ],
+      "care": [
+       "Weigh it every morning at the same time, before the first feed, and enter the weight so the feed calculator stays right.",
+       "Keep a daily record of its weight, feeds and progress; your authorisation requires records to be kept for 3 years."
+      ],
+      "daily_checks": [
+       "Morning weight recorded",
+       "Crop empty overnight",
+       "Droppings look normal",
+       "Nest clean and warm",
+       "Feathers growing well"
+      ],
+      "log_days": 14,
+      "feed_calc": {
+       "applies": true,
+       "what": "Passwell Hand Rearing Food or Granivore Rearing Mix",
+       "weight_g": 350,
+       "stage": "Nestling in pin feathers (eyes open)",
+       "percent_body_weight_per_day": 50,
+       "feeds_per_day": 5,
+       "basis": "Wombaroo parrot hand-rearing table: up to 10% of body weight a feed, 5 feeds a day at pin-feather stage.",
+       "sure": false
+      },
+      "release": {
+       "ready_when": [
+        "Eats seed and natural foods on its own and holds its weight",
+        "Flies strongly and lands well the length of the aviary",
+        "Full, healthy feathers with no signs of feather or beak disease",
+        "Wary of people"
+       ],
+       "target_weight": "About 850 g for a sulphur-crested cockatoo",
+       "how": [
+        "Release it within 24 hours of it being ready.",
+        "Choose a calm, mild morning, never extreme weather, so it has the day to settle.",
+        "Carry it in a lined, ventilated box, open it near trees and cover, and step well back.",
+        "Sulphur-crested cockatoos live in flocks, so release it where a local flock is feeding, with any cockatoos it was raised with."
+       ],
+       "where": "Release it where it was found (recorded with GPS coordinates or a Melways reference), or if that spot is unsuitable, at the closest suitable place within its home range; Victorian rules do not allow release anywhere else."
+      },
+      "escalate": {
+       "vet": [
+        "Crop still full in the morning, or slow to empty between feeds",
+        "Weight drops, or stays the same for two days",
+        "Watery or oddly coloured droppings for more than a day",
+        "Feathers that look pinched, curled or bloody, or a beak that looks overgrown, which can mean beak and feather disease"
+       ],
+       "urgent": [
+        "Cold, cannot hold its head up or has collapsed: give nothing by mouth on the way",
+        "Food bubbling from its nostrils, or struggling to breathe",
+        "Tremors, a twisted neck or poor balance, which can be bird flu: also ring the Emergency Animal Disease Watch Hotline on 1800 675 888",
+        "Caught by a cat or dog: a vet the same day, even if no wound can be seen"
+       ]
+      },
+      "rehydration": {
+       "needed": false,
+       "weight_g": null,
+       "dehydration_pct": null,
+       "steps": []
+      },
+      "species_group": "bird",
+      "next_visit": "",
+      "sources": [
+       "vic-cop-welfare-wildlife-rehabilitation",
+       "vic-release-requirements",
+       "vic-rehabilitator-authorisation-conditions",
+       "vic-shelter-foster-carer-authorisation",
+       "vic-rehab-guidelines-part-a",
+       "vic-h5-bird-flu-wildlife-rehabilitators",
+       "wombaroo-native-birds-feeding-guidelines",
+       "wires-helping-chicks"
+      ]
+     }
+    },
+    {
+     "id": "lib-sccockatoo-adult",
+     "stage": "Adult",
+     "weight": "about 850 g",
+     "text": "Ready-made plan: an adult sulphur-crested cockatoo, about 850 g, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a cockatoo like this, from today until release. Use day and week numbers, not calendar dates.",
+     "sheet": {
+      "animal": "Adult sulphur-crested cockatoo",
+      "case_number": "",
+      "species": "Sulphur-crested cockatoo (Cacatua galerita)",
+      "kind": "wildlife",
+      "summary": "This adult sulphur-crested cockatoo, about 850 g, is recovering in care with no injuries needing treatment. The goal is to keep it calm and eating well, rebuild its flying fitness and return it to its flock where it was found as soon as it is fit.",
+      "photo_findings": [],
+      "medications": [],
+      "plan": [
+       {
+        "when": "Days 1 to 3",
+        "tasks": [
+         "Keep it in a covered hospital cage while it settles."
+        ]
+       },
+       {
+        "when": "Once eating well and moving normally",
+        "tasks": [
+         "Move it to an outdoor flight aviary to rebuild flying fitness."
+        ]
+       }
+      ],
+      "housing": [
+       "Keep it in a sturdy covered cage with natural branch perches, in a quiet, dim room at the temperature the app shows for adult birds.",
+       "Keep it in a quiet room on its own, in a separate air space from any pet birds, with its own dishes and cleaning gear, as serious diseases pass between wild and pet birds through the air.",
+       "Use an aviary with weathered or vinegar-washed wire, as new galvanised wire can poison parrots with zinc. Clean the floor and dishes daily.",
+       "Wear gloves, a surgical or N95 mask and eye protection when handling it or cleaning, and wash your hands with soap afterwards, as wild parrots in Victoria often carry psittacosis; disinfect dishes and cages with Virkon S at 2% left on for at least 10 minutes, as beak and feather disease survives ordinary cleaners."
+      ],
+      "feeding": [
+       "Offer a parrot seed mix (not one heavy in sunflower or other oily seed) with natural foods such as seeding grasses, gum nuts, sheoak and banksia cones, plus defrosted peas and corn mixed with Parrot Soft Food; never avocado, bread or dairy.",
+       "An adult sulphur-crested cockatoo eats about 66 g of food a day; weigh what you put in and what is left so you know it is eating.",
+       "Put the food in shallow dishes on the floor and near a perch, and top it up every morning.",
+       "Keep fresh water in a shallow dish at all times and change it every day.",
+       "Once in the aviary, offer most of its food as natural seed heads, cones and branches so it is foraging for itself before release."
+      ],
+      "activity": [
+       "Handle it as little and as quickly as possible, wrapped in a thick towel with your hand firmly behind its head, as cockatoos bite very hard; do not try to tame it.",
+       "Give it fresh branches to chew every few days, and keep pets, children and noise well away from its cage."
+      ],
+      "care": [
+       "If you develop a fever, headache or cough, tell your doctor you work with wild birds."
+      ],
+      "daily_checks": [
+       "Food eaten, dish topped up",
+       "Fresh water given",
+       "Perching steadily",
+       "Droppings look normal",
+       "Breathing quiet"
+      ],
+      "log_days": 14,
+      "feed_calc": {
+       "applies": false,
+       "what": "",
+       "weight_g": 850,
+       "stage": "Adult",
+       "percent_body_weight_per_day": null,
+       "feeds_per_day": null,
+       "basis": "Adult eating seed and natural foods; no measured milk or formula amount.",
+       "sure": true
+      },
+      "release": {
+       "ready_when": [
+        "Flies strongly and lands well the length of the aviary",
+        "Eating natural foods and holding its weight",
+        "Feathers in good condition and needing no more care",
+        "Alert and wary of people"
+       ],
+       "target_weight": "About 850 g, holding at or above its arrival weight",
+       "how": [
+        "Release it within 24 hours of it being ready.",
+        "Choose a calm, mild morning, never extreme weather.",
+        "Carry it in a lined, ventilated box, open it near trees and cover, and step well back.",
+        "Release it where a local flock of sulphur-crested cockatoos is feeding, as flocking birds settle best into an existing group."
+       ],
+       "where": "Release it where it was found (recorded with GPS coordinates or a Melways reference), or if that spot is unsuitable, at the closest suitable place within its home range; Victorian rules do not allow release anywhere else."
+      },
+      "escalate": {
+       "vet": [
+        "Not eating, or losing weight two days running",
+        "Watery or oddly coloured droppings for more than a day",
+        "Not flying properly once in the flight aviary",
+        "Feathers that look pinched, curled or bloody, or a beak that looks overgrown, which can mean beak and feather disease"
+       ],
+       "urgent": [
+        "Fluffed up, sleepy on the floor or collapsed: give nothing by mouth on the way",
+        "Struggling to breathe, or tail bobbing with each breath",
+        "Tremors, a twisted neck or poor balance, which can be bird flu: also ring the Emergency Animal Disease Watch Hotline on 1800 675 888",
+        "Bleeding or a new injury"
+       ]
+      },
+      "rehydration": {
+       "needed": false,
+       "weight_g": null,
+       "dehydration_pct": null,
+       "steps": []
+      },
+      "species_group": "bird",
+      "next_visit": "",
+      "sources": [
+       "vic-cop-welfare-wildlife-rehabilitation",
+       "vic-release-requirements",
+       "vic-rehabilitator-authorisation-conditions",
+       "vic-shelter-foster-carer-authorisation",
+       "vic-rehab-guidelines-part-a",
+       "vic-h5-bird-flu-wildlife-rehabilitators",
+       "wombaroo-native-birds-feeding-guidelines"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "ytbc",
+   "name": "Yellow-tailed black-cockatoo",
+   "plans": [
+    {
+     "id": "lib-ytbc-nestling",
+     "stage": "Nestling",
+     "weight": "about 400 g",
+     "text": "Ready-made plan: an orphaned yellow-tailed black-cockatoo nestling, about 400 g, with pin feathers coming through. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a nestling like this, from today until release. Use day and week numbers, not calendar dates.",
+     "sheet": {
+      "animal": "Orphaned yellow-tailed black-cockatoo nestling",
+      "case_number": "",
+      "species": "Yellow-tailed black-cockatoo (Zanda funerea)",
+      "kind": "wildlife",
+      "summary": "This orphaned yellow-tailed black-cockatoo nestling, about 400 g with pin feathers coming through, is healthy and ready to be hand-reared. The goal is to raise it to a strong, wild, self-feeding young bird and release it with a local flock where it was found.",
+      "photo_findings": [],
+      "medications": [],
+      "plan": [
+       {
+        "when": "About weeks 1 to 4",
+        "tasks": [
+         "Thicken the formula step by step as its pin feathers open, dropping to 3 to 4 feeds a day."
+        ]
+       },
+       {
+        "when": "About weeks 5 to 7 (fully feathered)",
+        "tasks": [
+         "Move it to a sturdy cage with low perches and start offering soaked seed and soft food in a dish.",
+         "Drop to 1 to 2 hand-feeds a day as it eats more on its own."
+        ]
+       },
+       {
+        "when": "About weeks 8 to 10",
+        "tasks": [
+         "Stop hand-feeding once it eats on its own and holds its weight; young black-cockatoos stay dependent for a long time, so expect weaning to take many weeks.",
+         "Move it to an outdoor flight aviary to build flying fitness, ideally with other young black-cockatoos."
+        ]
+       }
+      ],
+      "housing": [
+       "Keep it in a small container lined with paper towel, like a nest, inside a heated box at the temperature the app shows for its stage, with room to move away from the heat; lower the heat bit by bit as its feathers cover its body.",
+       "Keep it in a quiet room on its own, in a separate air space from any pet birds, with its own dishes and cleaning gear, as serious diseases pass between wild and pet birds through the air.",
+       "Change the lining whenever it is soiled and clean up droppings after each feed.",
+       "Wear gloves, a surgical or N95 mask and eye protection when handling it or cleaning, and wash your hands with soap afterwards, as wild parrots in Victoria often carry psittacosis; disinfect dishes and cages with Virkon S at 2% left on for at least 10 minutes, as beak and feather disease survives ordinary cleaners."
+      ],
+      "feeding": [
+       "Feed Passwell Hand Rearing Food or Wombaroo Granivore Rearing Mix, the hand-rearing formula for parrots and cockatoos, mixed at 1 g of powder to 3 mL of water while it is in pin feathers, then thicker (1 g to 2.5 mL, then 1 g to 2 mL) as its feathers open.",
+       "Give the amount in the feed calculator each day, split evenly across the feeds, which is up to about 10% of its body weight at each feed, stopping when the crop is comfortably full. There is no black-cockatoo chick chart, so this follows the general parrot hand-rearing guidance; check its progress with an experienced cockatoo carer.",
+       "Give 5 feeds a day, about 6 am, 10 am, 2 pm, 6 pm and 10 pm, then leave it about 6 hours overnight so the crop empties fully at least once a day.",
+       "Feed it from a small spoon with the sides bent up, letting it pump and swallow at its own pace, and stop if food comes out of its nostrils; never squirt food into its open beak with a syringe, as it can inhale it.",
+       "Mix each feed fresh with pre-boiled water at about 50°C, let it stand 2 minutes, feed it at 38 to 40°C (test it on your wrist) and throw out what is left.",
+       "Wipe its beak and face clean with a warm damp cloth after each feed so formula does not dry on its feathers.",
+       "It gets its fluid from the formula, so it needs no water dish until it starts eating on its own.",
+       "Once it is fully feathered, offer soaked or sprouted seed, defrosted peas and corn mixed with Parrot Soft Food, and banksia, hakea and casuarina cones, eucalypt seed and pine cones in a shallow dish, and cut back hand-feeds as it eats more by itself."
+      ],
+      "activity": [
+       "Handle it only for feeds, weighing and cleaning, quickly and gently, and do not talk to it or let visitors see it, as young parrots tame very easily.",
+       "If another young yellow-tailed black-cockatoo is in care with an experienced bird carer, raising them together helps it grow up knowing its own kind.",
+       "From the aviary stage, give it banksia, hakea and casuarina cones, eucalypt seed and pine cones and fresh branches to forage and chew."
+      ],
+      "care": [
+       "Weigh it every morning at the same time, before the first feed, and enter the weight so the feed calculator stays right.",
+       "Keep a daily record of its weight, feeds and progress; your authorisation requires records to be kept for 3 years.",
+       "Check it is a yellow-tailed black-cockatoo: if it could be a red-tailed or glossy black-cockatoo, which are threatened in Victoria, your authorisation requires you to tell the Conservation Regulator within 48 hours."
+      ],
+      "daily_checks": [
+       "Morning weight recorded",
+       "Crop empty overnight",
+       "Droppings look normal",
+       "Nest clean and warm",
+       "Feathers growing well"
+      ],
+      "log_days": 14,
+      "feed_calc": {
+       "applies": true,
+       "what": "Passwell Hand Rearing Food or Granivore Rearing Mix",
+       "weight_g": 400,
+       "stage": "Nestling in pin feathers (eyes open)",
+       "percent_body_weight_per_day": 50,
+       "feeds_per_day": 5,
+       "basis": "Wombaroo parrot hand-rearing table: up to 10% of body weight a feed, 5 feeds a day at pin-feather stage.",
+       "sure": false
+      },
+      "release": {
+       "ready_when": [
+        "Eats seed and natural foods on its own and holds its weight",
+        "Flies strongly and lands well the length of the aviary",
+        "Full, healthy feathers with no signs of feather or beak disease",
+        "Wary of people"
+       ],
+       "target_weight": "About 750 g for a yellow-tailed black-cockatoo",
+       "how": [
+        "Release it within 24 hours of it being ready.",
+        "Choose a calm, mild morning, never extreme weather, so it has the day to settle.",
+        "Carry it in a lined, ventilated box, open it near trees and cover, and step well back.",
+        "Yellow-tailed black-cockatoos travel in family groups and flocks, so release it where a local flock is feeding."
+       ],
+       "where": "Release it where it was found (recorded with GPS coordinates or a Melways reference), or if that spot is unsuitable, at the closest suitable place within its home range; Victorian rules do not allow release anywhere else."
+      },
+      "escalate": {
+       "vet": [
+        "Crop still full in the morning, or slow to empty between feeds",
+        "Weight drops, or stays the same for two days",
+        "Watery or oddly coloured droppings for more than a day",
+        "Feathers that look pinched, curled or bloody, or a beak that looks overgrown, which can mean beak and feather disease"
+       ],
+       "urgent": [
+        "Cold, cannot hold its head up or has collapsed: give nothing by mouth on the way",
+        "Food bubbling from its nostrils, or struggling to breathe",
+        "Tremors, a twisted neck or poor balance, which can be bird flu: also ring the Emergency Animal Disease Watch Hotline on 1800 675 888",
+        "Caught by a cat or dog: a vet the same day, even if no wound can be seen"
+       ]
+      },
+      "rehydration": {
+       "needed": false,
+       "weight_g": null,
+       "dehydration_pct": null,
+       "steps": []
+      },
+      "species_group": "bird",
+      "next_visit": "",
+      "sources": [
+       "vic-cop-welfare-wildlife-rehabilitation",
+       "vic-release-requirements",
+       "vic-rehabilitator-authorisation-conditions",
+       "vic-shelter-foster-carer-authorisation",
+       "vic-rehab-guidelines-part-a",
+       "vic-h5-bird-flu-wildlife-rehabilitators",
+       "wombaroo-native-birds-feeding-guidelines",
+       "wires-helping-chicks"
+      ]
+     }
+    },
+    {
+     "id": "lib-ytbc-adult",
+     "stage": "Adult",
+     "weight": "about 750 g",
+     "text": "Ready-made plan: an adult yellow-tailed black-cockatoo, about 750 g, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a cockatoo like this, from today until release. Use day and week numbers, not calendar dates.",
+     "sheet": {
+      "animal": "Adult yellow-tailed black-cockatoo",
+      "case_number": "",
+      "species": "Yellow-tailed black-cockatoo (Zanda funerea)",
+      "kind": "wildlife",
+      "summary": "This adult yellow-tailed black-cockatoo, about 750 g, is recovering in care with no injuries needing treatment. The goal is to keep it calm and eating well, rebuild its flying fitness and return it to its flock where it was found as soon as it is fit.",
+      "photo_findings": [],
+      "medications": [],
+      "plan": [
+       {
+        "when": "Days 1 to 3",
+        "tasks": [
+         "Keep it in a covered hospital cage while it settles."
+        ]
+       },
+       {
+        "when": "Once eating well and moving normally",
+        "tasks": [
+         "Move it to an outdoor flight aviary to rebuild flying fitness."
+        ]
+       }
+      ],
+      "housing": [
+       "Keep it in a sturdy covered cage with natural branch perches, in a quiet, dim room at the temperature the app shows for adult birds.",
+       "Keep it in a quiet room on its own, in a separate air space from any pet birds, with its own dishes and cleaning gear, as serious diseases pass between wild and pet birds through the air.",
+       "Use an aviary with weathered or vinegar-washed wire, as new galvanised wire can poison parrots with zinc. Clean the floor and dishes daily.",
+       "Wear gloves, a surgical or N95 mask and eye protection when handling it or cleaning, and wash your hands with soap afterwards, as wild parrots in Victoria often carry psittacosis; disinfect dishes and cages with Virkon S at 2% left on for at least 10 minutes, as beak and feather disease survives ordinary cleaners."
+      ],
+      "feeding": [
+       "Offer natural foods first, such as banksia, hakea and casuarina cones, eucalypt seed and pine cones, plus a parrot seed mix (not one heavy in sunflower or other oily seed); never avocado, bread or dairy.",
+       "An adult black-cockatoo eats about 40 to 55 g of food a day; weigh what you put in and what is left so you know it is eating.",
+       "Put the food in shallow dishes on the floor and near a perch, and top it up every morning.",
+       "Keep fresh water in a shallow dish at all times and change it every day.",
+       "Once in the aviary, offer most of its food as natural seed heads, cones and branches so it is foraging for itself before release."
+      ],
+      "activity": [
+       "Handle it as little and as quickly as possible, wrapped in a thick towel with your hand firmly behind its head, as black-cockatoos bite very hard; do not try to tame it.",
+       "Give it fresh branches to chew every few days, and keep pets, children and noise well away from its cage."
+      ],
+      "care": [
+       "If you develop a fever, headache or cough, tell your doctor you work with wild birds.",
+       "Check it is a yellow-tailed black-cockatoo: if it could be a red-tailed or glossy black-cockatoo, which are threatened in Victoria, your authorisation requires you to tell the Conservation Regulator within 48 hours."
+      ],
+      "daily_checks": [
+       "Food eaten, dish topped up",
+       "Fresh water given",
+       "Perching steadily",
+       "Droppings look normal",
+       "Breathing quiet"
+      ],
+      "log_days": 14,
+      "feed_calc": {
+       "applies": false,
+       "what": "",
+       "weight_g": 750,
+       "stage": "Adult",
+       "percent_body_weight_per_day": null,
+       "feeds_per_day": null,
+       "basis": "Adult eating seed and natural foods; no measured milk or formula amount.",
+       "sure": true
+      },
+      "release": {
+       "ready_when": [
+        "Flies strongly and lands well the length of the aviary",
+        "Eating natural foods and holding its weight",
+        "Feathers in good condition and needing no more care",
+        "Alert and wary of people"
+       ],
+       "target_weight": "About 750 g, holding at or above its arrival weight",
+       "how": [
+        "Release it within 24 hours of it being ready.",
+        "Choose a calm, mild morning, never extreme weather.",
+        "Carry it in a lined, ventilated box, open it near trees and cover, and step well back.",
+        "Release it where a local flock of yellow-tailed black-cockatoos is feeding, as they settle best into an existing group."
+       ],
+       "where": "Release it where it was found (recorded with GPS coordinates or a Melways reference), or if that spot is unsuitable, at the closest suitable place within its home range; Victorian rules do not allow release anywhere else."
+      },
+      "escalate": {
+       "vet": [
+        "Not eating, or losing weight two days running",
+        "Watery or oddly coloured droppings for more than a day",
+        "Not flying properly once in the flight aviary",
+        "Feathers that look pinched, curled or bloody, or a beak that looks overgrown, which can mean beak and feather disease"
+       ],
+       "urgent": [
+        "Fluffed up, sleepy on the floor or collapsed: give nothing by mouth on the way",
+        "Struggling to breathe, or tail bobbing with each breath",
+        "Tremors, a twisted neck or poor balance, which can be bird flu: also ring the Emergency Animal Disease Watch Hotline on 1800 675 888",
+        "Bleeding or a new injury"
+       ]
+      },
+      "rehydration": {
+       "needed": false,
+       "weight_g": null,
+       "dehydration_pct": null,
+       "steps": []
+      },
+      "species_group": "bird",
+      "next_visit": "",
+      "sources": [
+       "vic-cop-welfare-wildlife-rehabilitation",
+       "vic-release-requirements",
+       "vic-rehabilitator-authorisation-conditions",
+       "vic-shelter-foster-carer-authorisation",
+       "vic-rehab-guidelines-part-a",
+       "vic-h5-bird-flu-wildlife-rehabilitators",
+       "wombaroo-native-birds-feeding-guidelines"
+      ]
+     }
+    }
+   ]
   }
  ]
 };

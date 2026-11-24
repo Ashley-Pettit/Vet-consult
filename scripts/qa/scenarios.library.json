@@ -370,5 +370,191 @@
   "role": "carer",
   "mode": "carer",
   "text": "Ready-made plan: an adult microbat of a species not yet identified, about 5 to 10 g, in care and recovering, with no injuries needing treatment and no medicines. For vaccinated, trained carers only. Write a standard plan another carer can follow for a microbat like this, from today until release. Use day and week numbers, not calendar dates."
+ },
+ {
+  "id": "lib-penguin-juvenile",
+  "role": "carer",
+  "mode": "carer",
+  "text": "Ready-made plan: a juvenile little penguin, about 700 g, underweight but alert, found on a beach. No injuries and no medicines. Write a standard plan another carer can follow for a penguin like this, from today until release. Use day and week numbers, not calendar dates."
+ },
+ {
+  "id": "lib-penguin-adult",
+  "role": "carer",
+  "mode": "carer",
+  "text": "Ready-made plan: an adult little penguin, about 1.1 kg, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a penguin like this, from today until release. Use day and week numbers, not calendar dates."
+ },
+ {
+  "id": "lib-kookaburra-nestling",
+  "role": "carer",
+  "mode": "carer",
+  "text": "Ready-made plan: an orphaned laughing kookaburra nestling, about 200 g, with pin feathers coming through. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a nestling like this, from today until release. Use day and week numbers, not calendar dates."
+ },
+ {
+  "id": "lib-kookaburra-adult",
+  "role": "carer",
+  "mode": "carer",
+  "text": "Ready-made plan: an adult laughing kookaburra, about 350 g, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a kookaburra like this, from today until release. Use day and week numbers, not calendar dates."
+ },
+ {
+  "id": "lib-silvergull-chick",
+  "role": "carer",
+  "mode": "carer",
+  "text": "Ready-made plan: an orphaned silver gull chick, about 100 g, covered in down. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a chick like this, from today until release. Use day and week numbers, not calendar dates."
+ },
+ {
+  "id": "lib-silvergull-adult",
+  "role": "carer",
+  "mode": "carer",
+  "text": "Ready-made plan: an adult silver gull, about 280 g, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a gull like this, from today until release. Use day and week numbers, not calendar dates."
+ },
+ {
+  "id": "lib-kingparrot-nestling",
+  "role": "carer",
+  "mode": "carer",
+  "text": "Ready-made plan: an orphaned Australian king-parrot nestling, about 120 g, with pin feathers coming through. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a nestling like this, from today until release. Use day and week numbers, not calendar dates."
+ },
+ {
+  "id": "lib-kingparrot-adult",
+  "role": "carer",
+  "mode": "carer",
+  "text": "Ready-made plan: an adult Australian king-parrot, about 220 g, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a king-parrot like this, from today until release. Use day and week numbers, not calendar dates."
+ },
+ {
+  "id": "lib-swan-cygnet",
+  "role": "carer",
+  "mode": "carer",
+  "text": "Ready-made plan: an orphaned black swan cygnet, about 300 g, covered in grey down, a couple of weeks old. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a cygnet like this, from today until release. Use day and week numbers, not calendar dates."
+ },
+ {
+  "id": "lib-swan-adult",
+  "role": "carer",
+  "mode": "carer",
+  "text": "Ready-made plan: an adult black swan, about 5.5 kg, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a swan like this, from today until release. Use day and week numbers, not calendar dates."
+ },
+ {
+  "id": "lib-corella-nestling",
+  "role": "carer",
+  "mode": "carer",
+  "text": "Ready-made plan: an orphaned little corella nestling, about 200 g, with pin feathers coming through. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a nestling like this, from today until release. Use day and week numbers, not calendar dates."
+ },
+ {
+  "id": "lib-corella-adult",
+  "role": "carer",
+  "mode": "carer",
+  "text": "Ready-made plan: an adult little corella, about 400 g, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a corella like this, from today until release. Use day and week numbers, not calendar dates."
+ },
+ {
+  "id": "lib-raven-nestling",
+  "role": "carer",
+  "mode": "carer",
+  "text": "Ready-made plan: an orphaned Australian raven nestling, about 300 g, with pin feathers coming through. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a nestling like this, from today until release. Use day and week numbers, not calendar dates."
+ },
+ {
+  "id": "lib-raven-adult",
+  "role": "carer",
+  "mode": "carer",
+  "text": "Ready-made plan: an adult Australian raven, about 650 g, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a raven like this, from today until release. Use day and week numbers, not calendar dates."
+ },
+ {
+  "id": "lib-tern-chick",
+  "role": "carer",
+  "mode": "carer",
+  "text": "Ready-made plan: an orphaned crested tern chick, about 100 g, covered in down. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a chick like this, from today until release. Use day and week numbers, not calendar dates."
+ },
+ {
+  "id": "lib-tern-adult",
+  "role": "carer",
+  "mode": "carer",
+  "text": "Ready-made plan: an adult crested tern, about 350 g, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a tern like this, from today until release. Use day and week numbers, not calendar dates."
+ },
+ {
+  "id": "lib-sugarglider-joey",
+  "role": "carer",
+  "mode": "carer",
+  "text": "Ready-made plan: an orphaned sugar glider joey, about 40 g, furred with eyes open, drinking milk. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a joey like this, from today until release. Use day and week numbers, not calendar dates."
+ },
+ {
+  "id": "lib-sugarglider-adult",
+  "role": "carer",
+  "mode": "carer",
+  "text": "Ready-made plan: an adult sugar glider, about 120 g, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a glider like this, from today until release. Use day and week numbers, not calendar dates."
+ },
+ {
+  "id": "lib-kingfisher-nestling",
+  "role": "carer",
+  "mode": "carer",
+  "text": "Ready-made plan: an orphaned sacred kingfisher nestling, about 25 g, with pin feathers coming through. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a nestling like this, from today until release. Use day and week numbers, not calendar dates."
+ },
+ {
+  "id": "lib-kingfisher-adult",
+  "role": "carer",
+  "mode": "carer",
+  "text": "Ready-made plan: an adult sacred kingfisher, about 45 g, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a kingfisher like this, from today until release. Use day and week numbers, not calendar dates."
+ },
+ {
+  "id": "lib-mtbrushtail-joey",
+  "role": "carer",
+  "mode": "carer",
+  "text": "Ready-made plan: an orphaned mountain brushtail possum (bobuck) joey, about 500 g, furred with eyes open, drinking milk. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a joey like this, from today until release. Use day and week numbers, not calendar dates."
+ },
+ {
+  "id": "lib-mtbrushtail-adult",
+  "role": "carer",
+  "mode": "carer",
+  "text": "Ready-made plan: an adult mountain brushtail possum (bobuck), about 3.5 kg, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a possum like this, from today until release. Use day and week numbers, not calendar dates."
+ },
+ {
+  "id": "lib-rnwallaby-unfurred",
+  "role": "carer",
+  "mode": "carer",
+  "text": "Ready-made plan: an orphaned red-necked (Bennett's) wallaby joey, about 350 g, unfurred with eyes open and ears up. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a joey like this, from today until release. Use day and week numbers, not calendar dates."
+ },
+ {
+  "id": "lib-rnwallaby-furred",
+  "role": "carer",
+  "mode": "carer",
+  "text": "Ready-made plan: an orphaned red-necked (Bennett's) wallaby joey, about 2 kg, fully furred, spending most of its time in the pouch and drinking milk. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a joey like this, from today until release. Use day and week numbers, not calendar dates."
+ },
+ {
+  "id": "lib-rnwallaby-atfoot",
+  "role": "carer",
+  "mode": "carer",
+  "text": "Ready-made plan: a young-at-foot red-necked (Bennett's) wallaby, about 8 kg, grazing and being weaned off milk. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a wallaby like this, from today until release. Use day and week numbers, not calendar dates."
+ },
+ {
+  "id": "lib-blotched-juvenile",
+  "role": "carer",
+  "mode": "carer",
+  "text": "Ready-made plan: a juvenile blotched blue-tongue lizard, about 30 g. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a lizard like this, from today until release. Use day and week numbers, not calendar dates."
+ },
+ {
+  "id": "lib-blotched-adult",
+  "role": "carer",
+  "mode": "carer",
+  "text": "Ready-made plan: an adult blotched blue-tongue lizard, about 500 g, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a lizard like this, from today until release. Use day and week numbers, not calendar dates."
+ },
+ {
+  "id": "lib-sccockatoo-nestling",
+  "role": "carer",
+  "mode": "carer",
+  "text": "Ready-made plan: an orphaned sulphur-crested cockatoo nestling, about 350 g, with pin feathers coming through. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a nestling like this, from today until release. Use day and week numbers, not calendar dates."
+ },
+ {
+  "id": "lib-sccockatoo-adult",
+  "role": "carer",
+  "mode": "carer",
+  "text": "Ready-made plan: an adult sulphur-crested cockatoo, about 850 g, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a cockatoo like this, from today until release. Use day and week numbers, not calendar dates."
+ },
+ {
+  "id": "lib-ytbc-nestling",
+  "role": "carer",
+  "mode": "carer",
+  "text": "Ready-made plan: an orphaned yellow-tailed black-cockatoo nestling, about 400 g, with pin feathers coming through. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a nestling like this, from today until release. Use day and week numbers, not calendar dates."
+ },
+ {
+  "id": "lib-ytbc-adult",
+  "role": "carer",
+  "mode": "carer",
+  "text": "Ready-made plan: an adult yellow-tailed black-cockatoo, about 750 g, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a cockatoo like this, from today until release. Use day and week numbers, not calendar dates."
  }
 ]
