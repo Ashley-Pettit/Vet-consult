@@ -1036,9 +1036,13 @@ export function normaliseCareSheet(raw, knownSources = null) {
 }
 
 
-/** The parts of a care plan that can be edited as plain text: [key, label]. One item per line. */
+/** The parts of a care plan that can be edited as plain text: [key, label, hint]. One item per line. */
 export const PLAN_TEXT_PARTS = [
+  ['animal', 'Title', 'The animal, as named at the top of the plan.'],
   ['summary', 'Summary'],
+  ['medications', 'Medications', 'Each medicine on its own line, then "How:", "How often:", "How long:" and "Tip:" lines under it.'],
+  ['rehydration.steps', 'Rehydration steps'],
+  ['rehydration.table', 'Rehydration amounts', 'One line a day, in mL. Change a figure to set your own (it’s marked as set by hand); leave them to keep the protocol’s amounts.'],
   ['plan', 'Day-by-day plan'],
   ['housing', 'Housing'],
   ['feeding', 'Feeding'],
@@ -1052,26 +1056,78 @@ export const PLAN_TEXT_PARTS = [
   ['escalate.vet', 'Contact the vet within a day if'],
   ['escalate.urgent', 'Get vet help straight away if'],
 ];
-const SINGLE = new Set(['summary', 'release.where']);
+const SINGLE = new Set(['animal', 'summary', 'release.where']);
 const partOf = (c, key) => key.split('.').reduce((o, k) => (o ? o[k] : undefined), c);
 const lines = (t) => String(t || '').split('\n').map((x) => x.trim()).filter(Boolean);
+
+// Medicines as text: the name on its own line, then a labelled line for each detail.
+const MED_LABELS = [['how', 'How'], ['how_often', 'How often'], ['how_long', 'How long'], ['tip', 'Tip']];
+const medsToText = (meds) => (meds || []).map((m) => [`${m.name}:`, ...MED_LABELS.filter(([k]) => m[k]).map(([k, label]) => `${label}: ${m[k]}`)].join('\n')).join('\n');
+function textToMeds(text) {
+  const out = [];
+  const blank = (name) => ({ name, how: '', how_often: '', how_long: '', tip: '' });
+  for (const l of lines(text)) {
+    const m = l.match(/^(how often|how long|how|tip)\s*:\s*(.*)$/i);
+    if (!m) {
+      out.push(blank(l.replace(/:\s*$/, '').trim())); // any other line starts the next medicine
+      continue;
+    }
+    if (!out.length) out.push(blank(''));
+    const key = MED_LABELS.find(([, label]) => label.toLowerCase() === m[1].toLowerCase())[0];
+    const cur = out[out.length - 1];
+    cur[key] = cur[key] ? `${cur[key]} ${m[2]}` : m[2];
+  }
+  return out;
+}
+// Rehydration amounts as text, one line a day. Figures left as the protocol gives them stay worked out by the app.
+const mlPart = (v, what) => (v == null ? null : `${v} mL ${what}`);
+const tableToText = (r) => {
+  const t = rehydrationTable(r);
+  return t ? t.days.map((d) => `Day ${d.day}: ${[mlPart(d.total, 'in total'), mlPart(d.every4h, 'every 4 hours'), mlPart(d.every6h, 'every 6 hours')].filter(Boolean).join(', ')}`).join('\n') : '';
+};
+function textToTable(text) {
+  const rows = [];
+  for (const l of lines(text)) {
+    const m = l.match(/^day\s*(\d+)\s*[:.-]?\s*(.*)$/i);
+    const rest = m ? m[2] : l;
+    const find = (re) => (rest.match(re) || [])[1];
+    let [total, e4, e6] = [find(/([\d.]+)\s*(?:ml)?\s*(?:in\s+)?total/i), find(/([\d.]+)\s*(?:ml)?\s*(?:every|each)\s*4/i), find(/([\d.]+)\s*(?:ml)?\s*(?:every|each)\s*6/i)];
+    if (total == null && e4 == null && e6 == null) [total, e4, e6] = rest.match(/\d+(?:\.\d+)?/g) || [];
+    rows.push({ day: m ? Number(m[1]) : rows.length + 1, total_ml: total, every_4h_ml: e4, every_6h_ml: e6 });
+  }
+  return handTable(rows);
+}
 
 /** The plan as editable text, { key: text }. The day-by-day plan is a "When:" line, then one "- task" line each. */
 export function planToText(c) {
   const out = {};
   for (const [key] of PLAN_TEXT_PARTS) {
     const v = partOf(c, key);
-    out[key] = key === 'plan' ? (v || []).map((p) => [`${p.when}:`, ...p.tasks.map((t) => `- ${t}`)].join('\n')).join('\n') : SINGLE.has(key) ? String(v || '') : (v || []).join('\n');
+    if (key === 'medications') out[key] = medsToText(v);
+    else if (key === 'rehydration.table') out[key] = tableToText(c.rehydration);
+    else out[key] = key === 'plan' ? (v || []).map((p) => [`${p.when}:`, ...p.tasks.map((t) => `- ${t}`)].join('\n')).join('\n') : SINGLE.has(key) ? String(v || '') : (v || []).join('\n');
   }
   return out;
 }
 
 /** The plan with the edited text put back. In the day-by-day plan, a line ending in ":" starts a new step. */
 export function textToPlan(c, text) {
-  const next = { ...c, release: { ...c.release }, escalate: { ...c.escalate } };
+  const next = { ...c, release: { ...c.release }, escalate: { ...c.escalate }, rehydration: { ...(c.rehydration || {}) } };
   for (const [key] of PLAN_TEXT_PARTS) {
     if (!(key in text)) continue;
     let v;
+    if (key === 'medications') {
+      next.medications = textToMeds(text[key]);
+      continue;
+    }
+    if (key === 'rehydration.table') {
+      // Amounts the same as the protocol's stay worked out by the app (so a new weight still updates them).
+      const rows = textToTable(text[key]);
+      const { table, ...plain } = next.rehydration;
+      const proto = tableRows(rehydrationTable({ ...plain, needed: true }));
+      next.rehydration = rows && !sameRows(rows, proto) ? { ...plain, needed: true, table: rows } : plain;
+      continue;
+    }
     if (key === 'plan') {
       v = [];
       for (const l of lines(text[key])) {
@@ -1085,6 +1141,7 @@ export function textToPlan(c, text) {
     const [a, b] = key.split('.');
     if (b) next[a][b] = v;
     else next[a] = v;
+    if (key === 'rehydration.steps' && v.length) next.rehydration.needed = true;
   }
   return next;
 }

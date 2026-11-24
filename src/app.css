@@ -1815,3 +1815,7 @@ details.care-sec.fold .fold-actions { margin: 10px 0; }
 .case-box { margin: 10px 0 0; max-width: 320px; }
 .case-box input { padding: 10px 12px; font-variant-numeric: tabular-nums; }
 @media print { .case-box input { border: 0; padding: 0; } .case-box input:placeholder-shown { display: none; } .case-box:has(input:placeholder-shown) { display: none; } }
+
+/* Edit plan chooser: each choice with a line under it saying what it does. */
+.edit-choices .help { margin: -2px 0 6px; text-align: center; }
+.edit-form .field .help { margin: 0 0 4px; }

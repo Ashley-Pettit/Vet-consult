@@ -2038,7 +2038,7 @@ function renderSaved() {
         el('span', { class: 'lib-weight', text: savedLabel(p) }),
       ]);
       // Two clear choices: change what the plan says, or change its name.
-      const edit = el('button', { type: 'button', class: 'link saved-act', 'aria-label': `Edit ${p.name}`, onclick: () => { openSavedPlan(p.id); $('care-edit').click(); } }, 'Edit plan');
+      const edit = el('button', { type: 'button', class: 'link saved-act', 'aria-label': `Edit ${p.name}`, onclick: () => { openSavedPlan(p.id); askEditHow(); } }, 'Edit plan');
       const rename = el('button', { type: 'button', class: 'link saved-act', 'aria-label': `Rename ${p.name}` }, 'Rename');
       rename.addEventListener('click', () => {
         const input = el('input', { type: 'text', class: 'saved-name', 'aria-label': 'Plan name', maxlength: '80' });
@@ -2079,28 +2079,49 @@ $('care-reset').addEventListener('click', () => {
 });
 
 // Edit as text: one box per part of the plan, one item per line.
-$('care-edit').addEventListener('click', () => {
+function openTextEdit() {
   if (!careSheet) return;
   const text = planToText(careSheet);
+  const rehydrating = Boolean(careSheet.rehydration && careSheet.rehydration.needed);
   $('edit-form').replaceChildren(
-    ...PLAN_TEXT_PARTS.map(([key, label]) => {
+    ...PLAN_TEXT_PARTS.filter(([key]) => rehydrating || !key.startsWith('rehydration.')).map(([key, label, hint]) => {
       const id = `edit-${key.replace('.', '-')}`;
-      // Tall enough for the text as it wraps on a phone (about 40 characters a line), within reason.
-      const rows = text[key].split('\n').reduce((n, l) => n + Math.max(1, Math.ceil(l.length / 40)), 1);
-      const box = el('textarea', { id, name: key, rows: String(Math.min(14, Math.max(3, rows))) });
+      const hintEl = hint ? el('p', { class: 'help', id: `${id}-hint`, text: hint }) : null;
+      let box;
+      if (key === 'animal') {
+        box = el('input', { id, name: key, type: 'text', maxlength: '80', ...(hint ? { 'aria-describedby': `${id}-hint` } : {}) });
+      } else {
+        // Tall enough for the text as it wraps on a phone (about 40 characters a line), within reason.
+        const rows = text[key].split('\n').reduce((n, l) => n + Math.max(1, Math.ceil(l.length / 40)), 1);
+        box = el('textarea', { id, name: key, rows: String(Math.min(14, Math.max(3, rows))), ...(hint ? { 'aria-describedby': `${id}-hint` } : {}) });
+      }
       box.value = text[key];
-      return el('div', { class: 'field' }, [el('label', { for: id, text: label }), box]);
+      return el('div', { class: 'field' }, [el('label', { for: id, text: label }), hintEl, box].filter(Boolean));
     }),
   );
   showView('edit');
   $('edit-title').focus();
+}
+$('care-edit').addEventListener('click', openTextEdit);
+
+// Edit plan: change it with AI, or edit the words directly.
+function askEditHow() {
+  if (busy || !careSheet) return;
+  $('edit-choice').returnValue = '';
+  $('edit-choice').showModal();
+}
+$('edit-choice').addEventListener('close', () => {
+  const how = $('edit-choice').returnValue;
+  $('edit-choice').returnValue = '';
+  if (how === 'ai') changePlan();
+  else if (how === 'text') openTextEdit();
 });
 const leaveEdit = () => showView('care');
 $('edit-back').addEventListener('click', leaveEdit);
 $('edit-cancel').addEventListener('click', leaveEdit);
 $('edit-save').addEventListener('click', () => {
   if (!careSheet) return;
-  const text = Object.fromEntries([...$('edit-form').querySelectorAll('textarea')].map((t) => [t.name, t.value]));
+  const text = Object.fromEntries([...$('edit-form').querySelectorAll('textarea, input')].map((t) => [t.name, t.value]));
   const sheet = normaliseCareSheet(textToPlan(careSheet, text), null);
   carePlanChanged(sheet, 'Saved.');
 });
@@ -2700,7 +2721,7 @@ $('discharge-btn').addEventListener('click', openCare);
 $('copy-top').addEventListener('click', () => els.copy.click());
 $('care-back').addEventListener('click', () => (careFrom === 'library' || careFrom === 'saved' ? openLibrary() : showView(careFrom === 'note' ? 'note' : 'record')));
 // A plan made straight from the carer's words can take more info in place; one made from a vet note goes back to it.
-$('care-back-2').addEventListener('click', changePlan);
+$('care-back-2').addEventListener('click', askEditHow);
 // A typed case number stays with the plan: on the saved copy, in Recent, and on everything shared or printed from it.
 $('care-case').addEventListener('change', () => {
   if (!careSheet) return;
