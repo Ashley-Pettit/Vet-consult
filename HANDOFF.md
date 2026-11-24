@@ -69,6 +69,12 @@ Both copies share the same site, so settings, sign-in and drafts carry across wh
 
 ## Architecture in brief
 
+### Optional link to the care register
+
+In Google Forms, the form owner generates a prefilled responder link with `CASE_ID` in the admission ID short-answer question and gives it to carers privately. Each carer enters it under **Settings → Standard → Printouts and app → Care register form**.
+
+Choose **Log update in care register** from the care plan, the care plan start screen or the daily log start screen. Enter the Bunurong admission ID from the register. Only that ID goes into the link. The carer reviews and submits the update in Forms. The cage QR chart continues to use its own log.
+
 - **Build:** `scripts/build.mjs` (esbuild).
   - `dist/` is the ESM website with code-split chunks.
   - `dist-artifact/care-scribe.html` is one inline IIFE file for Claude.

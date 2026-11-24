@@ -5,6 +5,7 @@ import { withBaked, loadBaked } from './baked.js';
 import { withTemplate, withLiveRules, loadTemplates } from './templates.js';
 import { readDocument, DocError, MAX_DOCS, DOC_ACCEPT } from './docs.js';
 import { store } from './storage.js';
+import { careLogUrl } from './care-log.js';
 import { localChecks } from './clinical.js';
 import { dropUnsaidBrands } from './drugs.js';
 import { lostNote } from './factcheck.js';
@@ -1160,6 +1161,9 @@ function applyMode() {
   els.create.textContent = MODE_TEXT[m].button;
   els.transcript.placeholder = MODE_TEXT[m].placeholder + TYPO_NOTE;
   document.querySelectorAll('[data-modes]').forEach((n) => (n.hidden = !n.dataset.modes.split(' ').includes(m)));
+  const logConfigured = Boolean(careLogUrl(settings.careLogTemplate, 'CASE_ID'));
+  $('record-log-update').hidden = !logConfigured || !['carer', 'log'].includes(m);
+  $('plan-log-update').hidden = !logConfigured;
   // Media statements, expert witness statements and expert opinions sit together under Advanced, with a slider to pick one.
   const adv = ADVANCED.includes(m);
   $('adv-tab').setAttribute('aria-pressed', String(adv));
@@ -3873,6 +3877,8 @@ SET_TABS.forEach((t, i) => {
 
 async function openSettings(message, focus) {
   els.clinician.value = settings.clinician;
+  $('care-log-template').value = settings.careLogTemplate;
+  $('care-log-template').setCustomValidity('');
   renderAccount();
   $('drugs').value = settings.drugs || '';
   els.model.value = settings.model || CONFIG.defaultModel;
@@ -4264,11 +4270,43 @@ $('acct-fake').addEventListener('click', () => {
 els.openSettings.addEventListener('click', () => openSettings());
 $('close-settings').addEventListener('click', () => els.settings.close('close'));
 
+const logDialog = $('care-log');
+const caseInput = $('care-case-id');
+const logTemplate = $('care-log-template');
+for (const button of [$('record-log-update'), $('plan-log-update')]) {
+  button.addEventListener('click', () => {
+    caseInput.value = '';
+    logDialog.showModal();
+    caseInput.focus();
+  });
+}
+$('cancel-care-log').addEventListener('click', () => logDialog.close());
+$('care-log-form').addEventListener('submit', (event) => {
+  event.preventDefault();
+  const url = careLogUrl(settings.careLogTemplate, caseInput.value);
+  if (url) {
+    window.open(url, '_blank', 'noopener,noreferrer');
+    logDialog.close();
+  }
+});
+logDialog.addEventListener('close', () => { caseInput.value = ''; });
+logTemplate.addEventListener('input', () => logTemplate.setCustomValidity(''));
+$('settings-form').addEventListener('submit', (event) => {
+  if (!logTemplate.value.trim() || careLogUrl(logTemplate.value, 'CASE_ID')) return;
+  event.preventDefault();
+  showSettingsTab('standard');
+  logTemplate.setCustomValidity('Use a full Google Forms responder link with CASE_ID prefilled in the admission ID question.');
+  logTemplate.reportValidity();
+});
+
 els.settings.addEventListener('close', async () => {
   // Whatever way it's closed (Save, ✕, Escape, a tap outside), changes are kept: nothing typed is lost.
   const key = els.apiKey.value.trim();
   const next = { ...settings, photosOn: $('photos-on').checked, libraryAdmin: $('library-admin-on').checked, vetExtras: $('vet-extras-on').checked, template: $('template').value, drugs: $('drugs').value.slice(0, 3000), clinician: els.clinician.value.trim().slice(0, 80), model: els.model.value, apiKey: key, rememberKey: els.rememberKey.checked };
   // Shelter details live on their own (they travel with Ask a vet), but save with the rest.
+  const logValue = logTemplate.value.trim();
+  const logUrl = careLogUrl(logValue, 'CASE_ID');
+  next.careLogTemplate = logValue && !logUrl ? settings.careLogTemplate : logUrl;
   const shelter = { name: $('shelter-name').value.trim(), address: $('shelter-address').value.trim(), phone: $('shelter-phone').value.trim() };
   const shelterChanged = JSON.stringify(shelter) !== JSON.stringify(store.loadShelter());
   if (shelterChanged) store.saveShelter(shelter);

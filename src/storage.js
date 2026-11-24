@@ -86,6 +86,7 @@ export const store = {
     const sessionKey = read(session, SESSION_KEY, '');
     return {
       clinician: typeof s.clinician === 'string' ? s.clinician : '',
+      careLogTemplate: typeof s.careLogTemplate === 'string' ? s.careLogTemplate : '',
       vetReg: typeof s.vetReg === 'string' ? s.vetReg : '',
       drugs: typeof s.drugs === 'string' ? s.drugs : '',
       photosOn: s.photosOn !== false,
@@ -105,6 +106,7 @@ export const store = {
   saveSettings(s) {
     write(local, SETTINGS, {
       clinician: s.clinician || '',
+      careLogTemplate: s.careLogTemplate || '',
       vetReg: String(s.vetReg || '').slice(0, 40),
       drugs: String(s.drugs || '').slice(0, 3000),
       photosOn: s.photosOn !== false,

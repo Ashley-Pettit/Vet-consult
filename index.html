@@ -115,6 +115,7 @@
     <p class="mode-intro" data-modes="cage">New patient? Take a photo and add a few words. You get its chart and a QR code for the cage: staff scan it to read the chart and add to it.</p>
     <p class="mode-intro" data-modes="intake">Just picked one up? Talk through the rescue: where, when, what you saw and what you did.</p>
     <p class="mode-intro" data-modes="log">Talk through today: weight, feeds, meds, toileting and anything you’re watching.</p>
+    <button type="button" class="link" id="record-log-update" hidden>Log update in care register</button>
     <p class="mode-intro" data-modes="carer" data-roles-text="carer">Describe the animal and what it needs. You get a plan another carer can follow on their own.</p>
     <p class="mode-intro" data-modes="carer" data-roles-text="vet">Talk through the animal and its treatment. Shorthand is fine. You get a plan the carer can follow on their own.</p>
     <p class="mode-intro" data-modes="mop">On a call about a found animal? Talk it through. You get a short first-aid plan and a text to send the caller until it reaches a vet or shelter.</p>
@@ -294,6 +295,7 @@
       </div>
     </div>
     <p id="care-banner" class="banner" data-tone="info" hidden></p>
+    <button type="button" class="link" id="plan-log-update" hidden>Log update in care register</button>
     <section id="care-endorse" class="endorse" aria-live="polite" hidden>
       <p class="endorse-title" id="endorse-title"></p>
       <p class="endorse-text" id="endorse-text"></p>
@@ -490,6 +492,21 @@
   </footer>
 </main>
 
+<dialog id="care-log" class="confirm" aria-labelledby="care-log-title">
+  <form id="care-log-form" method="dialog">
+    <h2 id="care-log-title">Log a care update</h2>
+    <div class="field">
+      <label for="care-case-id">Bunurong admission ID</label>
+      <input id="care-case-id" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" pattern=".*\S.*" required>
+      <p class="help">Enter the animal’s ID from the care register. The Google Form opens in a new tab.</p>
+    </div>
+    <div class="dlg-actions">
+      <button type="button" class="btn ghost" id="cancel-care-log">Cancel</button>
+      <button type="submit" class="btn primary">Open care form</button>
+    </div>
+  </form>
+</dialog>
+
 <dialog id="settings" aria-labelledby="settings-title">
   <form method="dialog" id="settings-form" novalidate>
     <div class="dlg-head">
@@ -530,6 +547,11 @@
 
     <section class="set-group" aria-labelledby="set-app">
       <h3 class="set-title" id="set-app">Printouts and app</h3>
+      <div class="field">
+        <label for="care-log-template">Care register form (optional)</label>
+        <input id="care-log-template" type="text" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="care-log-help">
+        <p class="help" id="care-log-help">Paste a Google Forms prefilled link with CASE_ID in the admission ID question. This enables Log update on this device.</p>
+      </div>
       <div class="field home-field" id="home-field" hidden>
         <p class="field-label">Add to Home Screen</p>
         <p class="help" id="home-help"></p>
