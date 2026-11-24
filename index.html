@@ -354,6 +354,10 @@
       <p class="muted">One item per line. In the day-by-day plan, write when on its own line ending with a colon (for example "Week 2:"), then each job on the lines below it.</p>
     </div>
     <form id="edit-form" class="edit-form" novalidate></form>
+    <div class="edit-ai">
+      <button type="button" class="btn ghost" id="edit-ai"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2.5" width="6" height="12" rx="3"/><path d="M5 10.5a7 7 0 0 0 14 0"/><path d="M12 17.5v4"/></svg>Tell the AI what to change</button>
+      <p class="help">Say or type what’s changed and the AI updates every part of the plan it affects. Your edits here are saved first.</p>
+    </div>
     <div class="actions">
       <button type="button" class="btn ghost" id="edit-cancel">Cancel</button>
       <button type="button" class="btn primary" id="edit-save">Save plan</button>
@@ -861,19 +865,6 @@
   </form>
 </dialog>
 
-
-<dialog id="edit-choice" class="confirm" aria-labelledby="edit-choice-title">
-  <form method="dialog">
-    <h2 id="edit-choice-title">Edit plan</h2>
-    <div class="share-actions edit-choices">
-      <button type="submit" class="btn primary" value="ai">Change it with AI</button>
-      <p class="help">Say or type what’s changed. The AI updates every part of the plan it affects.</p>
-      <button type="submit" class="btn ghost" value="text">Edit the text myself</button>
-      <p class="help">Change the words directly. No AI, and nothing else changes.</p>
-      <button type="submit" class="link" value="cancel">Cancel</button>
-    </div>
-  </form>
-</dialog>
 
 <dialog id="print-dlg" class="confirm" aria-labelledby="print-title">
   <form method="dialog">

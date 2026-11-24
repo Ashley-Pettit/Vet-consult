@@ -1040,9 +1040,9 @@ export function normaliseCareSheet(raw, knownSources = null) {
 export const PLAN_TEXT_PARTS = [
   ['animal', 'Title', 'The animal, as named at the top of the plan.'],
   ['summary', 'Summary'],
-  ['medications', 'Medications', 'Each medicine on its own line, then "How:", "How often:", "How long:" and "Tip:" lines under it.'],
+  ['medications', 'Medications', 'One row per medicine. Clear a row, or remove it, to take it off the plan.'],
   ['rehydration.steps', 'Rehydration steps'],
-  ['rehydration.table', 'Rehydration amounts', 'One line a day, in mL. Change a figure to set your own (it’s marked as set by hand); leave them to keep the protocol’s amounts.'],
+  ['rehydration.table', 'Rehydration amounts (mL)', 'Change a figure to set your own (it’s marked as set by hand). Leave them as they are to keep the protocol’s amounts.'],
   ['plan', 'Day-by-day plan'],
   ['housing', 'Housing'],
   ['feeding', 'Feeding'],
@@ -1098,6 +1098,19 @@ function textToTable(text) {
   return handTable(rows);
 }
 
+/** The rehydration amounts on screen as rows (day, total_ml, every_4h_ml, every_6h_ml), or null; and the protocol's own. */
+export const rehydrationRows = (r) => tableRows(rehydrationTable(r));
+export const protocolRows = (r) => {
+  const { table, ...plain } = r || {};
+  return tableRows(rehydrationTable({ ...plain, needed: true }));
+};
+/** The plan with these rehydration amounts. Amounts the same as the protocol's stay worked out by the app (so a new weight still updates them). */
+export function setRehydrationRows(c, raw) {
+  const rows = handTable(raw);
+  const { table, ...plain } = c.rehydration || {};
+  return { ...c, rehydration: rows && !sameRows(rows, protocolRows(plain)) ? { ...plain, needed: true, table: rows } : plain };
+}
+
 /** The plan as editable text, { key: text }. The day-by-day plan is a "When:" line, then one "- task" line each. */
 export function planToText(c) {
   const out = {};
@@ -1121,11 +1134,7 @@ export function textToPlan(c, text) {
       continue;
     }
     if (key === 'rehydration.table') {
-      // Amounts the same as the protocol's stay worked out by the app (so a new weight still updates them).
-      const rows = textToTable(text[key]);
-      const { table, ...plain } = next.rehydration;
-      const proto = tableRows(rehydrationTable({ ...plain, needed: true }));
-      next.rehydration = rows && !sameRows(rows, proto) ? { ...plain, needed: true, table: rows } : plain;
+      next.rehydration = setRehydrationRows(next, textToTable(text[key])).rehydration;
       continue;
     }
     if (key === 'plan') {

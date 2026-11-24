@@ -78,6 +78,9 @@ import {
   PLAN_TEXT_PARTS,
   planToText,
   textToPlan,
+  rehydrationRows,
+  protocolRows,
+  setRehydrationRows,
   buildCareSheetPrompt,
   extractJson,
   normaliseNote,
@@ -2038,7 +2041,7 @@ function renderSaved() {
         el('span', { class: 'lib-weight', text: savedLabel(p) }),
       ]);
       // Two clear choices: change what the plan says, or change its name.
-      const edit = el('button', { type: 'button', class: 'link saved-act', 'aria-label': `Edit ${p.name}`, onclick: () => { openSavedPlan(p.id); askEditHow(); } }, 'Edit plan');
+      const edit = el('button', { type: 'button', class: 'link saved-act', 'aria-label': `Edit ${p.name}`, onclick: () => { openSavedPlan(p.id); openTextEdit(); } }, 'Edit plan');
       const rename = el('button', { type: 'button', class: 'link saved-act', 'aria-label': `Rename ${p.name}` }, 'Rename');
       rename.addEventListener('click', () => {
         const input = el('input', { type: 'text', class: 'saved-name', 'aria-label': 'Plan name', maxlength: '80' });
@@ -2078,7 +2081,40 @@ $('care-reset').addEventListener('click', () => {
   toast('Back to the original ready-made plan.');
 });
 
-// Edit as text: one box per part of the plan, one item per line.
+// Edit plan: the plan as it reads, to change directly. Text boxes, one item per line; medicines and rehydration amounts as tables.
+const MED_COLS = [['name', 'Medication'], ['how', 'How'], ['how_often', 'How often'], ['how_long', 'How long'], ['tip', 'Tip']];
+const REHY_COLS = [['total_ml', 'Total'], ['every_4h_ml', 'Every 4 hours'], ['every_6h_ml', 'Every 6 hours']];
+const X_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+const gridInput = (name, value, label, extra = {}) => el('input', { type: 'text', name, value: value == null ? '' : String(value), 'aria-label': label, autocomplete: 'off', ...extra });
+
+function medRow(m = {}) {
+  const del = el('button', { type: 'button', class: 'eg-del', 'aria-label': `Remove ${m.name || 'this medicine'}`, title: 'Remove', onclick: (e) => e.currentTarget.closest('tr').remove() });
+  del.innerHTML = X_ICON;
+  return el('tr', {}, [...MED_COLS.map(([k, label]) => el('td', { 'data-label': label }, [gridInput(k, m[k], label, { maxlength: k === 'name' || k === 'how_long' ? '120' : '300' })])), el('td', { class: 'eg-x' }, [del])]);
+}
+function medGrid(c) {
+  const body = el('tbody', {}, (c.medications.length ? c.medications : [{}]).map(medRow));
+  return [
+    el('div', { class: 'eg-wrap' }, [
+      el('table', { class: 'edit-grid eg-meds' }, [el('thead', {}, [el('tr', {}, [...MED_COLS.map(([, h]) => el('th', { scope: 'col', text: h })), el('th', { class: 'eg-x' }, [el('span', { class: 'sr-only', text: 'Remove' })])])]), body]),
+    ]),
+    el('button', { type: 'button', class: 'btn small ghost eg-add', onclick: () => { const tr = medRow(); body.append(tr); tr.querySelector('input').focus(); } }, '+ Add a medicine'),
+  ];
+}
+function rehyGrid(c) {
+  const r = c.rehydration;
+  const rows = rehydrationRows(r) || [1, 2, 3].map((day) => ({ day }));
+  const body = el('tbody', {}, rows.map((x) => el('tr', { 'data-day': String(x.day) }, [el('th', { scope: 'row', text: `Day ${x.day}` }), ...REHY_COLS.map(([k, label]) => el('td', {}, [gridInput(k, x[k], `Day ${x.day}, ${label.toLowerCase()} (mL)`, { inputmode: 'decimal' })]))])));
+  const proto = r.table && protocolRows(r);
+  const reset = proto
+    ? el('button', { type: 'button', class: 'link eg-reset', onclick: () => proto.forEach((x) => { const tr = body.querySelector(`tr[data-day="${x.day}"]`); if (tr) REHY_COLS.forEach(([k]) => { tr.querySelector(`[name="${k}"]`).value = x[k] ?? ''; }); }) }, 'Use the protocol’s amounts')
+    : null;
+  return [
+    el('div', { class: 'eg-wrap' }, [el('table', { class: 'edit-grid eg-rehy' }, [el('thead', {}, [el('tr', {}, [el('th', { scope: 'col', text: 'Day' }), ...REHY_COLS.map(([, h]) => el('th', { scope: 'col', text: h }))])]), body])]),
+    reset,
+  ];
+}
+let editBase = '';
 function openTextEdit() {
   if (!careSheet) return;
   const text = planToText(careSheet);
@@ -2087,43 +2123,55 @@ function openTextEdit() {
     ...PLAN_TEXT_PARTS.filter(([key]) => rehydrating || !key.startsWith('rehydration.')).map(([key, label, hint]) => {
       const id = `edit-${key.replace('.', '-')}`;
       const hintEl = hint ? el('p', { class: 'help', id: `${id}-hint`, text: hint }) : null;
+      const described = hint ? { 'aria-describedby': `${id}-hint` } : {};
+      if (key === 'medications' || key === 'rehydration.table') {
+        const grid = key === 'medications' ? medGrid(careSheet) : rehyGrid(careSheet);
+        return el('div', { class: 'field', role: 'group', 'aria-labelledby': `${id}-label`, ...described }, [el('p', { class: 'eg-label', id: `${id}-label`, text: label }), hintEl, ...grid].filter(Boolean));
+      }
       let box;
-      if (key === 'animal') {
-        box = el('input', { id, name: key, type: 'text', maxlength: '80', ...(hint ? { 'aria-describedby': `${id}-hint` } : {}) });
-      } else {
+      if (key === 'animal') box = el('input', { id, type: 'text', 'data-part': key, maxlength: '80', ...described });
+      else {
         // Tall enough for the text as it wraps on a phone (about 40 characters a line), within reason.
         const rows = text[key].split('\n').reduce((n, l) => n + Math.max(1, Math.ceil(l.length / 40)), 1);
-        box = el('textarea', { id, name: key, rows: String(Math.min(14, Math.max(3, rows))), ...(hint ? { 'aria-describedby': `${id}-hint` } : {}) });
+        box = el('textarea', { id, 'data-part': key, rows: String(Math.min(14, Math.max(3, rows))), ...described });
       }
       box.value = text[key];
       return el('div', { class: 'field' }, [el('label', { for: id, text: label }), hintEl, box].filter(Boolean));
     }),
   );
+  editBase = JSON.stringify(editedSheet());
   showView('edit');
   $('edit-title').focus();
 }
-$('care-edit').addEventListener('click', openTextEdit);
-
-// Edit plan: change it with AI, or edit the words directly.
-function askEditHow() {
-  if (busy || !careSheet) return;
-  $('edit-choice').returnValue = '';
-  $('edit-choice').showModal();
+/** The plan with what's in the editor. */
+function editedSheet() {
+  const form = $('edit-form');
+  const text = Object.fromEntries([...form.querySelectorAll('[data-part]')].map((t) => [t.dataset.part, t.value]));
+  let sheet = textToPlan(careSheet, text);
+  const meds = form.querySelector('.eg-meds');
+  if (meds) {
+    const rows = [...meds.tBodies[0].rows].map((tr) => Object.fromEntries(MED_COLS.map(([k]) => [k, tr.querySelector(`[name="${k}"]`).value.trim()])));
+    sheet = { ...sheet, medications: rows.filter((m) => MED_COLS.some(([k]) => m[k])) };
+  }
+  const rehy = form.querySelector('.eg-rehy');
+  if (rehy) sheet = setRehydrationRows(sheet, [...rehy.tBodies[0].rows].map((tr) => ({ day: Number(tr.dataset.day), ...Object.fromEntries(REHY_COLS.map(([k]) => [k, tr.querySelector(`[name="${k}"]`).value])) })));
+  return normaliseCareSheet(sheet, null);
 }
-$('edit-choice').addEventListener('close', () => {
-  const how = $('edit-choice').returnValue;
-  $('edit-choice').returnValue = '';
-  if (how === 'ai') changePlan();
-  else if (how === 'text') openTextEdit();
-});
+$('care-edit').addEventListener('click', openTextEdit);
 const leaveEdit = () => showView('care');
 $('edit-back').addEventListener('click', leaveEdit);
 $('edit-cancel').addEventListener('click', leaveEdit);
 $('edit-save').addEventListener('click', () => {
   if (!careSheet) return;
-  const text = Object.fromEntries([...$('edit-form').querySelectorAll('textarea, input')].map((t) => [t.name, t.value]));
-  const sheet = normaliseCareSheet(textToPlan(careSheet, text), null);
-  carePlanChanged(sheet, 'Saved.');
+  carePlanChanged(editedSheet(), 'Saved.');
+});
+// The AI voice editor, from the bottom of the editor: edits made here are kept first, then say what else has changed.
+$('edit-ai').addEventListener('click', () => {
+  if (!careSheet || busy) return;
+  const sheet = editedSheet();
+  if (JSON.stringify(sheet) !== editBase) carePlanChanged(sheet, 'Your edits are saved.');
+  else showView('care');
+  changePlan();
 });
 
 /* ---------------- care plan ---------------- */
@@ -2721,7 +2769,7 @@ $('discharge-btn').addEventListener('click', openCare);
 $('copy-top').addEventListener('click', () => els.copy.click());
 $('care-back').addEventListener('click', () => (careFrom === 'library' || careFrom === 'saved' ? openLibrary() : showView(careFrom === 'note' ? 'note' : 'record')));
 // A plan made straight from the carer's words can take more info in place; one made from a vet note goes back to it.
-$('care-back-2').addEventListener('click', askEditHow);
+$('care-back-2').addEventListener('click', openTextEdit);
 // A typed case number stays with the plan: on the saved copy, in Recent, and on everything shared or printed from it.
 $('care-case').addEventListener('change', () => {
   if (!careSheet) return;

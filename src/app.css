@@ -1816,6 +1816,35 @@ details.care-sec.fold .fold-actions { margin: 10px 0; }
 .case-box input { padding: 10px 12px; font-variant-numeric: tabular-nums; }
 @media print { .case-box input { border: 0; padding: 0; } .case-box input:placeholder-shown { display: none; } .case-box:has(input:placeholder-shown) { display: none; } }
 
-/* Edit plan chooser: each choice with a line under it saying what it does. */
-.edit-choices .help { margin: -2px 0 6px; text-align: center; }
 .edit-form .field .help { margin: 0 0 4px; }
+/* Edit plan: tables edited as tables. Inputs fill their cells; the remove button sits at the row's end. */
+.eg-label { margin: 0; font-weight: 600; }
+.eg-wrap { overflow-x: auto; }
+.edit-grid { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+.edit-grid th { text-align: left; font-weight: 600; padding: 4px 6px; white-space: nowrap; color: var(--muted); }
+.edit-grid tbody th { color: var(--ink); }
+.edit-grid td { padding: 3px; vertical-align: top; }
+.edit-grid input { width: 100%; min-width: 0; padding: 8px 10px; }
+.eg-rehy td { width: 26%; }
+.eg-rehy input { font-variant-numeric: tabular-nums; }
+.eg-x { width: 44px; }
+.eg-del { display: grid; place-items: center; width: 40px; height: 40px; border: 0; border-radius: 10px; background: transparent; color: var(--muted); cursor: pointer; }
+.eg-del:hover, .eg-del:focus-visible { color: var(--ink); background: var(--accent-soft); }
+.eg-del svg { width: 18px; height: 18px; }
+.eg-add { align-self: flex-start; margin-top: 4px; }
+.eg-reset { align-self: flex-start; padding: 6px 0; }
+.edit-form .field { display: flex; flex-direction: column; gap: 6px; }
+/* Phones: each medicine stacks into a little card with its labels, as five columns won't fit. */
+@media (max-width: 719px) {
+  .eg-meds thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .eg-meds tr { display: grid; grid-template-columns: 1fr 44px; gap: 6px 4px; padding: 10px; margin-bottom: 8px; border: 1px solid var(--line); border-radius: 12px; }
+  .eg-meds td { display: block; grid-column: 1; padding: 0; }
+  .eg-meds td::before { content: attr(data-label); display: block; margin: 0 0 3px; font-size: 0.85rem; color: var(--muted); }
+  .eg-meds td.eg-x { grid-column: 2; grid-row: 1; }
+  .eg-meds td.eg-x::before { content: none; }
+}
+/* The AI voice editor, at the bottom of the editor. */
+.edit-ai { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; margin: 22px 0 8px; padding-top: 16px; border-top: 1px solid var(--line); }
+.edit-ai .btn { display: inline-flex; align-items: center; gap: 8px; }
+.edit-ai .btn svg { width: 20px; height: 20px; }
+.edit-ai .help { margin: 0; }
