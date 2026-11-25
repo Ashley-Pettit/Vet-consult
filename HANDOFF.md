@@ -71,9 +71,19 @@ Both copies share the same site, so settings, sign-in and drafts carry across wh
 
 ### Optional link to the care register
 
-In Google Forms, the form owner generates a prefilled responder link with `CASE_ID` in the admission ID short-answer question and gives it to carers privately. Each carer enters it under **Settings → Standard → Printouts and app → Care register form**.
+Each Google Form submission adds one observation to a linked Google Sheet. Filter the sheet by admission ID and sort by observation time to read one animal's care history.
 
-Choose **Log update in care register** from the care plan, the care plan start screen or the daily log start screen. Enter the Bunurong admission ID from the register. Only that ID goes into the link. The carer reviews and submits the update in Forms. The cage QR chart continues to use its own log.
+**Set up the register**
+
+1. Create three required questions for the admission ID (short answer), observation date and time (Victoria local time), and care update (paragraph). Under **Responses**, link the form to a Google Sheet. In the spreadsheet settings, set the time zone to Melbourne.
+2. Restrict the published form to authorised responders, collect verified email addresses, allow repeat submissions and turn off response summaries. Grant access to the response sheet separately to the people who manage the register. Responders can submit with form access alone.
+3. Generate a prefilled responder link with the literal `CASE_ID` in the admission ID field. Share it privately. In each browser that will launch the form, save the link under **Settings → Standard → Printouts and app → Care register form**.
+
+**Record an observation**
+
+Choose **Log update in care register** from an open care plan, the care plan start screen or the daily log start screen. Enter the admission ID from the register. The app opens the form with that ID as its only prefilled value. Check the ID, enter the time the observation took place, type or dictate the update, then review and submit it. The response sheet records the submission time separately from the observation time.
+
+To check a new setup, submit a clearly labelled fictional observation and confirm that one row arrives with the same admission ID and observation time. Sync runs one way, from Forms to Sheets. The historical Excel register and the cage QR chart have separate update workflows.
 
 - **Build:** `scripts/build.mjs` (esbuild).
   - `dist/` is the ESM website with code-split chunks.
