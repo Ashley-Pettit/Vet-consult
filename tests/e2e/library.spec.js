@@ -46,7 +46,8 @@ test('Change plan on a ready-made plan: an admin saves it to the library, withou
   await page.locator('#transcript').fill('My own words.');
   await page.locator('#open-library').click();
   await page.locator('.lib-animal', { hasText: 'Koala' }).locator('.lib-plan').first().click();
-  await page.locator('#care-back-2').click();
+  await page.locator('#care-back-2').click(); // Edit plan opens the editor; the AI change is one tap from there
+  await page.locator('#edit-ai').click();
   await page.locator('#more-text').fill('Add a line about hot days.');
   await page.locator('#more-go').click();
   await expect(page.locator('#care-sheet')).toContainText('Keep it cool and shaded on hot days.');

@@ -20,8 +20,12 @@ test('the Edit / Share bar stays on the bottom edge on a phone, and nothing is l
     const b = await bar.boundingBox();
     expect(Math.round(b.y + b.height)).toBe(vh);
   }
-  // At the very bottom, the Word printout button (the last thing before the bar) is fully above it.
-  const word = await page.locator('#word-care').boundingBox();
+  // At the very bottom, the last thing on the page before the bar is fully above it.
+  const lastBottom = await page.evaluate(() => {
+    let n = document.querySelector('#view-care > .actions').previousElementSibling;
+    while (n && !n.getClientRects().length) n = n.previousElementSibling;
+    return n.getBoundingClientRect().bottom;
+  });
   const b = await bar.boundingBox();
-  expect(word.y + word.height).toBeLessThanOrEqual(b.y);
+  expect(lastBottom).toBeLessThanOrEqual(b.y);
 });
