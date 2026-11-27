@@ -39,7 +39,8 @@ jobs:
           whois "$zone" 2>/dev/null | grep -iE '^(registrar|registrar name|reseller|name server|status)' | head -12 || true
       - name: Current Pages settings
         run: |
-          gh api "repos/${{ github.repository }}/pages" --jq '{url: .html_url, cname: .cname, https: .https_enforced, build: .build_type}' || true
+          gh api "repos/${{ github.repository }}/pages" --jq '{url: .html_url, cname: .cname, https: .https_enforced, build: .build_type, certificate: .https_certificate.state, certificate_domains: .https_certificate.domains}' || true
+          for u in "https://$DOMAIN/" "https://$DOMAIN/care/" "http://$DOMAIN/care/" "https://ashley-pettit.github.io/Vet-consult/care/"; do echo "$u -> $(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' "$u")"; done
       - name: Set the custom domain (only when the DNS already points at GitHub)
         if: inputs.action == 'apply'
         run: |
