@@ -38,7 +38,8 @@ jobs:
           sudo apt-get install -y -qq whois >/dev/null 2>&1 || true
           whois "$zone" 2>/dev/null | grep -iE '^(registrar|registrar name|reseller|name server|status)' | head -12 || true
       - name: Current Pages settings
-        run: gh api "repos/${{ github.repository }}/pages" --jq '{url: .html_url, cname: .cname, https: .https_enforced, build: .build_type}' || true
+        run: |
+          gh api "repos/${{ github.repository }}/pages" --jq '{url: .html_url, cname: .cname, https: .https_enforced, build: .build_type}' || true
       - name: Set the custom domain (only when the DNS already points at GitHub)
         if: inputs.action == 'apply'
         run: |
