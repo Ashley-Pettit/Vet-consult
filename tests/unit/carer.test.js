@@ -47,7 +47,7 @@ test('normalise drops invented source ids and keeps release for wildlife only', 
 
 test('plain text plan: release, escalation and Based on, no reporting to the vet', async () => {
   const t = careSheetText(normaliseCareSheet({ ...EXAMPLE_CARER_PLAN, sources: ['vic-shelter-foster-carer-authorisation'] }, SOURCE_IDS()), lookupSource);
-  assert.match(t, /^Care plan: Ringtail possum joey \(female\)/);
+  assert.match(t, /^Care plan - Ringtail possum joey \(female\)/);
   assert.match(t, /Release\nRelease checklist:\n\[ \] /);
   const { AI_NOTES } = await import('../../src/note.js');
   assert.ok(AI_NOTES.some((n) => t.includes(n)));

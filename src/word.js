@@ -128,7 +128,7 @@ export function careModel(c, lookup, photos = [], video = null) {
   if (c.next_visit) blocks.push({ heading: 'Next vet visit', text: c.next_visit });
   return {
     docType: 'Care plan',
-    title: c.animal ? `Care plan: ${c.animal}` : 'Care plan',
+    title: c.animal ? `Care plan - ${c.animal}` : 'Care plan',
     // The case number leads the title on the printout (and the file name), the way shelters file them.
     ...(c.kind === 'wildlife' && c.case_number ? { lead: c.case_number } : {}),
     aiNote: careAiNote(c),

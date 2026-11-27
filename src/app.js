@@ -2010,7 +2010,7 @@ function refreshSaveBtn() {
   btn.querySelector('svg').innerHTML = on ? STAR_ON : STAR_OFF;
   btn.querySelector('span').textContent = on ? 'Saved' : 'Save';
 }
-const planName = () => els.careTitle.textContent.replace(/\u00a0/g, ' ').replace(/^(Care plan|Care at home):\s*/i, '').trim() || 'Care plan';
+const planName = () => els.careTitle.textContent.replace(/\u00a0/g, ' ').replace(/^(Care plan|Care at home)\s*(?::|\s-)\s*/i, '').trim() || 'Care plan';
 function updateSavedPlan(sheet) {
   return savedId ? store.updateSaved(savedId, { sheet, savedAt: Date.now() }) : false;
 }
@@ -2328,7 +2328,7 @@ function feedChartModel(c) {
   help.push(...c.feeding.slice(0, help.length ? 3 : 4).map((x) => shortLine(x)));
   return {
     docType: 'Feeding chart',
-    title: els.careTitle.textContent.replace(/\u00a0/g, ' ').replace(/^Care plan:\s*/i, 'Feeding: '),
+    title: els.careTitle.textContent.replace(/\u00a0/g, ' ').replace(/^Care plan\s*(?::|\s-)\s*/i, 'Feeding: '),
     blocks: [],
     fridgeOnly: true,
     tickSheet: {
@@ -2625,7 +2625,7 @@ const leaveIt = (c) => (Number(c.log_days) || 0) <= 1 && !c.medications.length &
 function renderCare(c) {
   const sec = (title, items, cls) => (items.length ? el('section', { class: 'care-sec ' + (cls || '') }, [el('h2', { text: title }), list(items)]) : null);
   const name = c.animal || currentNote()?.patient.name || '';
-  els.careTitle.textContent = keepBrackets(c.kind === 'wildlife' ? `Care plan: ${name || 'wildlife in care'}` : `Caring for ${name || 'your animal'} at home`);
+  els.careTitle.textContent = keepBrackets(c.kind === 'wildlife' ? `Care plan - ${name || 'wildlife in care'}` : `Caring for ${name || 'your animal'} at home`);
   // The case number box, for wildlife: filled from the words if it was said, otherwise typed in.
   $('care-case-box').hidden = c.kind !== 'wildlife';
   $('care-case-label').textContent = region().caseLabel;

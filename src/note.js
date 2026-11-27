@@ -263,7 +263,7 @@ const AMEND_REPLY = `- Reply with ONLY a JSON object holding just the top-level 
 const AMEND_SECTIONS = `- For "sections", give only the sections you changed or added, each complete with its "heading" (keep existing headings exactly). A new section also gets "after": the heading it follows, or "" to go first. To remove a section, give {"heading":"...","remove":true}.`;
 
 // How a care plan's JSON shows on screen, so a change to the title or the rehydration table lands in the right key.
-const CARE_AMEND_MAP = `- The plan's title on screen is "Care plan: " followed by "animal". To change the title, change "animal" (80 characters at most, without "Care plan:").
+const CARE_AMEND_MAP = `- The plan's title on screen is "Care plan - " followed by "animal". To change the title, change "animal" (80 characters at most, without "Care plan -").
 - "rehydration" "table" holds the rehydration amounts on screen (mL), which the app works out from "weight_g" and "dehydration_pct" (Anne Fowler's protocol). A new weight goes in grams in BOTH "rehydration" "weight_g" and "feed_calc" "weight_g", with "table" set to null so the app works the amounts out again. If the person gives an amount of their own (for example "make the day 2 every 6 hours amount 5 mL"), change that figure in "table", keep that row consistent (total = 6 x every 4 hours = 4 x every 6 hours) and leave the other rows as they are. To go back to the protocol's amounts, set "table" to null. Never write fluid amounts in the steps.`;
 
 export function buildAmendPrompt(what, current, change) {
@@ -303,7 +303,7 @@ const plainObj = (v) => Boolean(v) && typeof v === 'object' && !Array.isArray(v)
 export function mergeCareAmend(current, reply) {
   const r = { ...obj(reply) };
   if (typeof r.title === 'string' && r.title.trim() && !('animal' in r)) {
-    r.animal = r.title.replace(/^\s*(care plan|caring for)\s*:?\s*/i, '').replace(/\s+at home\s*$/i, '').trim();
+    r.animal = r.title.replace(/^\s*(care plan|caring for)\s*[:\-–]?\s*/i, '').replace(/\s+at home\s*$/i, '').trim();
   }
   delete r.title;
   return mergeAmend(current, r);
@@ -1026,7 +1026,7 @@ export function normaliseCareSheet(raw, knownSources = null) {
       .filter((m) => m.name)
       .slice(0, 20),
     plan: (Array.isArray(r.plan) ? r.plan : [])
-      .map((p) => ({ when: str(obj(p).when, 120), tasks: arr(obj(p).tasks, 8) }))
+      .map((p) => ({ when: str(obj(p).when, 200), tasks: arr(obj(p).tasks, 8) }))
       .filter((p) => p.when && p.tasks.length)
       .slice(0, 8),
     housing: arr(r.housing, 10),
@@ -1153,7 +1153,7 @@ export function textToPlan(c, text) {
       v = [];
       for (const l of lines(text[key])) {
         const task = l.replace(/^[-•*]\s*/, '');
-        if (!/^[-•*]/.test(l) && /:$/.test(l) && l.length <= 121) v.push({ when: l.slice(0, -1).trim(), tasks: [] });
+        if (!/^[-•*]/.test(l) && /:$/.test(l) && l.length <= 201) v.push({ when: l.slice(0, -1).trim(), tasks: [] });
         else if (v.length) v[v.length - 1].tasks.push(task);
         else v.push({ when: 'Day 1', tasks: [task] });
       }
@@ -1176,7 +1176,7 @@ export function careSheetText(c, lookup = () => null) {
     items.forEach((x) => L.push(`- ${x}`));
     L.push('');
   };
-  L.push(c.kind === 'wildlife' ? `Care plan: ${c.animal || 'wildlife in care'}` : `Caring for ${c.animal || 'your animal'} at home`);
+  L.push(c.kind === 'wildlife' ? `Care plan - ${c.animal || 'wildlife in care'}` : `Caring for ${c.animal || 'your animal'} at home`);
   if (c.kind === 'wildlife' && c.case_number) L.push(`${region().caseLabel}: ${c.case_number}`);
   L.push(careAiNote(c), '');
   if (c.summary) L.push(c.summary, '');

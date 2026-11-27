@@ -95,11 +95,11 @@ test('Copy offers Share or Copy as text; no extra copy button at the top of the 
   await expect(page.locator('#share-sheet')).toBeVisible();
   await page.getByRole('button', { name: 'Share as text' }).click();
   await expect.poll(() => page.evaluate(() => window.__shared.length)).toBe(1);
-  expect(await page.evaluate(() => window.__shared[0].text)).toMatch(/^Care plan: /);
+  expect(await page.evaluate(() => window.__shared[0].text)).toMatch(/^Care plan - /);
   await page.locator('#care-copy').click();
   await page.getByRole('button', { name: 'Copy as text' }).click();
   await expect(page.locator('#toast-text')).toContainText('Care plan copied');
-  expect(await page.evaluate(() => navigator.clipboard.readText())).toMatch(/^Care plan: /);
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toMatch(/^Care plan - /);
 });
 
 test('drugs saved in Settings are kept', async ({ page }) => {

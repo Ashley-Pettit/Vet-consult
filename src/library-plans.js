@@ -12,7 +12,7 @@ export default {
      "weight": "about 600 g",
      "text": "Ready-made plan: an orphaned common (bare-nosed) wombat joey, about 600 g, unfurred with pink skin and eyes closed. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a joey like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Orphaned common wombat joey",
+      "animal": "Common wombat - Unfurred joey",
       "species": "Common (bare-nosed) wombat (Vombatus ursinus)",
       "kind": "wildlife",
       "summary": "This orphaned common wombat joey, about 600 g, is unfurred with pink skin and closed eyes, and is healthy. The goal is to raise it through the pouch stages and weaning, then release it wild and wary where it was found.",
@@ -141,7 +141,7 @@ export default {
      "weight": "about 2.5 kg",
      "text": "Ready-made plan: an orphaned common (bare-nosed) wombat joey, about 2.5 kg, fully furred with eyes open, still drinking milk. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a joey like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Orphaned common wombat joey",
+      "animal": "Common wombat - Furred joey",
       "species": "Common (bare-nosed) wombat (Vombatus ursinus)",
       "kind": "wildlife",
       "summary": "This orphaned common wombat joey, about 2.5 kg, is fully furred with its eyes open, healthy and still drinking milk. The goal is to raise it with another wombat joey, wean it onto grass and release it wild and wary where it was found.",
@@ -268,7 +268,7 @@ export default {
      "weight": "about 8 kg",
      "text": "Ready-made plan: a young common (bare-nosed) wombat, about 8 kg, furred, starting to graze and being weaned off milk. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a wombat like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Young common wombat",
+      "animal": "Common wombat - Weaning young",
       "species": "Common (bare-nosed) wombat (Vombatus ursinus)",
       "kind": "wildlife",
       "summary": "This young common wombat, about 8 kg, is furred, healthy and being weaned from milk onto grass. The goal is to finish weaning, grow it to release size and return it wild and wary to where it was found.",
@@ -389,7 +389,7 @@ export default {
      "weight": "about 25 kg",
      "text": "Ready-made plan: an adult common (bare-nosed) wombat, about 25 kg, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a wombat like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Adult common wombat",
+      "animal": "Common wombat - Adult",
       "species": "Common (bare-nosed) wombat (Vombatus ursinus)",
       "kind": "wildlife",
       "summary": "This adult common wombat, about 25 kg, is in care and recovering well, with no injuries needing treatment and no medicines. The goal is to keep it calm, eating well and wild, and release it where it was found as soon as it is ready.",
@@ -509,7 +509,7 @@ export default {
      "weight": "about 400 g",
      "text": "Ready-made plan: an orphaned koala joey, about 400 g, furred with eyes open, still drinking milk. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a joey like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Koala joey",
+      "animal": "Koala - Furred pouch joey",
       "species": "Koala (Phascolarctos cinereus)",
       "kind": "wildlife",
       "summary": "This orphaned koala joey, about 400 g, furred and with its eyes open, is healthy and fully milk-fed. The goal is to raise it alongside other koalas through weaning onto eucalyptus leaf and grow it to a healthy weight so it can go home where it was found.",
@@ -640,7 +640,7 @@ export default {
      "weight": "about 1.5 kg",
      "text": "Ready-made plan: an orphaned koala back joey, about 1.5 kg, furred, starting to eat eucalyptus leaf and still drinking milk. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a joey like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Koala back joey",
+      "animal": "Koala - Back joey",
       "species": "Koala (Phascolarctos cinereus)",
       "kind": "wildlife",
       "summary": "This orphaned koala back joey, about 1.5 kg and furred, is healthy and moving from milk onto eucalyptus leaf. The goal is to wean it fully onto leaf, raised alongside other koalas, and grow it to a healthy weight so it can go home where it was found.",
@@ -767,7 +767,7 @@ export default {
      "weight": "about 7 kg",
      "text": "Ready-made plan: an adult koala, about 7 kg, eating eucalyptus leaf, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a koala like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Adult koala",
+      "animal": "Koala - Adult",
       "species": "Koala (Phascolarctos cinereus)",
       "kind": "wildlife",
       "summary": "This adult koala, about 7 kg, is recovering well in care, eating eucalyptus leaf and needs no treatment or medicines. The goal is to keep it eating well, holding its weight and climbing strongly so it can go home as soon as it is ready.",
@@ -889,7 +889,7 @@ export default {
      "weight": "about 40 g",
      "text": "Ready-made plan: an orphaned Pacific black duck duckling, about 40 g, covered in down, a few days old. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a duckling like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Pacific black duck duckling",
+      "animal": "Pacific black duck - Downy duckling",
       "species": "Pacific black duck (Anas superciliosa)",
       "kind": "wildlife",
       "summary": "This orphaned Pacific black duck duckling is healthy, only a few days old, about 40 g and still covered in down. The goal is to raise it warm, well fed and wild, with waterproof feathers and strong flight, ready to return to a flock of its own kind.",
@@ -1021,7 +1021,7 @@ export default {
      "weight": "about 300 g",
      "text": "Ready-made plan: an orphaned Pacific black duck duckling, about 300 g, with feathers coming through the down. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a duckling like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Pacific black duck duckling",
+      "animal": "Pacific black duck - Feathering duckling",
       "species": "Pacific black duck (Anas superciliosa)",
       "kind": "wildlife",
       "summary": "This orphaned Pacific black duck duckling is healthy and growing well, about 300 g with feathers coming through its down. The goal is to finish raising it wild, waterproof and flying strongly, ready to join a flock of its own kind.",
@@ -1147,7 +1147,7 @@ export default {
      "weight": "about 1 kg",
      "text": "Ready-made plan: an adult Pacific black duck, about 1 kg, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a duck like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Adult Pacific black duck",
+      "animal": "Pacific black duck - Adult",
       "species": "Pacific black duck (Anas superciliosa)",
       "kind": "wildlife",
       "summary": "This adult Pacific black duck, about 1 kg, is recovering well in care and has no injuries needing treatment. The goal is to keep it eating well, waterproof and flying strongly so it can go back to the wild as soon as it is ready.",
@@ -1277,7 +1277,7 @@ export default {
      "weight": "about 800 g",
      "text": "Ready-made plan: an orphaned eastern grey kangaroo joey, about 800 g, unfurred with eyes just opening. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a joey like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Orphaned eastern grey kangaroo joey",
+      "animal": "Eastern grey kangaroo - Unfurred joey",
       "species": "Eastern grey kangaroo (Macropus giganteus)",
       "kind": "wildlife",
       "summary": "This healthy orphaned eastern grey kangaroo joey weighs about 800 g, is still unfurred and its eyes are just opening, so it relies completely on its pouch and milk. The goal is to raise it steadily through each milk stage and weaning with other young kangaroos, then release it fit and wild.",
@@ -1408,7 +1408,7 @@ export default {
      "weight": "about 3 kg",
      "text": "Ready-made plan: an orphaned eastern grey kangaroo joey, about 3 kg, fully furred, spending most of its time in the pouch and drinking milk. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a joey like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Orphaned eastern grey kangaroo joey",
+      "animal": "Eastern grey kangaroo - Furred pouch joey",
       "species": "Eastern grey kangaroo (Macropus giganteus)",
       "kind": "wildlife",
       "summary": "This healthy orphaned eastern grey kangaroo joey weighs about 3 kg, is fully furred and still spends most of its time in the pouch drinking milk. The goal is to raise it through the rest of pouch life and weaning with other young kangaroos, then release it fit and wild.",
@@ -1541,7 +1541,7 @@ export default {
      "weight": "about 10 kg",
      "text": "Ready-made plan: a young-at-foot eastern grey kangaroo, about 10 kg, grazing and being weaned off milk. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a kangaroo like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Young-at-foot eastern grey kangaroo",
+      "animal": "Eastern grey kangaroo - Young at foot",
       "species": "Eastern grey kangaroo (Macropus giganteus)",
       "kind": "wildlife",
       "summary": "This healthy young-at-foot eastern grey kangaroo weighs about 10 kg, is grazing well and is part-way through weaning off milk. The goal is to finish weaning it onto a natural grazing diet, grow it up with other young kangaroos and release it as a fit, wild-wary animal.",
@@ -1675,7 +1675,7 @@ export default {
      "weight": "about 30 g",
      "text": "Ready-made plan: an orphaned common ringtail possum joey, about 30 g, unfurred with eyes closed. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a joey like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Common ringtail possum joey",
+      "animal": "Common ringtail possum - Unfurred joey",
       "species": "Common ringtail possum (Pseudocheirus peregrinus)",
       "kind": "wildlife",
       "summary": "This orphaned common ringtail possum joey weighs about 30 g, is unfurred with its eyes still closed, and is healthy. The goal is to hand-raise it on possum milk and then fresh leaves, alongside other ringtails, until it is ready for release at about 490 g.",
@@ -1803,7 +1803,7 @@ export default {
      "weight": "about 120 g",
      "text": "Ready-made plan: an orphaned common ringtail possum joey, about 120 g, furred with eyes open, drinking milk. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a joey like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Common ringtail possum joey",
+      "animal": "Common ringtail possum - Furred joey",
       "species": "Common ringtail possum (Pseudocheirus peregrinus)",
       "kind": "wildlife",
       "summary": "This orphaned common ringtail possum joey weighs about 120 g, is furred with its eyes open, healthy and drinking milk well. The goal is to raise it on possum milk and then fresh leaves, alongside other ringtails, until it is ready for release at about 490 g.",
@@ -1930,7 +1930,7 @@ export default {
      "weight": "about 400 g",
      "text": "Ready-made plan: a young common ringtail possum, about 400 g, eating leaves and nearly weaned. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a possum like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Young common ringtail possum",
+      "animal": "Common ringtail possum - Young, nearly weaned",
       "species": "Common ringtail possum (Pseudocheirus peregrinus)",
       "kind": "wildlife",
       "summary": "This young common ringtail possum weighs about 400 g, is healthy, eating leaves well and nearly weaned. The goal is to finish weaning it onto native browse alongside other ringtails and release it at about 490 g.",
@@ -2056,7 +2056,7 @@ export default {
      "weight": "about 300 g",
      "text": "Ready-made plan: an orphaned common brushtail possum joey, about 300 g, furred with eyes open, drinking milk. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a joey like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Common brushtail possum joey",
+      "animal": "Common brushtail possum - Furred joey",
       "species": "Common brushtail possum (Trichosurus vulpecula)",
       "kind": "wildlife",
       "summary": "This orphaned common brushtail possum joey, about 300 g, is healthy, fully furred with its eyes open, and drinking milk well. The goal is to raise it on the right possum milk, wean it onto natural foods, and return it to the wild where it was found.",
@@ -2185,7 +2185,7 @@ export default {
      "weight": "about 1 kg",
      "text": "Ready-made plan: a young common brushtail possum, about 1 kg, eating solid food and being weaned off milk. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a possum like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Young common brushtail possum",
+      "animal": "Common brushtail possum - Weaning young",
       "species": "Common brushtail possum (Trichosurus vulpecula)",
       "kind": "wildlife",
       "summary": "This young common brushtail possum, about 1 kg, is healthy, eating solid food well and in the last stage of weaning off milk. The goal is to finish weaning, build its fitness on a fully natural diet, and return it to the wild where it was found.",
@@ -2307,7 +2307,7 @@ export default {
      "weight": "about 2.5 kg",
      "text": "Ready-made plan: an adult common brushtail possum, about 2.5 kg, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a possum like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Adult common brushtail possum",
+      "animal": "Common brushtail possum - Adult",
       "species": "Common brushtail possum (Trichosurus vulpecula)",
       "kind": "wildlife",
       "summary": "This adult common brushtail possum, about 2.5 kg, is recovering well in care with no injuries needing treatment and no medicines. The goal is to keep it calm and eating well on natural foods, rebuild its fitness in pre-release housing, and return it to the wild where it was found.",
@@ -2432,7 +2432,7 @@ export default {
      "weight": "about 400 g",
      "text": "Ready-made plan: an orphaned short-beaked echidna puggle, about 400 g, with spines just coming through. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a puggle like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Short-beaked echidna puggle",
+      "animal": "Short-beaked echidna - Puggle",
       "species": "Short-beaked echidna (Tachyglossus aculeatus)",
       "kind": "wildlife",
       "summary": "This orphaned short-beaked echidna puggle, about 400 g with its spines just coming through, is healthy and uninjured. The goal is to raise it on echidna milk, wean it onto solid food and return it to the wild where it was found.",
@@ -2546,7 +2546,7 @@ export default {
      "weight": "about 4 kg",
      "text": "Ready-made plan: an adult short-beaked echidna, about 4 kg, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for an echidna like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Adult short-beaked echidna",
+      "animal": "Short-beaked echidna - Adult",
       "species": "Short-beaked echidna (Tachyglossus aculeatus)",
       "kind": "wildlife",
       "summary": "This adult short-beaked echidna, about 4 kg, is recovering well in care with no injuries needing treatment and no medicines. The goal is to keep it calm, cool and eating well so it can go back to where it was found as soon as it is fit.",
@@ -2666,7 +2666,7 @@ export default {
      "weight": "about 100 g",
      "text": "Ready-made plan: an orphaned grey-headed flying-fox pup, about 100 g, with fur on its back and eyes open. Healthy, no injuries and no medicines. For vaccinated, trained carers only. Write a standard plan another carer can follow for a pup like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Grey-headed flying-fox pup",
+      "animal": "Grey-headed flying-fox - Pup",
       "species": "Grey-headed flying-fox (Pteropus poliocephalus)",
       "kind": "wildlife",
       "summary": "This orphaned grey-headed flying-fox pup, about 100 g with fur on its back and eyes open, is healthy and uninjured. Grey-headed flying-foxes are a threatened species, and the goal is to hand-raise it with other pups, wean it onto fruit and return it to the wild.",
@@ -2794,7 +2794,7 @@ export default {
      "weight": "about 700 g",
      "text": "Ready-made plan: an adult grey-headed flying-fox, about 700 g, in care and recovering, with no injuries needing treatment and no medicines. For vaccinated, trained carers only. Write a standard plan another carer can follow for a flying-fox like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Adult grey-headed flying-fox",
+      "animal": "Grey-headed flying-fox - Adult",
       "species": "Grey-headed flying-fox (Pteropus poliocephalus)",
       "kind": "wildlife",
       "summary": "This adult grey-headed flying-fox, about 700 g, is recovering well in care with no injuries needing treatment and no medicines. Grey-headed flying-foxes are a threatened species, and the goal is to keep it eating and fit so it can return to its camp as soon as it is ready.",
@@ -2913,7 +2913,7 @@ export default {
      "weight": "about 100 g",
      "text": "Ready-made plan: an orphaned Australian magpie nestling, about 100 g, with pin feathers coming through. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a nestling like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Australian magpie nestling",
+      "animal": "Australian magpie - Nestling",
       "species": "Australian magpie (Gymnorhina tibicen)",
       "kind": "wildlife",
       "summary": "This orphaned Australian magpie nestling, about 100 g with pin feathers coming through, is healthy and ready to be hand-reared. The goal is to raise it to a strong, wild, self-feeding young magpie and release it where it was found.",
@@ -3045,7 +3045,7 @@ export default {
      "weight": "about 250 g",
      "text": "Ready-made plan: an Australian magpie fledgling, about 250 g, fully feathered with a short tail and not yet flying well. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a fledgling like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Australian magpie fledgling",
+      "animal": "Australian magpie - Fledgling",
       "species": "Australian magpie (Gymnorhina tibicen)",
       "kind": "wildlife",
       "summary": "This healthy, fully feathered magpie fledgling of about 250 g is at the normal stage where young magpies spend a few weeks on the ground before they fly well, while their parents keep feeding them. The goal is to reunite it with its family where it was found, as soon as possible.",
@@ -3130,7 +3130,7 @@ export default {
      "weight": "about 300 g",
      "text": "Ready-made plan: an adult Australian magpie, about 300 g, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a magpie like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Adult Australian magpie",
+      "animal": "Australian magpie - Adult",
       "species": "Australian magpie (Gymnorhina tibicen)",
       "kind": "wildlife",
       "summary": "This adult Australian magpie, about 300 g, is recovering well in care, with no injuries needing treatment and no medicines. The goal is to keep it eating a natural diet, flying strongly and wary of people, so it can go home to its family group as soon as it is fit.",
@@ -3260,7 +3260,7 @@ export default {
      "weight": "about 150 g",
      "text": "Ready-made plan: an orphaned tawny frogmouth chick, about 150 g, covered in down. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a chick like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Orphaned tawny frogmouth chick, about 150 g, downy",
+      "animal": "Tawny frogmouth - Downy chick",
       "species": "Tawny frogmouth (Podargus strigoides)",
       "kind": "wildlife",
       "summary": "This orphaned tawny frogmouth chick, about 150 g and still covered in down, is healthy with no injuries. The goal is to hand-rear it with as little human contact as possible until it is flying, feeding itself and ready to go home to where it was found.",
@@ -3390,7 +3390,7 @@ export default {
      "weight": "about 400 g",
      "text": "Ready-made plan: an adult tawny frogmouth, about 400 g, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a frogmouth like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Adult tawny frogmouth, about 400 g",
+      "animal": "Tawny frogmouth - Adult",
       "species": "Tawny frogmouth (Podargus strigoides)",
       "kind": "wildlife",
       "summary": "This adult tawny frogmouth, about 400 g, is recovering well in care with no injuries needing treatment. The goal is to keep it calm and well fed, get it flying and catching insects again, and return it to where it was found as soon as it is fit.",
@@ -3513,7 +3513,7 @@ export default {
      "weight": "about 30 g",
      "text": "Ready-made plan: a juvenile eastern blue-tongue lizard, about 30 g. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a lizard like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Juvenile eastern blue-tongue lizard, about 30 g",
+      "animal": "Eastern blue-tongue lizard - Juvenile",
       "species": "Eastern blue-tongue lizard (Tiliqua scincoides)",
       "kind": "wildlife",
       "summary": "This young eastern blue-tongue lizard, about 30 g, is healthy with no injuries. The goal is to keep it warm, well fed and settled for as short a time as possible, then send it home to where it was found as soon as the weather allows.",
@@ -3627,7 +3627,7 @@ export default {
      "weight": "about 400 g",
      "text": "Ready-made plan: an adult eastern blue-tongue lizard, about 400 g, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a lizard like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Adult eastern blue-tongue lizard, about 400 g",
+      "animal": "Eastern blue-tongue lizard - Adult",
       "species": "Eastern blue-tongue lizard (Tiliqua scincoides)",
       "kind": "wildlife",
       "summary": "This adult eastern blue-tongue lizard, about 400 g, is recovering well in care with no injuries needing treatment. The goal is to keep it warm, well fed and settled so it can go home to where it was found as soon as it is fit and the weather allows.",
@@ -3747,7 +3747,7 @@ export default {
      "weight": "about 40 g",
      "text": "Ready-made plan: an orphaned eastern rosella nestling, about 40 g, with pin feathers coming through. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a nestling like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Orphaned eastern rosella nestling",
+      "animal": "Eastern rosella - Nestling",
       "case_number": "",
       "species": "Eastern rosella (Platycercus eximius)",
       "kind": "wildlife",
@@ -3875,7 +3875,7 @@ export default {
      "weight": "about 95 g",
      "text": "Ready-made plan: an eastern rosella fledgling, about 95 g, fully feathered with a short tail and not yet flying well. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a fledgling like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Eastern rosella fledgling",
+      "animal": "Eastern rosella - Fledgling",
       "case_number": "",
       "species": "Eastern rosella (Platycercus eximius)",
       "kind": "wildlife",
@@ -3992,7 +3992,7 @@ export default {
      "weight": "about 105 g",
      "text": "Ready-made plan: an adult eastern rosella, about 105 g, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a rosella like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Adult eastern rosella",
+      "animal": "Eastern rosella - Adult",
       "case_number": "",
       "species": "Eastern rosella (Platycercus eximius)",
       "kind": "wildlife",
@@ -4112,7 +4112,7 @@ export default {
      "weight": "about 70 g",
      "text": "Ready-made plan: an orphaned rainbow lorikeet nestling, about 70 g, with pin feathers coming through. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a nestling like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Orphaned rainbow lorikeet nestling",
+      "animal": "Rainbow lorikeet - Nestling",
       "case_number": "",
       "species": "Rainbow lorikeet (Trichoglossus moluccanus)",
       "kind": "wildlife",
@@ -4239,7 +4239,7 @@ export default {
      "weight": "about 130 g",
      "text": "Ready-made plan: an adult rainbow lorikeet, about 130 g, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a lorikeet like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Adult rainbow lorikeet",
+      "animal": "Rainbow lorikeet - Adult",
       "case_number": "",
       "species": "Rainbow lorikeet (Trichoglossus moluccanus)",
       "kind": "wildlife",
@@ -4360,7 +4360,7 @@ export default {
      "weight": "about 40 g",
      "text": "Ready-made plan: an orphaned Australian wood duck (maned duck) duckling, about 40 g, covered in down, a few days old. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a duckling like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Australian wood duck duckling",
+      "animal": "Australian wood duck - Downy duckling",
       "case_number": "",
       "species": "Australian wood duck, also called maned duck (Chenonetta jubata)",
       "kind": "wildlife",
@@ -4491,7 +4491,7 @@ export default {
      "weight": "about 350 g",
      "text": "Ready-made plan: an orphaned Australian wood duck (maned duck) duckling, about 350 g, with feathers coming through the down. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a duckling like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Australian wood duck duckling",
+      "animal": "Australian wood duck - Feathering duckling",
       "case_number": "",
       "species": "Australian wood duck, also called maned duck (Chenonetta jubata)",
       "kind": "wildlife",
@@ -4614,7 +4614,7 @@ export default {
      "weight": "about 800 g",
      "text": "Ready-made plan: an adult Australian wood duck (maned duck), about 800 g, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a duck like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Adult Australian wood duck",
+      "animal": "Australian wood duck - Adult",
       "case_number": "",
       "species": "Australian wood duck, also called maned duck (Chenonetta jubata)",
       "kind": "wildlife",
@@ -4735,7 +4735,7 @@ export default {
      "weight": "about 550 g",
      "text": "Ready-made plan: a short-tailed shearwater fledgling, about 550 g, found grounded inland in April, fully feathered and alert, waterproof unknown. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a fledgling like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Grounded short-tailed shearwater fledgling",
+      "animal": "Short-tailed shearwater - Grounded fledgling",
       "case_number": "",
       "species": "Short-tailed shearwater (Ardenna tenuirostris)",
       "kind": "wildlife",
@@ -4850,7 +4850,7 @@ export default {
      "weight": "about 550 g",
      "text": "Ready-made plan: an adult short-tailed shearwater, about 550 g, found washed up on a beach, thin but alert, with no injuries needing treatment and no medicines. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a shearwater like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Beach-washed short-tailed shearwater",
+      "animal": "Short-tailed shearwater - Adult",
       "case_number": "",
       "species": "Short-tailed shearwater (Ardenna tenuirostris)",
       "kind": "wildlife",
@@ -4971,7 +4971,7 @@ export default {
      "weight": "about 60 g",
      "text": "Ready-made plan: an orphaned crimson rosella nestling, about 60 g, with pin feathers coming through. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a nestling like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Orphaned crimson rosella nestling",
+      "animal": "Crimson rosella - Nestling",
       "case_number": "",
       "species": "Crimson rosella (Platycercus elegans)",
       "kind": "wildlife",
@@ -5099,7 +5099,7 @@ export default {
      "weight": "about 130 g",
      "text": "Ready-made plan: an adult crimson rosella, about 130 g, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a rosella like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Adult crimson rosella",
+      "animal": "Crimson rosella - Adult",
       "case_number": "",
       "species": "Crimson rosella (Platycercus elegans)",
       "kind": "wildlife",
@@ -5219,7 +5219,7 @@ export default {
      "weight": "about 300 g",
      "text": "Ready-made plan: an orphaned white-faced heron nestling, about 300 g, downy with pin feathers coming through. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a nestling like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Orphaned white-faced heron nestling",
+      "animal": "White-faced heron - Nestling",
       "case_number": "",
       "species": "White-faced heron (Egretta novaehollandiae)",
       "kind": "wildlife",
@@ -5343,7 +5343,7 @@ export default {
      "weight": "about 550 g",
      "text": "Ready-made plan: an adult white-faced heron, about 550 g, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a heron like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Adult white-faced heron",
+      "animal": "White-faced heron - Adult",
       "case_number": "",
       "species": "White-faced heron (Egretta novaehollandiae)",
       "kind": "wildlife",
@@ -5464,7 +5464,7 @@ export default {
      "weight": "about 10 g",
      "text": "Ready-made plan: an orphaned welcome swallow nestling, about 10 g, with pin feathers coming through. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a nestling like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Orphaned welcome swallow nestling",
+      "animal": "Welcome swallow - Nestling",
       "case_number": "",
       "species": "Welcome swallow (Hirundo neoxena)",
       "kind": "wildlife",
@@ -5530,7 +5530,7 @@ export default {
        "weight_g": 10,
        "stage": "Nestling in pin feathers (about 7 to 10 days old)",
        "percent_body_weight_per_day": 55,
-       "feeds_per_day": 28,
+       "feeds_per_day": 24,
        "basis": "Wombaroo welcome swallow chart: about 5 to 7 g a day at 7 to 10 days old. Feeds a day not given.",
        "sure": false
       },
@@ -5589,7 +5589,7 @@ export default {
      "weight": "about 15 g",
      "text": "Ready-made plan: an adult welcome swallow, about 15 g, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a swallow like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Adult welcome swallow",
+      "animal": "Welcome swallow - Adult",
       "case_number": "",
       "species": "Welcome swallow (Hirundo neoxena)",
       "kind": "wildlife",
@@ -5708,7 +5708,7 @@ export default {
      "weight": "about 4 g",
      "text": "Ready-made plan: an adult little forest bat (microbat), about 4 g, in care and recovering, with no injuries needing treatment and no medicines. For vaccinated, trained carers only. Write a standard plan another carer can follow for a bat like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Adult little forest bat",
+      "animal": "Little forest bat - Adult",
       "case_number": "",
       "species": "Little forest bat (Vespadelus vulturnus)",
       "kind": "wildlife",
@@ -5817,7 +5817,7 @@ export default {
      "weight": "about 7 g",
      "text": "Ready-made plan: an adult large forest bat (microbat), about 7 g, in care and recovering, with no injuries needing treatment and no medicines. For vaccinated, trained carers only. Write a standard plan another carer can follow for a bat like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Adult large forest bat",
+      "animal": "Large forest bat - Adult",
       "case_number": "",
       "species": "Large forest bat (Vespadelus darlingtoni)",
       "kind": "wildlife",
@@ -5926,7 +5926,7 @@ export default {
      "weight": "about 5 to 10 g",
      "text": "Ready-made plan: an adult microbat of a species not yet identified, about 5 to 10 g, in care and recovering, with no injuries needing treatment and no medicines. For vaccinated, trained carers only. Write a standard plan another carer can follow for a microbat like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Adult microbat (species not yet known)",
+      "animal": "Unidentified microbat - Adult",
       "case_number": "",
       "species": "Microbat, species to be identified",
       "kind": "wildlife",
@@ -6042,7 +6042,7 @@ export default {
      "weight": "about 800 g",
      "text": "Ready-made plan: an adult little black cormorant, about 800 g, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a cormorant like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Adult little black cormorant",
+      "animal": "Little black cormorant - Adult",
       "case_number": "",
       "species": "Little black cormorant (Phalacrocorax sulcirostris)",
       "kind": "wildlife",
@@ -6156,7 +6156,7 @@ export default {
      "weight": "about 1.6 kg",
      "text": "Ready-made plan: an adult black-faced cormorant, about 1.6 kg, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a cormorant like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Adult black-faced cormorant",
+      "animal": "Black-faced cormorant - Adult",
       "case_number": "",
       "species": "Black-faced cormorant (Phalacrocorax fuscescens)",
       "kind": "wildlife",
@@ -6277,7 +6277,7 @@ export default {
      "weight": "about 8 g",
      "text": "Ready-made plan: a common (eastern) long-necked turtle hatchling, about 8 g, found away from water. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a hatchling like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Common long-necked turtle hatchling",
+      "animal": "Common long-necked turtle - Hatchling",
       "case_number": "",
       "species": "Common (eastern) long-necked turtle (Chelodina longicollis)",
       "kind": "wildlife",
@@ -6384,7 +6384,7 @@ export default {
      "weight": "about 1 kg",
      "text": "Ready-made plan: an adult common (eastern) long-necked turtle, about 1 kg, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a turtle like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Adult common long-necked turtle",
+      "animal": "Common long-necked turtle - Adult",
       "case_number": "",
       "species": "Common (eastern) long-necked turtle (Chelodina longicollis)",
       "kind": "wildlife",
@@ -6500,7 +6500,7 @@ export default {
      "weight": "about 180 g",
      "text": "Ready-made plan: an orphaned southern boobook owlet, about 180 g, downy with feathers coming through, not yet flying. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a owlet like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Orphaned southern boobook owlet",
+      "animal": "Southern boobook - Owlet",
       "case_number": "",
       "species": "Southern boobook (Ninox boobook)",
       "kind": "wildlife",
@@ -6623,7 +6623,7 @@ export default {
      "weight": "about 250 g",
      "text": "Ready-made plan: an adult southern boobook, about 250 g, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a owl like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Adult southern boobook",
+      "animal": "Southern boobook - Adult",
       "case_number": "",
       "species": "Southern boobook (Ninox boobook)",
       "kind": "wildlife",
@@ -6743,7 +6743,7 @@ export default {
      "weight": "about 250 g",
      "text": "Ready-made plan: an orphaned black (swamp) wallaby joey, about 250 g, unfurred with eyes open and ears up. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a joey like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Orphaned black wallaby joey",
+      "animal": "Black wallaby - Unfurred joey",
       "case_number": "",
       "species": "Black wallaby, also called swamp wallaby (Wallabia bicolor)",
       "kind": "wildlife",
@@ -6874,7 +6874,7 @@ export default {
      "weight": "about 1.5 kg",
      "text": "Ready-made plan: an orphaned black (swamp) wallaby joey, about 1.5 kg, fully furred, spending most of its time in the pouch and drinking milk. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a joey like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Orphaned black wallaby joey",
+      "animal": "Black wallaby - Furred pouch joey",
       "case_number": "",
       "species": "Black wallaby, also called swamp wallaby (Wallabia bicolor)",
       "kind": "wildlife",
@@ -7002,7 +7002,7 @@ export default {
      "weight": "about 6 kg",
      "text": "Ready-made plan: a young-at-foot black (swamp) wallaby, about 6 kg, browsing and being weaned off milk. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a wallaby like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Young black wallaby",
+      "animal": "Black wallaby - Young at foot",
       "case_number": "",
       "species": "Black wallaby, also called swamp wallaby (Wallabia bicolor)",
       "kind": "wildlife",
@@ -7130,7 +7130,7 @@ export default {
      "weight": "about 150 g",
      "text": "Ready-made plan: an orphaned galah nestling, about 150 g, with pin feathers coming through. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a nestling like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Orphaned galah nestling",
+      "animal": "Galah - Nestling",
       "case_number": "",
       "species": "Galah (Eolophus roseicapilla)",
       "kind": "wildlife",
@@ -7258,7 +7258,7 @@ export default {
      "weight": "about 330 g",
      "text": "Ready-made plan: an adult galah, about 330 g, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a galah like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Adult galah",
+      "animal": "Galah - Adult",
       "case_number": "",
       "species": "Galah (Eolophus roseicapilla)",
       "kind": "wildlife",
@@ -7378,7 +7378,7 @@ export default {
      "weight": "about 60 g",
      "text": "Ready-made plan: an orphaned red wattlebird nestling, about 60 g, with pin feathers coming through. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a nestling like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Orphaned red wattlebird nestling",
+      "animal": "Red wattlebird - Nestling",
       "case_number": "",
       "species": "Red wattlebird (Anthochaera carunculata)",
       "kind": "wildlife",
@@ -7504,7 +7504,7 @@ export default {
      "weight": "about 110 g",
      "text": "Ready-made plan: an adult red wattlebird, about 110 g, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a wattlebird like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Adult red wattlebird",
+      "animal": "Red wattlebird - Adult",
       "case_number": "",
       "species": "Red wattlebird (Anthochaera carunculata)",
       "kind": "wildlife",
@@ -7618,7 +7618,7 @@ export default {
      "weight": "about 70 g",
      "text": "Ready-made plan: an adult little wattlebird, about 70 g, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a wattlebird like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Adult little wattlebird",
+      "animal": "Little wattlebird - Adult",
       "case_number": "",
       "species": "Little wattlebird (Anthochaera chrysoptera)",
       "kind": "wildlife",
@@ -7738,7 +7738,7 @@ export default {
      "weight": "about 700 g",
      "text": "Ready-made plan: a juvenile little penguin, about 700 g, underweight but alert, found on a beach. No injuries and no medicines. Write a standard plan another carer can follow for a penguin like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Underweight juvenile little penguin",
+      "animal": "Little penguin - Underweight juvenile",
       "case_number": "",
       "species": "Little penguin (Eudyptula minor)",
       "kind": "wildlife",
@@ -7845,7 +7845,7 @@ export default {
      "weight": "about 1.1 kg",
      "text": "Ready-made plan: an adult little penguin, about 1.1 kg, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a penguin like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Adult little penguin",
+      "animal": "Little penguin - Adult",
       "case_number": "",
       "species": "Little penguin (Eudyptula minor)",
       "kind": "wildlife",
@@ -7958,7 +7958,7 @@ export default {
      "weight": "about 200 g",
      "text": "Ready-made plan: an orphaned laughing kookaburra nestling, about 200 g, with pin feathers coming through. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a nestling like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Orphaned laughing kookaburra nestling",
+      "animal": "Laughing kookaburra - Nestling",
       "case_number": "",
       "species": "Laughing kookaburra (Dacelo novaeguineae)",
       "kind": "wildlife",
@@ -8082,7 +8082,7 @@ export default {
      "weight": "about 350 g",
      "text": "Ready-made plan: an adult laughing kookaburra, about 350 g, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a kookaburra like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Adult laughing kookaburra",
+      "animal": "Laughing kookaburra - Adult",
       "case_number": "",
       "species": "Laughing kookaburra (Dacelo novaeguineae)",
       "kind": "wildlife",
@@ -8203,7 +8203,7 @@ export default {
      "weight": "about 100 g",
      "text": "Ready-made plan: an orphaned silver gull chick, about 100 g, covered in down. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a chick like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Orphaned silver gull chick",
+      "animal": "Silver gull - Downy chick",
       "case_number": "",
       "species": "Silver gull (Chroicocephalus novaehollandiae)",
       "kind": "wildlife",
@@ -8328,7 +8328,7 @@ export default {
      "weight": "about 280 g",
      "text": "Ready-made plan: an adult silver gull, about 280 g, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a gull like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Adult silver gull",
+      "animal": "Silver gull - Adult",
       "case_number": "",
       "species": "Silver gull (Chroicocephalus novaehollandiae)",
       "kind": "wildlife",
@@ -8448,7 +8448,7 @@ export default {
      "weight": "about 120 g",
      "text": "Ready-made plan: an orphaned Australian king-parrot nestling, about 120 g, with pin feathers coming through. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a nestling like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Orphaned Australian king-parrot nestling",
+      "animal": "Australian king-parrot - Nestling",
       "case_number": "",
       "species": "Australian king-parrot (Alisterus scapularis)",
       "kind": "wildlife",
@@ -8576,7 +8576,7 @@ export default {
      "weight": "about 220 g",
      "text": "Ready-made plan: an adult Australian king-parrot, about 220 g, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a king-parrot like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Adult Australian king-parrot",
+      "animal": "Australian king-parrot - Adult",
       "case_number": "",
       "species": "Australian king-parrot (Alisterus scapularis)",
       "kind": "wildlife",
@@ -8696,7 +8696,7 @@ export default {
      "weight": "about 300 g",
      "text": "Ready-made plan: an orphaned black swan cygnet, about 300 g, covered in grey down, a couple of weeks old. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a cygnet like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Orphaned black swan cygnet",
+      "animal": "Black swan - Downy cygnet",
       "case_number": "",
       "species": "Black swan (Cygnus atratus)",
       "kind": "wildlife",
@@ -8818,7 +8818,7 @@ export default {
      "weight": "about 5.5 kg",
      "text": "Ready-made plan: an adult black swan, about 5.5 kg, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a swan like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Adult black swan",
+      "animal": "Black swan - Adult",
       "case_number": "",
       "species": "Black swan (Cygnus atratus)",
       "kind": "wildlife",
@@ -8938,7 +8938,7 @@ export default {
      "weight": "about 200 g",
      "text": "Ready-made plan: an orphaned little corella nestling, about 200 g, with pin feathers coming through. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a nestling like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Orphaned little corella nestling",
+      "animal": "Little corella - Nestling",
       "case_number": "",
       "species": "Little corella (Cacatua sanguinea)",
       "kind": "wildlife",
@@ -9066,7 +9066,7 @@ export default {
      "weight": "about 400 g",
      "text": "Ready-made plan: an adult little corella, about 400 g, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a corella like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Adult little corella",
+      "animal": "Little corella - Adult",
       "case_number": "",
       "species": "Little corella (Cacatua sanguinea)",
       "kind": "wildlife",
@@ -9186,7 +9186,7 @@ export default {
      "weight": "about 300 g",
      "text": "Ready-made plan: an orphaned Australian raven nestling, about 300 g, with pin feathers coming through. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a nestling like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Orphaned Australian raven nestling",
+      "animal": "Australian raven - Nestling",
       "case_number": "",
       "species": "Australian raven (Corvus coronoides)",
       "kind": "wildlife",
@@ -9310,7 +9310,7 @@ export default {
      "weight": "about 650 g",
      "text": "Ready-made plan: an adult Australian raven, about 650 g, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a raven like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Adult Australian raven",
+      "animal": "Australian raven - Adult",
       "case_number": "",
       "species": "Australian raven (Corvus coronoides)",
       "kind": "wildlife",
@@ -9424,7 +9424,7 @@ export default {
      "weight": "about 550 g",
      "text": "Ready-made plan: an adult little raven, about 550 g, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a raven like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Adult little raven",
+      "animal": "Little raven - Adult",
       "case_number": "",
       "species": "Little raven (Corvus mellori)",
       "kind": "wildlife",
@@ -9544,7 +9544,7 @@ export default {
      "weight": "about 100 g",
      "text": "Ready-made plan: an orphaned crested tern chick, about 100 g, covered in down. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a chick like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Orphaned crested tern chick",
+      "animal": "Crested tern - Downy chick",
       "case_number": "",
       "species": "Greater crested tern (Thalasseus bergii)",
       "kind": "wildlife",
@@ -9667,7 +9667,7 @@ export default {
      "weight": "about 350 g",
      "text": "Ready-made plan: an adult crested tern, about 350 g, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a tern like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Adult crested tern",
+      "animal": "Crested tern - Adult",
       "case_number": "",
       "species": "Greater crested tern (Thalasseus bergii)",
       "kind": "wildlife",
@@ -9787,7 +9787,7 @@ export default {
      "weight": "about 40 g",
      "text": "Ready-made plan: an orphaned sugar glider joey, about 40 g, furred with eyes open, drinking milk. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a joey like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Orphaned sugar glider joey",
+      "animal": "Sugar glider - Furred joey",
       "case_number": "",
       "species": "Sugar glider (Petaurus breviceps)",
       "kind": "wildlife",
@@ -9911,7 +9911,7 @@ export default {
      "weight": "about 120 g",
      "text": "Ready-made plan: an adult sugar glider, about 120 g, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a glider like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Adult sugar glider",
+      "animal": "Sugar glider - Adult",
       "case_number": "",
       "species": "Sugar glider (Petaurus breviceps)",
       "kind": "wildlife",
@@ -10029,7 +10029,7 @@ export default {
      "weight": "about 25 g",
      "text": "Ready-made plan: an orphaned sacred kingfisher nestling, about 25 g, with pin feathers coming through. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a nestling like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Orphaned sacred kingfisher nestling",
+      "animal": "Sacred kingfisher - Nestling",
       "case_number": "",
       "species": "Sacred kingfisher (Todiramphus sanctus)",
       "kind": "wildlife",
@@ -10152,7 +10152,7 @@ export default {
      "weight": "about 45 g",
      "text": "Ready-made plan: an adult sacred kingfisher, about 45 g, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a kingfisher like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Adult sacred kingfisher",
+      "animal": "Sacred kingfisher - Adult",
       "case_number": "",
       "species": "Sacred kingfisher (Todiramphus sanctus)",
       "kind": "wildlife",
@@ -10271,7 +10271,7 @@ export default {
      "weight": "about 500 g",
      "text": "Ready-made plan: an orphaned mountain brushtail possum (bobuck) joey, about 500 g, furred with eyes open, drinking milk. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a joey like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Orphaned mountain brushtail possum joey",
+      "animal": "Mountain brushtail possum - Furred joey",
       "case_number": "",
       "species": "Mountain brushtail possum, also called bobuck (Trichosurus cunninghami)",
       "kind": "wildlife",
@@ -10394,7 +10394,7 @@ export default {
      "weight": "about 3.5 kg",
      "text": "Ready-made plan: an adult mountain brushtail possum (bobuck), about 3.5 kg, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a possum like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Adult mountain brushtail possum",
+      "animal": "Mountain brushtail possum - Adult",
       "case_number": "",
       "species": "Mountain brushtail possum, also called bobuck (Trichosurus cunninghami)",
       "kind": "wildlife",
@@ -10512,7 +10512,7 @@ export default {
      "weight": "about 350 g",
      "text": "Ready-made plan: an orphaned red-necked (Bennett's) wallaby joey, about 350 g, unfurred with eyes open and ears up. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a joey like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Orphaned red-necked wallaby joey",
+      "animal": "Red-necked wallaby - Unfurred joey",
       "case_number": "",
       "species": "Red-necked wallaby, also called Bennett's wallaby (Notamacropus rufogriseus)",
       "kind": "wildlife",
@@ -10644,7 +10644,7 @@ export default {
      "weight": "about 2 kg",
      "text": "Ready-made plan: an orphaned red-necked (Bennett's) wallaby joey, about 2 kg, fully furred, spending most of its time in the pouch and drinking milk. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a joey like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Orphaned red-necked wallaby joey",
+      "animal": "Red-necked wallaby - Furred pouch joey",
       "case_number": "",
       "species": "Red-necked wallaby, also called Bennett's wallaby (Notamacropus rufogriseus)",
       "kind": "wildlife",
@@ -10772,7 +10772,7 @@ export default {
      "weight": "about 8 kg",
      "text": "Ready-made plan: a young-at-foot red-necked (Bennett's) wallaby, about 8 kg, grazing and being weaned off milk. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a wallaby like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Young red-necked wallaby",
+      "animal": "Red-necked wallaby - Young at foot",
       "case_number": "",
       "species": "Red-necked wallaby, also called Bennett's wallaby (Notamacropus rufogriseus)",
       "kind": "wildlife",
@@ -10900,7 +10900,7 @@ export default {
      "weight": "about 30 g",
      "text": "Ready-made plan: a juvenile blotched blue-tongue lizard, about 30 g. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a lizard like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Juvenile blotched blue-tongue lizard",
+      "animal": "Blotched blue-tongue lizard - Juvenile",
       "case_number": "",
       "species": "Blotched blue-tongue lizard (Tiliqua nigrolutea)",
       "kind": "wildlife",
@@ -11014,7 +11014,7 @@ export default {
      "weight": "about 500 g",
      "text": "Ready-made plan: an adult blotched blue-tongue lizard, about 500 g, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a lizard like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Adult blotched blue-tongue lizard",
+      "animal": "Blotched blue-tongue lizard - Adult",
       "case_number": "",
       "species": "Blotched blue-tongue lizard (Tiliqua nigrolutea)",
       "kind": "wildlife",
@@ -11134,7 +11134,7 @@ export default {
      "weight": "about 350 g",
      "text": "Ready-made plan: an orphaned sulphur-crested cockatoo nestling, about 350 g, with pin feathers coming through. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a nestling like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Orphaned sulphur-crested cockatoo nestling",
+      "animal": "Sulphur-crested cockatoo - Nestling",
       "case_number": "",
       "species": "Sulphur-crested cockatoo (Cacatua galerita)",
       "kind": "wildlife",
@@ -11262,7 +11262,7 @@ export default {
      "weight": "about 850 g",
      "text": "Ready-made plan: an adult sulphur-crested cockatoo, about 850 g, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a cockatoo like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Adult sulphur-crested cockatoo",
+      "animal": "Sulphur-crested cockatoo - Adult",
       "case_number": "",
       "species": "Sulphur-crested cockatoo (Cacatua galerita)",
       "kind": "wildlife",
@@ -11382,7 +11382,7 @@ export default {
      "weight": "about 400 g",
      "text": "Ready-made plan: an orphaned yellow-tailed black-cockatoo nestling, about 400 g, with pin feathers coming through. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a nestling like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Orphaned yellow-tailed black-cockatoo nestling",
+      "animal": "Yellow-tailed black-cockatoo - Nestling",
       "case_number": "",
       "species": "Yellow-tailed black-cockatoo (Zanda funerea)",
       "kind": "wildlife",
@@ -11511,7 +11511,7 @@ export default {
      "weight": "about 750 g",
      "text": "Ready-made plan: an adult yellow-tailed black-cockatoo, about 750 g, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a cockatoo like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Adult yellow-tailed black-cockatoo",
+      "animal": "Yellow-tailed black-cockatoo - Adult",
       "case_number": "",
       "species": "Yellow-tailed black-cockatoo (Zanda funerea)",
       "kind": "wildlife",
@@ -11632,7 +11632,7 @@ export default {
      "weight": "about 250 g",
      "text": "Ready-made plan: an orphaned glossy ibis nestling, about 250 g, with pin feathers coming through, not yet flying. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a nestling like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Orphaned glossy ibis nestling",
+      "animal": "Glossy ibis - Nestling",
       "case_number": "",
       "species": "Glossy ibis (Plegadis falcinellus)",
       "kind": "wildlife",
@@ -11762,7 +11762,7 @@ export default {
      "weight": "about 550 g",
      "text": "Ready-made plan: an adult glossy ibis, about 550 g, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a ibis like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Adult glossy ibis",
+      "animal": "Glossy ibis - Adult",
       "case_number": "",
       "species": "Glossy ibis (Plegadis falcinellus)",
       "kind": "wildlife",
@@ -11883,7 +11883,7 @@ export default {
      "weight": "about 300 g",
      "text": "Ready-made plan: an orphaned Pacific gull chick, about 300 g, downy with feathers coming through. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a chick like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Orphaned Pacific gull chick",
+      "animal": "Pacific gull - Chick",
       "case_number": "",
       "species": "Pacific gull (Larus pacificus)",
       "kind": "wildlife",
@@ -12008,7 +12008,7 @@ export default {
      "weight": "about 1.2 kg",
      "text": "Ready-made plan: an adult Pacific gull, about 1.2 kg, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a gull like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Adult Pacific gull",
+      "animal": "Pacific gull - Adult",
       "case_number": "",
       "species": "Pacific gull (Larus pacificus)",
       "kind": "wildlife",
@@ -12128,7 +12128,7 @@ export default {
      "weight": "about 40 g",
      "text": "Ready-made plan: an orphaned musk lorikeet nestling, about 40 g, with pin feathers coming through. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a nestling like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Orphaned musk lorikeet nestling",
+      "animal": "Musk lorikeet - Nestling",
       "case_number": "",
       "species": "Musk lorikeet (Glossopsitta concinna)",
       "kind": "wildlife",
@@ -12255,7 +12255,7 @@ export default {
      "weight": "about 60 g",
      "text": "Ready-made plan: an adult musk lorikeet, about 60 g, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a lorikeet like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Adult musk lorikeet",
+      "animal": "Musk lorikeet - Adult",
       "case_number": "",
       "species": "Musk lorikeet (Glossopsitta concinna)",
       "kind": "wildlife",
@@ -12376,7 +12376,7 @@ export default {
      "weight": "about 2 kg",
      "text": "Ready-made plan: a juvenile Australasian gannet, about 2 kg, underweight but alert, found washed up on a beach. No injuries and no medicines. Write a standard plan another carer can follow for a gannet like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Beach-washed juvenile Australasian gannet",
+      "animal": "Australasian gannet - Juvenile, beach-washed",
       "case_number": "",
       "species": "Australasian gannet (Morus serrator)",
       "kind": "wildlife",
@@ -12491,7 +12491,7 @@ export default {
      "weight": "about 2.5 kg",
      "text": "Ready-made plan: an adult Australasian gannet, about 2.5 kg, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a gannet like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Adult Australasian gannet",
+      "animal": "Australasian gannet - Adult",
       "case_number": "",
       "species": "Australasian gannet (Morus serrator)",
       "kind": "wildlife",
@@ -12611,7 +12611,7 @@ export default {
      "weight": "about 60 g",
      "text": "Ready-made plan: an orphaned Australian shelduck duckling, about 60 g, covered in down, a few days old. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a duckling like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Australian shelduck duckling",
+      "animal": "Australian shelduck - Downy duckling",
       "case_number": "",
       "species": "Australian shelduck, also called mountain duck (Tadorna tadornoides)",
       "kind": "wildlife",
@@ -12742,7 +12742,7 @@ export default {
      "weight": "about 1.3 kg",
      "text": "Ready-made plan: an adult Australian shelduck, about 1.3 kg, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a shelduck like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Adult Australian shelduck",
+      "animal": "Australian shelduck - Adult",
       "case_number": "",
       "species": "Australian shelduck, also called mountain duck (Tadorna tadornoides)",
       "kind": "wildlife",
@@ -12863,7 +12863,7 @@ export default {
      "weight": "about 150 g",
      "text": "Ready-made plan: an orphaned pied currawong nestling, about 150 g, with pin feathers coming through. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a nestling like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Orphaned pied currawong nestling",
+      "animal": "Pied currawong - Nestling",
       "case_number": "",
       "species": "Pied currawong (Strepera graculina)",
       "kind": "wildlife",
@@ -12987,7 +12987,7 @@ export default {
      "weight": "about 300 g",
      "text": "Ready-made plan: an adult pied currawong, about 300 g, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a currawong like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Adult pied currawong",
+      "animal": "Pied currawong - Adult",
       "case_number": "",
       "species": "Pied currawong (Strepera graculina)",
       "kind": "wildlife",
@@ -13107,7 +13107,7 @@ export default {
      "weight": "about 6 g",
      "text": "Ready-made plan: an orphaned spotted pardalote nestling, about 6 g, with pin feathers coming through. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a nestling like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Orphaned spotted pardalote nestling",
+      "animal": "Spotted pardalote - Nestling",
       "case_number": "",
       "species": "Spotted pardalote (Pardalotus punctatus)",
       "kind": "wildlife",
@@ -13173,7 +13173,7 @@ export default {
        "weight_g": 6,
        "stage": "Nestling in pin feathers",
        "percent_body_weight_per_day": 50,
-       "feeds_per_day": 28,
+       "feeds_per_day": 24,
        "basis": "Wombaroo welcome swallow chart as the nearest guide (about 1.2 g a day at 1.5 g, 5 g a day at 10 g); no pardalote chart given.",
        "sure": false
       },
@@ -13232,7 +13232,7 @@ export default {
      "weight": "about 9 g",
      "text": "Ready-made plan: an adult spotted pardalote, about 9 g, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a pardalote like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Adult spotted pardalote",
+      "animal": "Spotted pardalote - Adult",
       "case_number": "",
       "species": "Spotted pardalote (Pardalotus punctatus)",
       "kind": "wildlife",
@@ -13358,7 +13358,7 @@ export default {
      "weight": "about 120 g",
      "text": "Ready-made plan: an orphaned collared sparrowhawk nestling, about 120 g, downy with feathers coming through, not yet flying. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a nestling like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Orphaned collared sparrowhawk nestling",
+      "animal": "Collared sparrowhawk - Nestling",
       "case_number": "",
       "species": "Collared sparrowhawk (Accipiter cirrocephalus)",
       "kind": "wildlife",
@@ -13488,7 +13488,7 @@ export default {
      "weight": "about 150 g",
      "text": "Ready-made plan: an adult collared sparrowhawk, about 150 g, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a sparrowhawk like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Adult collared sparrowhawk",
+      "animal": "Collared sparrowhawk - Adult",
       "case_number": "",
       "species": "Collared sparrowhawk (Accipiter cirrocephalus)",
       "kind": "wildlife",
@@ -13614,7 +13614,7 @@ export default {
      "weight": "about 100 g",
      "text": "Ready-made plan: an orphaned crested pigeon squab, about 100 g, with pin feathers coming through. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a squab like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Orphaned crested pigeon squab",
+      "animal": "Crested pigeon - Squab",
       "case_number": "",
       "species": "Crested pigeon (Ocyphaps lophotes)",
       "kind": "wildlife",
@@ -13743,7 +13743,7 @@ export default {
      "weight": "about 200 g",
      "text": "Ready-made plan: an adult crested pigeon, about 200 g, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a pigeon like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Adult crested pigeon",
+      "animal": "Crested pigeon - Adult",
       "case_number": "",
       "species": "Crested pigeon (Ocyphaps lophotes)",
       "kind": "wildlife",
@@ -13869,7 +13869,7 @@ export default {
      "weight": "about 250 g",
      "text": "Ready-made plan: an orphaned eastern barn owl owlet, about 250 g, downy with feathers coming through, not yet flying. Healthy, no injuries and no medicines. Write a standard plan another carer can follow for a owlet like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Orphaned eastern barn owl owlet",
+      "animal": "Eastern barn owl - Owlet",
       "case_number": "",
       "species": "Eastern barn owl (Tyto javanica)",
       "kind": "wildlife",
@@ -13992,7 +13992,7 @@ export default {
      "weight": "about 330 g",
      "text": "Ready-made plan: an adult eastern barn owl, about 330 g, in care and recovering, with no injuries needing treatment and no medicines. Write a standard plan another carer can follow for a owl like this, from today until release. Use day and week numbers, not calendar dates.",
      "sheet": {
-      "animal": "Adult eastern barn owl",
+      "animal": "Eastern barn owl - Adult",
       "case_number": "",
       "species": "Eastern barn owl (Tyto javanica)",
       "kind": "wildlife",

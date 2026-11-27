@@ -141,6 +141,14 @@ try {
 } catch {}
 const animals = [];
 const missing = [];
+// Ready-made plan titles follow "Care plan - Species - Age". A group (Ravens) names the species in its stage ("Little raven, adult").
+const GROUPS = new Set(Object.values(META).filter(([aid], i, all) => new Set(all.filter((m) => m[0] === aid).map((m) => m[2].split(',')[0])).size > 1 && all.filter((m) => m[0] === aid).every((m) => m[2].includes(','))).map((m) => m[1]));
+const cap = (x) => x.charAt(0).toUpperCase() + x.slice(1);
+const titled = (sheet, name, stage) => {
+  const plain = stage.replace(/\s*\([^)]*\)/g, '').trim();
+  const [species, age] = GROUPS.has(name) ? [plain.split(',')[0].trim(), plain.split(',').slice(1).join(',').trim()] : [name, plain];
+  return { ...sheet, animal: `${species} - ${cap(age)}`.slice(0, 80) };
+};
 for (const [id, [aid, name, stage, weight]] of Object.entries(META)) {
   const s = scen.find((x) => x.id === id);
   const key = keyFor[id];
@@ -149,7 +157,7 @@ for (const [id, [aid, name, stage, weight]] of Object.entries(META)) {
     if (s && built[id]) {
       let a = animals.find((x) => x.id === aid);
       if (!a) animals.push((a = { id: aid, name, plans: [] }));
-      a.plans.push({ id, stage, weight, text: s.text, sheet: built[id] });
+      a.plans.push({ id, stage, weight, text: s.text, sheet: titled(built[id], name, stage) });
       continue;
     }
     missing.push(id);
@@ -157,7 +165,7 @@ for (const [id, [aid, name, stage, weight]] of Object.entries(META)) {
   }
   let a = animals.find((x) => x.id === aid);
   if (!a) animals.push((a = { id: aid, name, plans: [] }));
-  a.plans.push({ id, stage, weight, text: s.text, sheet: json(fs.readFileSync(file, 'utf8')) });
+  a.plans.push({ id, stage, weight, text: s.text, sheet: titled(json(fs.readFileSync(file, 'utf8')), name, stage) });
 }
 if (missing.length && !process.env.PARTIAL) {
   console.error('No reply yet for:', missing.join(', '));
