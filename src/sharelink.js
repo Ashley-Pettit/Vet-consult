@@ -1,6 +1,6 @@
 // Share a plan as a link, with no database: the plan itself is packed (compressed) into the link's #fragment.
 // The part after # never leaves the phone when the link is opened, so the plan isn't sent to any server.
-export const SITE_URL = 'https://ashley-pettit.github.io/Vet-consult/care/';
+export const SITE_URL = 'https://companion.bunurongwildlifecare.au/care/';
 
 const toB64url = (bytes) => {
   let s = '';

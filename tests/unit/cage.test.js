@@ -52,3 +52,10 @@ test('the QR link carries the chart id and key, and nothing else opens as a char
   assert.equal(cageHash('#c=abc.def'), null);
   assert.equal(cageHash('#r=abcdEFGH2345.' + 'k'.repeat(24)), null);
 });
+
+test('links made where the address is unknown (inside Claude) use the companion address', async () => {
+  const { SITE_URL, planLink } = await import('../../src/sharelink.js');
+  assert.equal(SITE_URL, 'https://companion.bunurongwildlifecare.au/care/');
+  assert.match(await planLink({ type: 'care', sheet: {} }, new URL('https://claude.ai/artifact/x')), /^https:\/\/companion\.bunurongwildlifecare\.au\/care\/#p=/);
+  assert.match(cageLink('abcdEFGH2345', 'k'.repeat(24), new URL('https://companion.bunurongwildlifecare.au/care/')), /^https:\/\/companion\.bunurongwildlifecare\.au\/care\/#c=/);
+});

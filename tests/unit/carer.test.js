@@ -269,7 +269,7 @@ test('share links: a plan packs into a short link and comes back exactly', async
   const code = await packPlan(data);
   assert.deepEqual(await unpackPlan(code), data);
   const url = await planLink(data, null);
-  assert.match(url, /^https:\/\/ashley-pettit\.github\.io\/Vet-consult\/care\/#p=z/);
+  assert.match(url, /^https:\/\/companion\.bunurongwildlifecare\.au\/care\/#p=z/);
   assert.ok(url.length < JSON.stringify(data).length, `link ${url.length} vs json ${JSON.stringify(data).length}`);
   assert.equal(linkCode(new URL(url).hash), code);
 });
