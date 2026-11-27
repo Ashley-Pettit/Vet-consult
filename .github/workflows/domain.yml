@@ -1,0 +1,53 @@
+# Custom domain for the Pages site (companion.bunurongwildlifecare.au), run from the Actions tab.
+# "check" shows who runs the domain's DNS, where the address points now and the current Pages settings.
+# "apply" sets the Pages custom domain, and only when the address already points at GitHub Pages, because setting
+# it earlier would send the github.io link to an address that doesn't serve the app yet.
+name: Custom domain
+
+on:
+  workflow_dispatch:
+    inputs:
+      domain:
+        description: The address to serve the site on
+        default: companion.bunurongwildlifecare.au
+        required: true
+      action:
+        description: check, or apply (set it in Pages once the DNS points at GitHub)
+        type: choice
+        options: [check, apply]
+        default: check
+
+permissions:
+  pages: write
+  contents: read
+
+jobs:
+  domain:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      DOMAIN: ${{ inputs.domain }}
+    steps:
+      - name: Who runs the DNS, and where the address points now
+        run: |
+          zone="${DOMAIN#*.}"
+          echo "Name servers for $zone:"; dig +short NS "$zone"
+          echo "SOA: $(dig +short SOA "$zone")"
+          echo "$DOMAIN CNAME: $(dig +short CNAME "$DOMAIN")"
+          echo "$DOMAIN A: $(dig +short A "$DOMAIN" | tr '\n' ' ')"
+          sudo apt-get install -y -qq whois >/dev/null 2>&1 || true
+          whois "$zone" 2>/dev/null | grep -iE '^(registrar|registrar name|reseller|name server|status)' | head -12 || true
+      - name: Current Pages settings
+        run: gh api "repos/${{ github.repository }}/pages" --jq '{url: .html_url, cname: .cname, https: .https_enforced, build: .build_type}' || true
+      - name: Set the custom domain (only when the DNS already points at GitHub)
+        if: inputs.action == 'apply'
+        run: |
+          a=$(dig +short A "$DOMAIN" | sort | tr '\n' ' ')
+          c=$(dig +short CNAME "$DOMAIN")
+          if ! echo "$c $a" | grep -qE 'github\.io|185\.199\.10[89]\.153|185\.199\.11[01]\.153'; then
+            echo "::error::$DOMAIN doesn't point at GitHub Pages yet (CNAME '$c', A '$a'). Change the DNS first."; exit 1
+          fi
+          gh api -X PUT "repos/${{ github.repository }}/pages" -f cname="$DOMAIN"
+          sleep 20
+          gh api -X PUT "repos/${{ github.repository }}/pages" -F https_enforced=true || echo "HTTPS can be enforced once GitHub has issued the certificate (up to an hour): run apply again."
+          gh api "repos/${{ github.repository }}/pages" --jq '{url: .html_url, cname: .cname, https: .https_enforced}'
